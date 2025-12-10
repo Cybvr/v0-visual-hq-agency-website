@@ -97,3 +97,11 @@ export async function deletePortfolioProject(id: string): Promise<void> {
   const docRef = doc(db, COLLECTION_NAME, id)
   await deleteDoc(docRef)
 }
+
+export async function getPortfolioProjectBySlug(slug: string): Promise<PortfolioProject | null> {
+  const q = query(collection(db, COLLECTION_NAME), where("slug", "==", slug), limit(1))
+  const snapshot = await getDocs(q)
+  if (snapshot.empty) return null
+  const docSnap = snapshot.docs[0]
+  return { id: docSnap.id, ...docSnap.data() } as PortfolioProject
+}

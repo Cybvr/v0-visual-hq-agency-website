@@ -4,7 +4,7 @@ import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
 import { Button } from "@/components/ui/button"
 import { useState, useEffect } from "react"
-import { ExternalLink, Loader2 } from "lucide-react"
+import { Loader2 } from "lucide-react"
 import { getPortfolioProjects, type PortfolioProject } from "@/lib/portfolio"
 import Link from "next/link"
 
@@ -81,13 +81,7 @@ export default function PortfolioPage() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               {filteredProjects.map((project) => (
-                <Link
-                  href={project.projectUrl || "#"}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  key={project.id}
-                  className="group cursor-pointer"
-                >
+                <Link href={`/portfolio/${project.slug}`} key={project.id} className="group cursor-pointer">
                   <div className="aspect-[7/5] bg-muted rounded-lg overflow-hidden mb-4">
                     <img
                       src={project.imageUrl || "/placeholder.svg?height=500&width=700&query=project"}
@@ -95,20 +89,17 @@ export default function PortfolioPage() {
                       className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                     />
                   </div>
-                  <div className="flex items-start justify-between gap-4">
-                    <div>
-                      <p className="text-sm text-muted-foreground mb-1">{project.category?.join(", ")}</p>
-                      <h3 className="font-semibold text-xl group-hover:underline">{project.title}</h3>
-                      <p className="text-muted-foreground mt-1 line-clamp-2">{project.description}</p>
-                      <div className="flex flex-wrap gap-2 mt-3">
-                        {project.technologies?.slice(0, 4).map((tech) => (
-                          <span key={tech} className="text-xs bg-secondary px-2 py-1 rounded">
-                            {tech}
-                          </span>
-                        ))}
-                      </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-1">{project.category?.join(", ")}</p>
+                    <h3 className="font-semibold text-xl group-hover:underline">{project.title}</h3>
+                    <p className="text-muted-foreground mt-1 line-clamp-2">{project.description}</p>
+                    <div className="flex flex-wrap gap-2 mt-3">
+                      {project.technologies?.slice(0, 4).map((tech) => (
+                        <span key={tech} className="text-xs bg-secondary px-2 py-1 rounded">
+                          {tech}
+                        </span>
+                      ))}
                     </div>
-                    <ExternalLink className="w-5 h-5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0 mt-1" />
                   </div>
                 </Link>
               ))}

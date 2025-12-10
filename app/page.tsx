@@ -35,9 +35,7 @@ export default function HomePage() {
       try {
         const data = await getPortfolioProjects()
         // Get first 3 published, featured projects
-        const featured = data
-          .filter((p) => p.status === "Published" && p.featured)
-          .slice(0, 3)
+        const featured = data.filter((p) => p.status === "Published" && p.featured).slice(0, 3)
         setFeaturedProjects(featured)
       } catch (error) {
         console.error("Error fetching projects:", error)
@@ -119,7 +117,7 @@ export default function HomePage() {
           ) : featuredProjects.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {featuredProjects.map((project) => (
-                <Link key={project.id} href={`/portfolio`} className="group block">
+                <Link key={project.id} href={`/portfolio/${project.slug}`} className="group block">
                   <div className="aspect-[3/2] bg-muted rounded-lg overflow-hidden mb-4">
                     <img
                       src={project.imageUrl || "/placeholder.svg"}
