@@ -1,3 +1,5 @@
+"use client"
+
 import { useState, useEffect } from "react"
 
 import Link from "next/link"
@@ -6,7 +8,6 @@ import { Footer } from "@/components/footer"
 import { Button } from "@/components/ui/button"
 import { ArrowRight, Palette, Code, Sparkles, Loader2 } from "lucide-react"
 import { getPortfolioProjects, type PortfolioProject } from "@/lib/portfolio"
-
 
 const services = [
   {
@@ -34,7 +35,6 @@ export default function HomePage() {
     async function fetchProjects() {
       try {
         const data = await getPortfolioProjects()
-        // Get first 3 published, featured projects
         const featured = data.filter((p) => p.status === "Published" && p.featured).slice(0, 3)
         setFeaturedProjects(featured)
       } catch (error) {
@@ -127,6 +127,7 @@ export default function HomePage() {
               </Link>
             </Button>
           </div>
+
           {loading ? (
             <div className="flex items-center justify-center py-12">
               <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
