@@ -1,10 +1,12 @@
+import { useState, useEffect } from "react"
+
 import Link from "next/link"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
 import { Button } from "@/components/ui/button"
 import { ArrowRight, Palette, Code, Sparkles, Loader2 } from "lucide-react"
 import { getPortfolioProjects, type PortfolioProject } from "@/lib/portfolio"
-import { useState, useEffect } from "react"
+
 
 const services = [
   {
