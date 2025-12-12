@@ -1,5 +1,3 @@
-"use client"
-
 import Link from "next/link"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
@@ -53,13 +51,13 @@ export default function HomePage() {
       {/* Hero Section */}
       <section className="pt-32 pb-20 px-6">
         <div className="max-w-7xl mx-auto">
-          <div className="max-w-4xl">
+          <div className="max-w-2xl">
             <h1 className="font-serif text-5xl md:text-7xl font-bold tracking-tight leading-[1.1] text-balance">
               We craft brands and build digital experiences
             </h1>
-            <p className="mt-6 text-lg md:text-xl text-muted-foreground max-w-2xl">
-              VisualHQ is a creative agency in Lagos, Nigeria specializing in brand development and web development. We
-              help businesses stand out through strategic design and technology.
+            <p className="mt-6 text-lg md:text-xl text-muted-foreground">
+              VisualHQ is a creative agency in Lagos, Nigeria specializing in brand development and web development.
+              We help businesses stand out through strategic design and technology.
             </p>
             <div className="mt-8 flex flex-wrap gap-4">
               <Button size="lg" asChild>
@@ -71,6 +69,23 @@ export default function HomePage() {
               <Button size="lg" variant="outline" asChild>
                 <Link href="/contact">Get in Touch</Link>
               </Button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Canva Embed Section */}
+      <section className="py-20 px-6">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex justify-center">
+            <div className="w-full max-w-[350px] aspect-[9/16] rounded-lg overflow-hidden shadow-lg">
+              <iframe
+                loading="lazy"
+                className="w-full h-full"
+                src="https://www.canva.com/design/DAG7SJwEiW0/T1aH6eU39bKp_nVlrFe2Cw/view?embed"
+                allowFullScreen
+                allow="fullscreen"
+              />
             </div>
           </div>
         </div>

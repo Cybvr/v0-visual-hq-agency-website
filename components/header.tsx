@@ -10,7 +10,7 @@ const navigation = [
   { name: "Home", href: "/" },
   { name: "About", href: "/about" },
   { name: "Portfolio", href: "/portfolio" },
-  { name: "Contact", href: "/contact" },
+  { name: "Pricing", href: "/pricing" },
 ]
 
 export function Header() {
@@ -20,12 +20,7 @@ export function Header() {
     <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b">
       <nav className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
         <Link href="/" className="relative h-10 w-32">
-          <Image
-            src="/images/design-mode/visualhqlog.png"
-            alt="VisualHQ"
-            fill
-            className="object-contain"
-          />
+          <Image src="/images/design-mode/visualhqlog.png" alt="VisualHQ" fill className="object-contain" />
         </Link>
 
         {/* Desktop Navigation */}
