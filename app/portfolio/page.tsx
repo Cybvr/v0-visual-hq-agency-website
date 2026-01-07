@@ -60,6 +60,7 @@ export default function PortfolioPage() {
                 key={category}
                 variant={activeFilter === category ? "default" : "outline"}
                 size="sm"
+                className="font-serif"
                 onClick={() => setActiveFilter(category)}
               >
                 {category}
@@ -91,8 +92,7 @@ export default function PortfolioPage() {
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground mb-1">{project.category?.join(", ")}</p>
-                    <h3 className="font-semibold text-xl group-hover:underline">{project.title}</h3>
-                    <p className="text-muted-foreground mt-1 line-clamp-2">{project.description}</p>
+                    <h3 className="font-serif group-hover:underline italic font-light text-3xl">{project.title}</h3>
                     <div className="flex flex-wrap gap-2 mt-3">
                       {project.technologies?.slice(0, 4).map((tech) => (
                         <span key={tech} className="text-xs bg-secondary px-2 py-1 rounded">
@@ -115,7 +115,7 @@ export default function PortfolioPage() {
           <p className="text-primary-foreground/70 max-w-xl mx-auto mb-8">
             We'd love to hear about it. Let's discuss how we can help bring your vision to life.
           </p>
-          <Button size="lg" variant="secondary" asChild>
+          <Button size="lg" variant="secondary" className="font-serif" asChild>
             <a href="/contact">Start a Project</a>
           </Button>
         </div>
