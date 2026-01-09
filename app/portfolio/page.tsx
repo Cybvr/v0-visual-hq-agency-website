@@ -83,7 +83,7 @@ export default function PortfolioPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               {filteredProjects.map((project) => (
                 <Link href={`/portfolio/${project.slug}`} key={project.id} className="group cursor-pointer">
-                  <div className="aspect-[7/5] bg-muted rounded-lg overflow-hidden mb-4">
+                  <div className="aspect-[4/5] bg-muted rounded-lg overflow-hidden mb-4">
                     <img
                       src={project.imageUrl || "/placeholder.svg?height=500&width=700&query=project"}
                       alt={project.title}
@@ -92,7 +92,7 @@ export default function PortfolioPage() {
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground mb-1">{project.category?.join(", ")}</p>
-                    <h3 className="font-serif group-hover:underline italic font-light text-3xl">{project.title}</h3>
+                    <h3 className="font-serif group-hover:underline text-3xl font-medium">{project.title}</h3>
                     <div className="flex flex-wrap gap-2 mt-3">
                       {project.technologies?.slice(0, 4).map((tech) => (
                         <span key={tech} className="text-xs bg-secondary px-2 py-1 rounded">

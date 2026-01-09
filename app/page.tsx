@@ -103,13 +103,13 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto">
           <div className="mb-12">
             <p className="text-sm font-medium text-muted-foreground mb-2">What We Do</p>
-            <h2 className="font-serif text-3xl md:text-4xl font-light">Our Services</h2>
+            <h2 className="font-serif text-3xl md:text-4xl font-bold">Our Services</h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {services.map((service) => (
               <div key={service.title} className="bg-card p-8 rounded-lg border-border px-4 py-4 pb-24 border-0">
                 <service.icon className="w-10 h-10 mb-4" />
-                <h3 className="text-xl mb-2 font-serif font-light">{service.title}</h3>
+                <h3 className="text-xl mb-2 font-serif font-medium">{service.title}</h3>
                 <p className="text-muted-foreground leading-4 text-xs">{service.description}</p>
               </div>
             ))}
@@ -123,7 +123,7 @@ export default function HomePage() {
           <div className="flex flex-col md:flex-row md:items-end md:justify-between mb-12 gap-4">
             <div>
               <p className="text-sm font-medium text-muted-foreground mb-2">Featured Work</p>
-              <h2 className="font-serif text-3xl md:text-4xl font-light">Selected Projects</h2>
+              <h2 className="font-serif text-3xl md:text-4xl font-bold">Selected Projects</h2>
             </div>
             <Button variant="outline" className="font-serif bg-transparent" asChild>
               <Link href="/portfolio">
@@ -149,7 +149,7 @@ export default function HomePage() {
                     />
                   </div>
                   <p className="text-sm text-muted-foreground mb-1">{project.category?.join(" & ") || "Project"}</p>
-                  <h3 className="font-serif group-hover:underline text-2xl font-medium italic">{project.title}</h3>
+                  <h3 className="font-serif group-hover:underline text-2xl font-medium">{project.title}</h3>
                 </Link>
               ))}
             </div>
