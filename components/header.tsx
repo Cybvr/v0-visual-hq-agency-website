@@ -24,12 +24,12 @@ export function Header() {
         </Link>
 
         {/* Desktop Navigation */}
-        <div className="hidden md:flex items-center gap-8">
+        <div className="hidden md:flex items-center gap-4">
           {navigation.map((item) => (
             <Link
               key={item.name}
               href={item.href}
-              className="text-muted-foreground hover:text-foreground transition-colors uppercase text-sm font-serif font-medium"
+              className="text-muted-foreground hover:text-foreground transition-colors uppercase font-sans text-sm font-semibold"
             >
               {item.name}
             </Link>

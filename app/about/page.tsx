@@ -90,7 +90,7 @@ export default function AboutPage() {
               </div>
             </div>
             <div className="aspect-square bg-muted rounded-lg overflow-hidden">
-              <img src="/modern-creative-office-workspace-lagos.jpg" alt="VisualHQ Office" className="w-full h-full object-cover" />
+              <img src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/pexels-eniforo-kelvin-2147697922-29715199-xWkruvbP3vXKzdsjBdSomWtqM5Y8r7.jpg" alt="VisualHQ Office" className="w-full h-full object-cover" />
             </div>
           </div>
         </div>
@@ -116,29 +116,7 @@ export default function AboutPage() {
       </section>
 
       {/* Team Section */}
-      <section className="py-20 px-6 bg-secondary">
-        <div className="max-w-7xl mx-auto">
-          <div className="mb-12">
-            <p className="text-sm font-medium text-muted-foreground mb-2">The Team</p>
-            <h2 className="font-serif text-3xl md:text-4xl font-bold">Meet the People Behind VisualHQ</h2>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {team.map((member) => (
-              <div key={member.name}>
-                <div className="aspect-square bg-muted rounded-lg overflow-hidden mb-4">
-                  <img
-                    src={member.image || "/placeholder.svg"}
-                    alt={member.name}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <h3 className="font-semibold text-lg">{member.name}</h3>
-                <p className="text-muted-foreground">{member.role}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+      
 
       {/* CTA Section */}
       <section className="py-20 px-6">
