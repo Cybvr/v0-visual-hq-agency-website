@@ -68,8 +68,8 @@ export function Footer() {
         </div>
 
         <div className="mt-12 pt-8 border-t border-primary-foreground/10 flex flex-col md:flex-row justify-between items-center gap-4">
-          <p className="text-primary-foreground/50 text-xs">
-            © {new Date().getFullYear()} VisualHQ. All rights reserved.
+          <p className="text-primary-foreground/50 text-xs text-center md:text-left">
+            © {new Date().getFullYear()} VISUAL CORE NINE SYSTEMS. All rights reserved.
           </p>
           <p className="text-primary-foreground/50 text-xs">Crafted with precision in Lagos, Nigeria</p>
         </div>

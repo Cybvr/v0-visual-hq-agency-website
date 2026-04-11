@@ -20,7 +20,7 @@ export default function PortfolioPage() {
       try {
         const data = await getPortfolioProjects()
         // Only show published projects
-        setProjects(data.filter((p) => p.status === "Published"))
+        setProjects(data.filter((p) => p.status?.toLowerCase() === "published"))
       } catch (error) {
         console.error("Error fetching projects:", error)
       } finally {

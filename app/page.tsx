@@ -40,7 +40,7 @@ export default function HomePage() {
     async function fetchProjects() {
       try {
         const data = await getPortfolioProjects()
-        const featured = data.filter((p) => p.status === "Published" && p.featured).slice(0, 3)
+        const featured = data.filter((p) => p.status?.toLowerCase() === "published" && p.featured).slice(0, 3)
         setFeaturedProjects(featured)
       } catch (error) {
         console.error("Error fetching projects:", error)
@@ -168,7 +168,7 @@ export default function HomePage() {
             Ready to transform your brand?
           </h2>
           <p className="text-primary-foreground/70 max-w-2xl mx-auto mb-8">
-            Let's discuss your project and explore how VisualHQ can help bring your vision to life.
+            Let's discuss your project and explore how Visual Core Nine Systems can help bring your vision to life.
           </p>
           <Button size="lg" variant="secondary" className="font-serif" asChild>
             <Link href="/contact">
