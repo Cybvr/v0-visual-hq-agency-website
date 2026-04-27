@@ -1,67 +1,76 @@
 "use client"
 
 import Link from "next/link"
-import Image from "next/image"
 import { useState } from "react"
 import { Menu, X } from "lucide-react"
-import { Button } from "@/components/ui/button"
 
 const navigation = [
-  { name: "About", href: "/about" },
-  { name: "Portfolio", href: "/portfolio" },
-  { name: "Pricing", href: "/pricing" },
+  { name: "Products", href: "/#products" },
+  { name: "Impact", href: "/#impact" },
+  { name: "AI", href: "/#ai" },
+  { name: "Careers", href: "/#careers" },
+  { name: "Contact", href: "/contact" },
 ]
+
+function CoreNineWordmark() {
+  return (
+    <span className="flex items-center gap-3">
+      <span className="grid grid-cols-3 gap-1" aria-hidden="true">
+        {Array.from({ length: 9 }).map((_, index) => (
+          <span key={index} className="block size-1.5 rounded-[2px] bg-foreground" />
+        ))}
+      </span>
+      <span className="text-base font-semibold tracking-tight">VisualCoreNine</span>
+    </span>
+  )
+}
 
 export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b">
-      <nav className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-        <Link href="/" className="relative h-10 w-32">
-          <Image src="/images/design-mode/visualhqlog.png" alt="VisualHQ" fill className="object-contain" />
+    <header className="fixed left-0 right-0 top-0 z-50 border-b border-border/70 bg-background/90 backdrop-blur-md">
+      <nav className="mx-auto flex max-w-7xl items-center justify-between px-6 py-5">
+        <Link href="/" aria-label="VisualCoreNine home">
+          <CoreNineWordmark />
         </Link>
 
-        {/* Desktop Navigation */}
-        <div className="hidden md:flex items-center gap-4">
+        <div className="hidden items-center gap-8 md:flex">
           {navigation.map((item) => (
             <Link
               key={item.name}
               href={item.href}
-              className="text-muted-foreground hover:text-foreground transition-colors uppercase font-sans text-sm font-semibold"
+              className="text-xs font-semibold uppercase tracking-[0.24em] text-foreground transition-colors hover:text-primary"
             >
               {item.name}
             </Link>
           ))}
-          <Button asChild>
-            <Link href="/contact">Get Started</Link>
-          </Button>
         </div>
 
-        {/* Mobile Menu Button */}
-        <button className="md:hidden p-2" onClick={() => setMobileMenuOpen(!mobileMenuOpen)} aria-label="Toggle menu">
-          {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+        <button
+          className="flex size-10 items-center justify-center rounded-full md:hidden"
+          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          aria-label="Toggle menu"
+          aria-expanded={mobileMenuOpen}
+        >
+          {mobileMenuOpen ? <X className="size-6" /> : <Menu className="size-6" />}
         </button>
       </nav>
 
-      {/* Mobile Navigation */}
       {mobileMenuOpen && (
-        <div className="md:hidden bg-background border-b">
-          <div className="px-6 py-4 flex flex-col gap-4">
+        <div className="border-b border-border bg-background md:hidden">
+          <nav className="flex flex-col gap-1 px-6 pb-6">
             {navigation.map((item) => (
               <Link
                 key={item.name}
                 href={item.href}
-                className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+                className="py-3 text-sm font-semibold uppercase tracking-[0.18em] text-foreground"
                 onClick={() => setMobileMenuOpen(false)}
               >
                 {item.name}
               </Link>
             ))}
-            <Button asChild className="w-full">
-              <Link href="/contact">Get Started</Link>
-            </Button>
-          </div>
+          </nav>
         </div>
       )}
     </header>

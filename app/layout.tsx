@@ -19,10 +19,10 @@ const FIREBASE_FAVICON_URL =
   "https://firebasestorage.googleapis.com/v0/b/jujuagi-new.firebasestorage.app/o/favicon.ico?alt=media&token=e0666b35-06cb-41a4-8d0d-9b37740baa7a"
 
 export const metadata: Metadata = {
-  title: "VisualHQ - Brand & Web Development Agency | Lagos, Nigeria",
+  title: "VisualCoreNine - Software Systems for Modern Businesses",
   description:
-    "VisualHQ is a creative agency specializing in brand development and web development. Based in Lagos, Nigeria, we transform brands through exceptional design and cutting-edge technology.",
-  keywords: ["web development", "brand development", "Lagos", "Nigeria", "creative agency", "design"],
+    "VisualCoreNine builds software systems, product businesses, and AI-enabled tools from Lagos for modern teams.",
+  keywords: ["software development", "AI", "VisualHQ", "VisualCoreNine", "Lagos", "Nigeria", "product company"],
   generator: "v0.app",
   // --- FAVICON USING EXTERNAL URL ---
   icons: {

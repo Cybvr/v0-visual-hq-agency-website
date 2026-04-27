@@ -1,183 +1,172 @@
-"use client"
-
-import { useState, useEffect } from "react"
-
 import Link from "next/link"
-import { Header } from "@/components/header"
-import { Footer } from "@/components/footer"
-import { Button } from "@/components/ui/button"
-import { ArrowRight, Palette, Code, Sparkles, Loader2, Megaphone } from "lucide-react"
-import { getPortfolioProjects, type PortfolioProject } from "@/lib/portfolio"
+import { ArrowRight, ArrowUpRight, Bot, BriefcaseBusiness, Code2, Handshake, Sparkles } from "lucide-react"
 
-const services = [
+import { Footer } from "@/components/footer"
+import { Header } from "@/components/header"
+import { Button } from "@/components/ui/button"
+
+const products = [
   {
-    icon: Palette,
-    title: "Brand Development",
-    description: "Strategic brand identity, visual systems, and guidelines that make your business memorable.",
+    name: "VisualHQ",
+    href: "/about",
+    description:
+      "Software development consulting for companies that need reliable digital products, platforms, and internal systems.",
+    icon: Code2,
+    links: [
+      { label: "Work", href: "/portfolio" },
+      { label: "Pricing", href: "/pricing" },
+      { label: "Contact", href: "/contact" },
+    ],
   },
   {
-    icon: Code,
-    title: "Web Development",
-    description: "High-performance websites and web applications built with modern technologies.",
+    name: "Passive",
+    href: "https://pasive.co",
+    description: "Automation and operating tools for businesses that want calmer, more repeatable growth.",
+    icon: BriefcaseBusiness,
+    links: [],
   },
   {
+    name: "Juju",
+    href: "https://jujuapp.co",
+    description: "AI-powered visual creation for teams and creators shaping new visual worlds.",
     icon: Sparkles,
-    title: "Digital Strategy",
-    description: "Comprehensive digital solutions that align your brand with your business goals.",
-  },
-  {
-    icon: Megaphone,
-    title: "Marketing",
-    description: "Effective marketing strategies to promote your brand and reach your target audience.",
+    links: [],
   },
 ]
 
-export default function HomePage() {
-  const [featuredProjects, setFeaturedProjects] = useState<PortfolioProject[]>([])
-  const [loading, setLoading] = useState(true)
+const companyFocus = [
+  {
+    id: "impact",
+    title: "Impact",
+    description:
+      "We build practical software systems for founders, operators, and teams that need technology to make work more durable.",
+    icon: Handshake,
+  },
+  {
+    id: "ai",
+    title: "AI",
+    description:
+      "We use AI where it improves delivery, automation, creative output, and the quality of business operations.",
+    icon: Bot,
+  },
+  {
+    id: "careers",
+    title: "Careers",
+    description:
+      "VisualCoreNine is shaped as a small, product-minded team for builders who care about systems, taste, and execution.",
+    icon: BriefcaseBusiness,
+  },
+]
 
-  useEffect(() => {
-    async function fetchProjects() {
-      try {
-        const data = await getPortfolioProjects()
-        const featured = data.filter((p) => p.status?.toLowerCase() === "published" && p.featured).slice(0, 3)
-        setFeaturedProjects(featured)
-      } catch (error) {
-        console.error("Error fetching projects:", error)
-      } finally {
-        setLoading(false)
-      }
-    }
-    fetchProjects()
-  }, [])
-
+function CoreNineMark() {
   return (
-    <div className="min-h-screen">
+    <div className="grid grid-cols-3 gap-2" aria-hidden="true">
+      {Array.from({ length: 9 }).map((_, index) => (
+        <span key={index} className="block size-4 rounded-[4px] bg-foreground md:size-5" />
+      ))}
+    </div>
+  )
+}
+
+export default function HomePage() {
+  return (
+    <div className="min-h-screen bg-background text-foreground">
       <Header />
 
-      {/* Hero Section */}
-      <section className="pt-32 pb-20 px-6">
-        <div className="max-w-7xl mx-auto">
-          <div className="max-w-2xl">
-            <h1 className="font-serif text-5xl md:text-7xl font-bold tracking-tight leading-[1.1] text-balance">
-              We craft brands and build digital experiences
+      <main>
+        <section className="flex min-h-screen flex-col px-6 pb-8 pt-18">
+          <div className="mx-auto flex w-full max-w-7xl flex-1 flex-col items-center justify-center text-center">
+
+            <h1 className="mt-5 max-w-4xl text-balance text-4xl font-semibold tracking-normal md:text-6xl lg:text-7xl">
+              VisualCoreNine builds software systems for modern businesses.
             </h1>
-            <p className="mt-6 text-lg md:text-xl text-muted-foreground">
-              VisualHQ is a creative agency in Lagos, Nigeria specializing in brand development and web development. We
-              help businesses stand out through strategic design and technology.
-            </p>
-            <div className="mt-8 flex flex-wrap gap-4">
-              <Button size="lg" className="font-serif" asChild>
-                <Link href="/portfolio">
-                  View Our Work
-                  <ArrowRight className="ml-2 w-4 h-4" />
+            <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
+              <Button size="lg" className="rounded-full px-6 font-semibold" asChild>
+                <Link href="#products">
+                  Explore products
+                  <ArrowRight className="size-4" />
                 </Link>
               </Button>
-              <Button size="lg" variant="outline" className="font-serif bg-transparent" asChild>
-                <Link href="/contact">Get in Touch</Link>
+              <Button size="lg" variant="outline" className="rounded-full bg-transparent px-6 font-semibold" asChild>
+                <Link href="/contact">Work with VisualHQ</Link>
               </Button>
             </div>
           </div>
-        </div>
-      </section>
 
-      {/* Canva Embed Section */}
-      <section className="py-20 px-6">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex justify-center">
-            <div className="w-full max-w-[350px] aspect-[9/16] rounded-lg overflow-hidden shadow-lg">
-              <iframe
-                loading="lazy"
-                className="w-full h-full"
-                src="https://www.canva.com/design/DAG7SJwEiW0/T1aH6eU39bKp_nVlrFe2Cw/view?embed"
-                allowFullScreen
-                allow="fullscreen"
-              />
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Services Section */}
-      <section className="py-20 px-6 bg-secondary">
-        <div className="max-w-7xl mx-auto">
-          <div className="mb-12">
-            <p className="text-sm font-medium text-muted-foreground mb-2">What We Do</p>
-            <h2 className="font-serif text-3xl md:text-4xl font-bold">Our Services</h2>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {services.map((service) => (
-              <div key={service.title} className="bg-card p-8 rounded-lg border-border px-4 py-4 pb-24 border-0">
-                <service.icon className="w-10 h-10 mb-4" />
-                <h3 className="text-xl mb-2 font-serif font-medium">{service.title}</h3>
-                <p className="text-muted-foreground leading-4 text-xs">{service.description}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Featured Work Section */}
-      <section className="py-20 px-6">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex flex-col md:flex-row md:items-end md:justify-between mb-12 gap-4">
-            <div>
-              <p className="text-sm font-medium text-muted-foreground mb-2">Featured Work</p>
-              <h2 className="font-serif text-3xl md:text-4xl font-bold">Selected Projects</h2>
-            </div>
-            <Button variant="outline" className="font-serif bg-transparent" asChild>
-              <Link href="/portfolio">
-                View All Projects
-                <ArrowRight className="ml-2 w-4 h-4" />
+          <nav
+            className="mx-auto flex w-full max-w-3xl flex-wrap items-center justify-center gap-x-10 gap-y-4 pt-12"
+            aria-label="VisualCoreNine products"
+          >
+            {products.map((product) => (
+              <Link
+                key={product.name}
+                href={product.href}
+                className="text-sm font-semibold uppercase tracking-[0.22em] text-foreground transition-colors hover:text-primary"
+              >
+                {product.name}
               </Link>
-            </Button>
-          </div>
+            ))}
+          </nav>
+        </section>
 
-          {loading ? (
-            <div className="flex items-center justify-center py-12">
-              <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+        <section id="products" className="scroll-mt-24 px-6 py-24">
+          <div className="mx-auto max-w-7xl">
+            <div className="mx-auto max-w-3xl text-center">
+              <p className="text-sm font-semibold uppercase tracking-[0.24em] text-muted-foreground">Products</p>
+              <h2 className="mt-4 text-balance text-4xl font-semibold tracking-normal md:text-6xl">
+                A simple ecosystem for building, operating, and creating.
+              </h2>
             </div>
-          ) : featuredProjects.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {featuredProjects.map((project) => (
-                <Link key={project.id} href={`/portfolio/${project.slug}`} className="group block">
-                  <div className="aspect-[3/2] bg-muted rounded-lg overflow-hidden mb-4">
-                    <img
-                      src={project.imageUrl || "/placeholder.svg"}
-                      alt={project.title}
-                      className="w-full object-cover transition-transform duration-500 group-hover:scale-105 h-full py-0"
-                    />
+
+            <div className="mx-auto mt-16 grid max-w-5xl gap-6">
+              {products.map((product) => (
+                <Link
+                  key={product.name}
+                  href={product.href}
+                  className="group grid gap-6 rounded-[3rem] bg-secondary px-7 py-8 transition-colors hover:bg-accent md:grid-cols-[auto_1fr_auto] md:items-center md:px-10"
+                >
+                  <div className="flex size-14 items-center justify-center rounded-full bg-background text-primary shadow-sm">
+                    <product.icon className="size-7" />
                   </div>
-                  <p className="text-sm text-muted-foreground mb-1">{project.category?.join(" & ") || "Project"}</p>
-                  <h3 className="font-serif group-hover:underline text-2xl font-medium">{project.title}</h3>
+                  <div>
+                    <div className="flex flex-wrap items-center gap-3">
+                      <h3 className="text-2xl font-semibold md:text-3xl">{product.name}</h3>
+                      {product.name === "VisualHQ" && (
+                        <span className="rounded-full bg-background px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                          Consulting
+                        </span>
+                      )}
+                    </div>
+                    <p className="mt-3 max-w-2xl text-base leading-7 text-muted-foreground">{product.description}</p>
+                    {product.links.length > 0 && (
+                      <div className="mt-5 flex flex-wrap gap-4">
+                        {product.links.map((item) => (
+                          <span key={item.label} className="text-sm font-semibold text-foreground/75">
+                            {item.label}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  <ArrowUpRight className="size-8 transition-transform group-hover:-translate-y-1 group-hover:translate-x-1" />
                 </Link>
               ))}
             </div>
-          ) : (
-            <div className="text-center py-12 text-muted-foreground">
-              <p>No featured projects yet. Check back soon!</p>
-            </div>
-          )}
-        </div>
-      </section>
+          </div>
+        </section>
 
-      {/* CTA Section */}
-      <section className="py-20 px-6 bg-foreground text-primary-foreground">
-        <div className="max-w-7xl mx-auto text-center">
-          <h2 className="font-serif text-3xl md:text-5xl mb-6 text-balance font-medium">
-            Ready to transform your brand?
-          </h2>
-          <p className="text-primary-foreground/70 max-w-2xl mx-auto mb-8">
-            Let's discuss your project and explore how Visual Core Nine Systems can help bring your vision to life.
-          </p>
-          <Button size="lg" variant="secondary" className="font-serif" asChild>
-            <Link href="/contact">
-              Start a Conversation
-              <ArrowRight className="ml-2 w-4 h-4" />
-            </Link>
-          </Button>
-        </div>
-      </section>
+        <section className="px-6 py-20">
+          <div className="mx-auto grid max-w-7xl gap-6 md:grid-cols-3">
+            {companyFocus.map((item) => (
+              <section key={item.id} id={item.id} className="scroll-mt-24 border-t border-border pt-8">
+                <item.icon className="size-7 text-primary" />
+                <h2 className="mt-6 text-2xl font-semibold">{item.title}</h2>
+                <p className="mt-4 text-sm leading-6 text-muted-foreground">{item.description}</p>
+              </section>
+            ))}
+          </div>
+        </section>
+      </main>
 
       <Footer />
     </div>

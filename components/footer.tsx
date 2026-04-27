@@ -1,77 +1,91 @@
 import Link from "next/link"
-import Image from "next/image"
 import { Mail, MapPin } from "lucide-react"
+
+const productLinks = [
+  { name: "VisualHQ", href: "/about" },
+  { name: "Passive", href: "https://pasive.co" },
+  { name: "Juju", href: "https://jujuapp.co" },
+]
+
+const companyLinks = [
+  { name: "About", href: "/about" },
+  { name: "Portfolio", href: "/portfolio" },
+  { name: "Pricing", href: "/pricing" },
+  { name: "Contact", href: "/contact" },
+]
 
 export function Footer() {
   return (
     <footer className="bg-foreground text-primary-foreground">
-      <div className="max-w-7xl mx-auto px-6 py-16">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-12">
+      <div className="mx-auto max-w-7xl px-6 py-16">
+        <div className="grid grid-cols-1 gap-12 md:grid-cols-4">
           <div className="md:col-span-2">
-            <Link href="/" className="relative inline-block h-10 w-32">
-              <Image
-                src="/images/design-mode/visualhqlog.png"
-                alt="VisualHQ"
-                fill
-                className="object-contain brightness-0 invert"
-              />
+            <Link href="/" className="inline-flex items-center gap-3" aria-label="VisualCoreNine home">
+              <span className="grid grid-cols-3 gap-1" aria-hidden="true">
+                {Array.from({ length: 9 }).map((_, index) => (
+                  <span key={index} className="block size-1.5 rounded-[2px] bg-primary-foreground" />
+                ))}
+              </span>
+              <span className="text-lg font-semibold tracking-tight">VisualCoreNine</span>
             </Link>
-            <p className="mt-4 text-primary-foreground/70 max-w-md text-sm">
-              Transforming brands through exceptional design and cutting-edge web development. Based in Lagos,
-              delivering globally.
+            <p className="mt-5 max-w-md text-sm leading-6 text-primary-foreground/70">
+              VisualCoreNine builds software systems, product businesses, and AI-enabled tools from Lagos for modern
+              teams.
             </p>
           </div>
 
           <div>
-            <h4 className="font-semibold mb-4 font-serif">Navigation</h4>
-            <nav className="flex flex-col gap-2">
-              <Link href="/" className="text-primary-foreground/70 hover:text-primary-foreground transition-colors text-sm">
-                Home
-              </Link>
-              <Link
-                href="/about"
-                className="text-primary-foreground/70 hover:text-primary-foreground transition-colors text-sm"
-              >
-                About
-              </Link>
-              <Link
-                href="/portfolio"
-                className="text-primary-foreground/70 hover:text-primary-foreground transition-colors text-sm"
-              >
-                Portfolio
-              </Link>
-              <Link
-                href="/contact"
-                className="text-primary-foreground/70 hover:text-primary-foreground transition-colors text-sm"
-              >
-                Contact
-              </Link>
+            <h4 className="mb-4 text-sm font-semibold uppercase tracking-[0.18em] text-primary-foreground/50">
+              Products
+            </h4>
+            <nav className="flex flex-col gap-3">
+              {productLinks.map((item) => (
+                <Link
+                  key={item.name}
+                  href={item.href}
+                  className="text-sm text-primary-foreground/70 transition-colors hover:text-primary-foreground"
+                >
+                  {item.name}
+                </Link>
+              ))}
             </nav>
           </div>
 
           <div>
-            <h4 className="font-semibold mb-4 font-serif">Get in Touch</h4>
-            <div className="flex flex-col gap-3">
-              <a
-                href="mailto:jide.pinheiro@gmail.com"
-                className="flex items-center gap-2 text-primary-foreground/70 hover:text-primary-foreground transition-colors text-sm"
-              >
-                <Mail className="w-4 h-4" />
-                jide.pinheiro@gmail.com
-              </a>
-              <div className="flex items-start gap-2 text-primary-foreground/70">
-                <MapPin className="w-4 h-4 flex-shrink-0 mt-0.5" />
-                <span className="text-sm">Polystar 2nd Roundabout, Lekki Phase 1, Lagos 105102, Nigeria</span>
-              </div>
-            </div>
+            <h4 className="mb-4 text-sm font-semibold uppercase tracking-[0.18em] text-primary-foreground/50">
+              Company
+            </h4>
+            <nav className="flex flex-col gap-3">
+              {companyLinks.map((item) => (
+                <Link
+                  key={item.name}
+                  href={item.href}
+                  className="text-sm text-primary-foreground/70 transition-colors hover:text-primary-foreground"
+                >
+                  {item.name}
+                </Link>
+              ))}
+            </nav>
           </div>
         </div>
 
-        <div className="mt-12 pt-8 border-t border-primary-foreground/10 flex flex-col md:flex-row justify-between items-center gap-4">
-          <p className="text-primary-foreground/50 text-xs text-center md:text-left">
-            © {new Date().getFullYear()} VISUAL CORE NINE SYSTEMS. All rights reserved.
+        <div className="mt-12 grid gap-6 border-t border-primary-foreground/10 pt-8 md:grid-cols-[1fr_auto] md:items-center">
+          <div className="flex flex-col gap-3 text-sm text-primary-foreground/60">
+            <a
+              href="mailto:jide.pinheiro@gmail.com"
+              className="flex items-center gap-2 transition-colors hover:text-primary-foreground"
+            >
+              <Mail className="size-4" />
+              jide.pinheiro@gmail.com
+            </a>
+            <div className="flex items-start gap-2">
+              <MapPin className="mt-0.5 size-4 flex-shrink-0" />
+              <span>Polystar 2nd Roundabout, Lekki Phase 1, Lagos 105102, Nigeria</span>
+            </div>
+          </div>
+          <p className="text-xs uppercase tracking-[0.18em] text-primary-foreground/50">
+            © {new Date().getFullYear()} VISUAL CORE NINE SYSTEMS
           </p>
-          <p className="text-primary-foreground/50 text-xs">Crafted with precision in Lagos, Nigeria</p>
         </div>
       </div>
     </footer>
