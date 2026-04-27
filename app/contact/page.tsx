@@ -8,8 +8,8 @@ import Cal, { getCalApi } from "@calcom/embed-react";
 export default function ContactPage() {
   useEffect(() => {
     (async function () {
-      const cal = await getCalApi({"namespace":"30min"});
-      cal("ui", {"hideEventTypeDetails":false,"layout":"month_view"});
+      const cal = await getCalApi({ "namespace": "30min" });
+      cal("ui", { "hideEventTypeDetails": false, "layout": "month_view" });
     })();
   }, []);
 
@@ -36,16 +36,16 @@ export default function ContactPage() {
               <Cal
                 namespace="30min"
                 calLink="pinheirojide/30min"
-                style={{width:"100%",height:"100%",overflow:"scroll"}}
-                config={{"layout":"month_view"}}
+                style={{ width: "100%", height: "100%", overflow: "scroll" }}
+                config={{ "layout": "month_view" }}
               />
             </div>
             <div>
               <div className="bg-secondary p-8 rounded-lg mb-8">
                 <h3 className="font-semibold text-lg mb-4">Prefer email?</h3>
-                <a href="mailto:jide.pinheiro@gmail.com" className="flex items-center gap-3 text-foreground hover:underline">
+                <a href="mailto:hello@pasive.co" className="flex items-center gap-3 text-foreground hover:underline">
                   <Mail className="w-5 h-5" />
-                  jide.pinheiro@gmail.com
+                  hello@pasive.co
                 </a>
               </div>
               <div className="bg-secondary p-8 rounded-lg mb-8">
