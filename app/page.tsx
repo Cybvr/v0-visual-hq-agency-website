@@ -59,7 +59,7 @@ export default function HomePage() {
               </h2>
             </div>
 
-            <div className="mx-auto mt-10 grid max-w-4xl grid-cols-3 gap-3 sm:mt-14">
+            <div className="mx-auto mt-10 grid max-w-4xl grid-cols-2 gap-3 sm:mt-14 md:grid-cols-4">
               {products.map((product) => (
                 <Link
                   key={product.name}

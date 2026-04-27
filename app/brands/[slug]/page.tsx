@@ -46,14 +46,22 @@ export default async function BrandDetailPage({ params }: { params: Promise<{ sl
               <p className="text-sm font-semibold uppercase tracking-[0.24em] text-muted-foreground">
                 {item.product}
               </p>
-              <h1 className="mt-5 text-balance text-5xl font-semibold tracking-normal md:text-7xl">
+              <h1 
+                className="mt-5 text-balance text-5xl font-semibold tracking-normal md:text-7xl"
+                style={{ color: item.color }}
+              >
                 {item.name}
               </h1>
               <p className="mt-8 text-xl leading-8 text-muted-foreground max-w-xl">
-                {item.description}
+                {item.content || item.description}
               </p>
               <div className="mt-10">
-                <Button asChild size="lg" className="rounded-full px-8">
+                <Button 
+                  asChild 
+                  size="lg" 
+                  className="rounded-full px-8 text-white border-none"
+                  style={{ backgroundColor: item.color }}
+                >
                   {item.websiteUrl.startsWith("/") ? (
                     <Link href={item.websiteUrl}>
                       {item.slug === "visualhq" ? "View Portfolio" : "Visit Website"}
@@ -70,11 +78,19 @@ export default async function BrandDetailPage({ params }: { params: Promise<{ sl
             </div>
 
             <div className="relative aspect-[4/3] w-full overflow-hidden rounded-[2.5rem] bg-secondary/30 border border-border">
-              <div className="absolute inset-0 flex items-center justify-center">
-                <p className="text-sm font-medium text-muted-foreground uppercase tracking-widest">Brand Showcase</p>
-              </div>
-              {/* If we had a showcase image, it would go here */}
-              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-50" />
+              {item.screenshot ? (
+                <Image
+                  src={item.screenshot}
+                  alt={`${item.name} screenshot`}
+                  fill
+                  className="object-cover transition-transform duration-500 hover:scale-105"
+                />
+              ) : (
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <p className="text-sm font-medium text-muted-foreground uppercase tracking-widest">Brand Showcase</p>
+                </div>
+              )}
+              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-50 pointer-events-none" />
             </div>
           </div>
 
