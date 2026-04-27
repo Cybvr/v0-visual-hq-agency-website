@@ -122,7 +122,7 @@ export function Footer() {
             </a>
             <div className="flex items-start gap-2">
               <MapPin className="mt-0.5 size-4 flex-shrink-0" />
-              <span>Polystar 2nd Roundabout, Lekki Phase 1, Lagos 105102, Nigeria</span>
+              <span>5 Ado Ibrahim Street, Sabo, Yaba</span>
             </div>
             <div className="flex items-start gap-2">
               <MapPin className="mt-0.5 size-4 flex-shrink-0" />

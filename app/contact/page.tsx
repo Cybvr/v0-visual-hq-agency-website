@@ -52,7 +52,7 @@ export default function ContactPage() {
                 <h3 className="font-semibold text-lg mb-4">Location</h3>
                 <div className="flex items-start gap-3 text-muted-foreground">
                   <MapPin className="w-5 h-5 flex-shrink-0 mt-0.5" />
-                  <span>Polystar 2nd Roundabout, Lekki Phase 1, Lagos 105102, Nigeria</span>
+                  <span>5 Ado Ibrahim Street, Sabo, Yaba</span>
                 </div>
               </div>
               <div className="p-8 border border-border rounded-lg">
