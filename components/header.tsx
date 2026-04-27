@@ -1,25 +1,23 @@
 "use client"
 
 import Link from "next/link"
+import Image from "next/image"
 import { useState } from "react"
 import { Menu, X } from "lucide-react"
 
 const navigation = [
-  { name: "Products", href: "/#products" },
-  { name: "Impact", href: "/#impact" },
-  { name: "AI", href: "/#ai" },
-  { name: "Careers", href: "/#careers" },
-  { name: "Contact", href: "/contact" },
+  { name: "Company", href: "/#company" },
+  { name: "Portfolio", href: "/#portfolio" },
+  { name: "Capabilities", href: "/#capabilities" },
+  { name: "Industries", href: "/#industries" },
+  { name: "Careers", href: "https://pasive.co/jobs" },
+  { name: "News", href: "/#news" },
 ]
 
-function CoreNineWordmark() {
+function VisualCoreNineWordmark() {
   return (
     <span className="flex items-center gap-3">
-      <span className="grid grid-cols-3 gap-1" aria-hidden="true">
-        {Array.from({ length: 9 }).map((_, index) => (
-          <span key={index} className="block size-1.5 rounded-[2px] bg-foreground" />
-        ))}
-      </span>
+      <Image src="/visualhqlogo.svg" alt="" width={28} height={28} className="size-7" priority />
       <span className="text-base font-semibold tracking-tight">VisualCoreNine</span>
     </span>
   )
@@ -32,15 +30,15 @@ export function Header() {
     <header className="fixed left-0 right-0 top-0 z-50 border-b border-border/70 bg-background/90 backdrop-blur-md">
       <nav className="mx-auto flex max-w-7xl items-center justify-between px-6 py-5">
         <Link href="/" aria-label="VisualCoreNine home">
-          <CoreNineWordmark />
+          <VisualCoreNineWordmark />
         </Link>
 
-        <div className="hidden items-center gap-8 md:flex">
+        <div className="hidden items-center gap-5 md:flex">
           {navigation.map((item) => (
             <Link
               key={item.name}
               href={item.href}
-              className="text-xs font-semibold uppercase tracking-[0.24em] text-foreground transition-colors hover:text-primary"
+              className="text-xs font-semibold uppercase tracking-[0.18em] text-foreground transition-colors hover:text-primary"
             >
               {item.name}
             </Link>

@@ -1,17 +1,20 @@
 import Link from "next/link"
+import Image from "next/image"
 import { Mail, MapPin } from "lucide-react"
 
 const productLinks = [
   { name: "VisualHQ", href: "/about" },
-  { name: "Passive", href: "https://pasive.co" },
+  { name: "Pasive", href: "https://pasive.co" },
   { name: "Juju", href: "https://jujuapp.co" },
 ]
 
 const companyLinks = [
-  { name: "About", href: "/about" },
-  { name: "Portfolio", href: "/portfolio" },
-  { name: "Pricing", href: "/pricing" },
-  { name: "Contact", href: "/contact" },
+  { name: "Company", href: "/#company" },
+  { name: "Portfolio", href: "/#portfolio" },
+  { name: "Capabilities", href: "/#capabilities" },
+  { name: "Industries", href: "/#industries" },
+  { name: "Careers", href: "https://pasive.co/jobs" },
+  { name: "News", href: "/#news" },
 ]
 
 export function Footer() {
@@ -21,11 +24,13 @@ export function Footer() {
         <div className="grid grid-cols-1 gap-12 md:grid-cols-4">
           <div className="md:col-span-2">
             <Link href="/" className="inline-flex items-center gap-3" aria-label="VisualCoreNine home">
-              <span className="grid grid-cols-3 gap-1" aria-hidden="true">
-                {Array.from({ length: 9 }).map((_, index) => (
-                  <span key={index} className="block size-1.5 rounded-[2px] bg-primary-foreground" />
-                ))}
-              </span>
+              <Image
+                src="/visualhqlogo.svg"
+                alt=""
+                width={30}
+                height={30}
+                className="size-7 brightness-0 invert"
+              />
               <span className="text-lg font-semibold tracking-tight">VisualCoreNine</span>
             </Link>
             <p className="mt-5 max-w-md text-sm leading-6 text-primary-foreground/70">

@@ -1,9 +1,16 @@
 import Link from "next/link"
-import { ArrowRight, ArrowUpRight, Bot, BriefcaseBusiness, Code2, Handshake, Sparkles } from "lucide-react"
+import { ArrowRight, ArrowUpRight, BriefcaseBusiness, Building2, Code2, Newspaper, Sparkles } from "lucide-react"
 
 import { Footer } from "@/components/footer"
 import { Header } from "@/components/header"
 import { Button } from "@/components/ui/button"
+import { getCapabilities } from "@/lib/capabilities"
+import { getCompanyPortfolioItems } from "@/lib/company-portfolio"
+import { getIndustries } from "@/lib/industries"
+
+const capabilities = getCapabilities()
+const companyPortfolioItems = getCompanyPortfolioItems()
+const industries = getIndustries()
 
 const products = [
   {
@@ -19,16 +26,16 @@ const products = [
     ],
   },
   {
-    name: "Passive",
+    name: "Pasive",
     href: "https://pasive.co",
-    description: "Automation and operating tools for businesses that want calmer, more repeatable growth.",
+    description: "Ecommerce tools for businesses that need clearer storefronts, smoother ordering, and better sales flows.",
     icon: BriefcaseBusiness,
     links: [],
   },
   {
     name: "Juju",
     href: "https://jujuapp.co",
-    description: "AI-powered visual creation for teams and creators shaping new visual worlds.",
+    description: "AI Marketing Suite for teams creating campaigns, content, and growth workflows with sharper speed.",
     icon: Sparkles,
     links: [],
   },
@@ -36,18 +43,11 @@ const products = [
 
 const companyFocus = [
   {
-    id: "impact",
-    title: "Impact",
+    id: "company",
+    title: "Company",
     description:
-      "We build practical software systems for founders, operators, and teams that need technology to make work more durable.",
-    icon: Handshake,
-  },
-  {
-    id: "ai",
-    title: "AI",
-    description:
-      "We use AI where it improves delivery, automation, creative output, and the quality of business operations.",
-    icon: Bot,
+      "VisualCoreNine is the mother brand for a focused ecosystem of software, automation, and AI-enabled products.",
+    icon: Building2,
   },
   {
     id: "careers",
@@ -55,6 +55,13 @@ const companyFocus = [
     description:
       "VisualCoreNine is shaped as a small, product-minded team for builders who care about systems, taste, and execution.",
     icon: BriefcaseBusiness,
+  },
+  {
+    id: "news",
+    title: "News",
+    description:
+      "Updates from the VisualCoreNine ecosystem, including product launches, company notes, and new work from VisualHQ.",
+    icon: Newspaper,
   },
 ]
 
@@ -74,7 +81,7 @@ export default function HomePage() {
       <Header />
 
       <main>
-        <section className="flex min-h-screen flex-col px-6 pb-8 pt-18">
+        <section className="flex min-h-screen flex-col px-6 pb-8 pt-28">
           <div className="mx-auto flex w-full max-w-7xl flex-1 flex-col items-center justify-center text-center">
 
             <h1 className="mt-5 max-w-4xl text-balance text-4xl font-semibold tracking-normal md:text-6xl lg:text-7xl">
@@ -149,6 +156,77 @@ export default function HomePage() {
                     )}
                   </div>
                   <ArrowUpRight className="size-8 transition-transform group-hover:-translate-y-1 group-hover:translate-x-1" />
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section id="capabilities" className="scroll-mt-24 px-6 py-24">
+          <div className="mx-auto max-w-7xl">
+            <div className="grid gap-10 md:grid-cols-[0.8fr_1.2fr] md:items-start">
+              <div>
+                <p className="text-sm font-semibold uppercase tracking-[0.24em] text-muted-foreground">
+                  Capabilities
+                </p>
+                <h2 className="mt-4 text-balance text-4xl font-semibold tracking-normal md:text-5xl">
+                  What the ecosystem knows how to build.
+                </h2>
+              </div>
+              <div className="grid gap-4 sm:grid-cols-2">
+                {capabilities.map((capability) => (
+                  <div key={capability.title} className="border-t border-border pt-6">
+                    <h3 className="text-xl font-semibold">{capability.title}</h3>
+                    <p className="mt-3 text-sm leading-6 text-muted-foreground">{capability.description}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="industries" className="scroll-mt-24 bg-secondary px-6 py-24">
+          <div className="mx-auto max-w-7xl">
+            <div className="mx-auto max-w-3xl text-center">
+              <p className="text-sm font-semibold uppercase tracking-[0.24em] text-muted-foreground">Industries</p>
+              <h2 className="mt-4 text-balance text-4xl font-semibold tracking-normal md:text-5xl">
+                Built for operators, founders, and creative teams.
+              </h2>
+            </div>
+            <div className="mt-14 grid gap-4 md:grid-cols-4">
+              {industries.map((industry) => (
+                <div key={industry.name} className="rounded-[2rem] bg-background p-7">
+                  <h3 className="text-xl font-semibold">{industry.name}</h3>
+                  <p className="mt-4 text-sm leading-6 text-muted-foreground">{industry.description}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section id="portfolio" className="scroll-mt-24 px-6 py-24">
+          <div className="mx-auto max-w-7xl">
+            <div className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
+              <div>
+                <p className="text-sm font-semibold uppercase tracking-[0.24em] text-muted-foreground">Portfolio</p>
+                <h2 className="mt-4 max-w-3xl text-balance text-4xl font-semibold tracking-normal md:text-5xl">
+                  The VisualCoreNine portfolio is the product ecosystem.
+                </h2>
+              </div>
+              <Button variant="outline" className="rounded-full bg-transparent" asChild>
+                <Link href="/portfolio">
+                  VisualHQ work
+                  <ArrowRight className="size-4" />
+                </Link>
+              </Button>
+            </div>
+            <div className="mt-14 grid gap-5 md:grid-cols-3">
+              {companyPortfolioItems.map((item) => (
+                <Link key={item.name} href={item.href} className="group rounded-[2rem] border border-border p-7">
+                  <p className="text-sm font-semibold uppercase tracking-[0.18em] text-primary">{item.product}</p>
+                  <h3 className="mt-5 text-3xl font-semibold">{item.name}</h3>
+                  <p className="mt-4 text-sm leading-6 text-muted-foreground">{item.description}</p>
+                  <ArrowUpRight className="mt-8 size-7 transition-transform group-hover:-translate-y-1 group-hover:translate-x-1" />
                 </Link>
               ))}
             </div>
