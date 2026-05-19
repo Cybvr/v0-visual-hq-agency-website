@@ -41,8 +41,8 @@ export default function PortfolioPage() {
       <section className="pt-32 pb-12 px-12 md:px-20">
         <div className="max-w-7xl mx-auto">
           <div className="max-w-3xl">
-            <p className="text-sm font-medium text-muted-foreground mb-4">Portfolio</p>
-            <h1 className="font-serif text-4xl md:text-6xl font-bold tracking-tight leading-[1.1]">Our Work</h1>
+            <p className="text-sm font-semibold uppercase tracking-[0.24em] text-muted-foreground">Portfolio</p>
+            <h1 className="mt-5 max-w-4xl text-balance text-5xl font-semibold tracking-normal md:text-7xl">Our Work</h1>
             <p className="mt-6 text-lg text-muted-foreground">
               A selection of projects where we've helped brands establish their identity and build their digital
               presence.
@@ -60,7 +60,6 @@ export default function PortfolioPage() {
                 key={category}
                 variant={activeFilter === category ? "default" : "outline"}
                 size="sm"
-                className="font-serif"
                 onClick={() => setActiveFilter(category)}
               >
                 {category}
@@ -92,7 +91,7 @@ export default function PortfolioPage() {
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground mb-1">{project.category?.join(", ")}</p>
-                    <h3 className="font-serif group-hover:underline text-3xl font-medium">{project.title}</h3>
+                    <h3 className="text-2xl font-semibold mt-3 group-hover:text-primary transition-colors">{project.title}</h3>
                     <div className="flex flex-wrap gap-2 mt-3">
                       {project.technologies?.slice(0, 4).map((tech) => (
                         <span key={tech} className="text-xs bg-secondary px-2 py-1 rounded">
@@ -111,11 +110,11 @@ export default function PortfolioPage() {
       {/* CTA Section */}
       <section className="py-20 px-12 bg-foreground text-primary-foreground md:px-20">
         <div className="max-w-7xl mx-auto text-center">
-          <h2 className="font-serif text-3xl md:text-4xl font-bold mb-4">Have a project in mind?</h2>
+          <h2 className="text-3xl md:text-4xl font-semibold tracking-tight mb-4">Have a project in mind?</h2>
           <p className="text-primary-foreground/70 max-w-xl mx-auto mb-8">
             We'd love to hear about it. Let's discuss how we can help bring your vision to life.
           </p>
-          <Button size="lg" variant="secondary" className="font-serif" asChild>
+          <Button size="lg" variant="secondary" asChild>
             <a href="/contact">Start a Project</a>
           </Button>
         </div>
