@@ -97,7 +97,7 @@ export default function PortfolioPage() {
                         />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-base text-muted-foreground leading-relaxed group-hover:text-foreground transition-colors line-clamp-1">
+                        <p className="text-base font-semibold text-foreground leading-relaxed group-hover:text-primary transition-colors line-clamp-1">
                           {project.description && project.description.length > 60
                             ? `${project.description.slice(0, 60)}...`
                             : project.description}
