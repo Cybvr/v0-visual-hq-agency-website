@@ -11,7 +11,7 @@ export default function CapabilitiesPage() {
   return (
     <div className="min-h-screen">
       <Header />
-      <main className="px-6 pb-24 pt-32">
+      <main className="px-12 pb-24 pt-32 md:px-20">
         <div className="mx-auto max-w-7xl">
           <p className="text-sm font-semibold uppercase tracking-[0.24em] text-muted-foreground">Capabilities</p>
           <h1 className="mt-5 max-w-4xl text-balance text-5xl font-semibold tracking-normal md:text-7xl">

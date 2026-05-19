@@ -20,7 +20,7 @@ export default async function CapabilityDetailPage({ params }: { params: Promise
   return (
     <div className="min-h-screen">
       <Header />
-      <main className="px-6 pb-24 pt-32">
+      <main className="px-12 pb-24 pt-32 md:px-20">
         <div className="mx-auto max-w-4xl">
           <Button variant="ghost" size="sm" asChild>
             <Link href="/capabilities">
