@@ -45,7 +45,7 @@ export default function SingleProjectPage() {
     return (
       <div className="min-h-screen">
         <Header />
-        <div className="pt-32 pb-20 px-6 text-center">
+        <div className="pt-32 pb-20 px-12 text-center md:px-20">
           <h1 className="font-serif text-4xl font-bold mb-4">Project Not Found</h1>
           <p className="text-muted-foreground mb-8">The project you're looking for doesn't exist.</p>
           <Button asChild>
@@ -65,7 +65,7 @@ export default function SingleProjectPage() {
       <Header />
 
       {/* Back Button */}
-      <section className="pt-28 px-6">
+      <section className="pt-28 px-12 md:px-20">
         <div className="max-w-7xl mx-auto">
           <Button variant="ghost" size="sm" asChild>
             <Link href="/portfolio">
@@ -77,7 +77,7 @@ export default function SingleProjectPage() {
       </section>
 
       {/* Hero Image */}
-      <section className="pt-6 pb-12 px-6">
+      <section className="pt-6 pb-12 px-12 md:px-20">
         <div className="max-w-7xl mx-auto">
           <div className="aspect-[16/9] bg-muted rounded-lg overflow-hidden">
             <img
@@ -90,7 +90,7 @@ export default function SingleProjectPage() {
       </section>
 
       {/* Project Info */}
-      <section className="px-6 pb-12">
+      <section className="px-12 pb-12 md:px-20">
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
             <div className="lg:col-span-2">
@@ -155,7 +155,7 @@ export default function SingleProjectPage() {
 
       {/* Gallery */}
       {project.gallery && project.gallery.length > 0 && (
-        <section className="px-6 pb-20">
+        <section className="px-12 pb-20 md:px-20">
           <div className="max-w-7xl mx-auto">
             <h2 className="font-serif text-2xl font-bold mb-8">Project Gallery</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -174,7 +174,7 @@ export default function SingleProjectPage() {
       )}
 
       {/* CTA */}
-      <section className="py-20 px-6 bg-foreground text-primary-foreground">
+      <section className="py-20 px-12 bg-foreground text-primary-foreground md:px-20">
         <div className="max-w-7xl mx-auto text-center">
           <h2 className="font-serif text-3xl md:text-4xl font-bold mb-4">Like what you see?</h2>
           <p className="text-primary-foreground/70 max-w-xl mx-auto mb-8">

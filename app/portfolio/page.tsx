@@ -38,7 +38,7 @@ export default function PortfolioPage() {
       <Header />
 
       {/* Hero Section */}
-      <section className="pt-32 pb-12 px-6">
+      <section className="pt-32 pb-12 px-12 md:px-20">
         <div className="max-w-7xl mx-auto">
           <div className="max-w-3xl">
             <p className="text-sm font-medium text-muted-foreground mb-4">Portfolio</p>
@@ -52,7 +52,7 @@ export default function PortfolioPage() {
       </section>
 
       {/* Filter */}
-      <section className="px-6 pb-12">
+      <section className="px-12 pb-12 md:px-20">
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-wrap gap-2">
             {categories.map((category) => (
@@ -71,7 +71,7 @@ export default function PortfolioPage() {
       </section>
 
       {/* Projects Grid */}
-      <section className="px-6 pb-20">
+      <section className="px-12 pb-20 md:px-20">
         <div className="max-w-7xl mx-auto">
           {loading ? (
             <div className="flex items-center justify-center py-20">
@@ -109,7 +109,7 @@ export default function PortfolioPage() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 px-6 bg-foreground text-primary-foreground">
+      <section className="py-20 px-12 bg-foreground text-primary-foreground md:px-20">
         <div className="max-w-7xl mx-auto text-center">
           <h2 className="font-serif text-3xl md:text-4xl font-bold mb-4">Have a project in mind?</h2>
           <p className="text-primary-foreground/70 max-w-xl mx-auto mb-8">
