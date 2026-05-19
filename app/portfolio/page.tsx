@@ -4,7 +4,7 @@ import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
 import { Button } from "@/components/ui/button"
 import { useState, useEffect } from "react"
-import { Loader2 } from "lucide-react"
+import { Loader2, Folder, Wrench } from "lucide-react"
 import { getPortfolioProjects, type PortfolioProject } from "@/lib/portfolio"
 import Link from "next/link"
 
@@ -12,6 +12,7 @@ const categories = ["All", "Branding", "Web Development", "Presentation Design"]
 
 export default function PortfolioPage() {
   const [activeFilter, setActiveFilter] = useState("All")
+  const [currentPage, setCurrentPage] = useState(1)
   const [projects, setProjects] = useState<PortfolioProject[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -33,6 +34,13 @@ export default function PortfolioPage() {
   const filteredProjects =
     activeFilter === "All" ? projects : projects.filter((p) => p.category?.includes(activeFilter))
 
+  const ITEMS_PER_PAGE = 8
+  const totalPages = Math.ceil(filteredProjects.length / ITEMS_PER_PAGE)
+  const paginatedProjects = filteredProjects.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  )
+
   return (
     <div className="min-h-screen">
       <Header />
@@ -41,11 +49,8 @@ export default function PortfolioPage() {
       <section className="pt-32 pb-12 px-12 md:px-20">
         <div className="max-w-7xl mx-auto">
           <div className="max-w-3xl">
-            <p className="text-sm font-semibold uppercase tracking-[0.24em] text-muted-foreground">Portfolio</p>
-            <h1 className="mt-5 max-w-4xl text-balance text-5xl font-semibold tracking-normal md:text-7xl">Our Work</h1>
-            <p className="mt-6 text-lg text-muted-foreground">
-              A selection of projects where we've helped brands establish their identity and build their digital
-              presence.
+            <p className="text-sm font-semibold uppercase tracking-[0.24em] text-muted-foreground">
+              Portfolio {!loading && `(${filteredProjects.length})`}
             </p>
           </div>
         </div>
@@ -79,30 +84,49 @@ export default function PortfolioPage() {
           ) : filteredProjects.length === 0 ? (
             <div className="text-center py-20 text-muted-foreground">No projects found.</div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <ul className="divide-y divide-border">
               {filteredProjects.map((project) => (
-                <Link href={`/portfolio/${project.slug}`} key={project.id} className="group cursor-pointer">
-                  <div className="aspect-[4/5] bg-muted rounded-lg overflow-hidden mb-4">
-                    <img
-                      src={project.imageUrl || "/placeholder.svg?height=500&width=700&query=project"}
-                      alt={project.title}
-                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                    />
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground mb-1">{project.category?.join(", ")}</p>
-                    <h3 className="text-2xl font-semibold mt-3 group-hover:text-primary transition-colors">{project.title}</h3>
-                    <div className="flex flex-wrap gap-2 mt-3">
-                      {project.technologies?.slice(0, 4).map((tech) => (
-                        <span key={tech} className="text-xs bg-secondary px-2 py-1 rounded">
-                          {tech}
-                        </span>
-                      ))}
+                <li key={project.id}>
+                  <Link href={`/portfolio/${project.slug}`} className="block py-4 group">
+                    <div className="flex flex-col md:flex-row gap-4 md:items-center">
+                      <div className="w-24 h-16 bg-muted overflow-hidden shrink-0">
+                        <img
+                          src={project.imageUrl || "/placeholder.svg?height=300&width=480&query=project"}
+                          alt={project.title}
+                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                        />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-base text-muted-foreground leading-relaxed group-hover:text-foreground transition-colors line-clamp-1">
+                          {project.description && project.description.length > 60
+                            ? `${project.description.slice(0, 60)}...`
+                            : project.description}
+                        </p>
+                        <div className="mt-2 flex flex-wrap items-center gap-y-1 gap-x-6 text-xs text-muted-foreground/80">
+                          <span className="flex items-center gap-1.5">
+                            <Folder className="size-3.5" />
+                            <span>
+                              {project.category && project.category.length > 2
+                                ? `${project.category.slice(0, 2).join(", ")} +${project.category.length - 2} more`
+                                : project.category?.join(", ")}
+                            </span>
+                          </span>
+                          <span className="hidden md:inline text-muted-foreground/30">•</span>
+                          <span className="flex items-center gap-1.5">
+                            <Wrench className="size-3.5" />
+                            <span>
+                              {project.technologies && project.technologies.length > 2
+                                ? `${project.technologies.slice(0, 2).join(", ")} +${project.technologies.length - 2} more`
+                                : project.technologies?.join(", ")}
+                            </span>
+                          </span>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                </Link>
+                  </Link>
+                </li>
               ))}
-            </div>
+            </ul>
           )}
         </div>
       </section>
