@@ -84,10 +84,10 @@ export default function PortfolioPage() {
           ) : filteredProjects.length === 0 ? (
             <div className="text-center py-20 text-muted-foreground">No projects found.</div>
           ) : (
-            <ul className="divide-y divide-border">
+            <ul className="grid grid-cols-1 md:grid-cols-2 gap-x-16 gap-y-8">
               {filteredProjects.map((project) => (
-                <li key={project.id}>
-                  <Link href={`/portfolio/${project.slug}`} className="block py-4 group">
+                <li key={project.id} className="border-b border-border pb-4">
+                  <Link href={`/portfolio/${project.slug}`} className="block group">
                     <div className="flex flex-col md:flex-row gap-4 md:items-center">
                       <div className="w-24 h-16 bg-muted overflow-hidden shrink-0">
                         <img
