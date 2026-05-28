@@ -14,6 +14,9 @@ import { Switch } from "@/components/ui/switch"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { ArrowLeft, Loader2, X } from "lucide-react"
 import { getPortfolioProject, updatePortfolioProject } from "@/lib/portfolio"
+import { Header } from "@/components/header"
+import { Footer } from "@/components/footer"
+import { ImageDropzone, GalleryDropzone } from "@/components/image-dropzone"
 
 const CATEGORIES = ["Branding", "Web Development", "Presentation Design"]
 
@@ -42,7 +45,6 @@ export default function EditProjectPage({ params }: { params: Promise<{ id: stri
     tags: [] as string[],
     technologies: [] as string[],
   })
-  const [newGalleryUrl, setNewGalleryUrl] = useState("")
   const [newTech, setNewTech] = useState("")
 
   useEffect(() => {
@@ -93,17 +95,6 @@ export default function EditProjectPage({ params }: { params: Promise<{ id: stri
     }))
   }
 
-  function addGalleryImage() {
-    if (newGalleryUrl.trim()) {
-      setFormData((prev) => ({ ...prev, gallery: [...prev.gallery, newGalleryUrl.trim()] }))
-      setNewGalleryUrl("")
-    }
-  }
-
-  function removeGalleryImage(index: number) {
-    setFormData((prev) => ({ ...prev, gallery: prev.gallery.filter((_, i) => i !== index) }))
-  }
-
   function addTechnology() {
     if (newTech.trim()) {
       setFormData((prev) => ({ ...prev, technologies: [...prev.technologies, newTech.trim()] }))
@@ -138,16 +129,15 @@ export default function EditProjectPage({ params }: { params: Promise<{ id: stri
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b">
-        <div className="max-w-4xl mx-auto px-6 py-4 flex items-center gap-4">
+      <Header />
+
+      <main className="max-w-4xl mx-auto px-4 sm:px-6 pt-28 pb-12">
+        <div className="flex items-center gap-4 mb-8">
           <Link href="/admin" className="text-muted-foreground hover:text-foreground transition-colors">
             <ArrowLeft className="w-5 h-5" />
           </Link>
           <h1 className="font-semibold text-xl">Edit Project</h1>
         </div>
-      </header>
-
-      <main className="max-w-4xl mx-auto px-6 py-8">
         <form onSubmit={handleSubmit} className="space-y-6">
           <Card>
             <CardHeader>
@@ -203,53 +193,23 @@ export default function EditProjectPage({ params }: { params: Promise<{ id: stri
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid gap-4 md:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="imageUrl">Cover Image URL</Label>
-                  <Input
-                    id="imageUrl"
-                    value={formData.imageUrl}
-                    onChange={(e) => handleChange("imageUrl", e.target.value)}
-                    placeholder="https://..."
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="logoUrl">Logo URL</Label>
-                  <Input
-                    id="logoUrl"
-                    value={formData.logoUrl}
-                    onChange={(e) => handleChange("logoUrl", e.target.value)}
-                    placeholder="https://..."
-                  />
-                </div>
+                <ImageDropzone
+                  label="Cover Image"
+                  value={formData.imageUrl}
+                  onChange={(url) => handleChange("imageUrl", url)}
+                />
+                <ImageDropzone
+                  label="Logo"
+                  value={formData.logoUrl}
+                  onChange={(url) => handleChange("logoUrl", url)}
+                />
               </div>
               <div className="space-y-2">
                 <Label>Gallery Images</Label>
-                <div className="flex gap-2">
-                  <Input
-                    value={newGalleryUrl}
-                    onChange={(e) => setNewGalleryUrl(e.target.value)}
-                    placeholder="Image URL"
-                  />
-                  <Button type="button" variant="outline" onClick={addGalleryImage}>
-                    Add
-                  </Button>
-                </div>
-                {formData.gallery.length > 0 && (
-                  <div className="flex flex-wrap gap-2 mt-2">
-                    {formData.gallery.map((url, i) => (
-                      <div key={i} className="relative group">
-                        <img src={url || "/placeholder.svg"} alt="" className="w-16 h-16 object-cover rounded" />
-                        <button
-                          type="button"
-                          onClick={() => removeGalleryImage(i)}
-                          className="absolute -top-1 -right-1 w-5 h-5 bg-destructive text-destructive-foreground rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                        >
-                          <X className="w-3 h-3" />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
+                <GalleryDropzone
+                  value={formData.gallery}
+                  onChange={(urls) => setFormData((prev) => ({ ...prev, gallery: urls }))}
+                />
               </div>
             </CardContent>
           </Card>
@@ -398,6 +358,7 @@ export default function EditProjectPage({ params }: { params: Promise<{ id: stri
           </div>
         </form>
       </main>
+      <Footer />
     </div>
   )
 }

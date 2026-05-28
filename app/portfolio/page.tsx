@@ -4,7 +4,7 @@ import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
 import { Button } from "@/components/ui/button"
 import { useState, useEffect } from "react"
-import { Loader2, Folder, Wrench } from "lucide-react"
+import { Loader2 } from "lucide-react"
 import { getPortfolioProjects, type PortfolioProject } from "@/lib/portfolio"
 import Link from "next/link"
 
@@ -59,16 +59,17 @@ export default function PortfolioPage() {
       {/* Filter */}
       <section className="px-12 pb-12 md:px-20">
         <div className="max-w-7xl mx-auto">
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-6">
             {categories.map((category) => (
-              <Button
+              <button
                 key={category}
-                variant={activeFilter === category ? "default" : "outline"}
-                size="sm"
                 onClick={() => setActiveFilter(category)}
+                className={`text-2xl font-bold md:text-3xl [font-family:var(--font-outfit)] transition-colors ${
+                  activeFilter === category ? "text-foreground" : "text-muted-foreground hover:text-foreground"
+                }`}
               >
                 {category}
-              </Button>
+              </button>
             ))}
           </div>
         </div>
@@ -84,7 +85,7 @@ export default function PortfolioPage() {
           ) : filteredProjects.length === 0 ? (
             <div className="text-center py-20 text-muted-foreground">No projects found.</div>
           ) : (
-            <ul className="grid grid-cols-1 md:grid-cols-2 gap-x-16 gap-y-8">
+            <ul className="grid grid-cols-1 gap-y-8">
               {filteredProjects.map((project) => (
                 <li key={project.id} className="border-b border-border pb-4">
                   <Link href={`/portfolio/${project.slug}`} className="block group">
@@ -97,30 +98,9 @@ export default function PortfolioPage() {
                         />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-base font-semibold text-foreground leading-relaxed group-hover:text-primary transition-colors line-clamp-1">
-                          {project.description && project.description.length > 60
-                            ? `${project.description.slice(0, 60)}...`
-                            : project.description}
+                        <p className="text-2xl font-bold text-foreground group-hover:text-primary transition-colors md:text-3xl line-clamp-1 [font-family:var(--font-outfit)]">
+                          {project.description}
                         </p>
-                        <div className="mt-2 flex flex-wrap items-center gap-y-1 gap-x-6 text-xs text-muted-foreground/80">
-                          <span className="flex items-center gap-1.5">
-                            <Folder className="size-3.5" />
-                            <span>
-                              {project.category && project.category.length > 2
-                                ? `${project.category.slice(0, 2).join(", ")} +${project.category.length - 2} more`
-                                : project.category?.join(", ")}
-                            </span>
-                          </span>
-                          <span className="hidden md:inline text-muted-foreground/30">•</span>
-                          <span className="flex items-center gap-1.5">
-                            <Wrench className="size-3.5" />
-                            <span>
-                              {project.technologies && project.technologies.length > 2
-                                ? `${project.technologies.slice(0, 2).join(", ")} +${project.technologies.length - 2} more`
-                                : project.technologies?.join(", ")}
-                            </span>
-                          </span>
-                        </div>
                       </div>
                     </div>
                   </Link>

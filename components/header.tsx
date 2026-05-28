@@ -9,9 +9,9 @@ import { getBrandItems } from "@/lib/brands"
 
 const brands = getBrandItems()
 
-const brandNavItems = brands
+const productNavItems = brands
   .filter((item) => item.slug !== "visualhq")
-  .map((item) => ({ name: item.name, href: item.href }))
+  .map((item) => ({ name: item.name, href: item.href, description: item.description }))
 
 const consultingNavItems = [
   { name: "VisualHQ", href: "/visualhq", description: "Who we are and what we do." },
@@ -78,6 +78,7 @@ function DesktopHoverMenu({
 
 export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [productsOpen, setProductsOpen] = useState(false)
   const [consultingOpen, setConsultingOpen] = useState(false)
 
   return (
@@ -89,15 +90,13 @@ export function Header() {
           </Link>
 
           <div className="flex items-center gap-5">
-            {brandNavItems.map((item) => (
-              <Link
-                key={item.name}
-                href={item.href}
-                className="text-xs font-semibold uppercase tracking-[0.18em] text-foreground transition-colors hover:text-primary"
-              >
-                {item.name}
-              </Link>
-            ))}
+            <DesktopHoverMenu
+              label="Products"
+              items={productNavItems}
+              isOpen={productsOpen}
+              onOpen={() => setProductsOpen(true)}
+              onClose={() => setProductsOpen(false)}
+            />
             <DesktopHoverMenu
               label="Consulting"
               items={consultingNavItems}
@@ -130,17 +129,25 @@ export function Header() {
       {mobileMenuOpen && (
         <div className="border-b border-border bg-background md:hidden">
           <nav className="flex flex-col gap-1 px-6 pb-6">
-            {brandNavItems.map((item) => (
-              <Link
-                key={item.name}
-                href={item.href}
-                className="py-3 text-sm font-semibold uppercase tracking-[0.18em] text-foreground"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                {item.name}
-              </Link>
-            ))}
             <Accordion type="single" collapsible className="w-full">
+              <AccordionItem value="products" className="border-border/70">
+                <AccordionTrigger className="py-3 text-sm font-semibold uppercase tracking-[0.18em] text-foreground">
+                  Products
+                </AccordionTrigger>
+                <AccordionContent className="grid gap-1 pb-3">
+                  {productNavItems.map((item) => (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      className="flex flex-col items-start gap-1 rounded-xl px-3 py-2 text-left text-sm transition-colors hover:bg-secondary"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      <span className="font-semibold">{item.name}</span>
+                      <span className="text-xs leading-5 text-muted-foreground">{item.description}</span>
+                    </Link>
+                  ))}
+                </AccordionContent>
+              </AccordionItem>
               <AccordionItem value="consulting" className="border-border/70">
                 <AccordionTrigger className="py-3 text-sm font-semibold uppercase tracking-[0.18em] text-foreground">
                   Consulting
