@@ -13,18 +13,11 @@ const productLinks = [
   { name: "Juju", href: "/brands/juju" },
 ]
 
-const companyLinks = [
-  { name: "Company", href: "/#company" },
-  { name: "Brands", href: "/brands" },
-  { name: "Careers", href: "https://pasive.co/jobs" },
-  { name: "News", href: "/#news" },
-]
-
 export function Footer() {
   return (
     <footer className="bg-foreground text-primary-foreground">
       <div className="mx-auto max-w-7xl px-6 py-16">
-        <div className="grid grid-cols-1 gap-12 md:grid-cols-6">
+        <div className="grid grid-cols-1 gap-12 md:grid-cols-5">
           <div className="md:col-span-2">
             <Link href="/" className="inline-flex items-center gap-3" aria-label="VisualCoreNine home">
               <Image
@@ -44,27 +37,10 @@ export function Footer() {
 
           <div>
             <h4 className="mb-4 text-sm font-semibold uppercase tracking-[0.18em] text-primary-foreground/50">
-              Brands
+              Software
             </h4>
             <nav className="flex flex-col gap-3">
               {productLinks.map((item) => (
-                <Link
-                  key={item.name}
-                  href={item.href}
-                  className="text-sm text-primary-foreground/70 transition-colors hover:text-primary-foreground"
-                >
-                  {item.name}
-                </Link>
-              ))}
-            </nav>
-          </div>
-
-          <div>
-            <h4 className="mb-4 text-sm font-semibold uppercase tracking-[0.18em] text-primary-foreground/50">
-              Company
-            </h4>
-            <nav className="flex flex-col gap-3">
-              {companyLinks.map((item) => (
                 <Link
                   key={item.name}
                   href={item.href}

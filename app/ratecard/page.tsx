@@ -1,5 +1,6 @@
 import type { Metadata } from "next"
 import { CircleAlert, Globe, Mail, MapPin } from "lucide-react"
+import { Footer } from "@/components/footer"
 
 export const metadata: Metadata = {
   title: "VisualHQ Rate Card",
@@ -589,8 +590,9 @@ export default function RateCardPage() {
         }
       `}</style>
 
-      <main className="ratecard-page">
-        <div className="page">
+      <div className="min-h-screen bg-background">
+        <main className="ratecard-page">
+          <div className="page">
           <header className="header">
             <div className="brand-lockup">
               <img className="brand-logo" src="/visualhqlogo.svg" alt="VisualHQ" />
@@ -698,26 +700,28 @@ export default function RateCardPage() {
 
           <hr className="footer-rule" />
 
-          <footer className="footer">
-            <div className="footer-item">
-              <MapPin className="footer-icon" size={18} />
-              <span>Lagos and Middletown</span>
-            </div>
-            <div className="footer-divider" />
-            <div className="footer-item">
-              <Mail className="footer-icon" size={18} />
-              <a href="mailto:hello@visualhq.com">hello@visualhq.com</a>
-            </div>
-            <div className="footer-divider" />
-            <div className="footer-item">
-              <Globe className="footer-icon" size={18} />
-              <a href="https://visualhq.space" target="_blank" rel="noreferrer">
-                visualhq.space
-              </a>
-            </div>
-          </footer>
-        </div>
-      </main>
+            <footer className="footer">
+              <div className="footer-item">
+                <MapPin className="footer-icon" size={18} />
+                <span>Lagos and Middletown</span>
+              </div>
+              <div className="footer-divider" />
+              <div className="footer-item">
+                <Mail className="footer-icon" size={18} />
+                <a href="mailto:hello@visualhq.com">hello@visualhq.com</a>
+              </div>
+              <div className="footer-divider" />
+              <div className="footer-item">
+                <Globe className="footer-icon" size={18} />
+                <a href="https://visualhq.space" target="_blank" rel="noreferrer">
+                  visualhq.space
+                </a>
+              </div>
+            </footer>
+          </div>
+        </main>
+        <Footer />
+      </div>
     </>
   )
 }

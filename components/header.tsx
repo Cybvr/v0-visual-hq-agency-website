@@ -91,7 +91,7 @@ export function Header() {
 
           <div className="flex items-center gap-5">
             <DesktopHoverMenu
-              label="Products"
+              label="Software"
               items={productNavItems}
               isOpen={productsOpen}
               onOpen={() => setProductsOpen(true)}
@@ -132,7 +132,7 @@ export function Header() {
             <Accordion type="single" collapsible className="w-full">
               <AccordionItem value="products" className="border-border/70">
                 <AccordionTrigger className="py-3 text-sm font-semibold uppercase tracking-[0.18em] text-foreground">
-                  Products
+                  Software
                 </AccordionTrigger>
                 <AccordionContent className="grid gap-1 pb-3">
                   {productNavItems.map((item) => (
