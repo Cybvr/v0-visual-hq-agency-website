@@ -32,42 +32,42 @@ const customDevelopmentRows: ServiceRow[] = [
   {
     service: "MVP Web App",
     scope: "Up to 5 screens · 1 user role · frontend only",
-    price: { amount: 650000 },
+    price: { amount: 3000000 },
     timeline: "1 week",
     included: "Static frontend (no auth, DB or backend)",
   },
   {
     service: "Full Web App",
     scope: "Up to 12 screens · 2–3 roles · auth, DB, integrations",
-    price: { amount: 1200000 },
+    price: { amount: 10200000 },
     timeline: "2 weeks",
     included: "Frontend + backend + auth + DB + API integrations",
   },
   {
     service: "Custom Web App",
     scope: "Marketplaces, streaming, real-time, payments",
-    price: { amount: 2500000, prefix: "From " },
+    price: { amount: 24500000, prefix: "From " },
     timeline: "4+ weeks",
     included: "Scoped per project",
   },
   {
     service: "Add-on: Backend/API",
     scope: "Extends an existing build",
-    price: { amount: 400000 },
+    price: { amount: 2450000 },
     timeline: "3–5 days",
     included: "Auth, DB, endpoints",
   },
   {
     service: "Maintenance Retainer",
     scope: "Live site upkeep · Basic / Priority / Growth tiers",
-    price: { amount: 300000, prefix: "From ", suffix: "/mo" },
+    price: { amount: 630000, prefix: "From ", suffix: "/mo" },
     timeline: "Ongoing",
     included: "Updates, fixes & priority support",
   },
   {
     service: "Additional / Out-of-scope",
     scope: "Extra revisions & work beyond agreed scope",
-    price: { amount: 15000, suffix: "/hr" },
+    price: { amount: 90000, suffix: "/hr" },
     timeline: "As needed",
     included: "Billed hourly",
   },
@@ -77,28 +77,28 @@ const platformRows: ServiceRow[] = [
   {
     service: "Webflow Site",
     scope: "Up to 7 pages · CMS · responsive",
-    price: { amount: 700000 },
+    price: { amount: 2600000 },
     timeline: "3–5 days",
     included: "Design, build, CMS setup & launch",
   },
   {
     service: "Framer Site",
     scope: "Up to 7 pages · interactive & animated",
-    price: { amount: 600000 },
+    price: { amount: 2200000 },
     timeline: "2–4 days",
     included: "Design, animations & publish",
   },
   {
     service: "WordPress Site",
     scope: "Up to 7 pages · blog · custom theme",
-    price: { amount: 600000 },
+    price: { amount: 2200000 },
     timeline: "3–5 days",
     included: "Theme, plugins, SEO basics & launch",
   },
   {
     service: "Add-on: WooCommerce",
     scope: "E-commerce layer on WordPress",
-    price: { amount: 300000, prefix: "+" },
+    price: { amount: 900000, prefix: "+" },
     timeline: "+2–3 days",
     included: "Product catalogue, cart & checkout",
   },
@@ -114,7 +114,7 @@ const retainers: Array<{
   {
     flag: " ",
     name: "Basic",
-    amount: 300000,
+    amount: 630000,
     specs: [
       { strong: "5 hrs", rest: "of work / month" },
       { strong: "48-hour", rest: "response time" },
@@ -125,7 +125,7 @@ const retainers: Array<{
   {
     flag: "Most popular",
     name: "Priority",
-    amount: 500000,
+    amount: 1150000,
     featured: true,
     specs: [
       { strong: "12 hrs", rest: "of work / month" },
@@ -137,7 +137,7 @@ const retainers: Array<{
   {
     flag: " ",
     name: "Growth",
-    amount: 800000,
+    amount: 2050000,
     specs: [
       { strong: "25 hrs", rest: "of work / month" },
       { strong: "Same-day", rest: "response time" },
