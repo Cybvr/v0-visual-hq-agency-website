@@ -32,42 +32,42 @@ const customDevelopmentRows: ServiceRow[] = [
   {
     service: "MVP Web App",
     scope: "Up to 5 screens · 1 user role · frontend only",
-    price: { amount: 650000 },
+    price: { amount: 1632000 },
     timeline: "1 week",
     included: "Static frontend (no auth, DB or backend)",
   },
   {
     service: "Full Web App",
     scope: "Up to 12 screens · 2–3 roles · auth, DB, integrations",
-    price: { amount: 1200000 },
+    price: { amount: 3808000 },
     timeline: "2 weeks",
     included: "Frontend + backend + auth + DB + API integrations",
   },
   {
     service: "Custom Web App",
     scope: "Marketplaces, streaming, real-time, payments",
-    price: { amount: 2500000, prefix: "From " },
+    price: { amount: 6120000, prefix: "From " },
     timeline: "4+ weeks",
     included: "Scoped per project",
   },
   {
     service: "Add-on: Backend/API",
     scope: "Extends an existing build",
-    price: { amount: 400000 },
+    price: { amount: 1020000 },
     timeline: "3–5 days",
     included: "Auth, DB, endpoints",
   },
   {
     service: "Maintenance Retainer",
     scope: "Live site upkeep · Basic / Priority / Growth tiers",
-    price: { amount: 300000, prefix: "From ", suffix: "/mo" },
+    price: { amount: 340000, prefix: "From ", suffix: "/mo" },
     timeline: "Ongoing",
     included: "Updates, fixes & priority support",
   },
   {
     service: "Additional / Out-of-scope",
     scope: "Extra revisions & work beyond agreed scope",
-    price: { amount: 15000, suffix: "/hr" },
+    price: { amount: 54400, suffix: "/hr" },
     timeline: "As needed",
     included: "Billed hourly",
   },
@@ -77,28 +77,28 @@ const platformRows: ServiceRow[] = [
   {
     service: "Webflow Site",
     scope: "Up to 7 pages · CMS · responsive",
-    price: { amount: 700000 },
+    price: { amount: 1292000 },
     timeline: "3–5 days",
     included: "Design, build, CMS setup & launch",
   },
   {
     service: "Framer Site",
     scope: "Up to 7 pages · interactive & animated",
-    price: { amount: 600000 },
+    price: { amount: 1156000 },
     timeline: "2–4 days",
     included: "Design, animations & publish",
   },
   {
     service: "WordPress Site",
     scope: "Up to 7 pages · blog · custom theme",
-    price: { amount: 600000 },
+    price: { amount: 1088000 },
     timeline: "3–5 days",
     included: "Theme, plugins, SEO basics & launch",
   },
   {
     service: "Add-on: WooCommerce",
     scope: "E-commerce layer on WordPress",
-    price: { amount: 300000, prefix: "+" },
+    price: { amount: 612000, prefix: "+" },
     timeline: "+2–3 days",
     included: "Product catalogue, cart & checkout",
   },
@@ -114,7 +114,7 @@ const retainers: Array<{
   {
     flag: " ",
     name: "Basic",
-    amount: 300000,
+    amount: 340000,
     specs: [
       { strong: "5 hrs", rest: "of work / month" },
       { strong: "48-hour", rest: "response time" },
@@ -125,7 +125,7 @@ const retainers: Array<{
   {
     flag: "Most popular",
     name: "Priority",
-    amount: 500000,
+    amount: 612000,
     featured: true,
     specs: [
       { strong: "12 hrs", rest: "of work / month" },
@@ -239,7 +239,7 @@ function TierSpecItem({ spec }: { spec: TierSpec }) {
 }
 
 export function RateCardContent() {
-  const [currency, setCurrency] = useState<Currency>("NGN")
+  const [currency, setCurrency] = useState<Currency>("USD")
   const currencySymbol = currency === "USD" ? "$" : "₦"
 
   return (
@@ -287,9 +287,22 @@ export function RateCardContent() {
           gap: 10px;
         }
 
+        .ratecard-page .brand-mark {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+        }
+
         .ratecard-page .brand-logo {
           height: 44px;
           width: auto;
+        }
+
+        .ratecard-page .brand-name {
+          font-size: 30px;
+          font-weight: 800;
+          letter-spacing: -0.3px;
+          color: var(--text);
         }
 
         .ratecard-page .brand-tagline {
@@ -745,7 +758,10 @@ export function RateCardContent() {
           <div className="page">
           <header className="header">
             <div className="brand-lockup">
-              <img className="brand-logo" src="/visualhqlogo.svg" alt="VisualHQ" />
+              <div className="brand-mark">
+                <img className="brand-logo" src="/visualhqlogo.svg" alt="VisualHQ" />
+                <span className="brand-name">VisualHQ</span>
+              </div>
               <p className="brand-tagline">Brand and Technology Solutions</p>
             </div>
             <h2 className="doc-title">Rate Card</h2>
@@ -758,19 +774,19 @@ export function RateCardContent() {
             <div className="currency-toggle" role="group" aria-label="Currency">
               <button
                 type="button"
-                className={`currency-btn${currency === "NGN" ? " active" : ""}`}
-                aria-pressed={currency === "NGN"}
-                onClick={() => setCurrency("NGN")}
-              >
-                ₦ NGN
-              </button>
-              <button
-                type="button"
                 className={`currency-btn${currency === "USD" ? " active" : ""}`}
                 aria-pressed={currency === "USD"}
                 onClick={() => setCurrency("USD")}
               >
                 $ USD
+              </button>
+              <button
+                type="button"
+                className={`currency-btn${currency === "NGN" ? " active" : ""}`}
+                aria-pressed={currency === "NGN"}
+                onClick={() => setCurrency("NGN")}
+              >
+                ₦ NGN
               </button>
             </div>
             <span className="fx-note">1 USD ≈ ₦{NGN_PER_USD.toLocaleString("en-NG")} — approximate, for reference only</span>
