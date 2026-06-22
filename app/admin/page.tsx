@@ -15,15 +15,18 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
-import { Plus, Pencil, Trash2, ExternalLink, Loader2, ArrowLeft } from "lucide-react"
+import { Plus, Trash2, FileText, Loader2, ArrowLeft } from "lucide-react"
 import { getPortfolioProjects, deletePortfolioProject, type PortfolioProject } from "@/lib/portfolio"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
+import { ProjectForm } from "@/components/admin/project-form"
+import { cn } from "@/lib/utils"
 
 export default function AdminPage() {
   const [projects, setProjects] = useState<PortfolioProject[]>([])
   const [loading, setLoading] = useState(true)
   const [deleting, setDeleting] = useState<string | null>(null)
+  const [selectedId, setSelectedId] = useState<string | "new" | null>(null)
 
   async function fetchProjects() {
     try {
@@ -45,6 +48,7 @@ export default function AdminPage() {
     try {
       await deletePortfolioProject(id)
       setProjects((prev) => prev.filter((p) => p.id !== id))
+      if (selectedId === id) setSelectedId(null)
     } catch (error) {
       console.error("Error deleting project:", error)
     } finally {
@@ -52,11 +56,20 @@ export default function AdminPage() {
     }
   }
 
+  async function handleSaved(id: string) {
+    await fetchProjects()
+    setSelectedId(id)
+  }
+
+  const selectedProject = typeof selectedId === "string" && selectedId !== "new" ? projects.find((p) => p.id === selectedId) ?? null : null
+
+  const allCategories = Array.from(new Set(projects.flatMap((p) => p.category || []))).sort()
+
   return (
     <div className="min-h-screen bg-background">
       <Header />
 
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 pt-28 pb-12">
+      <main className="max-w-6xl mx-auto px-4 sm:px-6 pt-28 pb-12">
         <div className="flex items-center justify-between mb-8 gap-4">
           <div className="flex items-center gap-3 min-w-0">
             <Link href="/" className="text-muted-foreground hover:text-foreground transition-colors shrink-0">
@@ -64,97 +77,101 @@ export default function AdminPage() {
             </Link>
             <h1 className="font-semibold text-xl truncate">Portfolio Admin</h1>
           </div>
-          <Button asChild className="shrink-0">
-            <Link href="/admin/new">
-              <Plus className="w-4 h-4 mr-2" />
-              Add Project
-            </Link>
+          <Button className="shrink-0" onClick={() => setSelectedId("new")}>
+            <Plus className="w-4 h-4 mr-2" />
+            Add Project
           </Button>
         </div>
-        {loading ? (
-          <div className="flex items-center justify-center py-20">
-            <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
-          </div>
-        ) : projects.length === 0 ? (
-          <Card>
-            <CardContent className="py-16 text-center">
-              <p className="text-muted-foreground mb-4">No projects yet.</p>
-              <Button asChild>
-                <Link href="/admin/new">
-                  <Plus className="w-4 h-4 mr-2" />
-                  Create your first project
-                </Link>
-              </Button>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="grid gap-3">
-            {projects.map((project) => (
-              <Card key={project.id} className="overflow-hidden">
-                <CardContent className="p-0">
-                  <div className="flex flex-col sm:flex-row sm:items-center gap-0">
-                    {/* Thumbnail */}
-                    <div className="w-full h-28 sm:w-20 sm:h-14 bg-muted overflow-hidden shrink-0">
-                      <img
-                        src={project.imageUrl || "/placeholder.svg?height=56&width=80&query=project"}
-                        alt={project.title}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                    {/* Info */}
-                    <div className="flex-1 min-w-0 px-4 py-3">
-                      <div className="flex flex-wrap items-center gap-2 mb-1">
-                        <h3 className="font-medium">{project.title}</h3>
-                      </div>
-                      <p className="text-sm text-muted-foreground line-clamp-1">{project.description}</p>
-                      <p className="text-xs text-muted-foreground mt-1">{project.category?.join(", ")}</p>
-                    </div>
-                    {/* Actions */}
-                    <div className="flex items-center gap-1 px-4 pb-3 sm:px-3 sm:pb-0 sm:pr-3 shrink-0">
-                      {project.projectUrl && (
-                        <Button variant="ghost" size="icon" asChild>
-                          <Link href={project.projectUrl} target="_blank" rel="noopener noreferrer">
-                            <ExternalLink className="w-4 h-4" />
-                          </Link>
-                        </Button>
-                      )}
-                      <Button variant="outline" size="sm" asChild>
-                        <Link href={`/admin/${project.id}`}>
-                          <Pencil className="w-3.5 h-3.5 mr-1.5" />
-                          Edit
-                        </Link>
-                      </Button>
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive">
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Delete project?</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              This will permanently delete "{project.title}". This action cannot be undone.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction
-                              onClick={() => handleDelete(project.id)}
-                              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                            >
-                              {deleting === project.id ? <Loader2 className="w-4 h-4 animate-spin" /> : "Delete"}
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                    </div>
-                  </div>
+
+        <div className="grid gap-6 lg:grid-cols-[360px_1fr] items-start">
+          {/* List */}
+          <div className="space-y-3">
+            {loading ? (
+              <div className="flex items-center justify-center py-20">
+                <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+              </div>
+            ) : projects.length === 0 ? (
+              <Card>
+                <CardContent className="py-16 text-center">
+                  <p className="text-muted-foreground mb-4">No projects yet.</p>
+                  <Button onClick={() => setSelectedId("new")}>
+                    <Plus className="w-4 h-4 mr-2" />
+                    Create your first project
+                  </Button>
                 </CardContent>
               </Card>
-            ))}
+            ) : (
+              <div className="divide-y">
+                {projects.map((project) => (
+                  <div
+                    key={project.id}
+                    className={cn(
+                      "flex items-center gap-2 py-2.5 cursor-pointer group",
+                      selectedId === project.id && "text-primary",
+                    )}
+                    onClick={() => setSelectedId(project.id)}
+                  >
+                    <FileText className="w-4 h-4 shrink-0 text-muted-foreground" />
+                    <span className="flex-1 min-w-0 truncate text-sm">{project.title}</span>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="w-7 h-7 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 shrink-0"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Delete project?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            This will permanently delete "{project.title}". This action cannot be undone.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={() => handleDelete(project.id)}
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                          >
+                            {deleting === project.id ? <Loader2 className="w-4 h-4 animate-spin" /> : "Delete"}
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
-        )}
+
+          {/* Edit / Create panel */}
+          <div>
+            {selectedId === null ? (
+              <Card>
+                <CardContent className="py-20 text-center text-muted-foreground">
+                  Select a project to edit, or add a new one.
+                </CardContent>
+              </Card>
+            ) : (
+              <>
+                <h2 className="font-semibold text-lg mb-4">
+                  {selectedId === "new" ? "New Project" : `Edit: ${selectedProject?.title ?? ""}`}
+                </h2>
+                <ProjectForm
+                  key={selectedId}
+                  project={selectedId === "new" ? null : selectedProject}
+                  existingCategories={allCategories}
+                  onSaved={handleSaved}
+                  onCancel={() => setSelectedId(null)}
+                />
+              </>
+            )}
+          </div>
+        </div>
       </main>
       <Footer />
     </div>

@@ -7,12 +7,13 @@ import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
 import { Button } from "@/components/ui/button"
 import { ArrowLeft, ExternalLink, Loader2 } from "lucide-react"
-import { getPortfolioProjectBySlug, type PortfolioProject } from "@/lib/portfolio"
+import { getPortfolioProjectBySlug, getPortfolioProjects, type PortfolioProject } from "@/lib/portfolio"
 
 export default function SingleProjectPage() {
   const params = useParams()
   const slug = params.slug as string
   const [project, setProject] = useState<PortfolioProject | null>(null)
+  const [relatedProjects, setRelatedProjects] = useState<PortfolioProject[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -20,6 +21,12 @@ export default function SingleProjectPage() {
       try {
         const data = await getPortfolioProjectBySlug(slug)
         setProject(data)
+
+        const all = await getPortfolioProjects()
+        const related = all
+          .filter((p) => p.status?.toLowerCase() === "published" && p.slug !== slug)
+          .slice(0, 3)
+        setRelatedProjects(related)
       } catch (error) {
         console.error("Error fetching project:", error)
       } finally {
@@ -79,7 +86,7 @@ export default function SingleProjectPage() {
       {/* Hero Image */}
       <section className="pt-6 pb-12 px-12 md:px-20">
         <div className="max-w-7xl mx-auto">
-          <div className="aspect-[16/9] bg-muted rounded-lg overflow-hidden">
+          <div className="h-[280px] md:h-[420px] bg-muted rounded-lg overflow-hidden">
             <img
               src={project.imageUrl || "/placeholder.svg?height=900&width=1600&query=project"}
               alt={project.title}
@@ -167,6 +174,29 @@ export default function SingleProjectPage() {
                     className="w-full h-full object-cover"
                   />
                 </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Related Projects */}
+      {relatedProjects.length > 0 && (
+        <section className="px-12 pb-20 md:px-20">
+          <div className="max-w-7xl mx-auto">
+            <h2 className="text-2xl font-semibold mb-8">You might also like this</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {relatedProjects.map((related) => (
+                <Link key={related.id} href={`/portfolio/${related.slug}`} className="block group">
+                  <div className="aspect-[4/3] bg-muted rounded-lg overflow-hidden">
+                    <img
+                      src={related.imageUrl || "/placeholder.svg?height=300&width=400&query=project"}
+                      alt={related.title}
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    />
+                  </div>
+                  <p className="mt-3 font-medium group-hover:text-primary transition-colors">{related.title}</p>
+                </Link>
               ))}
             </div>
           </div>
