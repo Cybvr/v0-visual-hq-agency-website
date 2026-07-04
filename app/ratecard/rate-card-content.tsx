@@ -6,7 +6,6 @@ import { Footer } from "@/components/footer"
 import {
   customDevelopmentRows,
   formatPrice,
-  growthPlanRows,
   NGN_PER_USD,
   platformRows,
   retainers,
@@ -14,6 +13,7 @@ import {
   type Currency,
   type ServiceRow,
   type TierSpec,
+  type WorkflowPlan,
 } from "@/lib/plans"
 
 const terms = [
@@ -45,6 +45,29 @@ const terms = [
     ],
   },
 ]
+
+const rateCardTabs = [
+  {
+    id: "technology",
+    label: "Technology",
+    title: "Product, platform, and technical implementation",
+    description: "For businesses that need websites, web apps, platforms, or technical implementation.",
+  },
+  {
+    id: "workflows",
+    label: "Workflows",
+    title: "Growth systems for existing tools",
+    description: "For businesses that need their existing tools connected into clear growth systems.",
+  },
+  {
+    id: "consulting",
+    label: "Consulting",
+    title: "Support, improvements, and technical guidance",
+    description: "For businesses that need ongoing support, improvements, and technical guidance.",
+  },
+] as const
+
+type RateCardTab = (typeof rateCardTabs)[number]["id"]
 
 function RateTable({
   headers,
@@ -81,6 +104,35 @@ function RateTable({
   )
 }
 
+function WorkflowTable({ rows, currency }: { rows: WorkflowPlan[]; currency: Currency }) {
+  return (
+    <div className="rate-table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Workflow</th>
+            <th>Best For</th>
+            <th>Price</th>
+            <th>Timeline</th>
+            <th>What&apos;s Included</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row) => (
+            <tr key={row.service}>
+              <td>{row.service}</td>
+              <td>{row.outcome}</td>
+              <td>{formatPrice(row.price, currency)}</td>
+              <td>{row.timeline}</td>
+              <td>{row.included}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )
+}
+
 function TierSpecItem({ spec }: { spec: TierSpec }) {
   if ("text" in spec) return <>{spec.text}</>
 
@@ -94,7 +146,9 @@ function TierSpecItem({ spec }: { spec: TierSpec }) {
 
 export function RateCardContent() {
   const [currency, setCurrency] = useState<Currency>("USD")
+  const [activeTab, setActiveTab] = useState<RateCardTab>("technology")
   const currencySymbol = currency === "USD" ? "$" : "₦"
+  const activeTabContent = rateCardTabs.find((tab) => tab.id === activeTab) ?? rateCardTabs[0]
 
   return (
     <>
@@ -196,6 +250,38 @@ export function RateCardContent() {
           flex-wrap: wrap;
           gap: 12px;
           margin-bottom: 28px;
+        }
+
+        .ratecard-page .tab-row {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 6px;
+          padding: 6px;
+          border: 1px solid var(--table-border);
+          border-radius: 10px;
+          background: #f3f2f0;
+          margin-bottom: 24px;
+        }
+
+        .ratecard-page .tab-btn {
+          appearance: none;
+          border: none;
+          border-radius: 7px;
+          background: transparent;
+          color: var(--muted);
+          cursor: pointer;
+          font-size: 11px;
+          font-weight: 800;
+          letter-spacing: 0.16em;
+          padding: 12px 10px;
+          text-align: left;
+          text-transform: uppercase;
+        }
+
+        .ratecard-page .tab-btn.active {
+          background: #fff;
+          color: var(--text);
+          box-shadow: 0 1px 5px rgba(0, 0, 0, 0.08);
         }
 
         .ratecard-page .currency-label {
@@ -316,6 +402,37 @@ export function RateCardContent() {
 
         .ratecard-page .section {
           margin-bottom: 28px;
+        }
+
+        .ratecard-page .lane {
+          margin: 34px 0 20px;
+        }
+
+        .ratecard-page .lane:first-of-type {
+          margin-top: 0;
+        }
+
+        .ratecard-page .lane-kicker {
+          font-size: 11px;
+          font-weight: 700;
+          letter-spacing: 0.16em;
+          text-transform: uppercase;
+          color: var(--blue);
+          margin-bottom: 8px;
+        }
+
+        .ratecard-page .lane-title {
+          font-size: 24px;
+          font-weight: 700;
+          margin-bottom: 6px;
+        }
+
+        .ratecard-page .lane-copy {
+          color: var(--muted);
+          font-size: 13px;
+          line-height: 1.5;
+          max-width: 560px;
+          margin: 0;
         }
 
         .ratecard-page .section-title {
@@ -505,6 +622,10 @@ export function RateCardContent() {
             grid-template-columns: 1fr;
           }
 
+          .ratecard-page .tab-row {
+            grid-template-columns: 1fr;
+          }
+
           .ratecard-page .footer-divider {
             display: none;
           }
@@ -556,106 +677,107 @@ export function RateCardContent() {
               <span className="fx-note">1 USD ≈ ₦{NGN_PER_USD.toLocaleString("en-NG")} - approximate, for reference only</span>
             </div>
 
-            <div className="section">
-              <h3 className="section-title">Custom Development</h3>
-              <div className="section-accent" />
+            <div className="tab-row" role="tablist" aria-label="Rate card sections">
+              {rateCardTabs.map((tab) => (
+                <button
+                  key={tab.id}
+                  type="button"
+                  role="tab"
+                  aria-selected={activeTab === tab.id}
+                  className={`tab-btn${activeTab === tab.id ? " active" : ""}`}
+                  onClick={() => setActiveTab(tab.id)}
+                >
+                  {tab.label}
+                </button>
+              ))}
             </div>
 
-            <RateTable
-              headers={["Service", "Scope", `Price (${currencySymbol})`, "Timeline", "What's Included"]}
-              rows={customDevelopmentRows}
-              currency={currency}
-            />
-
-            <div className="scope-note">
-              <CircleAlert className="icon" size={16} />
-              <span>
-                Prices apply within the scope shown. Marketplaces, streaming platforms, and apps with custom integrations
-                or heavy traffic fall under <strong>Custom Web App</strong> and are quoted after a scoping call.
-              </span>
+            <div className="lane">
+              <p className="lane-kicker">{activeTabContent.label}</p>
+              <h3 className="lane-title">{activeTabContent.title}</h3>
+              <p className="lane-copy">{activeTabContent.description}</p>
             </div>
 
-            <hr className="section-rule" />
+            {activeTab === "technology" && (
+              <>
+                <div className="section">
+                  <h4 className="section-title">Product Builds</h4>
+                  <div className="section-accent" />
+                </div>
 
-            <div className="section">
-              <h3 className="section-title">No-Code &amp; CMS Platforms</h3>
-              <div className="section-accent" />
-            </div>
+                <RateTable
+                  headers={["Service", "Scope", `Price (${currencySymbol})`, "Timeline", "What's Included"]}
+                  rows={customDevelopmentRows}
+                  currency={currency}
+                />
 
-            <RateTable
-              headers={["Service", "Scope", `Price (${currencySymbol})`, "Timeline", "What's Included"]}
-              rows={platformRows}
-              currency={currency}
-            />
+                <div className="scope-note">
+                  <CircleAlert className="icon" size={16} />
+                  <span>
+                    Prices apply within the scope shown. Marketplaces, streaming platforms, and apps with custom integrations
+                    or heavy traffic fall under <strong>Custom Web App</strong> and are quoted after a scoping call.
+                  </span>
+                </div>
 
-            <hr className="section-rule" />
+                <hr className="section-rule" />
 
-            <div className="section">
-              <h3 className="section-title">Growth Workflows</h3>
-              <div className="section-accent" />
-            </div>
+                <div className="section">
+                  <h4 className="section-title">Platforms</h4>
+                  <div className="section-accent" />
+                </div>
 
-            <RateTable
-              headers={["Workflow", "Pain Point", `Price (${currencySymbol})`, "Timeline", "What's Included"]}
-              rows={workflowPlanRows}
-              currency={currency}
-            />
+                <RateTable
+                  headers={["Service", "Scope", `Price (${currencySymbol})`, "Timeline", "What's Included"]}
+                  rows={platformRows}
+                  currency={currency}
+                />
 
-            <hr className="section-rule" />
+                <hr className="section-rule" />
 
-            <div className="section">
-              <h3 className="section-title">Growth Plans</h3>
-              <div className="section-accent" />
-            </div>
-
-            <RateTable
-              headers={["Service", "Scope", `Price (${currencySymbol})`, "Timeline", "What's Included"]}
-              rows={growthPlanRows}
-              currency={currency}
-            />
-
-            <hr className="section-rule" />
-
-            <div className="section">
-              <h3 className="section-title">Maintenance Retainer Tiers</h3>
-              <div className="section-accent" />
-              <div className="tier-grid">
-                {retainers.map((tier) => (
-                  <div key={tier.name} className={`tier-card${tier.featured ? " featured" : ""}`}>
-                    <span className="tier-flag">{tier.flag || "\u00A0"}</span>
-                    <div className="tier-name">{tier.name}</div>
-                    <div className="tier-price">
-                      {formatPrice({ amount: tier.amount }, currency)}
-                      <small> /mo</small>
-                    </div>
-                    <ul className="tier-specs">
-                      {tier.specs.map((spec) => (
-                        <li key={"text" in spec ? spec.text : `${spec.strong}-${spec.rest ?? ""}`}>
-                          <TierSpecItem spec={spec} />
-                        </li>
-                      ))}
-                    </ul>
+                <div className="section">
+                  <h3 className="section-title">Technology Stack</h3>
+                  <div className="section-accent" />
+                  <div className="tech-list">
+                    <span>React</span>
+                    <span>Next.js</span>
+                    <span>Tailwind CSS</span>
+                    <span>Firebase</span>
+                    <span>Vercel</span>
+                    <span>Webflow</span>
+                    <span>Framer</span>
+                    <span>WordPress</span>
                   </div>
-                ))}
-              </div>
-            </div>
+                </div>
+              </>
+            )}
 
-            <hr className="section-rule" />
+            {activeTab === "workflows" && <WorkflowTable rows={workflowPlanRows} currency={currency} />}
 
-            <div className="section">
-              <h3 className="section-title">Technology Stack</h3>
-              <div className="section-accent" />
-              <div className="tech-list">
-                <span>React</span>
-                <span>Next.js</span>
-                <span>Tailwind CSS</span>
-                <span>Firebase</span>
-                <span>Vercel</span>
-                <span>Webflow</span>
-                <span>Framer</span>
-                <span>WordPress</span>
+            {activeTab === "consulting" && (
+              <div className="section">
+                <h4 className="section-title">Retainers</h4>
+                <div className="section-accent" />
+                <div className="tier-grid">
+                  {retainers.map((tier) => (
+                    <div key={tier.name} className={`tier-card${tier.featured ? " featured" : ""}`}>
+                      <span className="tier-flag">{tier.flag || "\u00A0"}</span>
+                      <div className="tier-name">{tier.name}</div>
+                      <div className="tier-price">
+                        {formatPrice({ amount: tier.amount }, currency)}
+                        <small> /mo</small>
+                      </div>
+                      <ul className="tier-specs">
+                        {tier.specs.map((spec) => (
+                          <li key={"text" in spec ? spec.text : `${spec.strong}-${spec.rest ?? ""}`}>
+                            <TierSpecItem spec={spec} />
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
 
             <hr className="section-rule" />
 
