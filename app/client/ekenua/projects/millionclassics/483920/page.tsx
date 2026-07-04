@@ -516,6 +516,12 @@ export default function InstagramPreviewPage() {
                   >
                     Start {millionClassicsWorkflow.service}
                   </a>
+                  <a
+                    href="/pricing#workflows"
+                    className="mt-3 inline-flex w-full items-center justify-center rounded-full border border-white/35 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/10"
+                  >
+                    See other plans
+                  </a>
                 </div>
               </div>
               <div className="mx-auto mt-5 flex max-w-[200px] justify-center">
