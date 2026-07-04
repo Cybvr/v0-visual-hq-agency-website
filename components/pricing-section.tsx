@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { createElement, useEffect, useState, type ComponentType } from "react"
 import Link from "next/link"
 import { Check } from "lucide-react"
 import type { IconType } from "react-icons"
@@ -112,7 +112,7 @@ function OfferCard({
   ctaLabel,
   ctaHref,
 }: OfferCardProps) {
-  const Icon = icon ? planIcons[icon] : undefined
+  const Icon = icon ? (planIcons[icon] as ComponentType<{ className?: string }>) : undefined
 
   return (
     <div
@@ -137,7 +137,7 @@ function OfferCard({
         <div className="mt-4 flex items-center gap-3">
           {Icon && (
             <span className="flex size-11 items-center justify-center rounded-full bg-accent/10 text-accent">
-              <Icon className="size-5" />
+              {createElement(Icon, { className: "size-5" })}
             </span>
           )}
           <h3 className="text-2xl font-bold">{title}</h3>
