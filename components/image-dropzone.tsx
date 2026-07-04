@@ -59,7 +59,7 @@ export function ImageDropzone({ value, onChange, label }: ImageDropzoneProps) {
       <div
         className={cn(
           "relative border-2 border-dashed rounded-lg transition-colors cursor-pointer",
-          dragging ? "border-primary bg-primary/5" : "border-border hover:border-primary/50",
+          dragging ? "border-accent bg-accent/10" : "border-border hover:border-accent/60",
           value ? "p-2" : "p-8"
         )}
         onClick={() => !uploading && inputRef.current?.click()}
@@ -159,7 +159,7 @@ export function GalleryDropzone({ value, onChange }: GalleryDropzoneProps) {
       <div
         className={cn(
           "border-2 border-dashed rounded-lg p-6 cursor-pointer transition-colors",
-          dragging ? "border-primary bg-primary/5" : "border-border hover:border-primary/50"
+          dragging ? "border-accent bg-accent/10" : "border-border hover:border-accent/60"
         )}
         onClick={() => !uploading && inputRef.current?.click()}
         onDragOver={(e) => { e.preventDefault(); setDragging(true) }}

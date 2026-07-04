@@ -55,8 +55,8 @@ export default function AboutPage() {
         <div className="max-w-7xl mx-auto">
           <div className="max-w-3xl">
             <p className="text-sm font-medium text-muted-foreground mb-4">About Us</p>
-            <h1 className="font-serif text-4xl md:text-6xl font-bold tracking-tight leading-[1.1] text-balance">
-              Building brands that matter
+            <h1 className="font-serif text-4xl font-normal leading-[1.1] tracking-tight text-balance md:text-6xl">
+              Building brands that <span className="text-accent">matter</span>
             </h1>
             <p className="mt-6 text-lg text-muted-foreground">
               VisualHQ was founded with a simple mission: to help businesses in Africa and beyond establish powerful

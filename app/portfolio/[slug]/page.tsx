@@ -105,7 +105,10 @@ export default function SingleProjectPage() {
                 {project.category?.join(" & ") || "Project"}
               </p>
               <h1 className="mt-5 text-balance text-5xl font-semibold tracking-normal md:text-7xl">{project.title}</h1>
-              <p className="text-lg text-muted-foreground leading-relaxed">{project.description}</p>
+              {project.excerpt && (
+                <p className="mt-4 text-2xl md:text-3xl font-medium text-foreground">{project.excerpt}</p>
+              )}
+              <p className="mt-6 text-lg text-muted-foreground leading-relaxed">{project.description}</p>
 
               {project.projectUrl && (
                 <Button className="mt-8" asChild>
@@ -195,7 +198,7 @@ export default function SingleProjectPage() {
                       className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                     />
                   </div>
-                  <p className="mt-3 font-medium group-hover:text-primary transition-colors">{related.title}</p>
+                  <p className="mt-3 font-medium transition-colors group-hover:text-accent">{related.title}</p>
                 </Link>
               ))}
             </div>

@@ -1,63 +1,178 @@
-export interface Plan {
-  id: string
-  name: string
-  price: number
-  period: string
-  mostPicked?: boolean
-  description: string
-  features: string[]
+export type Currency = "NGN" | "USD"
+export type Price = "free" | { amount: number; prefix?: string; suffix?: string }
+
+export type ServiceRow = {
+  service: string
+  scope: string
+  price: Price
+  timeline: string
+  included: string
 }
 
-export const plans: Plan[] = [
+export type TierSpec = { text: string } | { strong: string; rest?: string }
+
+export type GrowthPlan = ServiceRow & {
+  features: string[]
+  paymentHref?: string
+}
+
+export const NGN_PER_USD = 1360
+
+export const customDevelopmentRows: ServiceRow[] = [
   {
-    id: "starter",
-    name: "Starter Plan",
-    price: 9999,
-    period: "year",
-    mostPicked: false,
-    description: "Perfect for early-stage businesses that need a solid foundation.",
-    features: [
-      "1 Mobile App MVP - basic iOS/Android build",
-      "1 Web App MVP - essential frontend/backend",
-      "Basic Marketing Setup - landing page & email capture",
-      "1 Managed Ad Campaign/mo - Google or Facebook",
-      "1-Hour Consulting/mo - strategy kick-off",
-      "Standard Support - email response within 48h",
-    ],
+    service: "Discovery & Scoping",
+    scope: "Fit, scope & build roadmap",
+    price: "free",
+    timeline: "45 min",
+    included: "Fixed quote after call",
   },
   {
-    id: "growth",
-    name: "Growth Plan",
-    price: 29999,
-    period: "year",
-    mostPicked: true,
-    description: "Scale your business with advanced tools and dedicated support.",
-    features: [
-      "2 Mobile Apps - tailored user flows",
-      "2 Web Apps - advanced modules & database",
-      "Advanced Marketing - A/B testing & funnel setup",
-      "Up to 5 Managed Ad Campaigns/mo - multi-channel",
-      "3-Hour Consulting/mo - growth & tech strategy",
-      "Priority Support - 24h response time",
-      "Analytics Dashboard - detailed usage stats",
-    ],
+    service: "MVP Web App",
+    scope: "Up to 5 screens - 1 user role - frontend only",
+    price: { amount: 1632000 },
+    timeline: "1 week",
+    included: "Static frontend (no auth, DB or backend)",
   },
   {
-    id: "premium",
-    name: "Premium Plan",
-    price: 69999,
-    period: "year",
-    mostPicked: false,
-    description: "Full-service enterprise solution for aggressive scaling.",
+    service: "Full Web App",
+    scope: "Up to 12 screens - 2-3 roles - auth, DB, integrations",
+    price: { amount: 3808000 },
+    timeline: "2 weeks",
+    included: "Frontend + backend + auth + DB + API integrations",
+  },
+  {
+    service: "Custom Web App",
+    scope: "Marketplaces, streaming, real-time, payments",
+    price: { amount: 6120000, prefix: "From " },
+    timeline: "4+ weeks",
+    included: "Scoped per project",
+  },
+  {
+    service: "Add-on: Backend/API",
+    scope: "Extends an existing build",
+    price: { amount: 1020000 },
+    timeline: "3-5 days",
+    included: "Auth, DB, endpoints",
+  },
+  {
+    service: "Maintenance Retainer",
+    scope: "Live site upkeep - Basic / Priority / Growth tiers",
+    price: { amount: 340000, prefix: "From ", suffix: "/mo" },
+    timeline: "Ongoing",
+    included: "Updates, fixes & priority support",
+  },
+  {
+    service: "Additional / Out-of-scope",
+    scope: "Extra revisions & work beyond agreed scope",
+    price: { amount: 54400, suffix: "/hr" },
+    timeline: "As needed",
+    included: "Billed hourly",
+  },
+]
+
+export const platformRows: ServiceRow[] = [
+  {
+    service: "Webflow Site",
+    scope: "Up to 7 pages - CMS - responsive",
+    price: { amount: 1292000 },
+    timeline: "3-5 days",
+    included: "Design, build, CMS setup & launch",
+  },
+  {
+    service: "Framer Site",
+    scope: "Up to 7 pages - interactive & animated",
+    price: { amount: 1156000 },
+    timeline: "2-4 days",
+    included: "Design, animations & publish",
+  },
+  {
+    service: "WordPress Site",
+    scope: "Up to 7 pages - blog - custom theme",
+    price: { amount: 1088000 },
+    timeline: "3-5 days",
+    included: "Theme, plugins, SEO basics & launch",
+  },
+  {
+    service: "Add-on: WooCommerce",
+    scope: "E-commerce layer on WordPress",
+    price: { amount: 612000, prefix: "+" },
+    timeline: "+2-3 days",
+    included: "Product catalogue, cart & checkout",
+  },
+]
+
+export const growthPlanRows: GrowthPlan[] = [
+  {
+    service: "VisualHQ Pro",
+    scope: "Monthly growth system for audience-to-action campaigns",
+    price: { amount: 200000 },
+    timeline: "Monthly",
+    included: "Strategy, ads, automation, Notion OS & campaign design",
+    paymentHref: "https://paystack.shop/pay/visualhqpro",
     features: [
-      "Up to 5 Custom Apps - mobile & web suite",
-      "Enterprise Marketing - AI automations & workflows",
-      "Up to 15 Managed Ad Campaigns/mo - cross-platform scaling",
-      "Weekly Strategy Calls - roadmap & conversion optimization",
-      "Dedicated Account Manager - direct Slack access",
-      "Custom API Integrations - Salesforce, HubSpot, Stripe",
-      "Priority Development Queue - fast-track requests",
-      "White-label Options - fully branded deployment",
+      "Digital strategy that maps the next 30 days",
+      "Meta Business Suite ad buy management to reach the right audience",
+      "SendPulse automation for follow-up and conversion flows",
+      "Dedicated Notion OS to manage campaign assets and tasks",
+      "Visual design that makes the campaign feel premium",
     ],
   },
 ]
+
+export const retainers: Array<{
+  flag: string
+  name: string
+  amount: number
+  featured?: boolean
+  specs: TierSpec[]
+}> = [
+  {
+    flag: "",
+    name: "Basic",
+    amount: 340000,
+    specs: [
+      { strong: "5 hrs", rest: "of work / month" },
+      { strong: "48-hour", rest: "response time" },
+      { text: "Updates, patches & bug fixes" },
+      { text: "Email support" },
+    ],
+  },
+  {
+    flag: "Most popular",
+    name: "Priority",
+    amount: 612000,
+    featured: true,
+    specs: [
+      { strong: "12 hrs", rest: "of work / month" },
+      { strong: "24-hour", rest: "response time" },
+      { text: "Everything in Basic" },
+      { text: "Priority queue & monthly check-in" },
+    ],
+  },
+  {
+    flag: "",
+    name: "Growth",
+    amount: 800000,
+    specs: [
+      { strong: "25 hrs", rest: "of work / month" },
+      { strong: "Same-day", rest: "response time" },
+      { text: "Everything in Priority" },
+      { text: "Feature development & monthly strategy call" },
+    ],
+  },
+]
+
+function ngnToUsd(amount: number) {
+  const raw = amount / NGN_PER_USD
+  const roundTo = raw < 50 ? 1 : 10
+  return Math.round(raw / roundTo) * roundTo
+}
+
+export function formatPrice(price: Price, currency: Currency) {
+  if (price === "free") return "Free"
+  const { amount, prefix = "", suffix = "" } = price
+  if (currency === "USD") {
+    return `${prefix}$${ngnToUsd(amount).toLocaleString("en-US")}${suffix}`
+  }
+  return `${prefix}₦${amount.toLocaleString("en-NG")}${suffix}`
+}

@@ -11,7 +11,7 @@ export default function VisualHQPage() {
       <main className="mx-auto max-w-7xl px-12 pb-24 pt-32 md:px-20">
         <Accordion type="multiple" defaultValue={["who"]} className="w-full">
           <AccordionItem value="who">
-            <AccordionTrigger className="text-left text-2xl font-bold hover:no-underline md:text-3xl">
+            <AccordionTrigger className="text-left text-2xl font-normal hover:no-underline md:text-3xl">
               1. VisualHQ is a software and technology consulting firm.
             </AccordionTrigger>
             <AccordionContent className="text-muted-foreground">
@@ -20,7 +20,7 @@ export default function VisualHQPage() {
           </AccordionItem>
 
           <AccordionItem value="what">
-            <AccordionTrigger className="text-left text-2xl font-bold hover:no-underline md:text-3xl">
+            <AccordionTrigger className="text-left text-2xl font-normal hover:no-underline md:text-3xl">
               2. What we do
             </AccordionTrigger>
             <AccordionContent className="text-muted-foreground">
@@ -29,7 +29,7 @@ export default function VisualHQPage() {
           </AccordionItem>
 
           <AccordionItem value="why">
-            <AccordionTrigger className="text-left text-2xl font-bold hover:no-underline md:text-3xl">
+            <AccordionTrigger className="text-left text-2xl font-normal hover:no-underline md:text-3xl">
               3. Why VisualHQ
             </AccordionTrigger>
             <AccordionContent className="text-muted-foreground">

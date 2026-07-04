@@ -3,165 +3,33 @@
 import { useState } from "react"
 import { CircleAlert, Globe, Mail, MapPin } from "lucide-react"
 import { Footer } from "@/components/footer"
-
-type Currency = "NGN" | "USD"
-
-// Approx. mid-market rate as of June 2026; conversions are rounded for readability.
-const NGN_PER_USD = 1360
-
-type Price = "free" | { amount: number; prefix?: string; suffix?: string }
-
-type ServiceRow = {
-  service: string
-  scope: string
-  price: Price
-  timeline: string
-  included: string
-}
-
-type TierSpec = { text: string } | { strong: string; rest?: string }
-
-const customDevelopmentRows: ServiceRow[] = [
-  {
-    service: "Discovery & Scoping",
-    scope: "Fit, scope & build roadmap",
-    price: "free",
-    timeline: "45 min",
-    included: "Fixed quote after call",
-  },
-  {
-    service: "MVP Web App",
-    scope: "Up to 5 screens · 1 user role · frontend only",
-    price: { amount: 1632000 },
-    timeline: "1 week",
-    included: "Static frontend (no auth, DB or backend)",
-  },
-  {
-    service: "Full Web App",
-    scope: "Up to 12 screens · 2–3 roles · auth, DB, integrations",
-    price: { amount: 3808000 },
-    timeline: "2 weeks",
-    included: "Frontend + backend + auth + DB + API integrations",
-  },
-  {
-    service: "Custom Web App",
-    scope: "Marketplaces, streaming, real-time, payments",
-    price: { amount: 6120000, prefix: "From " },
-    timeline: "4+ weeks",
-    included: "Scoped per project",
-  },
-  {
-    service: "Add-on: Backend/API",
-    scope: "Extends an existing build",
-    price: { amount: 1020000 },
-    timeline: "3–5 days",
-    included: "Auth, DB, endpoints",
-  },
-  {
-    service: "Maintenance Retainer",
-    scope: "Live site upkeep · Basic / Priority / Growth tiers",
-    price: { amount: 340000, prefix: "From ", suffix: "/mo" },
-    timeline: "Ongoing",
-    included: "Updates, fixes & priority support",
-  },
-  {
-    service: "Additional / Out-of-scope",
-    scope: "Extra revisions & work beyond agreed scope",
-    price: { amount: 54400, suffix: "/hr" },
-    timeline: "As needed",
-    included: "Billed hourly",
-  },
-]
-
-const platformRows: ServiceRow[] = [
-  {
-    service: "Webflow Site",
-    scope: "Up to 7 pages · CMS · responsive",
-    price: { amount: 1292000 },
-    timeline: "3–5 days",
-    included: "Design, build, CMS setup & launch",
-  },
-  {
-    service: "Framer Site",
-    scope: "Up to 7 pages · interactive & animated",
-    price: { amount: 1156000 },
-    timeline: "2–4 days",
-    included: "Design, animations & publish",
-  },
-  {
-    service: "WordPress Site",
-    scope: "Up to 7 pages · blog · custom theme",
-    price: { amount: 1088000 },
-    timeline: "3–5 days",
-    included: "Theme, plugins, SEO basics & launch",
-  },
-  {
-    service: "Add-on: WooCommerce",
-    scope: "E-commerce layer on WordPress",
-    price: { amount: 612000, prefix: "+" },
-    timeline: "+2–3 days",
-    included: "Product catalogue, cart & checkout",
-  },
-]
-
-const retainers: Array<{
-  flag: string
-  name: string
-  amount: number
-  featured?: boolean
-  specs: TierSpec[]
-}> = [
-  {
-    flag: " ",
-    name: "Basic",
-    amount: 340000,
-    specs: [
-      { strong: "5 hrs", rest: "of work / month" },
-      { strong: "48-hour", rest: "response time" },
-      { text: "Updates, patches & bug fixes" },
-      { text: "Email support" },
-    ],
-  },
-  {
-    flag: "Most popular",
-    name: "Priority",
-    amount: 612000,
-    featured: true,
-    specs: [
-      { strong: "12 hrs", rest: "of work / month" },
-      { strong: "24-hour", rest: "response time" },
-      { text: "Everything in Basic" },
-      { text: "Priority queue & monthly check-in" },
-    ],
-  },
-  {
-    flag: " ",
-    name: "Growth",
-    amount: 800000,
-    specs: [
-      { strong: "25 hrs", rest: "of work / month" },
-      { strong: "Same-day", rest: "response time" },
-      { text: "Everything in Priority" },
-      { text: "Feature development & monthly strategy call" },
-    ],
-  },
-]
+import {
+  customDevelopmentRows,
+  formatPrice,
+  growthPlanRows,
+  NGN_PER_USD,
+  platformRows,
+  retainers,
+  type Currency,
+  type ServiceRow,
+  type TierSpec,
+} from "@/lib/plans"
 
 const terms = [
   {
     title: "Payment",
     items: [
-      "50% deposit to start — non-refundable",
+      "50% deposit to start - non-refundable",
       "Balance due on delivery, before final handover",
       "Late payments accrue 5% per month",
-      "Prices exclusive of VAT & third-party costs",
+      "Prices exclusive of VAT and third-party costs",
     ],
   },
   {
     title: "Scope & Revisions",
     items: [
       "2 revision rounds included per project",
-      "Extra revisions & out-of-scope work billed hourly",
+      "Extra revisions and out-of-scope work billed hourly",
       "Rush delivery +30%",
       "Client-caused delays extend the timeline",
     ],
@@ -169,28 +37,13 @@ const terms = [
   {
     title: "Ownership & Delivery",
     items: [
-      "Full IP & source transfer on final payment",
-      "Hosting, domains & licenses billed separately",
+      "Full IP and source transfer on final payment",
+      "Hosting, domains and licenses billed separately",
       "14-day post-launch bug-fix warranty",
       "Ongoing upkeep via maintenance retainer",
     ],
   },
 ]
-
-function ngnToUsd(amount: number) {
-  const raw = amount / NGN_PER_USD
-  const roundTo = raw < 50 ? 1 : 10
-  return Math.round(raw / roundTo) * roundTo
-}
-
-function formatPrice(price: Price, currency: Currency) {
-  if (price === "free") return "Free"
-  const { amount, prefix = "", suffix = "" } = price
-  if (currency === "USD") {
-    return `${prefix}$${ngnToUsd(amount).toLocaleString("en-US")}${suffix}`
-  }
-  return `${prefix}₦${amount.toLocaleString("en-NG")}${suffix}`
-}
 
 function RateTable({
   headers,
@@ -246,7 +99,7 @@ export function RateCardContent() {
     <>
       <style>{`
         .ratecard-page {
-          --blue: #1644c8;
+          --blue: var(--accent);
           --text: #111214;
           --muted: #555;
           --rule: #d8dce8;
@@ -307,7 +160,6 @@ export function RateCardContent() {
 
         .ratecard-page .brand-tagline {
           font-size: 13.5px;
-          font-weight: 400;
           color: #444;
         }
 
@@ -319,11 +171,22 @@ export function RateCardContent() {
           text-align: right;
         }
 
-        .ratecard-page .header-rule {
+        .ratecard-page .header-rule,
+        .ratecard-page .section-rule,
+        .ratecard-page .footer-rule {
           border: none;
+        }
+
+        .ratecard-page .header-rule {
           border-top: 1.5px solid var(--blue);
           margin-bottom: 22px;
           opacity: 0.55;
+        }
+
+        .ratecard-page .section-rule,
+        .ratecard-page .footer-rule {
+          border-top: 1px solid var(--rule);
+          margin-bottom: 28px;
         }
 
         .ratecard-page .currency-row {
@@ -360,7 +223,6 @@ export function RateCardContent() {
           border-radius: 999px;
           cursor: pointer;
           color: var(--muted);
-          transition: background 0.15s ease, color 0.15s ease;
         }
 
         .ratecard-page .currency-btn.active {
@@ -368,16 +230,11 @@ export function RateCardContent() {
           color: #fff;
         }
 
-        .ratecard-page .fx-note {
+        .ratecard-page .fx-note,
+        .ratecard-page .disclaimer {
           font-size: 11px;
           font-style: italic;
           color: var(--muted);
-        }
-
-        .ratecard-page .section-rule {
-          border: none;
-          border-top: 1px solid var(--rule);
-          margin-bottom: 28px;
         }
 
         .ratecard-page .rate-table-wrap {
@@ -405,10 +262,6 @@ export function RateCardContent() {
           white-space: nowrap;
         }
 
-        .ratecard-page thead th + th {
-          border-left: 1px solid var(--table-border);
-        }
-
         .ratecard-page tbody tr {
           border-bottom: 1px solid var(--table-border);
         }
@@ -424,8 +277,12 @@ export function RateCardContent() {
           border-left: 1px solid var(--table-border);
         }
 
-        .ratecard-page tbody td:first-child {
+        .ratecard-page tbody td:first-child,
+        .ratecard-page thead th:first-child {
           border-left: none;
+        }
+
+        .ratecard-page tbody td:first-child {
           font-weight: 700;
         }
 
@@ -450,10 +307,10 @@ export function RateCardContent() {
           border-radius: 8px;
         }
 
-        .ratecard-page .scope-note .icon {
-          flex-shrink: 0;
+        .ratecard-page .scope-note .icon,
+        .ratecard-page .footer-icon {
           color: var(--blue);
-          margin-top: 1px;
+          flex-shrink: 0;
         }
 
         .ratecard-page .section {
@@ -474,19 +331,18 @@ export function RateCardContent() {
           margin-bottom: 14px;
         }
 
-        .ratecard-page .tier-grid {
+        .ratecard-page .tier-grid,
+        .ratecard-page .terms-grid {
           display: grid;
           grid-template-columns: repeat(3, 1fr);
           gap: 14px;
-          margin-bottom: 32px;
         }
 
-        .ratecard-page .tier-card {
+        .ratecard-page .tier-card,
+        .ratecard-page .terms-group {
           border: 1px solid var(--table-border);
           border-radius: 8px;
-          padding: 18px 18px 20px;
-          display: flex;
-          flex-direction: column;
+          padding: 18px;
         }
 
         .ratecard-page .tier-card.featured {
@@ -523,74 +379,7 @@ export function RateCardContent() {
           color: var(--muted);
         }
 
-        .ratecard-page .tier-specs {
-          list-style: none;
-          display: flex;
-          flex-direction: column;
-          gap: 7px;
-          border-top: 1px solid var(--rule);
-          padding-top: 13px;
-          margin: 0;
-        }
-
-        .ratecard-page .tier-specs li {
-          display: flex;
-          align-items: flex-start;
-          gap: 8px;
-          font-size: 11.5px;
-          line-height: 1.35;
-        }
-
-        .ratecard-page .tier-specs li::before {
-          content: "";
-          width: 5px;
-          height: 5px;
-          border-radius: 50%;
-          background: var(--blue);
-          flex-shrink: 0;
-          margin-top: 5px;
-        }
-
-        .ratecard-page .tier-specs strong {
-          font-weight: 700;
-          white-space: nowrap;
-        }
-
-        .ratecard-page .tech-list {
-          font-size: 14px;
-          color: var(--text);
-          display: flex;
-          gap: 0;
-          flex-wrap: wrap;
-        }
-
-        .ratecard-page .tech-list span {
-          display: inline-flex;
-          align-items: center;
-          gap: 10px;
-        }
-
-        .ratecard-page .tech-list span + span::before {
-          content: "•";
-          color: #aaa;
-          margin: 0 2px 0 2px;
-        }
-
-        .ratecard-page .terms-grid {
-          display: grid;
-          grid-template-columns: repeat(3, 1fr);
-          gap: 28px;
-        }
-
-        .ratecard-page .terms-group h4 {
-          font-size: 12px;
-          font-weight: 700;
-          letter-spacing: 0.05em;
-          text-transform: uppercase;
-          color: var(--blue);
-          margin-bottom: 12px;
-        }
-
+        .ratecard-page .tier-specs,
         .ratecard-page .terms-list {
           list-style: none;
           display: flex;
@@ -600,14 +389,21 @@ export function RateCardContent() {
           padding: 0;
         }
 
+        .ratecard-page .tier-specs {
+          border-top: 1px solid var(--rule);
+          padding-top: 13px;
+        }
+
+        .ratecard-page .tier-specs li,
         .ratecard-page .terms-list li {
           display: flex;
           align-items: flex-start;
           gap: 8px;
-          font-size: 11px;
+          font-size: 11.5px;
           line-height: 1.4;
         }
 
+        .ratecard-page .tier-specs li::before,
         .ratecard-page .terms-list li::before {
           content: "";
           width: 5px;
@@ -618,18 +414,30 @@ export function RateCardContent() {
           margin-top: 5px;
         }
 
-        .ratecard-page .disclaimer {
-          font-size: 11.5px;
-          font-style: italic;
-          line-height: 1.5;
-          color: #8a8f9a;
-          margin: 32px 0 22px;
+        .ratecard-page .tech-list {
+          font-size: 14px;
+          display: flex;
+          flex-wrap: wrap;
+          gap: 10px 14px;
         }
 
-        .ratecard-page .footer-rule {
-          border: none;
-          border-top: 1px solid var(--rule);
-          margin-bottom: 22px;
+        .ratecard-page .tech-list span {
+          color: var(--text);
+        }
+
+        .ratecard-page .terms-group h4 {
+          font-size: 12px;
+          font-weight: 700;
+          letter-spacing: 0.05em;
+          text-transform: uppercase;
+          color: var(--blue);
+          margin: 0 0 12px;
+        }
+
+        .ratecard-page .disclaimer {
+          margin: 32px 0 22px;
+          line-height: 1.5;
+          color: #8a8f9a;
         }
 
         .ratecard-page .footer {
@@ -663,11 +471,6 @@ export function RateCardContent() {
           flex-shrink: 0;
         }
 
-        .ratecard-page .footer-icon {
-          color: var(--blue);
-          flex-shrink: 0;
-        }
-
         .ratecard-page .footer-item a {
           color: inherit;
           text-decoration: none;
@@ -675,12 +478,6 @@ export function RateCardContent() {
 
         .ratecard-page .footer-item a:hover {
           text-decoration: underline;
-        }
-
-        @media (max-width: 900px) {
-          .ratecard-page .page {
-            padding: 40px 28px 44px;
-          }
         }
 
         @media (max-width: 720px) {
@@ -692,7 +489,8 @@ export function RateCardContent() {
             padding: 26px 18px 30px;
           }
 
-          .ratecard-page .header {
+          .ratecard-page .header,
+          .ratecard-page .footer {
             flex-direction: column;
             align-items: flex-start;
           }
@@ -706,12 +504,6 @@ export function RateCardContent() {
             grid-template-columns: 1fr;
           }
 
-          .ratecard-page .footer {
-            flex-direction: column;
-            align-items: stretch;
-            gap: 16px;
-          }
-
           .ratecard-page .footer-divider {
             display: none;
           }
@@ -722,177 +514,161 @@ export function RateCardContent() {
             justify-content: flex-start;
           }
         }
-
-        @media print {
-          .ratecard-page {
-            background: none;
-            padding: 0;
-          }
-
-          .ratecard-page .page {
-            box-shadow: none;
-            border-radius: 0;
-            padding: 0;
-            max-width: none;
-            width: auto;
-            margin: 0;
-          }
-
-          @page {
-            margin: 0.75in;
-          }
-
-          .ratecard-page .currency-toggle {
-            display: none;
-          }
-
-          .ratecard-page .rate-table-wrap,
-          .ratecard-page .section {
-            break-inside: avoid;
-          }
-        }
       `}</style>
 
       <div className="min-h-screen bg-background">
         <main className="ratecard-page">
           <div className="page">
-          <header className="header">
-            <div className="brand-lockup">
-              <div className="brand-mark">
-                <img className="brand-logo" src="/visualhqlogo.svg" alt="VisualHQ" />
-                <span className="brand-name">VisualHQ</span>
+            <header className="header">
+              <div className="brand-lockup">
+                <div className="brand-mark">
+                  <img className="brand-logo" src="/visualhqlogo.svg" alt="VisualHQ" />
+                  <span className="brand-name">VisualHQ</span>
+                </div>
+                <p className="brand-tagline">Brand and Technology Solutions</p>
               </div>
-              <p className="brand-tagline">Brand and Technology Solutions</p>
+              <h2 className="doc-title">Rate Card</h2>
+            </header>
+
+            <hr className="header-rule" />
+
+            <div className="currency-row">
+              <span className="currency-label">Currency</span>
+              <div className="currency-toggle" role="group" aria-label="Currency">
+                <button
+                  type="button"
+                  className={`currency-btn${currency === "USD" ? " active" : ""}`}
+                  aria-pressed={currency === "USD"}
+                  onClick={() => setCurrency("USD")}
+                >
+                  $ USD
+                </button>
+                <button
+                  type="button"
+                  className={`currency-btn${currency === "NGN" ? " active" : ""}`}
+                  aria-pressed={currency === "NGN"}
+                  onClick={() => setCurrency("NGN")}
+                >
+                  ₦ NGN
+                </button>
+              </div>
+              <span className="fx-note">1 USD ≈ ₦{NGN_PER_USD.toLocaleString("en-NG")} - approximate, for reference only</span>
             </div>
-            <h2 className="doc-title">Rate Card</h2>
-          </header>
 
-          <hr className="header-rule" />
-
-          <div className="currency-row">
-            <span className="currency-label">Currency</span>
-            <div className="currency-toggle" role="group" aria-label="Currency">
-              <button
-                type="button"
-                className={`currency-btn${currency === "USD" ? " active" : ""}`}
-                aria-pressed={currency === "USD"}
-                onClick={() => setCurrency("USD")}
-              >
-                $ USD
-              </button>
-              <button
-                type="button"
-                className={`currency-btn${currency === "NGN" ? " active" : ""}`}
-                aria-pressed={currency === "NGN"}
-                onClick={() => setCurrency("NGN")}
-              >
-                ₦ NGN
-              </button>
+            <div className="section">
+              <h3 className="section-title">Custom Development</h3>
+              <div className="section-accent" />
             </div>
-            <span className="fx-note">1 USD ≈ ₦{NGN_PER_USD.toLocaleString("en-NG")} — approximate, for reference only</span>
-          </div>
 
-          <div className="section">
-            <h3 className="section-title">Custom Development</h3>
-            <div className="section-accent" />
-          </div>
+            <RateTable
+              headers={["Service", "Scope", `Price (${currencySymbol})`, "Timeline", "What's Included"]}
+              rows={customDevelopmentRows}
+              currency={currency}
+            />
 
-          <RateTable
-            headers={["Service", "Scope", `Price (${currencySymbol})`, "Timeline", "What's Included"]}
-            rows={customDevelopmentRows}
-            currency={currency}
-          />
+            <div className="scope-note">
+              <CircleAlert className="icon" size={16} />
+              <span>
+                Prices apply within the scope shown. Marketplaces, streaming platforms, and apps with custom integrations
+                or heavy traffic fall under <strong>Custom Web App</strong> and are quoted after a scoping call.
+              </span>
+            </div>
 
-          <div className="scope-note">
-            <CircleAlert className="icon" size={16} />
-            <span>
-              Prices apply within the scope shown. Marketplaces, streaming platforms, and apps with custom integrations
-              or heavy traffic fall under <strong>Custom Web App</strong> and are quoted after a scoping call.
-            </span>
-          </div>
+            <hr className="section-rule" />
 
-          <hr className="section-rule" />
+            <div className="section">
+              <h3 className="section-title">No-Code &amp; CMS Platforms</h3>
+              <div className="section-accent" />
+            </div>
 
-          <div className="section">
-            <h3 className="section-title">No-Code &amp; CMS Platforms</h3>
-            <div className="section-accent" />
-          </div>
+            <RateTable
+              headers={["Service", "Scope", `Price (${currencySymbol})`, "Timeline", "What's Included"]}
+              rows={platformRows}
+              currency={currency}
+            />
 
-          <RateTable
-            headers={["Service", "Scope", `Price (${currencySymbol})`, "Timeline", "What’s Included"]}
-            rows={platformRows}
-            currency={currency}
-          />
+            <hr className="section-rule" />
 
-          <hr className="section-rule" />
+            <div className="section">
+              <h3 className="section-title">Growth Plans</h3>
+              <div className="section-accent" />
+            </div>
 
-          <div className="section">
-            <h3 className="section-title">Maintenance Retainer Tiers</h3>
-            <div className="section-accent" />
-            <div className="tier-grid">
-              {retainers.map((tier) => (
-                <div key={tier.name} className={`tier-card${tier.featured ? " featured" : ""}`}>
-                  <span className="tier-flag">{tier.flag}</span>
-                  <div className="tier-name">{tier.name}</div>
-                  <div className="tier-price">
-                    {formatPrice({ amount: tier.amount }, currency)}
-                    <small> /mo</small>
+            <RateTable
+              headers={["Service", "Scope", `Price (${currencySymbol})`, "Timeline", "What's Included"]}
+              rows={growthPlanRows}
+              currency={currency}
+            />
+
+            <hr className="section-rule" />
+
+            <div className="section">
+              <h3 className="section-title">Maintenance Retainer Tiers</h3>
+              <div className="section-accent" />
+              <div className="tier-grid">
+                {retainers.map((tier) => (
+                  <div key={tier.name} className={`tier-card${tier.featured ? " featured" : ""}`}>
+                    <span className="tier-flag">{tier.flag || "\u00A0"}</span>
+                    <div className="tier-name">{tier.name}</div>
+                    <div className="tier-price">
+                      {formatPrice({ amount: tier.amount }, currency)}
+                      <small> /mo</small>
+                    </div>
+                    <ul className="tier-specs">
+                      {tier.specs.map((spec) => (
+                        <li key={"text" in spec ? spec.text : `${spec.strong}-${spec.rest ?? ""}`}>
+                          <TierSpecItem spec={spec} />
+                        </li>
+                      ))}
+                    </ul>
                   </div>
-                  <ul className="tier-specs">
-                    {tier.specs.map((spec) => (
-                      <li key={"text" in spec ? spec.text : `${spec.strong}-${spec.rest ?? ""}`}>
-                        <TierSpecItem spec={spec} />
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-          </div>
 
-          <hr className="section-rule" />
+            <hr className="section-rule" />
 
-          <div className="section">
-            <h3 className="section-title">Technology Stack</h3>
-            <div className="section-accent" />
-            <div className="tech-list">
-              <span>React</span>
-              <span>Next.js</span>
-              <span>Tailwind CSS</span>
-              <span>Firebase</span>
-              <span>Vercel</span>
-              <span>Webflow</span>
-              <span>Framer</span>
-              <span>WordPress</span>
+            <div className="section">
+              <h3 className="section-title">Technology Stack</h3>
+              <div className="section-accent" />
+              <div className="tech-list">
+                <span>React</span>
+                <span>Next.js</span>
+                <span>Tailwind CSS</span>
+                <span>Firebase</span>
+                <span>Vercel</span>
+                <span>Webflow</span>
+                <span>Framer</span>
+                <span>WordPress</span>
+              </div>
             </div>
-          </div>
 
-          <hr className="section-rule" />
+            <hr className="section-rule" />
 
-          <div className="section">
-            <h3 className="section-title">Terms &amp; Conditions</h3>
-            <div className="section-accent" />
-            <div className="terms-grid">
-              {terms.map((group) => (
-                <div key={group.title} className="terms-group">
-                  <h4>{group.title}</h4>
-                  <ul className="terms-list">
-                    {group.items.map((item) => (
-                      <li key={item}>{item}</li>
-                    ))}
-                  </ul>
-                </div>
-              ))}
+            <div className="section">
+              <h3 className="section-title">Terms &amp; Conditions</h3>
+              <div className="section-accent" />
+              <div className="terms-grid">
+                {terms.map((group) => (
+                  <div key={group.title} className="terms-group">
+                    <h4>{group.title}</h4>
+                    <ul className="terms-list">
+                      {group.items.map((item) => (
+                        <li key={item}>{item}</li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
 
-          <p className="disclaimer">
-            Prices are indicative and subject to change without prior notice. Final pricing is confirmed at the time of
-            quotation and may be adjusted for project scope, exchange-rate movements, third-party costs, or other
-            factors beyond VisualHQ’s control.
-          </p>
+            <p className="disclaimer">
+              Prices are indicative and subject to change without prior notice. Final pricing is confirmed at the time of
+              quotation and may be adjusted for project scope, exchange-rate movements, third-party costs, or other
+              factors beyond VisualHQ's control.
+            </p>
 
-          <hr className="footer-rule" />
+            <hr className="footer-rule" />
 
             <footer className="footer">
               <div className="footer-item">

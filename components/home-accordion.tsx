@@ -18,7 +18,7 @@ export function HomeAccordion({
   return (
     <Accordion type="multiple" defaultValue={["intro"]} className="w-full">
       <AccordionItem value="intro">
-        <AccordionTrigger className="text-left text-2xl font-bold hover:no-underline md:text-3xl">
+        <AccordionTrigger className="text-left text-2xl hover:no-underline md:text-3xl">
           1. VisualCoreNine builds software systems for modern businesses.
         </AccordionTrigger>
         <AccordionContent className="text-muted-foreground">
@@ -27,7 +27,7 @@ export function HomeAccordion({
       </AccordionItem>
 
       <AccordionItem value="products">
-        <AccordionTrigger className="text-left text-2xl font-bold hover:no-underline md:text-3xl">
+        <AccordionTrigger className="text-left text-2xl hover:no-underline md:text-3xl">
           2. Products
         </AccordionTrigger>
         <AccordionContent>
@@ -44,7 +44,7 @@ export function HomeAccordion({
       </AccordionItem>
 
       <AccordionItem value="capabilities">
-        <AccordionTrigger className="text-left text-2xl font-bold hover:no-underline md:text-3xl">
+        <AccordionTrigger className="text-left text-2xl hover:no-underline md:text-3xl">
           3. Capabilities
         </AccordionTrigger>
         <AccordionContent>
@@ -60,7 +60,7 @@ export function HomeAccordion({
         </AccordionContent>
       </AccordionItem>
       <AccordionItem value="news">
-        <AccordionTrigger className="text-left text-2xl font-bold hover:no-underline md:text-3xl">
+        <AccordionTrigger className="text-left text-2xl hover:no-underline md:text-3xl">
           4. News
         </AccordionTrigger>
         <AccordionContent>

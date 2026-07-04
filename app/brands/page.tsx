@@ -15,15 +15,15 @@ export default function BrandsPage() {
       <main className="px-6 pb-24 pt-32">
         <div className="mx-auto max-w-7xl">
           <p className="text-sm font-semibold uppercase tracking-[0.24em] text-muted-foreground">Brands</p>
-          <h1 className="mt-5 max-w-4xl text-balance text-5xl font-semibold tracking-normal md:text-7xl">
-            The VisualCoreNine brands are the product ecosystem.
+          <h1 className="mt-5 max-w-4xl text-balance text-5xl font-normal tracking-normal md:text-7xl">
+            The VisualCoreNine brands are the <span className="text-accent">product ecosystem</span>.
           </h1>
           <div className="mt-16 grid gap-6 md:grid-cols-2 lg:grid-cols-4">
             {items.map((item) => (
               <Link 
                 key={item.slug} 
                 href={item.href} 
-                className="group relative flex flex-col justify-between rounded-[2rem] border border-border bg-card p-8 transition-all hover:border-primary/50 hover:shadow-2xl hover:shadow-primary/5"
+                className="group relative flex flex-col justify-between rounded-[2rem] border border-border bg-card p-8 transition-all hover:border-accent/60 hover:shadow-2xl hover:shadow-accent/10"
               >
                 <div>
                   <div className="mb-6 flex h-12 w-12 items-center justify-center overflow-hidden rounded-xl bg-secondary/50 p-2">
@@ -35,7 +35,7 @@ export default function BrandsPage() {
                       className="h-full w-full object-contain"
                     />
                   </div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-accent">
                     {item.product}
                   </p>
                   <h2 
@@ -48,7 +48,7 @@ export default function BrandsPage() {
                     {item.description}
                   </p>
                 </div>
-                <ArrowUpRight className="mt-8 size-7 transition-transform group-hover:-translate-y-1 group-hover:translate-x-1 text-primary" />
+                <ArrowUpRight className="mt-8 size-7 text-accent transition-transform group-hover:-translate-y-1 group-hover:translate-x-1" />
               </Link>
             ))}
           </div>

@@ -25,6 +25,7 @@ import {
   Tag,
   X,
 } from "lucide-react";
+import { formatPrice, growthPlanRows } from "@/lib/plans";
 import { instagramPosts, type InstagramPost } from "./instagram-posts";
 
 const HIGHLIGHTS = [
@@ -48,10 +49,7 @@ const BRAND = {
 
 const PREVIEW_POST_COUNT = 9;
 
-// Mid-market rate, matches the rate card (app/ratecard/rate-card-content.tsx).
-const NGN_PER_USD = 1360;
-const PRICE_NGN = 200_000;
-const PRICE_USD = Math.round(PRICE_NGN / NGN_PER_USD);
+const visualHQProPlan = growthPlanRows[0];
 
 const appFont = {
   fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
@@ -229,7 +227,7 @@ function PostModal({
               {(post.likes + (liked ? 1 : 0)).toLocaleString()} likes
             </div>
             <div className="mb-3 mt-1 text-[11px] uppercase tracking-wide text-[#8e8e8e]">
-              {post.location} · {post.timeAgo} ago
+              {post.location} - {post.timeAgo} ago
             </div>
 
             <div className="flex items-center gap-3 border-t border-[#efefef] py-3">
@@ -454,8 +452,8 @@ export default function InstagramPreviewPage() {
               >
                 <PostImage post={post} />
                 <div className="absolute inset-0 flex items-center justify-center gap-[26px] bg-black/35 text-[15px] font-bold text-white opacity-0 transition-opacity duration-150 group-hover:opacity-100">
-                  <span>♥ {post.likes}</span>
-                  <span>💬 {post.comments.length}</span>
+                  <span>Likes {post.likes}</span>
+                  <span>Comments {post.comments.length}</span>
                 </div>
               </button>
             ))}
@@ -484,42 +482,28 @@ export default function InstagramPreviewPage() {
                 <div className="border border-[#dbdbdb] bg-[#fafafa] p-4">
                   <div className="text-sm font-semibold text-[#262626]">Included in Pro*</div>
                   <ul className="mt-3 grid gap-2 text-sm text-[#737373]">
-                    <li className="flex items-center gap-2">
-                      <span className="h-2 w-2 rounded-full bg-[#0E32FC]" />
-                      Digital strategy that maps the next 30 days
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <span className="h-2 w-2 rounded-full bg-[#0E32FC]" />
-                      Meta Business Suite ad buy management to reach the right audience
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <span className="h-2 w-2 rounded-full bg-[#0E32FC]" />
-                      SendPulse automation for follow-up and conversion flows
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <span className="h-2 w-2 rounded-full bg-[#0E32FC]" />
-                      Dedicated Notion OS to manage campaign assets and tasks
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <span className="h-2 w-2 rounded-full bg-[#0E32FC]" />
-                      Visual design that makes the campaign feel premium
-                    </li>
+                    {visualHQProPlan.features.map((feature) => (
+                      <li key={feature} className="flex items-center gap-2">
+                        <span className="h-2 w-2 rounded-full bg-accent" />
+                        {feature}
+                      </li>
+                    ))}
                   </ul>
                 </div>
 
-                <div className="border border-[#0E32FC] bg-[#0E32FC] p-4 text-white">
+                <div className="border border-accent bg-accent p-4 text-accent-foreground">
                   <div className="text-xs font-semibold uppercase tracking-[0.18em] text-white/70">
-                    VisualHQ Pro
+                    {visualHQProPlan.service}
                   </div>
-                  <div className="mt-1 text-4xl font-semibold">${PRICE_USD.toLocaleString("en-US")}</div>
+                  <div className="mt-1 text-4xl font-semibold">{formatPrice(visualHQProPlan.price, "USD")}</div>
                   <div className="text-sm font-medium text-white/75">
-                    per month · ₦{PRICE_NGN.toLocaleString("en-NG")}
+                    per month - {formatPrice(visualHQProPlan.price, "NGN")}
                   </div>
                   <a
-                    href="https://paystack.shop/pay/visualhqpro"
-                    className="mt-4 inline-flex w-full items-center justify-center rounded-full bg-white px-5 py-3 text-sm font-semibold text-[#0E32FC] transition hover:bg-white/92"
+                    href={visualHQProPlan.paymentHref}
+                    className="mt-4 inline-flex w-full items-center justify-center rounded-full bg-background px-5 py-3 text-sm font-semibold text-accent-foreground transition hover:bg-background/90"
                   >
-                    Start VisualHQ Pro
+                    Start {visualHQProPlan.service}
                   </a>
                 </div>
               </div>

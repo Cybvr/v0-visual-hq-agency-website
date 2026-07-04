@@ -25,7 +25,7 @@ export default async function NewsItemPage({ params }: { params: Promise<{ slug:
           href={item.url}
           target="_blank"
           rel="noopener noreferrer"
-          className="mt-6 inline-block text-sm font-semibold hover:text-primary"
+          className="mt-6 inline-block text-sm font-semibold hover:text-accent"
         >
           Read full article →
         </a>

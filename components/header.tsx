@@ -5,6 +5,7 @@ import Image from "next/image"
 import { useState } from "react"
 import { ChevronDown, Menu, X } from "lucide-react"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
+import { Button } from "@/components/ui/button"
 import { getBrandItems } from "@/lib/brands"
 
 const brands = getBrandItems()
@@ -21,9 +22,12 @@ const consultingNavItems = [
 ]
 
 const secondaryNavigation = [
+  { name: "Pricing", href: "/pricing" },
   { name: "Careers", href: "https://pasive.co/jobs" },
   { name: "News", href: "/news" },
 ]
+
+const bookNowHref = "/contact"
 
 function Wordmark() {
   return (
@@ -51,7 +55,7 @@ function DesktopHoverMenu({
     <div className="relative" onMouseEnter={onOpen} onMouseLeave={onClose}>
       <button
         type="button"
-        className="inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-[0.18em] text-foreground outline-none transition-colors hover:text-primary focus-visible:text-primary"
+        className="inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-[0.18em] text-foreground outline-none transition-colors hover:text-accent focus-visible:text-accent"
       >
         {label}
         <ChevronDown className="size-3" />
@@ -63,9 +67,9 @@ function DesktopHoverMenu({
               <Link
                 key={item.href}
                 href={item.href}
-                className="flex flex-col items-start gap-1 rounded-xl px-3 py-2 text-left text-sm outline-none transition-colors hover:bg-secondary focus:bg-secondary"
+                className="flex flex-col items-start gap-1 rounded-xl px-3 py-2 text-left text-sm outline-none transition-colors hover:bg-accent/15 focus:bg-accent/15"
               >
-                <span className="font-semibold">{item.name}</span>
+                <h3 className="text-sm">{item.name}</h3>
                 <span className="text-xs leading-5 text-muted-foreground">{item.description}</span>
               </Link>
             ))}
@@ -108,13 +112,17 @@ export function Header() {
               <Link
                 key={item.name}
                 href={item.href}
-                className="text-xs font-semibold uppercase tracking-[0.18em] text-foreground transition-colors hover:text-primary"
+                className="text-xs font-semibold uppercase tracking-[0.18em] text-foreground transition-colors hover:text-accent"
               >
                 {item.name}
               </Link>
             ))}
           </div>
         </div>
+
+        <Button asChild className="hidden rounded-full px-5 text-xs font-semibold uppercase tracking-[0.18em] md:inline-flex">
+          <Link href={bookNowHref}>Book Now</Link>
+        </Button>
 
         <button
           className="flex size-10 items-center justify-center rounded-full md:hidden"
@@ -139,10 +147,10 @@ export function Header() {
                     <Link
                       key={item.href}
                       href={item.href}
-                      className="flex flex-col items-start gap-1 rounded-xl px-3 py-2 text-left text-sm transition-colors hover:bg-secondary"
+                      className="flex flex-col items-start gap-1 rounded-xl px-3 py-2 text-left text-sm transition-colors hover:bg-accent/15"
                       onClick={() => setMobileMenuOpen(false)}
                     >
-                      <span className="font-semibold">{item.name}</span>
+                      <h3 className="text-sm">{item.name}</h3>
                       <span className="text-xs leading-5 text-muted-foreground">{item.description}</span>
                     </Link>
                   ))}
@@ -157,10 +165,10 @@ export function Header() {
                     <Link
                       key={item.href}
                       href={item.href}
-                      className="flex flex-col items-start gap-1 rounded-xl px-3 py-2 text-left text-sm transition-colors hover:bg-secondary"
+                      className="flex flex-col items-start gap-1 rounded-xl px-3 py-2 text-left text-sm transition-colors hover:bg-accent/15"
                       onClick={() => setMobileMenuOpen(false)}
                     >
-                      <span className="font-semibold">{item.name}</span>
+                      <h3 className="text-sm">{item.name}</h3>
                       <span className="text-xs leading-5 text-muted-foreground">{item.description}</span>
                     </Link>
                   ))}
@@ -177,6 +185,11 @@ export function Header() {
                 {item.name}
               </Link>
             ))}
+            <Button asChild className="mt-3 rounded-full text-sm font-semibold uppercase tracking-[0.18em]">
+              <Link href={bookNowHref} onClick={() => setMobileMenuOpen(false)}>
+                Book Now
+              </Link>
+            </Button>
           </nav>
         </div>
       )}

@@ -20,8 +20,8 @@ export default function ContactPage() {
         <div className="max-w-7xl mx-auto">
           <div className="max-w-3xl">
             <p className="text-sm font-medium text-muted-foreground mb-4">Contact</p>
-            <h1 className="font-serif text-4xl md:text-6xl font-bold tracking-tight leading-[1.1]">
-              Let's start a project
+            <h1 className="font-serif text-4xl font-normal leading-[1.1] tracking-tight md:text-6xl">
+              Let&apos;s start a <span className="text-accent">project</span>
             </h1>
             <p className="mt-6 text-lg text-muted-foreground">
               Have a project in mind? We'd love to hear from you. Book a call below or reach out directly via email.

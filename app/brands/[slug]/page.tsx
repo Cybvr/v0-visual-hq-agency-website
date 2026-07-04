@@ -90,7 +90,7 @@ export default async function BrandDetailPage({ params }: { params: Promise<{ sl
                   <p className="text-sm font-medium text-muted-foreground uppercase tracking-widest">Brand Showcase</p>
                 </div>
               )}
-              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-50 pointer-events-none" />
+              <div className="absolute inset-0 bg-gradient-to-br from-accent/10 to-transparent opacity-50 pointer-events-none" />
             </div>
           </div>
 
@@ -108,7 +108,7 @@ export default async function BrandDetailPage({ params }: { params: Promise<{ sl
                 <Link
                   key={brand.slug}
                   href={brand.href}
-                  className="group relative flex flex-col justify-between overflow-hidden rounded-[2rem] border border-border bg-card p-8 transition-all hover:border-primary/50 hover:shadow-2xl hover:shadow-primary/5"
+                  className="group relative flex flex-col justify-between overflow-hidden rounded-[2rem] border border-border bg-card p-8 transition-all hover:border-accent/60 hover:shadow-2xl hover:shadow-accent/10"
                 >
                   <div>
                     <div className="mb-6 flex h-12 w-12 items-center justify-center overflow-hidden rounded-xl bg-secondary/50 p-2">
@@ -120,7 +120,7 @@ export default async function BrandDetailPage({ params }: { params: Promise<{ sl
                         className="h-full w-full object-contain"
                       />
                     </div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">
+                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-accent">
                       {brand.product}
                     </p>
                     <h3 className="mt-4 text-2xl font-semibold">{brand.name}</h3>
@@ -128,7 +128,7 @@ export default async function BrandDetailPage({ params }: { params: Promise<{ sl
                       {brand.description}
                     </p>
                   </div>
-                  <div className="mt-8 flex items-center text-sm font-medium text-primary opacity-0 transition-all group-hover:opacity-100">
+                  <div className="mt-8 flex items-center text-sm font-medium text-accent opacity-0 transition-all group-hover:opacity-100">
                     View Project <ArrowUpRight className="ml-1 size-4" />
                   </div>
                 </Link>
