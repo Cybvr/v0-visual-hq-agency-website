@@ -25,7 +25,7 @@ import {
   Tag,
   X,
 } from "lucide-react";
-import { formatPrice, growthPlanRows } from "@/lib/plans";
+import { formatPrice, workflowPlanRows } from "@/lib/plans";
 import { instagramPosts, type InstagramPost } from "./instagram-posts";
 
 const HIGHLIGHTS = [
@@ -49,7 +49,7 @@ const BRAND = {
 
 const PREVIEW_POST_COUNT = 9;
 
-const visualHQProPlan = growthPlanRows[0];
+const millionClassicsWorkflow = workflowPlanRows.find((plan) => plan.service === "Marketing") ?? workflowPlanRows[0];
 
 const appFont = {
   fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
@@ -467,43 +467,59 @@ export default function InstagramPreviewPage() {
               </div>
               <div className="mb-3 flex flex-wrap items-center gap-2">
                 <span className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8e8e8e]">
-                  VisualHQ Pro
+                  {millionClassicsWorkflow.service} Workflow
                 </span>
               </div>
               <h2 className="text-2xl font-semibold leading-tight md:text-3xl">
-                Turn attention into measurable growth.
+                Run the Million Classics marketing workflow.
               </h2>
               <p className="mt-3 max-w-[620px] text-sm leading-6 text-[#737373] md:text-base">
-                Buy VisualHQ Pro and get
-                a growth system designed to turn audience attention into action.
+                {millionClassicsWorkflow.outcome}
               </p>
 
               <div className="mt-6 grid gap-3 text-left md:grid-cols-[1fr_240px]">
                 <div className="border border-[#dbdbdb] bg-[#fafafa] p-4">
-                  <div className="text-sm font-semibold text-[#262626]">Included in Pro*</div>
+                  <div className="text-sm font-semibold text-[#262626]">What this workflow does</div>
                   <ul className="mt-3 grid gap-2 text-sm text-[#737373]">
-                    {visualHQProPlan.features.map((feature) => (
+                    {millionClassicsWorkflow.included.split(", ").map((feature) => (
                       <li key={feature} className="flex items-center gap-2">
                         <span className="h-2 w-2 rounded-full bg-accent" />
-                        {feature}
+                        {feature.replace(/^and /, "")}
                       </li>
                     ))}
                   </ul>
+                  <div className="mt-4 border-t border-[#dbdbdb] pt-4">
+                    <div className="text-sm font-semibold text-[#262626]">Workflow</div>
+                    <p className="mt-2 text-sm text-[#737373]">{millionClassicsWorkflow.workflow}</p>
+                  </div>
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    {millionClassicsWorkflow.tools.slice(0, 4).map((tool) => (
+                      <span key={tool} className="rounded-full bg-white px-3 py-1 text-xs text-[#737373]">
+                        {tool}
+                      </span>
+                    ))}
+                  </div>
                 </div>
 
                 <div className="border border-accent bg-accent p-4 text-accent-foreground">
                   <div className="text-xs font-semibold uppercase tracking-[0.18em] text-white/70">
-                    {visualHQProPlan.service}
+                    {millionClassicsWorkflow.service}
                   </div>
-                  <div className="mt-1 text-4xl font-semibold">{formatPrice(visualHQProPlan.price, "USD")}</div>
+                  <div className="mt-1 text-4xl font-semibold">{formatPrice(millionClassicsWorkflow.price, "USD")}</div>
                   <div className="text-sm font-medium text-white/75">
-                    per month - {formatPrice(visualHQProPlan.price, "NGN")}
+                    {millionClassicsWorkflow.timeline} - {formatPrice(millionClassicsWorkflow.price, "NGN")}
                   </div>
                   <a
-                    href={visualHQProPlan.paymentHref}
-                    className="mt-4 inline-flex w-full items-center justify-center rounded-full bg-background px-5 py-3 text-sm font-semibold text-accent-foreground transition hover:bg-background/90"
+                    href="/contact"
+                    className="mt-4 inline-flex w-full items-center justify-center rounded-full bg-background px-5 py-3 text-sm font-semibold text-foreground transition hover:bg-background/90"
                   >
-                    Start {visualHQProPlan.service}
+                    Build this workflow
+                  </a>
+                  <a
+                    href="/pricing#workflows"
+                    className="mt-3 inline-flex w-full items-center justify-center rounded-full border border-white/35 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/10"
+                  >
+                    See other plans
                   </a>
                 </div>
               </div>

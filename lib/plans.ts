@@ -7,6 +7,7 @@ export type ServiceRow = {
   price: Price
   timeline: string
   included: string
+  icon?: string
 }
 
 export type TierSpec = { text: string } | { strong: string; rest?: string }
@@ -28,6 +29,7 @@ export const NGN_PER_USD = 1360
 export const customDevelopmentRows: ServiceRow[] = [
   {
     service: "Discovery & Scoping",
+    icon: "compass",
     scope: "Fit, scope & build roadmap",
     price: "free",
     timeline: "45 min",
@@ -35,6 +37,7 @@ export const customDevelopmentRows: ServiceRow[] = [
   },
   {
     service: "MVP Web App",
+    icon: "layout",
     scope: "Up to 5 screens - 1 user role - frontend only",
     price: { amount: 1632000 },
     timeline: "1 week",
@@ -42,6 +45,7 @@ export const customDevelopmentRows: ServiceRow[] = [
   },
   {
     service: "Full Web App",
+    icon: "layers",
     scope: "Up to 12 screens - 2-3 roles - auth, DB, integrations",
     price: { amount: 3808000 },
     timeline: "2 weeks",
@@ -49,6 +53,7 @@ export const customDevelopmentRows: ServiceRow[] = [
   },
   {
     service: "Custom Web App",
+    icon: "code",
     scope: "Marketplaces, streaming, real-time, payments",
     price: { amount: 6120000, prefix: "From " },
     timeline: "4+ weeks",
@@ -56,6 +61,7 @@ export const customDevelopmentRows: ServiceRow[] = [
   },
   {
     service: "Add-on: Backend/API",
+    icon: "server",
     scope: "Extends an existing build",
     price: { amount: 1020000 },
     timeline: "3-5 days",
@@ -63,6 +69,7 @@ export const customDevelopmentRows: ServiceRow[] = [
   },
   {
     service: "Maintenance Retainer",
+    icon: "shield",
     scope: "Live site upkeep - Basic / Priority / Growth tiers",
     price: { amount: 340000, prefix: "From ", suffix: "/mo" },
     timeline: "Ongoing",
@@ -70,6 +77,7 @@ export const customDevelopmentRows: ServiceRow[] = [
   },
   {
     service: "Additional / Out-of-scope",
+    icon: "clock",
     scope: "Extra revisions & work beyond agreed scope",
     price: { amount: 54400, suffix: "/hr" },
     timeline: "As needed",
@@ -80,6 +88,7 @@ export const customDevelopmentRows: ServiceRow[] = [
 export const platformRows: ServiceRow[] = [
   {
     service: "Webflow Site",
+    icon: "globe",
     scope: "Up to 7 pages - CMS - responsive",
     price: { amount: 1292000 },
     timeline: "3-5 days",
@@ -87,6 +96,7 @@ export const platformRows: ServiceRow[] = [
   },
   {
     service: "Framer Site",
+    icon: "zap",
     scope: "Up to 7 pages - interactive & animated",
     price: { amount: 1156000 },
     timeline: "2-4 days",
@@ -94,6 +104,7 @@ export const platformRows: ServiceRow[] = [
   },
   {
     service: "WordPress Site",
+    icon: "edit",
     scope: "Up to 7 pages - blog - custom theme",
     price: { amount: 1088000 },
     timeline: "3-5 days",
@@ -101,6 +112,7 @@ export const platformRows: ServiceRow[] = [
   },
   {
     service: "Add-on: WooCommerce",
+    icon: "cart",
     scope: "E-commerce layer on WordPress",
     price: { amount: 612000, prefix: "+" },
     timeline: "+2-3 days",
@@ -111,6 +123,7 @@ export const platformRows: ServiceRow[] = [
 export const growthPlanRows: GrowthPlan[] = [
   {
     service: "VisualHQ Pro",
+    icon: "trending",
     scope: "Monthly growth system for audience-to-action campaigns",
     price: { amount: 200000 },
     timeline: "Monthly",
@@ -128,7 +141,20 @@ export const growthPlanRows: GrowthPlan[] = [
 
 export const workflowPlanRows: WorkflowPlan[] = [
   {
+    service: "Marketing",
+    icon: "trending",
+    scope: "Helps your business run monthly content, ads, automation, and campaign follow-up",
+    painPoint: "You need consistent marketing activity, but strategy, content, ads, and follow-up are not connected.",
+    workflow: "Plan campaign -> Create content -> Run ads -> Follow up -> Track response",
+    tools: ["Meta Business Suite", "SendPulse", "Notion", "WhatsApp", "Google Sheets"],
+    outcome: "For businesses who need help running monthly marketing campaigns that create attention and follow-up.",
+    price: { amount: 200000 },
+    timeline: "Monthly",
+    included: "Digital strategy, ad management, SendPulse automation, Notion campaign board, campaign design",
+  },
+  {
     service: "Orbit",
+    icon: "orbit",
     scope: "Helps your business collect leads from every channel and follow up faster",
     painPoint: "You get leads from your website, DMs, WhatsApp, email, and ads, but some people do not get a fast reply.",
     workflow: "New lead -> Auto-reply -> Qualify -> Assign -> Book a call",
@@ -140,6 +166,7 @@ export const workflowPlanRows: WorkflowPlan[] = [
   },
   {
     service: "Studio",
+    icon: "image",
     scope: "Helps your team plan, approve, and publish content without confusion",
     painPoint: "Your content ideas, captions, files, approvals, and posting tasks are scattered across too many places.",
     workflow: "Idea -> Brief -> Approve -> Schedule -> Publish",
@@ -151,6 +178,7 @@ export const workflowPlanRows: WorkflowPlan[] = [
   },
   {
     service: "Launch",
+    icon: "rocket",
     scope: "Helps your ads turn into tracked leads, follow-ups, and sales conversations",
     painPoint: "People click your ads, but the next steps are not clear or properly tracked.",
     workflow: "Ad click -> Landing page -> Lead capture -> Follow-up -> Sale",
@@ -162,6 +190,7 @@ export const workflowPlanRows: WorkflowPlan[] = [
   },
   {
     service: "Pulse",
+    icon: "pulse",
     scope: "Helps your business follow up with interested customers who have not bought yet",
     painPoint: "People ask questions, abandon checkout, delay payment, or disappear after receiving a quote.",
     workflow: "Customer drops off -> Reminder -> Follow-up -> Return to buy",
@@ -173,6 +202,7 @@ export const workflowPlanRows: WorkflowPlan[] = [
   },
   {
     service: "Signal",
+    icon: "chart",
     scope: "Helps you understand what is bringing leads, sales, and customer interest",
     painPoint: "Your numbers are spread across ads, website analytics, social media, and sales tools.",
     workflow: "Collect numbers -> Summarize -> Show what worked -> Decide next steps",
@@ -184,6 +214,7 @@ export const workflowPlanRows: WorkflowPlan[] = [
   },
   {
     service: "Atlas",
+    icon: "map",
     scope: "Helps service businesses onboard clients and manage delivery in one clear flow",
     painPoint: "Payments, onboarding forms, files, tasks, approvals, and client updates are not connected.",
     workflow: "Payment -> Onboarding -> Project setup -> Approval -> Client update",
@@ -199,12 +230,14 @@ export const retainers: Array<{
   flag: string
   name: string
   amount: number
+  icon?: string
   featured?: boolean
   specs: TierSpec[]
 }> = [
   {
     flag: "",
     name: "Basic",
+    icon: "tool",
     amount: 340000,
     specs: [
       { strong: "5 hrs", rest: "of work / month" },
@@ -216,6 +249,7 @@ export const retainers: Array<{
   {
     flag: "Most popular",
     name: "Priority",
+    icon: "zap",
     amount: 612000,
     featured: true,
     specs: [
@@ -228,6 +262,7 @@ export const retainers: Array<{
   {
     flag: "",
     name: "Growth",
+    icon: "trending",
     amount: 800000,
     specs: [
       { strong: "25 hrs", rest: "of work / month" },

@@ -1,8 +1,30 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import Link from "next/link"
 import { Check } from "lucide-react"
+import type { IconType } from "react-icons"
+import {
+  FiActivity,
+  FiBarChart2,
+  FiClock,
+  FiCode,
+  FiCompass,
+  FiEdit3,
+  FiGlobe,
+  FiImage,
+  FiLayers,
+  FiMap,
+  FiMousePointer,
+  FiRepeat,
+  FiSend,
+  FiServer,
+  FiShield,
+  FiShoppingCart,
+  FiTool,
+  FiTrendingUp,
+  FiZap,
+} from "react-icons/fi"
 import {
   customDevelopmentRows,
   formatPrice,
@@ -39,11 +61,34 @@ const retainerDescriptions: Record<string, string> = {
 
 type PricingTab = (typeof pricingTabs)[number]["id"]
 
+const planIcons: Record<string, IconType> = {
+  cart: FiShoppingCart,
+  chart: FiBarChart2,
+  clock: FiClock,
+  code: FiCode,
+  compass: FiCompass,
+  edit: FiEdit3,
+  globe: FiGlobe,
+  image: FiImage,
+  layers: FiLayers,
+  layout: FiMousePointer,
+  map: FiMap,
+  orbit: FiRepeat,
+  pulse: FiActivity,
+  rocket: FiSend,
+  server: FiServer,
+  shield: FiShield,
+  tool: FiTool,
+  trending: FiTrendingUp,
+  zap: FiZap,
+}
+
 type OfferCardProps = {
   eyebrow: string
   badge?: string
   featured?: boolean
   title: string
+  icon?: string
   price: string
   timeline: string
   description?: string
@@ -58,6 +103,7 @@ function OfferCard({
   badge,
   featured,
   title,
+  icon,
   price,
   timeline,
   description,
@@ -66,6 +112,8 @@ function OfferCard({
   ctaLabel,
   ctaHref,
 }: OfferCardProps) {
+  const Icon = icon ? planIcons[icon] : undefined
+
   return (
     <div
       className={`group flex h-full flex-col rounded-2xl border p-6 transition-colors ${
@@ -86,7 +134,14 @@ function OfferCard({
           )}
         </div>
 
-        <h3 className="mt-3 text-2xl font-bold">{title}</h3>
+        <div className="mt-4 flex items-center gap-3">
+          {Icon && (
+            <span className="flex size-11 items-center justify-center rounded-full bg-accent/10 text-accent">
+              <Icon className="size-5" />
+            </span>
+          )}
+          <h3 className="text-2xl font-bold">{title}</h3>
+        </div>
 
         {description && <p className="mt-3 text-sm leading-6 text-muted-foreground">{description}</p>}
 
@@ -130,6 +185,23 @@ export function PricingSection() {
   const [activeTab, setActiveTab] = useState<PricingTab>("technology")
   const activeTabContent = pricingTabs.find((tab) => tab.id === activeTab) ?? pricingTabs[0]
 
+  function selectTab(tab: PricingTab) {
+    setActiveTab(tab)
+    window.history.pushState(null, "", `/pricing#${tab}`)
+  }
+
+  useEffect(() => {
+    function syncTabFromHash() {
+      const hashTab = window.location.hash.replace("#", "")
+      const nextTab = pricingTabs.find((tab) => tab.id === hashTab)?.id
+      if (nextTab) setActiveTab(nextTab)
+    }
+
+    syncTabFromHash()
+    window.addEventListener("hashchange", syncTabFromHash)
+    return () => window.removeEventListener("hashchange", syncTabFromHash)
+  }, [])
+
   return (
     <div className="space-y-14">
       <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-border bg-card px-5 py-4">
@@ -155,22 +227,25 @@ export function PricingSection() {
         </div>
       </div>
 
-      <div className="space-y-5">
-        <div className="grid gap-3 rounded-2xl border border-border bg-muted p-2 md:grid-cols-3">
-          {pricingTabs.map((tab) => (
-            <button
-              key={tab.id}
-              type="button"
-              onClick={() => setActiveTab(tab.id)}
-              className={`rounded-xl px-5 py-4 text-left transition-colors ${
-                activeTab === tab.id ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-accent"
-              }`}
-            >
-              <span className="block text-sm font-semibold uppercase tracking-[0.18em]">{tab.label}</span>
-            </button>
-          ))}
-        </div>
+      <div className="sticky top-[92px] z-40 grid gap-2 rounded-2xl border border-border bg-card/95 p-1.5 shadow-sm backdrop-blur md:top-[88px] md:grid-cols-3">
+        {pricingTabs.map((tab) => (
+          <a
+            key={tab.id}
+            href={`/pricing#${tab.id}`}
+            onClick={(event) => {
+              event.preventDefault()
+              selectTab(tab.id)
+            }}
+            className={`rounded-xl px-4 py-3 text-left transition-colors md:py-3 ${
+              activeTab === tab.id ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-accent"
+            }`}
+          >
+            <span className="block text-sm font-semibold uppercase tracking-[0.18em]">{tab.label}</span>
+          </a>
+        ))}
+      </div>
 
+      <div className="space-y-5">
         <div className="max-w-3xl">
           <p className="text-sm font-medium uppercase tracking-[0.18em] text-muted-foreground">
             {activeTabContent.label}
@@ -205,6 +280,7 @@ export function PricingSection() {
                   key={row.service}
                   eyebrow={row.price === "free" ? "Free" : "Offer"}
                   title={row.service}
+                  icon={row.icon}
                   price={formatPrice(row.price, currency)}
                   timeline={row.timeline}
                   description={row.scope}
@@ -227,6 +303,7 @@ export function PricingSection() {
                   key={row.service}
                   eyebrow={row.price === "free" ? "Free" : "Offer"}
                   title={row.service}
+                  icon={row.icon}
                   price={formatPrice(row.price, currency)}
                   timeline={row.timeline}
                   description={row.scope}
@@ -248,6 +325,7 @@ export function PricingSection() {
                 key={plan.service}
                 eyebrow="Workflow"
                 title={plan.service}
+                icon={plan.icon}
                 price={formatPrice(plan.price, currency)}
                 timeline={plan.timeline}
                 description={plan.outcome}
@@ -272,6 +350,7 @@ export function PricingSection() {
                   badge={tier.flag || undefined}
                   featured={tier.featured}
                   title={tier.name}
+                  icon={tier.icon}
                   price={formatPrice({ amount: tier.amount, suffix: "/mo" }, currency)}
                   timeline="Monthly"
                   description={retainerDescriptions[tier.name]}
