@@ -472,19 +472,17 @@ export default function InstagramPreviewPage() {
               </div>
               <div className="mb-3 flex flex-wrap items-center gap-2">
                 <span className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8e8e8e]">
-                  {millionClassicsWorkflow.service} Workflow
+                  {millionClassicsWorkflow.service}
                 </span>
               </div>
-              <h2 className="text-2xl font-semibold leading-tight md:text-3xl">
-                Run the Million Classics marketing workflow.
-              </h2>
+              <h2 className="text-2xl font-semibold leading-tight md:text-3xl">Turn attention into measurable growth.</h2>
               <p className="mt-3 max-w-[620px] text-sm leading-6 text-[#737373] md:text-base">
-                {millionClassicsWorkflow.outcome}
+                Buy this plan and get a growth system designed to turn audience attention into action.
               </p>
 
               <div className="mt-6 grid gap-3 text-left md:grid-cols-[1fr_240px]">
                 <div className="border border-[#dbdbdb] bg-[#fafafa] p-4">
-                  <div className="text-sm font-semibold text-[#262626]">What this workflow does</div>
+                  <div className="text-sm font-semibold text-[#262626]">Included in plan*</div>
                   <ul className="mt-3 grid gap-2 text-sm text-[#737373]">
                     {millionClassicsWorkflow.included.split(", ").map(toSentenceCase).map((feature) => (
                       <li key={feature} className="flex items-center gap-2">
@@ -507,9 +505,7 @@ export default function InstagramPreviewPage() {
                 </div>
 
                 <div className="border border-accent bg-accent p-4 text-accent-foreground">
-                  <div className="text-xs font-semibold uppercase tracking-[0.18em] text-white/70">
-                    {millionClassicsWorkflow.service}
-                  </div>
+                  <div className="text-xs font-semibold uppercase tracking-[0.18em] text-white/70">{millionClassicsWorkflow.service}</div>
                   <div className="mt-1 text-4xl font-semibold">{formatPrice(millionClassicsWorkflow.price, "USD")}</div>
                   <div className="text-sm font-medium text-white/75">
                     {millionClassicsWorkflow.timeline} - {formatPrice(millionClassicsWorkflow.price, "NGN")}
@@ -518,13 +514,7 @@ export default function InstagramPreviewPage() {
                     href="/contact"
                     className="mt-4 inline-flex w-full items-center justify-center rounded-full bg-background px-5 py-3 text-sm font-semibold text-foreground transition hover:bg-background/90"
                   >
-                    Build this workflow
-                  </a>
-                  <a
-                    href="/pricing#workflows"
-                    className="mt-3 inline-flex w-full items-center justify-center rounded-full border border-white/35 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/10"
-                  >
-                    See other plans
+                    Start {millionClassicsWorkflow.service}
                   </a>
                 </div>
               </div>

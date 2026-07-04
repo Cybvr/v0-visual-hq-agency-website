@@ -296,7 +296,7 @@ export function PricingSection() {
                   timeline={row.timeline}
                   description={row.scope}
                   features={[row.included]}
-                  ctaLabel={row.price === "free" ? "Book a call" : "Get started"}
+                  ctaLabel="Get plan"
                   ctaHref="/contact"
                 />
               ))}
@@ -319,7 +319,7 @@ export function PricingSection() {
                   timeline={row.timeline}
                   description={row.scope}
                   features={[row.included]}
-                  ctaLabel="Get started"
+                  ctaLabel="Get plan"
                   ctaHref="/contact"
                 />
               ))}
@@ -342,7 +342,7 @@ export function PricingSection() {
                 description={plan.outcome}
                 features={plan.included.split(", ").map(toSentenceCase)}
                 chips={plan.tools}
-                ctaLabel="Get started"
+                ctaLabel="Get plan"
                 ctaHref="/contact"
               />
             ))}
@@ -368,7 +368,7 @@ export function PricingSection() {
                   features={tier.specs.map((spec) =>
                     "text" in spec ? spec.text : `${spec.strong}${spec.rest ? ` ${spec.rest}` : ""}`,
                   )}
-                  ctaLabel="Get started"
+                  ctaLabel="Get plan"
                   ctaHref="/contact"
                 />
               ))}
