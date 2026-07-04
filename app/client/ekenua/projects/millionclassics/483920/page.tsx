@@ -48,6 +48,11 @@ const BRAND = {
 
 const PREVIEW_POST_COUNT = 9;
 
+// Mid-market rate, matches the rate card (app/ratecard/rate-card-content.tsx).
+const NGN_PER_USD = 1360;
+const PRICE_NGN = 200_000;
+const PRICE_USD = Math.round(PRICE_NGN / NGN_PER_USD);
+
 const appFont = {
   fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
 } as const;
@@ -439,7 +444,7 @@ export default function InstagramPreviewPage() {
           </div>
 
           <section className="relative mb-16 text-[#262626] md:mb-10">
-          <div className="relative max-h-[3800px] overflow-hidden sm:max-h-none sm:overflow-visible">
+          <div className="relative max-h-[1950px] overflow-hidden sm:max-h-none sm:overflow-visible">
           <div className="grid grid-cols-1 gap-1 sm:grid-cols-3">
             {previewPosts.map((post, i) => (
               <button
@@ -472,7 +477,7 @@ export default function InstagramPreviewPage() {
               </h2>
               <p className="mt-3 max-w-[620px] text-sm leading-6 text-[#737373] md:text-base">
                 Buy VisualHQ Pro and get
-                digital strategy, ad buy, and visual design to turn audience attention into action.
+                a growth system designed to turn audience attention into action.
               </p>
 
               <div className="mt-6 grid gap-3 text-left md:grid-cols-[1fr_240px]">
@@ -485,7 +490,15 @@ export default function InstagramPreviewPage() {
                     </li>
                     <li className="flex items-center gap-2">
                       <span className="h-2 w-2 rounded-full bg-[#0E32FC]" />
-                      Ad buy management to reach the right audience
+                      Meta Business Suite ad buy management to reach the right audience
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <span className="h-2 w-2 rounded-full bg-[#0E32FC]" />
+                      SendPulse automation for follow-up and conversion flows
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <span className="h-2 w-2 rounded-full bg-[#0E32FC]" />
+                      Dedicated Notion OS to manage campaign assets and tasks
                     </li>
                     <li className="flex items-center gap-2">
                       <span className="h-2 w-2 rounded-full bg-[#0E32FC]" />
@@ -498,8 +511,10 @@ export default function InstagramPreviewPage() {
                   <div className="text-xs font-semibold uppercase tracking-[0.18em] text-white/70">
                     VisualHQ Pro
                   </div>
-                  <div className="mt-1 text-4xl font-semibold">$50</div>
-                  <div className="text-sm font-medium text-white/75">per month</div>
+                  <div className="mt-1 text-4xl font-semibold">${PRICE_USD.toLocaleString("en-US")}</div>
+                  <div className="text-sm font-medium text-white/75">
+                    per month · ₦{PRICE_NGN.toLocaleString("en-NG")}
+                  </div>
                   <a
                     href="https://paystack.shop/pay/visualhqpro"
                     className="mt-4 inline-flex w-full items-center justify-center rounded-full bg-white px-5 py-3 text-sm font-semibold text-[#0E32FC] transition hover:bg-white/92"
@@ -508,7 +523,7 @@ export default function InstagramPreviewPage() {
                   </a>
                 </div>
               </div>
-              <div className="mx-auto mt-5 flex max-w-[280px] justify-center">
+              <div className="mx-auto mt-5 flex max-w-[200px] justify-center">
                 <Image
                   src="/images/paystack-secured.png"
                   alt="Secured by Paystack. Visa, Mastercard, Verve, American Express, Apple Pay and AfriGO accepted."
