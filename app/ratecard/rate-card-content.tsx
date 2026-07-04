@@ -10,6 +10,7 @@ import {
   NGN_PER_USD,
   platformRows,
   retainers,
+  workflowPlanRows,
   type Currency,
   type ServiceRow,
   type TierSpec,
@@ -584,6 +585,19 @@ export function RateCardContent() {
             <RateTable
               headers={["Service", "Scope", `Price (${currencySymbol})`, "Timeline", "What's Included"]}
               rows={platformRows}
+              currency={currency}
+            />
+
+            <hr className="section-rule" />
+
+            <div className="section">
+              <h3 className="section-title">Growth Workflows</h3>
+              <div className="section-accent" />
+            </div>
+
+            <RateTable
+              headers={["Workflow", "Pain Point", `Price (${currencySymbol})`, "Timeline", "What's Included"]}
+              rows={workflowPlanRows}
               currency={currency}
             />
 

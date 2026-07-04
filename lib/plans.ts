@@ -16,6 +16,13 @@ export type GrowthPlan = ServiceRow & {
   paymentHref?: string
 }
 
+export type WorkflowPlan = ServiceRow & {
+  painPoint: string
+  workflow: string
+  tools: string[]
+  outcome: string
+}
+
 export const NGN_PER_USD = 1360
 
 export const customDevelopmentRows: ServiceRow[] = [
@@ -116,6 +123,75 @@ export const growthPlanRows: GrowthPlan[] = [
       "Dedicated Notion OS to manage campaign assets and tasks",
       "Visual design that makes the campaign feel premium",
     ],
+  },
+]
+
+export const workflowPlanRows: WorkflowPlan[] = [
+  {
+    service: "Orbit",
+    scope: "Helps your business collect leads from every channel and follow up faster",
+    painPoint: "You get leads from your website, DMs, WhatsApp, email, and ads, but some people do not get a fast reply.",
+    workflow: "New lead -> Auto-reply -> Qualify -> Assign -> Book a call",
+    tools: ["Website forms", "WhatsApp", "Instagram DMs", "Gmail", "CRM / Sheets", "Cal.com"],
+    outcome: "For businesses who need help capturing leads, replying faster, and booking more calls.",
+    price: { amount: 680000, prefix: "From " },
+    timeline: "Setup + monthly",
+    included: "Lead routing, qualification rules, reminders, booking handoff, and pipeline visibility",
+  },
+  {
+    service: "Studio",
+    scope: "Helps your team plan, approve, and publish content without confusion",
+    painPoint: "Your content ideas, captions, files, approvals, and posting tasks are scattered across too many places.",
+    workflow: "Idea -> Brief -> Approve -> Schedule -> Publish",
+    tools: ["Notion", "Airtable", "Google Drive", "Canva", "Buffer", "Meta Business Suite"],
+    outcome: "For businesses who need help planning, approving, and publishing content consistently.",
+    price: { amount: 560000, prefix: "From " },
+    timeline: "Setup + monthly",
+    included: "Campaign board, content calendar, approval flow, asset library, and publishing checklist",
+  },
+  {
+    service: "Launch",
+    scope: "Helps your ads turn into tracked leads, follow-ups, and sales conversations",
+    painPoint: "People click your ads, but the next steps are not clear or properly tracked.",
+    workflow: "Ad click -> Landing page -> Lead capture -> Follow-up -> Sale",
+    tools: ["Meta Ads", "Google Analytics", "Landing pages", "Forms", "CRM", "Email / WhatsApp"],
+    outcome: "For businesses who need help turning ad traffic into leads and sales follow-up.",
+    price: { amount: 850000, prefix: "From " },
+    timeline: "Setup + monthly",
+    included: "Campaign funnel map, landing-page handoff, CRM tagging, retargeting audiences, and conversion tracking",
+  },
+  {
+    service: "Pulse",
+    scope: "Helps your business follow up with interested customers who have not bought yet",
+    painPoint: "People ask questions, abandon checkout, delay payment, or disappear after receiving a quote.",
+    workflow: "Customer drops off -> Reminder -> Follow-up -> Return to buy",
+    tools: ["Shopify / WooCommerce", "Paystack", "Email", "WhatsApp", "CRM", "Sheets"],
+    outcome: "For businesses who need help following up with customers who showed interest but did not buy.",
+    price: { amount: 520000, prefix: "From " },
+    timeline: "Setup + monthly",
+    included: "Drop-off triggers, reminder sequences, quote follow-up, abandoned cart recovery, and reactivation lists",
+  },
+  {
+    service: "Signal",
+    scope: "Helps you understand what is bringing leads, sales, and customer interest",
+    painPoint: "Your numbers are spread across ads, website analytics, social media, and sales tools.",
+    workflow: "Collect numbers -> Summarize -> Show what worked -> Decide next steps",
+    tools: ["Google Analytics", "Meta Ads", "Search Console", "CRM", "Sheets", "Looker Studio"],
+    outcome: "For businesses who need help understanding what is bringing leads, sales, and customer interest.",
+    price: { amount: 480000, prefix: "From " },
+    timeline: "Setup + monthly",
+    included: "Data source map, reporting dashboard, weekly summary format, KPI tracking, and action recommendations",
+  },
+  {
+    service: "Atlas",
+    scope: "Helps service businesses onboard clients and manage delivery in one clear flow",
+    painPoint: "Payments, onboarding forms, files, tasks, approvals, and client updates are not connected.",
+    workflow: "Payment -> Onboarding -> Project setup -> Approval -> Client update",
+    tools: ["Paystack", "Notion", "Google Drive", "Slack / WhatsApp", "Forms", "Email"],
+    outcome: "For businesses who need help onboarding clients, organizing files, and managing delivery.",
+    price: { amount: 620000, prefix: "From " },
+    timeline: "Setup + monthly",
+    included: "Onboarding form, project workspace, folder automation, approval checkpoints, and status update flow",
   },
 ]
 
