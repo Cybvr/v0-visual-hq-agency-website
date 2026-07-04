@@ -209,22 +209,26 @@ export function PricingSection() {
 
   return (
     <div className="space-y-14">
-      <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-border bg-card px-5 py-4">
+      <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <p className="text-sm font-semibold">Choose currency</p>
+          <p className="text-[11.5px] font-bold uppercase tracking-[0.05em] text-muted-foreground">Choose currency</p>
           <p className="text-sm text-muted-foreground">View pricing in USD or Nigerian naira.</p>
         </div>
-        <div className="inline-flex rounded-full border border-border bg-muted p-1">
+        <div className="inline-flex rounded-full border border-border bg-muted p-[3px]">
           <button
             type="button"
-            className={`rounded-full px-4 py-2 text-sm font-semibold ${currency === "USD" ? "bg-accent text-accent-foreground" : "text-muted-foreground"}`}
+            className={`rounded-full px-[14px] py-[6px] text-xs font-bold ${
+              currency === "USD" ? "bg-accent text-accent-foreground" : "text-muted-foreground"
+            }`}
             onClick={() => setCurrency("USD")}
           >
             USD
           </button>
           <button
             type="button"
-            className={`rounded-full px-4 py-2 text-sm font-semibold ${currency === "NGN" ? "bg-accent text-accent-foreground" : "text-muted-foreground"}`}
+            className={`rounded-full px-[14px] py-[6px] text-xs font-bold ${
+              currency === "NGN" ? "bg-accent text-accent-foreground" : "text-muted-foreground"
+            }`}
             onClick={() => setCurrency("NGN")}
           >
             NGN
@@ -232,7 +236,7 @@ export function PricingSection() {
         </div>
       </div>
 
-      <div className="sticky top-[92px] z-40 grid gap-2 rounded-2xl border border-border bg-card/95 p-1.5 shadow-sm backdrop-blur md:top-[88px] md:grid-cols-3">
+      <div className="sticky top-[92px] z-40 grid grid-cols-3 gap-[6px] rounded-[10px] border border-border bg-[#f3f2f0]/95 p-[6px] backdrop-blur md:top-[88px]">
         {pricingTabs.map((tab) => (
           <a
             key={tab.id}
@@ -241,11 +245,13 @@ export function PricingSection() {
               event.preventDefault()
               selectTab(tab.id)
             }}
-            className={`rounded-xl px-4 py-3 text-left transition-colors md:py-3 ${
-              activeTab === tab.id ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-accent"
+            className={`rounded-[7px] px-[10px] py-3 text-left text-[11px] font-extrabold uppercase tracking-[0.16em] transition-colors ${
+              activeTab === tab.id
+                ? "bg-background text-foreground shadow-[0_1px_5px_rgba(0,0,0,0.08)]"
+                : "text-muted-foreground hover:text-foreground"
             }`}
           >
-            <span className="block text-sm font-semibold uppercase tracking-[0.18em]">{tab.label}</span>
+            <span className="block">{tab.label}</span>
           </a>
         ))}
       </div>
