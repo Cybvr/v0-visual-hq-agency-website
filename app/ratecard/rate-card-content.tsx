@@ -623,7 +623,20 @@ export function RateCardContent() {
           }
 
           .ratecard-page .tab-row {
-            grid-template-columns: 1fr;
+            display: flex;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+          }
+
+          .ratecard-page .tab-row::-webkit-scrollbar {
+            display: none;
+          }
+
+          .ratecard-page .tab-btn {
+            flex: 0 0 auto;
+            min-width: 150px;
           }
 
           .ratecard-page .footer-divider {

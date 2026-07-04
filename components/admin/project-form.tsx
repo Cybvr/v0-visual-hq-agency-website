@@ -9,7 +9,6 @@ import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent } from "@/components/ui/card"
 import { Switch } from "@/components/ui/switch"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Loader2, X } from "lucide-react"
 import {
   createPortfolioProject,
@@ -23,6 +22,7 @@ const CATEGORIES = ["Branding", "Web Development", "Presentation Design"]
 type FormState = {
   title: string
   slug: string
+  excerpt: string
   description: string
   category: string[]
   imageUrl: string
@@ -44,6 +44,7 @@ type FormState = {
 const EMPTY_FORM: FormState = {
   title: "",
   slug: "",
+  excerpt: "",
   description: "",
   category: [],
   imageUrl: "",
@@ -55,7 +56,7 @@ const EMPTY_FORM: FormState = {
   founders: "",
   industry: "",
   projectUrl: "",
-  status: "Draft",
+  status: "draft",
   featured: false,
   order: 0,
   tags: [],
@@ -80,6 +81,7 @@ export function ProjectForm({ project, existingCategories = [], onSaved, onCance
       setFormData({
         title: project.title || "",
         slug: project.slug || "",
+        excerpt: project.excerpt || "",
         description: project.description || "",
         category: project.category || [],
         imageUrl: project.imageUrl || "",
@@ -91,7 +93,7 @@ export function ProjectForm({ project, existingCategories = [], onSaved, onCance
         founders: project.founders || "",
         industry: project.industry || "",
         projectUrl: project.projectUrl || "",
-        status: project.status || "Draft",
+        status: project.status?.trim().toLowerCase() === "published" ? "published" : "draft",
         featured: project.featured || false,
         order: project.order || 0,
         tags: project.tags || [],
@@ -149,15 +151,19 @@ export function ProjectForm({ project, existingCategories = [], onSaved, onCance
     setFormData((prev) => ({ ...prev, technologies: prev.technologies.filter((_, i) => i !== index) }))
   }
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
+  async function saveProject() {
+    if (saving) return;
     setSaving(true)
     try {
+      const dataToSave = {
+        ...formData,
+        status: formData.status?.trim().toLowerCase() === "published" ? "published" : "draft",
+      }
       if (project) {
-        await updatePortfolioProject(project.id, formData)
+        await updatePortfolioProject(project.id, dataToSave)
         onSaved(project.id)
       } else {
-        const id = await createPortfolioProject(formData)
+        const id = await createPortfolioProject(dataToSave)
         onSaved(id)
       }
     } catch (error) {
@@ -166,6 +172,23 @@ export function ProjectForm({ project, existingCategories = [], onSaved, onCance
       setSaving(false)
     }
   }
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    await saveProject()
+  }
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+        e.preventDefault()
+        saveProject()
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [formData, project, saving, onSaved])
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
@@ -180,6 +203,16 @@ export function ProjectForm({ project, existingCategories = [], onSaved, onCance
               <Label htmlFor="slug">Slug</Label>
               <Input id="slug" value={formData.slug} onChange={(e) => handleChange("slug", e.target.value)} />
             </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="excerpt">Excerpt</Label>
+            <Textarea
+              id="excerpt"
+              value={formData.excerpt}
+              onChange={(e) => handleChange("excerpt", e.target.value)}
+              rows={2}
+            />
           </div>
 
           <div className="space-y-1.5">
@@ -319,28 +352,23 @@ export function ProjectForm({ project, existingCategories = [], onSaved, onCance
             )}
           </div>
 
-          <div className="grid gap-3 md:grid-cols-2">
-            <div className="space-y-1.5">
-              <Label htmlFor="status">Status</Label>
-              <Select value={formData.status} onValueChange={(v) => handleChange("status", v)}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Draft">Draft</SelectItem>
-                  <SelectItem value="Published">Published</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="order">Order</Label>
-              <Input
-                id="order"
-                type="number"
-                value={formData.order}
-                onChange={(e) => handleChange("order", Number.parseInt(e.target.value) || 0)}
-              />
-            </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="order">Order</Label>
+            <Input
+              id="order"
+              type="number"
+              value={formData.order}
+              onChange={(e) => handleChange("order", Number.parseInt(e.target.value) || 0)}
+            />
+          </div>
+
+          <div className="flex items-center gap-3">
+            <Switch
+              id="status"
+              checked={formData.status?.trim().toLowerCase() === "published"}
+              onCheckedChange={(v) => handleChange("status", v ? "published" : "draft")}
+            />
+            <Label htmlFor="status">Published</Label>
           </div>
 
           <div className="flex items-center gap-3">

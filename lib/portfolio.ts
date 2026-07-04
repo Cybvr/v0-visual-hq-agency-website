@@ -18,6 +18,7 @@ export interface PortfolioProject {
   id: string
   title: string
   slug: string
+  excerpt?: string
   description: string
   category: string[]
   imageUrl: string
@@ -44,8 +45,8 @@ export async function getPortfolioProjects(): Promise<PortfolioProject[]> {
   const q = query(collection(db, COLLECTION_NAME), orderBy("order", "asc"))
   const snapshot = await getDocs(q)
   return snapshot.docs.map((doc) => ({
-    id: doc.id,
     ...doc.data(),
+    id: doc.id,
   })) as PortfolioProject[]
 }
 
@@ -59,8 +60,8 @@ export async function getFeaturedProjects(maxCount = 3): Promise<PortfolioProjec
   )
   const snapshot = await getDocs(q)
   return snapshot.docs.map((doc) => ({
-    id: doc.id,
     ...doc.data(),
+    id: doc.id,
   })) as PortfolioProject[]
 }
 
@@ -68,7 +69,7 @@ export async function getPortfolioProject(id: string): Promise<PortfolioProject 
   const docRef = doc(db, COLLECTION_NAME, id)
   const snapshot = await getDoc(docRef)
   if (!snapshot.exists()) return null
-  return { id: snapshot.id, ...snapshot.data() } as PortfolioProject
+  return { ...snapshot.data(), id: snapshot.id } as PortfolioProject
 }
 
 export async function createPortfolioProject(
@@ -103,5 +104,5 @@ export async function getPortfolioProjectBySlug(slug: string): Promise<Portfolio
   const snapshot = await getDocs(q)
   if (snapshot.empty) return null
   const docSnap = snapshot.docs[0]
-  return { id: docSnap.id, ...docSnap.data() } as PortfolioProject
+  return { ...docSnap.data(), id: docSnap.id } as PortfolioProject
 }
