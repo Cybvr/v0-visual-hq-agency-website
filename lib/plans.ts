@@ -22,6 +22,7 @@ export type WorkflowPlan = ServiceRow & {
   workflow: string
   tools: string[]
   outcome: string
+  paymentHref?: string
 }
 
 export const NGN_PER_USD = 1360
@@ -151,6 +152,7 @@ export const workflowPlanRows: WorkflowPlan[] = [
     price: { amount: 200000 },
     timeline: "Monthly",
     included: "Digital strategy, ad management, SendPulse automation, Notion campaign board, campaign design",
+    paymentHref: "https://paystack.shop/pay/visualhqpro",
   },
   {
     service: "Orbit",

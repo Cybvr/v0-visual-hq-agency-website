@@ -467,8 +467,11 @@ export default function InstagramPreviewPage() {
           </div>
             <div className="relative z-10 px-2 pb-8 pt-6 sm:-mt-[260px] sm:pt-[150px]">
             <div className="mx-auto max-w-[760px] rounded-[8px] border border-[#dbdbdb] bg-white p-5 text-left shadow-[0_8px_24px_rgba(0,0,0,0.06)]">
-              <div className="mb-4 flex items-center">
+              <div className="mb-4 flex items-center gap-3">
                 <Image src="/visualhqlogo.svg" alt="VisualHQ" width={28} height={28} />
+                <span className="text-xs text-[#8e8e8e]">
+                  Concept mockup by VisualHQ — not live posts
+                </span>
               </div>
               <div className="mb-3 flex flex-wrap items-center gap-2">
                 <span className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8e8e8e]">
@@ -511,7 +514,7 @@ export default function InstagramPreviewPage() {
                     {millionClassicsWorkflow.timeline} - {formatPrice(millionClassicsWorkflow.price, "NGN")}
                   </div>
                   <a
-                    href="/contact"
+                    href={millionClassicsWorkflow.paymentHref ?? "/contact"}
                     className="mt-4 inline-flex w-full items-center justify-center rounded-full bg-background px-5 py-3 text-sm font-semibold text-foreground transition hover:bg-background/90"
                   >
                     Start {millionClassicsWorkflow.service}
