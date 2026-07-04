@@ -83,6 +83,11 @@ const planIcons: Record<string, IconType> = {
   zap: FiZap,
 }
 
+function toSentenceCase(value: string) {
+  const trimmed = value.trim().replace(/^and /, "")
+  return trimmed ? `${trimmed.charAt(0).toUpperCase()}${trimmed.slice(1)}` : trimmed
+}
+
 type OfferCardProps = {
   eyebrow: string
   badge?: string
@@ -329,7 +334,7 @@ export function PricingSection() {
                 price={formatPrice(plan.price, currency)}
                 timeline={plan.timeline}
                 description={plan.outcome}
-                features={plan.included.split(", ").map((item) => item.replace(/^and /, ""))}
+                features={plan.included.split(", ").map(toSentenceCase)}
                 chips={plan.tools}
                 ctaLabel="Get started"
                 ctaHref="/contact"

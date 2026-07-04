@@ -51,6 +51,11 @@ const PREVIEW_POST_COUNT = 9;
 
 const millionClassicsWorkflow = workflowPlanRows.find((plan) => plan.service === "Marketing") ?? workflowPlanRows[0];
 
+function toSentenceCase(value: string) {
+  const trimmed = value.trim().replace(/^and /, "");
+  return trimmed ? `${trimmed.charAt(0).toUpperCase()}${trimmed.slice(1)}` : trimmed;
+}
+
 const appFont = {
   fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
 } as const;
@@ -481,10 +486,10 @@ export default function InstagramPreviewPage() {
                 <div className="border border-[#dbdbdb] bg-[#fafafa] p-4">
                   <div className="text-sm font-semibold text-[#262626]">What this workflow does</div>
                   <ul className="mt-3 grid gap-2 text-sm text-[#737373]">
-                    {millionClassicsWorkflow.included.split(", ").map((feature) => (
+                    {millionClassicsWorkflow.included.split(", ").map(toSentenceCase).map((feature) => (
                       <li key={feature} className="flex items-center gap-2">
                         <span className="h-2 w-2 rounded-full bg-accent" />
-                        {feature.replace(/^and /, "")}
+                        {feature}
                       </li>
                     ))}
                   </ul>
