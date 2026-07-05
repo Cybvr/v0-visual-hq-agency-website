@@ -1,7 +1,10 @@
 export type MarketingPost = {
   slug: string
-  image: string
-  imageAlt: string
+  eyebrow: string
+  headline: string
+  supporting: string
+  cta: string
+  variant: "discovery" | "website" | "funnel" | "mvp"
   caption: string
   likes: number
   comments: number
@@ -30,84 +33,55 @@ export const marketingProfile: MarketingProfile = {
 
 export const marketingPosts: MarketingPost[] = [
   {
-    slug: "fintech-dashboard",
-    image: "/fintech-dashboard-dark-modern.jpg",
-    imageAlt: "Dark fintech dashboard design",
-    caption: "Fintech dashboard, dark mode done right. Design that makes numbers feel calm.",
+    slug: "discovery-call",
+    eyebrow: "Free discovery",
+    headline: "Book a 45-min scoping call.",
+    supporting: "Get clarity, scope, and a fixed quote before the project starts.",
+    cta: "Book now",
+    variant: "discovery",
+    caption:
+      "Start with a free 45-minute discovery and scoping call. Leave with clearer next steps and a fixed quote for your build.",
     likes: 312,
     comments: 14,
     timeAgo: "6h",
   },
   {
-    slug: "creative-studio-identity",
-    image: "/creative-studio-brand-identity-minimal.jpg",
-    imageAlt: "Minimal creative studio brand identity",
-    caption: "Brand identity for a creative studio. Minimal on purpose.",
+    slug: "website-launch",
+    eyebrow: "Fast websites",
+    headline: "Launch a serious website in days.",
+    supporting: "Webflow, Framer, or WordPress for brands that need to move quickly.",
+    cta: "See options",
+    variant: "website",
+    caption:
+      "Need a clean, conversion-focused site without a dragged-out timeline? We design and launch websites in days, not months.",
     likes: 268,
     comments: 9,
     timeAgo: "1d",
   },
   {
-    slug: "food-delivery-app",
-    image: "/food-delivery-app-interface-orange.jpg",
-    imageAlt: "Food delivery app interface",
-    caption: "Appetite-first UI. A delivery experience designed around the food, not the menu tree.",
+    slug: "ads-to-leads",
+    eyebrow: "Campaign systems",
+    headline: "Your ads should lead somewhere.",
+    supporting: "Landing pages, follow-up, tracking, and the next steps after the click.",
+    cta: "Build the funnel",
+    variant: "funnel",
+    caption:
+      "We help businesses turn ad clicks into real leads with landing pages, follow-up flows, tracking, and clear next steps.",
     likes: 421,
     comments: 22,
     timeAgo: "2d",
   },
   {
-    slug: "healthcare-brand",
-    image: "/healthcare-brand-identity-clean.jpg",
-    imageAlt: "Clean healthcare brand identity",
-    caption: "Healthcare branding that feels human. Clean, warm, trustworthy.",
+    slug: "mvp-build",
+    eyebrow: "Product sprint",
+    headline: "Start with the MVP.",
+    supporting: "Ship a focused product fast for testing, pitching, or launch.",
+    cta: "Start scoping",
+    variant: "mvp",
+    caption:
+      "If you need to test an idea, pitch investors, or launch quickly, we can design and build an MVP web app with speed and clarity.",
     likes: 197,
     comments: 7,
     timeAgo: "3d",
-  },
-  {
-    slug: "lagos-workspace",
-    image: "/modern-creative-office-workspace-lagos.jpg",
-    imageAlt: "Modern creative workspace in Lagos",
-    caption: "Where the work happens. Lagos, always.",
-    likes: 356,
-    comments: 18,
-    timeAgo: "4d",
-  },
-  {
-    slug: "real-estate-site",
-    image: "/modern-real-estate-website.png",
-    imageAlt: "Modern real estate website",
-    caption: "Real estate, minus the clutter. A listings site that sells the home before the visit.",
-    likes: 243,
-    comments: 11,
-    timeAgo: "5d",
-  },
-  {
-    slug: "consulting-identity",
-    image: "/consulting-firm-brand-identity-professional.jpg",
-    imageAlt: "Professional consulting firm brand identity",
-    caption: "Identity system for a consulting firm. Serious without being stiff.",
-    likes: 184,
-    comments: 6,
-    timeAgo: "6d",
-  },
-  {
-    slug: "brand-mockup",
-    image: "/creative-studio-brand-mockup.jpg",
-    imageAlt: "Creative studio brand mockup",
-    caption: "From moodboard to mockup. Process post - how a look becomes a system.",
-    likes: 289,
-    comments: 13,
-    timeAgo: "1w",
-  },
-  {
-    slug: "fintech-app",
-    image: "/fintech-app-dashboard-dark-modern.jpg",
-    imageAlt: "Fintech app dashboard",
-    caption: "Same product, sharper story. Post-redesign metrics tell the rest.",
-    likes: 231,
-    comments: 8,
-    timeAgo: "1w",
   },
 ]
