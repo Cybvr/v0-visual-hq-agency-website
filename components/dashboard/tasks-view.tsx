@@ -335,7 +335,7 @@ export function TasksView({
             onDragStart={handleDragStart}
             onDragEnd={handleDragEnd}
           >
-            <div className="flex gap-4 overflow-x-auto pb-4">
+            <div className="scrollbar-none flex gap-4 overflow-x-auto pb-4">
               {STATUS_ORDER.map((status) => {
                 const meta = taskStatusMeta[status]
                 const items = optimisticTasks.filter((t: Task) => t.status === status)

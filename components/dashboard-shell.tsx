@@ -11,6 +11,7 @@ import { useAuth } from "@/components/auth-provider"
 import { cn } from "@/lib/utils"
 
 const COLLAPSE_STORAGE_KEY = "dashboardSidebarCollapsed"
+const APP_CANVAS_CLASS = "bg-[#f5f3ef]"
 
 export type NavLink = {
   label: string
@@ -187,11 +188,12 @@ export function DashboardShell({
   }, [pathname])
 
   return (
-    <div className="min-h-screen bg-[#f5f3ef]">
+    <div className={cn("min-h-screen", APP_CANVAS_CLASS)}>
       {/* Desktop sidebar */}
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-40 hidden flex-col border-r border-black/5 bg-white/88 shadow-[0_18px_40px_rgba(15,23,42,0.07)] backdrop-blur-sm transition-[width] duration-200 md:flex",
+          "fixed inset-y-0 left-0 z-40 hidden flex-col transition-[width] duration-200 md:flex",
+          APP_CANVAS_CLASS,
           collapsed ? "w-16" : "w-60",
         )}
       >
@@ -207,7 +209,7 @@ export function DashboardShell({
       </aside>
 
       {/* Mobile top bar with hamburger -> Sheet */}
-      <div className="sticky top-0 z-40 flex items-center gap-3 border-b border-black/5 bg-white/88 px-4 py-3 shadow-[0_10px_30px_rgba(15,23,42,0.06)] backdrop-blur-sm md:hidden">
+      <div className={cn("sticky top-0 z-40 flex items-center gap-3 px-4 py-3 md:hidden", APP_CANVAS_CLASS)}>
         <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
           <SheetTrigger asChild>
             <Button variant="ghost" size="icon" className="h-9 w-9" aria-label="Open menu">
@@ -229,12 +231,13 @@ export function DashboardShell({
         <BrandLockup logoSize={22} gapClassName="gap-0.5" />
       </div>
 
-      <div className={cn("transition-[padding] duration-200", collapsed ? "md:pl-16" : "md:pl-60")}>
-        <div className="min-h-screen px-3 py-3 sm:px-4 sm:py-4 md:px-6 md:py-6">
-          <main className="min-h-[calc(100vh-1.5rem)] rounded-[28px] border border-black/6 bg-white shadow-[0_14px_38px_rgba(15,23,42,0.08),0_2px_8px_rgba(15,23,42,0.04)] md:min-h-[calc(100vh-3rem)]">
-            {children}
-          </main>
-        </div>
+      <div
+        className={cn(
+          "min-h-screen bg-background shadow-[0_16px_42px_rgba(15,23,42,0.14),0_3px_10px_rgba(15,23,42,0.08)] transition-[padding] duration-200",
+          collapsed ? "md:pl-16" : "md:pl-60",
+        )}
+      >
+        {children}
       </div>
     </div>
   )
