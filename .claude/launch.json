@@ -3,8 +3,8 @@
   "configurations": [
     {
       "name": "visualhq-dev",
-      "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev"],
+      "runtimeExecutable": "cmd.exe",
+      "runtimeArgs": ["/c", ".claude\\dev.cmd"],
       "port": 3000
     }
   ]
