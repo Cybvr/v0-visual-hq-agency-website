@@ -1,10 +1,7 @@
 export type MarketingPost = {
   slug: string
-  eyebrow: string
-  headline: string
-  supporting: string
-  cta: string
-  variant: "discovery" | "website" | "funnel" | "mvp"
+  image: string
+  imageAlt: string
   caption: string
   likes: number
   comments: number
@@ -22,11 +19,11 @@ export type MarketingProfile = {
 }
 
 export const marketingProfile: MarketingProfile = {
-  handle: "visualhq.studio",
-  name: "VisualHQ",
+  handle: "visualcns.studio",
+  name: "VisualCNS",
   category: "Marketing agency",
-  bio: "Visual style, copy tone and the workflow that keeps brands publishing month after month. Lagos.",
-  site: "visualhq.pro",
+  bio: "Software systems, launch funnels, and digital products for modern businesses. Lagos.",
+  site: "visualcns.pro",
   followers: "2,431",
   following: "56",
 }
@@ -34,11 +31,8 @@ export const marketingProfile: MarketingProfile = {
 export const marketingPosts: MarketingPost[] = [
   {
     slug: "discovery-call",
-    eyebrow: "Free discovery",
-    headline: "Book a 45-min scoping call.",
-    supporting: "Get clarity, scope, and a fixed quote before the project starts.",
-    cta: "Book now",
-    variant: "discovery",
+    image: "/ads/discovery-call.png",
+    imageAlt: "VisualCNS discovery call ad",
     caption:
       "Start with a free 45-minute discovery and scoping call. Leave with clearer next steps and a fixed quote for your build.",
     likes: 312,
@@ -47,11 +41,8 @@ export const marketingPosts: MarketingPost[] = [
   },
   {
     slug: "website-launch",
-    eyebrow: "Fast websites",
-    headline: "Launch a serious website in days.",
-    supporting: "Webflow, Framer, or WordPress for brands that need to move quickly.",
-    cta: "See options",
-    variant: "website",
+    image: "/ads/website-launch.png",
+    imageAlt: "VisualCNS fast website launch ad",
     caption:
       "Need a clean, conversion-focused site without a dragged-out timeline? We design and launch websites in days, not months.",
     likes: 268,
@@ -60,11 +51,8 @@ export const marketingPosts: MarketingPost[] = [
   },
   {
     slug: "ads-to-leads",
-    eyebrow: "Campaign systems",
-    headline: "Your ads should lead somewhere.",
-    supporting: "Landing pages, follow-up, tracking, and the next steps after the click.",
-    cta: "Build the funnel",
-    variant: "funnel",
+    image: "/ads/ads-to-leads.png",
+    imageAlt: "VisualCNS ads to leads funnel ad",
     caption:
       "We help businesses turn ad clicks into real leads with landing pages, follow-up flows, tracking, and clear next steps.",
     likes: 421,
@@ -73,11 +61,8 @@ export const marketingPosts: MarketingPost[] = [
   },
   {
     slug: "mvp-build",
-    eyebrow: "Product sprint",
-    headline: "Start with the MVP.",
-    supporting: "Ship a focused product fast for testing, pitching, or launch.",
-    cta: "Start scoping",
-    variant: "mvp",
+    image: "/ads/mvp-build.png",
+    imageAlt: "VisualCNS MVP product sprint ad",
     caption:
       "If you need to test an idea, pitch investors, or launch quickly, we can design and build an MVP web app with speed and clarity.",
     likes: 197,

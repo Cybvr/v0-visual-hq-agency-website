@@ -8,40 +8,6 @@ const igFont = {
   fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
 } as const
 
-function MarketingPostArtwork({
-  eyebrow,
-  headline,
-  supporting,
-  cta,
-  variant,
-}: {
-  eyebrow: string
-  headline: string
-  supporting: string
-  cta: string
-  variant: "discovery" | "website" | "funnel" | "mvp"
-}) {
-  return (
-    <div className={`marketing-post-card marketing-post-card--${variant}`}>
-      <div className="marketing-post-glow" />
-      <div className="marketing-post-grid" />
-      <div className="marketing-post-orb marketing-post-orb--one" />
-      <div className="marketing-post-orb marketing-post-orb--two" />
-      <div className="marketing-post-rail" />
-
-      <div className="marketing-post-content">
-        <span className="marketing-post-eyebrow">{eyebrow}</span>
-        <h2 className="marketing-post-headline">{headline}</h2>
-        <p className="marketing-post-supporting">{supporting}</p>
-        <div className="marketing-post-footer">
-          <span className="marketing-post-brand">VisualHQ</span>
-          <span className="marketing-post-cta">{cta}</span>
-        </div>
-      </div>
-    </div>
-  )
-}
-
 export default function MarketingPage() {
   return (
     <main className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
@@ -108,15 +74,15 @@ export default function MarketingPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-3 gap-1 p-1">
+        <div className="grid grid-cols-2 gap-1 p-1 md:grid-cols-3">
           {marketingPosts.map((post) => (
             <div key={post.slug} className="group relative aspect-square overflow-hidden bg-[#F2EFF4]">
-              <MarketingPostArtwork
-                eyebrow={post.eyebrow}
-                headline={post.headline}
-                supporting={post.supporting}
-                cta={post.cta}
-                variant={post.variant}
+              <Image
+                src={post.image}
+                alt={post.imageAlt}
+                fill
+                sizes="(max-width: 768px) 50vw, 33vw"
+                className="object-cover"
               />
               <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/45 px-3 text-center text-white opacity-0 transition-opacity duration-150 group-hover:opacity-100">
                 <div className="flex items-center gap-4 text-sm font-bold">
