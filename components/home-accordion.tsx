@@ -19,7 +19,7 @@ export function HomeAccordion({
     <Accordion type="multiple" defaultValue={["intro"]} className="w-full">
       <AccordionItem value="intro">
         <AccordionTrigger className="text-left text-2xl hover:no-underline md:text-3xl">
-          1. VisualCoreNine builds software systems for modern businesses.
+          1. VisualCNS builds software systems for modern businesses.
         </AccordionTrigger>
         <AccordionContent className="text-muted-foreground">
           We design and engineer digital products across ecommerce, AI tooling, and experience platforms.

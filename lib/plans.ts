@@ -8,6 +8,7 @@ export type ServiceRow = {
   timeline: string
   included: string
   icon?: string
+  tools?: string[]
 }
 
 export type TierSpec = { text: string } | { strong: string; rest?: string }
@@ -94,6 +95,7 @@ export const platformRows: ServiceRow[] = [
     price: { amount: 1292000 },
     timeline: "3-5 days",
     included: "Design, build, CMS setup & launch",
+    tools: ["Webflow"],
   },
   {
     service: "Framer Site",
@@ -102,6 +104,7 @@ export const platformRows: ServiceRow[] = [
     price: { amount: 1156000 },
     timeline: "2-4 days",
     included: "Design, animations & publish",
+    tools: ["Framer"],
   },
   {
     service: "WordPress Site",
@@ -110,6 +113,7 @@ export const platformRows: ServiceRow[] = [
     price: { amount: 1088000 },
     timeline: "3-5 days",
     included: "Theme, plugins, SEO basics & launch",
+    tools: ["WordPress"],
   },
   {
     service: "Add-on: WooCommerce",
@@ -118,6 +122,7 @@ export const platformRows: ServiceRow[] = [
     price: { amount: 612000, prefix: "+" },
     timeline: "+2-3 days",
     included: "Product catalogue, cart & checkout",
+    tools: ["WooCommerce"],
   },
 ]
 

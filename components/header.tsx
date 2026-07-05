@@ -33,7 +33,7 @@ function Wordmark() {
   return (
     <span className="flex items-center gap-3">
       <Image src="/visualhqlogo.svg" alt="" width={28} height={28} className="size-7" priority />
-      <span className="text-base font-semibold tracking-tight">VisualCoreNine</span>
+      <span className="text-base font-semibold tracking-tight">VisualCNS</span>
     </span>
   )
 }

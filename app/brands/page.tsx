@@ -16,7 +16,7 @@ export default function BrandsPage() {
         <div className="mx-auto max-w-7xl">
           <p className="text-sm font-semibold uppercase tracking-[0.24em] text-muted-foreground">Brands</p>
           <h1 className="mt-5 max-w-4xl text-balance text-5xl font-normal tracking-normal md:text-7xl">
-            The VisualCoreNine brands are the <span className="text-accent">product ecosystem</span>.
+            The VisualCNS brands are the <span className="text-accent">product ecosystem</span>.
           </h1>
           <div className="mt-16 grid gap-6 md:grid-cols-2 lg:grid-cols-4">
             {items.map((item) => (

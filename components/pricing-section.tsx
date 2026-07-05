@@ -33,6 +33,7 @@ import {
   workflowPlanRows,
   type Currency,
 } from "@/lib/plans"
+import { getToolIconSpecs } from "@/lib/tool-icons"
 import { Button } from "@/components/ui/button"
 
 const pricingTabs = [
@@ -86,6 +87,37 @@ const planIcons: Record<string, IconType> = {
 function toSentenceCase(value: string) {
   const trimmed = value.trim().replace(/^and /, "")
   return trimmed ? `${trimmed.charAt(0).toUpperCase()}${trimmed.slice(1)}` : trimmed
+}
+
+function ToolChip({ tool }: { tool: string }) {
+  const icons = getToolIconSpecs(tool)
+
+  return (
+    <span className="inline-flex items-center gap-2 rounded-full bg-muted px-3 py-1 text-xs text-muted-foreground">
+      {icons.length > 0 ? (
+        <span className="flex items-center gap-1.5">
+          {icons.map(({ icon: Icon, color, label, textMark }) => (
+            <span key={`${tool}-${label}`} aria-label={label} title={label}>
+              {Icon
+                ? createElement(Icon as ComponentType<{ className?: string; color?: string }>, {
+                    className: "size-3.5",
+                    color,
+                  })
+                : (
+                  <span
+                    className="inline-flex h-4 min-w-4 items-center justify-center rounded-[4px] px-1 text-[9px] font-bold uppercase"
+                    style={{ backgroundColor: `${color}18`, color }}
+                  >
+                    {textMark}
+                  </span>
+                )}
+            </span>
+          ))}
+        </span>
+      ) : null}
+      <span>{tool}</span>
+    </span>
+  )
 }
 
 type OfferCardProps = {
@@ -158,9 +190,7 @@ function OfferCard({
         {chips && chips.length > 0 && (
           <div className="mt-4 flex flex-wrap gap-2">
             {chips.map((chip) => (
-              <span key={chip} className="rounded-full bg-muted px-3 py-1 text-xs text-muted-foreground">
-                {chip}
-              </span>
+              <ToolChip key={chip} tool={chip} />
             ))}
           </div>
         )}
@@ -236,7 +266,7 @@ export function PricingSection() {
         </div>
       </div>
 
-      <div className="sticky top-[92px] z-40 grid grid-cols-3 gap-[6px] rounded-[10px] border border-border bg-[#f3f2f0]/95 p-[6px] backdrop-blur md:top-[88px]">
+      <div className="grid grid-cols-3 gap-[6px] rounded-[10px] border border-border bg-[#f3f2f0] p-[6px]">
         {pricingTabs.map((tab) => (
           <a
             key={tab.id}
@@ -296,6 +326,7 @@ export function PricingSection() {
                   timeline={row.timeline}
                   description={row.scope}
                   features={[row.included]}
+                  chips={row.tools}
                   ctaLabel="Get plan"
                   ctaHref="/contact"
                 />
@@ -319,6 +350,7 @@ export function PricingSection() {
                   timeline={row.timeline}
                   description={row.scope}
                   features={[row.included]}
+                  chips={row.tools}
                   ctaLabel="Get plan"
                   ctaHref="/contact"
                 />

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { createElement, useEffect, useState, type ComponentType } from "react";
 import Image from "next/image";
 import {
   BadgeCheck,
@@ -26,6 +26,7 @@ import {
   X,
 } from "lucide-react";
 import { formatPrice, workflowPlanRows } from "@/lib/plans";
+import { getToolIconSpecs } from "@/lib/tool-icons";
 import { instagramPosts, type InstagramPost } from "./instagram-posts";
 
 const HIGHLIGHTS = [
@@ -54,6 +55,37 @@ const millionClassicsWorkflow = workflowPlanRows.find((plan) => plan.service ===
 function toSentenceCase(value: string) {
   const trimmed = value.trim().replace(/^and /, "");
   return trimmed ? `${trimmed.charAt(0).toUpperCase()}${trimmed.slice(1)}` : trimmed;
+}
+
+function ToolChip({ tool }: { tool: string }) {
+  const icons = getToolIconSpecs(tool);
+
+  return (
+    <span className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1 text-xs text-[#737373]">
+      {icons.length > 0 ? (
+        <span className="flex items-center gap-1.5">
+          {icons.map(({ icon: Icon, color, label, textMark }) => (
+            <span key={`${tool}-${label}`} aria-label={label} title={label}>
+              {Icon
+                ? createElement(Icon as ComponentType<{ className?: string; color?: string }>, {
+                    className: "size-3.5",
+                    color,
+                  })
+                : (
+                  <span
+                    className="inline-flex h-4 min-w-4 items-center justify-center rounded-[4px] px-1 text-[9px] font-bold uppercase"
+                    style={{ backgroundColor: `${color}18`, color }}
+                  >
+                    {textMark}
+                  </span>
+                )}
+            </span>
+          ))}
+        </span>
+      ) : null}
+      <span>{tool}</span>
+    </span>
+  );
 }
 
 const appFont = {
@@ -500,9 +532,7 @@ export default function InstagramPreviewPage() {
                   </div>
                   <div className="mt-4 flex flex-wrap gap-2">
                     {millionClassicsWorkflow.tools.slice(0, 4).map((tool) => (
-                      <span key={tool} className="rounded-full bg-white px-3 py-1 text-xs text-[#737373]">
-                        {tool}
-                      </span>
+                      <ToolChip key={tool} tool={tool} />
                     ))}
                   </div>
                 </div>

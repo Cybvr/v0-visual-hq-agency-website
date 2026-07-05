@@ -29,8 +29,6 @@ const footerGroups = [
     links: [
       { name: "Capabilities", href: "/capabilities" },
       { name: "Industries", href: "/industries" },
-      { name: "Rate Card", href: "/ratecard" },
-      { name: "Million Classics", href: "/client/ekenua/projects/millionclassics/483920" },
     ],
   },
 ]
@@ -48,10 +46,10 @@ export function Footer() {
     <footer className="bg-foreground text-primary-foreground">
       <div className="mx-auto max-w-7xl px-6 py-16 md:py-20">
         <div className="grid gap-8 md:grid-cols-[1fr_420px] md:items-end">
-          <Link href="/" className="group inline-flex items-center gap-4" aria-label="VisualCoreNine home">
+          <Link href="/" className="group inline-flex items-center gap-4" aria-label="VisualCNS home">
             <Image src="/visualhqlogo.svg" alt="" width={54} height={54} className="size-12 brightness-0 invert" />
             <h2 className="text-5xl leading-none tracking-tight text-primary-foreground md:text-7xl">
-              VisualCoreNine
+              VisualCNS
             </h2>
           </Link>
 
@@ -92,7 +90,7 @@ export function Footer() {
               Send a note when you are ready to build, price, or ship the next system.
             </p>
             <a
-              href="mailto:hello@pasive.co?subject=VisualCoreNine%20project%20inquiry"
+              href="mailto:hello@pasive.co?subject=VisualCNS%20project%20inquiry"
               className="group flex items-center justify-between border-b border-primary-foreground/70 pb-4 text-primary-foreground transition-colors hover:border-accent hover:text-accent"
             >
               <span className="text-base text-primary-foreground/70 transition-colors group-hover:text-accent">
@@ -104,7 +102,7 @@ export function Footer() {
         </div>
 
         <div className="mt-16 flex flex-col gap-6 border-t border-primary-foreground/15 pt-8 text-sm text-primary-foreground/55 md:flex-row md:items-center md:justify-between">
-          <p>© {year} VisualCoreNine Systems · Privacy · Terms</p>
+          <p>© {year} VisualCNS Systems · Privacy · Terms</p>
           <div className="flex gap-8 text-sm font-semibold tracking-[0.16em] text-primary-foreground">
             {socialLinks.map((item) => (
               <a
