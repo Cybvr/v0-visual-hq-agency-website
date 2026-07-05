@@ -1,9 +1,9 @@
 "use client"
 
 import Link from "next/link"
-import Image from "next/image"
 import { useState } from "react"
 import { ChevronDown, Menu, X } from "lucide-react"
+import { BrandLockup } from "@/components/brand-lockup"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { Button } from "@/components/ui/button"
 import { getBrandItems } from "@/lib/brands"
@@ -28,15 +28,6 @@ const secondaryNavigation = [
 ]
 
 const bookNowHref = "/contact"
-
-function Wordmark() {
-  return (
-    <span className="flex items-center gap-3">
-      <Image src="/visualhqlogo.svg" alt="" width={28} height={28} className="size-7" priority />
-      <span className="text-base font-semibold tracking-tight">VisualCNS</span>
-    </span>
-  )
-}
 
 function DesktopHoverMenu({
   label,
@@ -90,7 +81,7 @@ export function Header() {
       <nav className="mx-auto flex max-w-7xl items-center justify-between px-6 py-5">
         <div className="hidden items-center gap-8 md:flex">
           <Link href="/" aria-label="VisualHQ home">
-            <Wordmark />
+            <BrandLockup logoSize={28} gapClassName="gap-1" />
           </Link>
 
           <div className="flex items-center gap-5">
@@ -120,9 +111,18 @@ export function Header() {
           </div>
         </div>
 
-        <Button asChild className="hidden rounded-full px-5 text-xs font-semibold uppercase tracking-[0.18em] md:inline-flex">
-          <Link href={bookNowHref}>Book Now</Link>
-        </Button>
+        <div className="hidden items-center gap-2 md:flex">
+          <Button
+            asChild
+            variant="ghost"
+            className="rounded-full px-5 text-xs font-semibold uppercase tracking-[0.18em]"
+          >
+            <Link href="/auth/login">Sign In</Link>
+          </Button>
+          <Button asChild className="rounded-full px-5 text-xs font-semibold uppercase tracking-[0.18em]">
+            <Link href={bookNowHref}>Book Now</Link>
+          </Button>
+        </div>
 
         <button
           className="flex size-10 items-center justify-center rounded-full md:hidden"
@@ -132,6 +132,9 @@ export function Header() {
         >
           {mobileMenuOpen ? <X className="size-6" /> : <Menu className="size-6" />}
         </button>
+        <Link href="/" aria-label="VisualHQ home" className="md:hidden">
+          <BrandLockup logoSize={24} gapClassName="gap-1" />
+        </Link>
       </nav>
 
       {mobileMenuOpen && (
@@ -185,6 +188,13 @@ export function Header() {
                 {item.name}
               </Link>
             ))}
+            <Link
+              href="/auth/login"
+              className="py-3 text-sm font-semibold uppercase tracking-[0.18em] text-foreground"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              Sign In
+            </Link>
             <Button asChild className="mt-3 rounded-full text-sm font-semibold uppercase tracking-[0.18em]">
               <Link href={bookNowHref} onClick={() => setMobileMenuOpen(false)}>
                 Book Now

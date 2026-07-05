@@ -2,11 +2,16 @@
 
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import Image from "next/image"
 import { Loader2 } from "lucide-react"
+import { BrandLockup } from "@/components/brand-lockup"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { useAuth } from "@/components/auth-provider"
+
+function destinationFor(isAdmin: boolean) {
+  // Routing is by role: admins go to /admin, everyone else to /dashboard.
+  return isAdmin ? "/admin" : "/dashboard"
+}
 
 function GoogleIcon() {
   return (
@@ -33,20 +38,19 @@ function GoogleIcon() {
 
 export default function LoginPage() {
   const router = useRouter()
-  const { user, loading, signInWithGoogle } = useAuth()
+  const { user, isAdmin, loading, signInWithGoogle } = useAuth()
   const [signingIn, setSigningIn] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    if (!loading && user) router.replace("/admin")
-  }, [loading, user, router])
+    if (!loading && user) router.replace(destinationFor(isAdmin))
+  }, [loading, user, isAdmin, router])
 
   async function handleSignIn() {
     setSigningIn(true)
     setError(null)
     try {
       await signInWithGoogle()
-      router.replace("/admin")
     } catch (err) {
       const message = err instanceof Error ? err.message : "Sign-in failed. Please try again."
       // Popup closed by user isn't an error worth showing loudly
@@ -64,10 +68,10 @@ export default function LoginPage() {
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <Card className="w-full max-w-sm">
         <CardContent className="flex flex-col items-center gap-6 px-6 py-10">
-          <Image src="/visualhqlogo.svg" alt="VisualHQ" width={40} height={40} />
+          <BrandLockup logoSize={26} gapClassName="gap-0.5" />
           <div className="text-center">
             <h1 className="text-lg font-semibold">Sign in to VisualHQ</h1>
-            <p className="mt-1 text-sm text-muted-foreground">Admin access only</p>
+            <p className="mt-1 text-sm text-muted-foreground">Access your dashboard</p>
           </div>
 
           <Button

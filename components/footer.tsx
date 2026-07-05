@@ -1,5 +1,5 @@
-import Image from "next/image"
 import Link from "next/link"
+import { BrandLockup } from "@/components/brand-lockup"
 
 const footerGroups = [
   {
@@ -46,11 +46,8 @@ export function Footer() {
     <footer className="bg-foreground text-primary-foreground">
       <div className="mx-auto max-w-7xl px-6 py-16 md:py-20">
         <div className="grid gap-8 md:grid-cols-[1fr_420px] md:items-end">
-          <Link href="/" className="group inline-flex items-center gap-4" aria-label="VisualCNS home">
-            <Image src="/visualhqlogo.svg" alt="" width={54} height={54} className="size-12 brightness-0 invert" />
-            <h2 className="text-5xl leading-none tracking-tight text-primary-foreground md:text-7xl">
-              VisualCNS
-            </h2>
+          <Link href="/" className="group inline-flex items-center gap-4" aria-label="Visualcore home">
+            <BrandLockup invert logoSize={52} gapClassName="gap-1.5" wordmarkScale={0.98} />
           </Link>
 
           <p className="max-w-md text-base leading-7 text-primary-foreground/70 md:ml-auto md:text-right md:text-xl">

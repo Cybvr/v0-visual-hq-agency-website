@@ -37,6 +37,11 @@ export default function RootLayout({
       lang="en"
       className={`${inter.variable} ${geistMono.variable} ${outfit.variable} ${ebGaramond.variable}`}
     >
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link href="https://fonts.googleapis.com/css2?family=Geist+Pixel:wght@400&display=swap" rel="stylesheet" />
+      </head>
       <body className="font-sans antialiased">
         {children}
         <Analytics />

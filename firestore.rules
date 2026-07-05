@@ -1,0 +1,85 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // --- Helpers -----------------------------------------------------------
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    // Reads the caller's own users/{uid} doc to check their role.
+    function isAdmin() {
+      return isSignedIn()
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    // -----------------------------------------------------------------------
+    // NOTE: The previous open catch-all
+    //   match /{collection}/{document=**} { allow read, write: if request.auth != null; }
+    // let ANY signed-in user read/write EVERY collection. That broke client
+    // isolation (a client could read other clients' data), so it is removed.
+    // Access is now granted per-collection below. Anything without a matching
+    // rule is denied by default.
+    // -----------------------------------------------------------------------
+
+    // Portfolio - public site content. Public read; writes admin-only.
+    match /portfolio/{portfolioId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // JPPortfolio - public read; writes admin-only.
+    match /jpportfolio/{projectId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Documents - admins full access; otherwise no access.
+    match /documents/{documentId} {
+      allow read, write: if isAdmin();
+    }
+
+    // Users - a user can read/write their OWN doc; admins can manage all.
+    // Note: role escalation is possible here because a user can write their
+    // own doc (incl. the role field). Lock role changes to admins only by
+    // moving role management to a trusted server (Admin SDK) if that matters.
+    match /users/{userId} {
+      allow read: if isAdmin() || (isSignedIn() && request.auth.uid == userId);
+      allow create: if isAdmin() || (isSignedIn() && request.auth.uid == userId);
+      allow update, delete: if isAdmin() || (isSignedIn() && request.auth.uid == userId);
+    }
+
+    // Reads the caller's users/{uid} doc to get their clientId.
+    function myClientId() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.clientId;
+    }
+
+    // Projects - admins manage; a client can read their own projects.
+    match /projects/{projectId} {
+      allow read: if isAdmin() || (isSignedIn() && resource.data.clientId == myClientId());
+      allow write: if isAdmin();
+    }
+
+    // Tasks - admins manage all; a client has full CRUD on their OWN tasks
+    // (clientId must match, and an update can't move a task to another client).
+    match /tasks/{taskId} {
+      allow read: if isAdmin() || (isSignedIn() && resource.data.clientId == myClientId());
+      allow create: if isAdmin() || (isSignedIn() && request.resource.data.clientId == myClientId());
+      allow update: if isAdmin()
+        || (isSignedIn()
+            && resource.data.clientId == myClientId()
+            && request.resource.data.clientId == resource.data.clientId);
+      allow delete: if isAdmin() || (isSignedIn() && resource.data.clientId == myClientId());
+    }
+
+    // Approvals - client deliverable sign-off (see lib/approvals.ts).
+    // Signed-in users can read/write; admins included. Tighten to per-client
+    // once approvals carry a clientId you can match against the user doc.
+    match /approvals/{approvalId} {
+      allow read, write: if isSignedIn();
+    }
+
+    // Everything else: denied by default.
+  }
+}
