@@ -1,26 +1,6 @@
-export type InstagramComment = {
-  username: string;
-  avatar: string;
-  text: string;
-  timeAgo: string;
-  likes: number;
-};
+import type { InstagramPreviewPost } from "@/components/instagram-preview";
 
-export type InstagramPost = {
-  slug: string;
-  image: string;
-  imageAlt: string;
-  location: string;
-  caption: string;
-  hashtags: string[];
-  likes: number;
-  shares: number;
-  bookmarks: number;
-  timeAgo: string;
-  comments: InstagramComment[];
-};
-
-export const instagramPosts: InstagramPost[] = [
+export const instagramPosts: InstagramPreviewPost[] = [
   {
     slug: "were-launching",
     image: "/social/were-launching.jpg",

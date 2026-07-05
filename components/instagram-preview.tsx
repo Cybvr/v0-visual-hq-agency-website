@@ -432,9 +432,15 @@ export function InstagramPreview({
                         className="group relative block aspect-square cursor-pointer overflow-hidden text-left"
                       >
                         <PostImage post={post} />
-                        <div className="absolute inset-0 flex items-center justify-center gap-[26px] bg-black/35 text-[15px] font-bold text-white opacity-0 transition-opacity duration-150 group-hover:opacity-100">
-                          <span>Likes {post.likes}</span>
-                          <span>Comments {post.comments.length}</span>
+                        <div className="absolute inset-0 flex items-center justify-center gap-6 bg-black/35 text-[15px] font-bold text-white opacity-0 transition-opacity duration-150 group-hover:opacity-100">
+                          <span className="flex items-center gap-1.5">
+                            <Heart size={19} fill="#fff" strokeWidth={0} />
+                            {post.likes.toLocaleString()}
+                          </span>
+                          <span className="flex items-center gap-1.5">
+                            <MessageCircle size={19} fill="#fff" strokeWidth={0} className="-scale-x-100" />
+                            {post.comments.length}
+                          </span>
                         </div>
                       </button>
                     ))}

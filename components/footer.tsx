@@ -46,7 +46,7 @@ export function Footer() {
     <footer className="bg-foreground text-primary-foreground">
       <div className="mx-auto max-w-7xl px-6 py-16 md:py-20">
         <div className="grid gap-8 md:grid-cols-[1fr_420px] md:items-end">
-          <Link href="/" className="group inline-flex items-center gap-4" aria-label="Visualcore home">
+          <Link href="/" className="group inline-flex items-center gap-4" aria-label="VisualCNS home">
             <BrandLockup invert logoSize={52} gapClassName="gap-1.5" wordmarkScale={0.98} />
           </Link>
 

@@ -1,0 +1,101 @@
+
+> my-v0-project@0.1.0 dev
+> next dev
+
+ ⚠ Port 3000 is in use by process 12616, using available port 3001 instead.
+   ▲ Next.js 16.0.10 (Turbopack)
+   - Local:         http://localhost:3001
+   - Network:       http://192.168.0.248:3001
+   - Environments: .env.local
+
+ ✓ Starting...
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+ ⚠ Minimum recommended TypeScript version is v5.1.0, older versions can potentially be incompatible with Next.js. Detected: 5.0.2
+ ✓ Ready in 14.3s
+ ○ Compiling /admin/marketing ...
+ GET /admin/marketing 200 in 8.3s (compile: 7.6s, render: 667ms)
+ GET /admin/marketing 200 in 81ms (compile: 9ms, render: 73ms)
+ GET /admin/marketing 200 in 188ms (compile: 9ms, render: 179ms)
+ GET /auth/login 200 in 2.6s (compile: 2.3s, render: 253ms)
+ GET /admin/marketing 200 in 188ms (compile: 9ms, render: 179ms)
+ GET /auth/login 200 in 149ms (compile: 12ms, render: 137ms)
+ GET /admin/marketing 200 in 82ms (compile: 9ms, render: 73ms)
+ GET /auth/login 200 in 198ms (compile: 13ms, render: 185ms)
+ ✓ Compiled in 900ms
+ ✓ Compiled in 651ms
+ GET /admin/marketing 200 in 1076ms (compile: 173ms, render: 903ms)
+ GET /admin/marketing 200 in 66ms (compile: 7ms, render: 60ms)
+ GET /admin/marketing 200 in 52ms (compile: 3ms, render: 48ms)
+ GET /admin/marketing 200 in 70ms (compile: 6ms, render: 64ms)
+ GET /admin/marketing 200 in 57ms (compile: 4ms, render: 53ms)
+ GET /admin 200 in 1524ms (compile: 1474ms, render: 50ms)
+ GET / 200 in 1558ms (compile: 1256ms, render: 301ms)
+ ✓ Compiled in 317ms
+ GET / 200 in 267ms (compile: 166ms, render: 101ms)
+ GET /admin 200 in 1401ms (compile: 289ms, render: 1112ms)
+ GET /admin/marketing 200 in 541ms (compile: 336ms, render: 205ms)
+ GET /admin/marketing 200 in 757ms (compile: 19ms, render: 738ms)
+ GET /admin/marketing 200 in 380ms (compile: 69ms, render: 311ms)
+ GET / 200 in 655ms (compile: 15ms, render: 639ms)
+ GET / 200 in 428ms (compile: 9ms, render: 419ms)
+ ○ Compiling /pricing ...
+ GET /pricing 200 in 5.6s (compile: 5.4s, render: 219ms)
+ GET /pricing 200 in 113ms (compile: 8ms, render: 105ms)
+ GET /admin/marketing 200 in 150ms (compile: 12ms, render: 139ms)
+ GET /dashboard 200 in 2.8s (compile: 2.7s, render: 107ms)
+ GET /admin 200 in 68ms (compile: 27ms, render: 41ms)
+ GET /dashboard 200 in 232ms (compile: 7ms, render: 224ms)
+ GET /admin/marketing 200 in 1324ms (compile: 184ms, render: 1140ms)
+ GET /marketing/website-launch.png 404 in 1591ms (compile: 1387ms, render: 205ms)
+ GET /marketing/discovery-call.png 404 in 1606ms (compile: 1304ms, render: 302ms)
+ GET /marketing/ads-to-leads.png 404 in 200ms (compile: 24ms, render: 176ms)
+ GET /marketing/mvp-build.png 404 in 187ms (compile: 35ms, render: 152ms)
+ GET /admin/marketing 200 in 156ms (compile: 8ms, render: 148ms)
+ GET /marketing/discovery-call.png 404 in 276ms (compile: 22ms, render: 254ms)
+ GET /marketing/website-launch.png 404 in 275ms (compile: 145ms, render: 130ms)
+ GET /marketing/ads-to-leads.png 404 in 272ms (compile: 105ms, render: 167ms)
+ GET /marketing/mvp-build.png 404 in 98ms (compile: 29ms, render: 69ms)
+ GET /admin 200 in 32ms (compile: 7ms, render: 26ms)
+ GET /admin/projects 200 in 914ms (compile: 863ms, render: 50ms)
+ GET /admin/projects 200 in 30ms (compile: 5ms, render: 25ms)
+ GET /admin/tasks 200 in 782ms (compile: 719ms, render: 62ms)
+ GET /admin/portfolio 200 in 940ms (compile: 905ms, render: 34ms)
+ GET /admin/marketing 200 in 34ms (compile: 5ms, render: 29ms)
+ GET /marketing/discovery-call.png 404 in 347ms (compile: 20ms, render: 326ms)
+ GET /marketing/ads-to-leads.png 404 in 293ms (compile: 104ms, render: 189ms)
+ GET /marketing/website-launch.png 404 in 304ms (compile: 58ms, render: 246ms)
+ GET /marketing/mvp-build.png 404 in 276ms (compile: 166ms, render: 110ms)
+ GET /admin/marketing 200 in 53ms (compile: 6ms, render: 47ms)
+ GET /marketing/discovery-call.png 404 in 463ms (compile: 49ms, render: 414ms)
+ GET /marketing/website-launch.png 404 in 565ms (compile: 153ms, render: 412ms)
+ GET /marketing/ads-to-leads.png 404 in 554ms (compile: 273ms, render: 282ms)
+ GET /marketing/mvp-build.png 404 in 310ms (compile: 177ms, render: 133ms)
+ GET /admin/marketing 200 in 65ms (compile: 4ms, render: 61ms)
+ GET /admin/marketing 200 in 72ms (compile: 5ms, render: 67ms)
+ GET /marketing/discovery-call.png 404 in 129ms (compile: 23ms, render: 106ms)
+ GET /marketing/website-launch.png 404 in 130ms (compile: 38ms, render: 92ms)
+ GET /marketing/ads-to-leads.png 404 in 171ms (compile: 35ms, render: 136ms)
+ GET /marketing/mvp-build.png 404 in 169ms (compile: 96ms, render: 72ms)
+ GET /admin/marketing 200 in 64ms (compile: 5ms, render: 59ms)
+ GET /marketing/website-launch.png 404 in 277ms (compile: 34ms, render: 243ms)
+ GET /marketing/discovery-call.png 404 in 288ms (compile: 27ms, render: 261ms)
+ GET /marketing/ads-to-leads.png 404 in 168ms (compile: 45ms, render: 123ms)
+ GET /marketing/mvp-build.png 404 in 150ms (compile: 80ms, render: 70ms)
+ ✓ Compiled in 401ms
+ ✓ Compiled in 438ms
+ ✓ Compiled in 343ms
+ ✓ Compiled in 431ms
+ GET /admin/marketing 200 in 589ms (compile: 152ms, render: 437ms)
+ ✓ Compiled in 265ms
+ ✓ Compiled in 270ms
+ ✓ Compiled in 186ms
+ ✓ Compiled in 177ms
+ ✓ Compiled in 300ms
+ ✓ Compiled in 521ms
+ ✓ Compiled in 534ms
+ ✓ Compiled in 469ms
+ ✓ Compiled in 470ms
+ ✓ Compiled in 391ms
+ ✓ Compiled in 390ms
+ ✓ Compiled in 878ms
+ ✓ Compiled in 486ms

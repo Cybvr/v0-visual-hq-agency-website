@@ -24,7 +24,7 @@ export function BrandLockup({
     <span className={cn("inline-flex items-center", gapClassName, className)}>
       <Image
         src="/visualhqlogo.svg"
-        alt="Visualcore"
+        alt="VisualCNS"
         width={logoSize}
         height={logoSize}
         className={cn("shrink-0", invert && "brightness-0 invert")}
@@ -40,7 +40,7 @@ export function BrandLockup({
           lineHeight: "0.82",
         }}
       >
-        Visualcore
+        VisualCNS
       </span>
     </span>
   )
