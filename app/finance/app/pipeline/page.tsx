@@ -28,7 +28,7 @@ const stageBarClasses: Record<PipelineStageTone, string> = {
 }
 
 const dealStageBadgeClasses: Record<DealStageTone, string> = {
-  "due-diligence": "bg-[#d3e4ff] text-[#001c38]",
+  "due-diligence": "bg-(--fin-secondary-container) text-(--fin-on-secondary-container)",
   loi: "bg-[#d8e3fa] text-[#111c2c]",
   neutral: "bg-(--fin-surface-variant) text-(--fin-outline)",
   stalled: "bg-(--fin-error-container) text-(--fin-on-error-container)",
@@ -58,6 +58,10 @@ export default function DealPipelinePage() {
   return (
     <>
       <PageHeader
+        breadcrumbs={[
+          { label: "Home", href: "/finance/app" },
+          { label: "Deal Pipeline" },
+        ]}
         eyebrow="Pipeline"
         title="Deal Pipeline"
         subtitle="Q4 acquisition targets, sourcing coverage, and diligence momentum across the active pipeline."
@@ -78,7 +82,7 @@ export default function DealPipelinePage() {
         </button>
       </section>
 
-      <section className="mb-8 grid grid-cols-5 gap-4">
+      <section className="mb-8 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
         {pipelineStages.map((stage) => (
           <div
             key={stage.label}
@@ -104,10 +108,10 @@ export default function DealPipelinePage() {
             <div className="flex items-center justify-between border-b border-(--fin-outline-variant) bg-(--fin-surface-container-lowest) px-6 py-4">
               <p className="text-xl font-semibold leading-7 text-(--fin-primary)">Active Opportunities</p>
               <div className="flex gap-2">
-                <button className="rounded-[4px] p-2 transition-colors hover:bg-(--fin-surface-container-low)">
+                <button aria-label="Filter opportunities" className="rounded-[4px] p-2 transition-colors hover:bg-(--fin-surface-container-low)">
                   <span className="material-symbols-outlined text-(--fin-outline)">filter_list</span>
                 </button>
-                <button className="rounded-[4px] p-2 transition-colors hover:bg-(--fin-surface-container-low)">
+                <button aria-label="More options" className="rounded-[4px] p-2 transition-colors hover:bg-(--fin-surface-container-low)">
                   <span className="material-symbols-outlined text-(--fin-outline)">more_vert</span>
                 </button>
               </div>
@@ -121,12 +125,20 @@ export default function DealPipelinePage() {
                     <th className="px-6 py-3 text-[11px] font-semibold">Sector</th>
                     <th className="px-6 py-3 text-[11px] font-semibold">Stage</th>
                     <th className="px-6 py-3 text-[11px] font-semibold">Lead Partner</th>
+                    <th className="px-6 py-3 text-[11px] font-semibold" />
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-(--fin-outline-variant) text-sm text-(--fin-on-surface)">
+                  {deals.length === 0 && (
+                    <tr>
+                      <td colSpan={6} className="px-6 py-12 text-center text-(--fin-on-surface-variant)">
+                        No active opportunities in the pipeline.
+                      </td>
+                    </tr>
+                  )}
                   {deals.map((deal) => (
                     <tr
-                      key={deal.name}
+                      key={deal.id}
                       className={cn(
                         "transition-colors hover:bg-(--fin-surface-container-low)",
                         deal.highlighted && "bg-(--fin-secondary-fixed)/10",
@@ -145,16 +157,27 @@ export default function DealPipelinePage() {
                           {deal.stage}
                         </span>
                       </td>
-                      <td className="flex items-center gap-2 px-6 py-4">
-                        <div
-                          className={cn(
-                            "flex h-6 w-6 items-center justify-center rounded-full text-[10px] font-bold",
-                            partnerAvatarClasses[deal.partnerAvatarTone],
-                          )}
-                        >
-                          {deal.partnerInitials}
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-2">
+                          <div
+                            className={cn(
+                              "flex h-6 w-6 items-center justify-center rounded-full text-[10px] font-bold",
+                              partnerAvatarClasses[deal.partnerAvatarTone],
+                            )}
+                          >
+                            {deal.partnerInitials}
+                          </div>
+                          {deal.partner}
                         </div>
-                        {deal.partner}
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <Link
+                          href={`/finance/app/analysis?deal=${deal.id}`}
+                          className="inline-flex items-center gap-1 whitespace-nowrap text-xs font-semibold tracking-[0.02em] text-(--fin-secondary) hover:underline"
+                        >
+                          Open Analysis
+                          <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
+                        </Link>
                       </td>
                     </tr>
                   ))}

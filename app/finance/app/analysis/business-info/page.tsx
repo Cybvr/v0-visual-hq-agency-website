@@ -2,11 +2,13 @@
 
 import { useState, type FormEvent, type ReactNode } from "react"
 import Link from "next/link"
+import { useSearchParams } from "next/navigation"
 import {
   businessInfoDefaults,
   industrySectorOptions,
   reportingCurrencyOptions,
 } from "@/lib/finance/analysis"
+import { resolveDeal } from "@/lib/finance/pipeline"
 import { AnalysisSubnav } from "@/components/finance/analysis-subnav"
 import { PageHeader } from "@/components/finance/page-header"
 
@@ -30,6 +32,8 @@ function SectionTitle({ children }: { children: ReactNode }) {
 
 export default function BusinessInfoPage() {
   const [saved, setSaved] = useState(false)
+  const dealId = useSearchParams().get("deal") ?? undefined
+  const deal = resolveDeal(dealId)
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -40,12 +44,18 @@ export default function BusinessInfoPage() {
     <>
       {/* Header section */}
       <PageHeader
-        eyebrow="Analysis"
+        breadcrumbs={[
+          { label: "Home", href: "/finance/app" },
+          { label: "Analysis", href: "/finance/app/analysis" },
+          { label: deal.name, href: `/finance/app/analysis?deal=${deal.id}` },
+          { label: "Business Info" },
+        ]}
+        eyebrow={deal.name}
         title="Business Info"
         subtitle="Capture the baseline company profile, reporting context, and scale assumptions that drive downstream QofE analysis."
       />
 
-      <AnalysisSubnav />
+      <AnalysisSubnav dealId={deal.id} />
 
       <div className="mb-8 flex items-center gap-2 text-xs font-semibold tracking-[0.02em] text-(--fin-secondary)">
         <span>STEP 1 OF 4</span>
@@ -68,6 +78,7 @@ export default function BusinessInfoPage() {
                 <input
                   id="company-name"
                   type="text"
+                  defaultValue={deal.name}
                   placeholder={businessInfoDefaults.companyNamePlaceholder}
                   className={inputClass}
                 />
@@ -153,8 +164,8 @@ export default function BusinessInfoPage() {
           {/* Actions */}
           <div className="flex items-center justify-between border-t border-(--fin-outline-variant) pt-6">
             <Link
-              href="/finance/app/analysis"
-              className="flex items-center gap-2 px-6 py-3 text-xs font-semibold tracking-[0.02em] text-(--fin-on-surface-variant) transition-colors hover:text-(--fin-primary)"
+              href={`/finance/app/analysis?deal=${deal.id}`}
+              className="flex items-center gap-2 px-6 py-3 text-xs font-semibold tracking-[0.02em] text-(--fin-error) transition-colors hover:text-(--fin-on-error-container)"
             >
               <span className="material-symbols-outlined">close</span>
               Discard Draft
@@ -208,12 +219,12 @@ export default function BusinessInfoPage() {
               Entity Profile Saved
             </p>
             <p className="mb-6 text-sm text-(--fin-on-surface-variant)">
-              Business information for {businessInfoDefaults.savedEntityName} has been successfully
+              Business information for {deal.name} has been successfully
               initialized. Ready to proceed to document ingestion.
             </p>
             <div className="flex flex-col gap-2">
               <Link
-                href="/finance/app/analysis/documents"
+                href={`/finance/app/analysis/documents?deal=${deal.id}`}
                 className="w-full bg-(--fin-primary) py-3 text-center text-xs font-semibold tracking-[0.02em] text-(--fin-on-primary) transition-opacity hover:opacity-90"
               >
                 Continue to Data Room

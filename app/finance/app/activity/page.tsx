@@ -14,6 +14,10 @@ export default function ActivityPage() {
   return (
     <>
       <PageHeader
+        breadcrumbs={[
+          { label: "Home", href: "/finance/app" },
+          { label: "Activity" },
+        ]}
         eyebrow="Workspace"
         title="Activity"
         subtitle="A fuller view of recent updates, alerts, and follow-ups across the finance workspace."

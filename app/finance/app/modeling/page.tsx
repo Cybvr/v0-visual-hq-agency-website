@@ -15,6 +15,8 @@ import {
   type ModelIconStyle,
   type SyncStatusTone,
 } from "@/lib/finance/modeling"
+import { deriveFinancials, formatEvShort, getFinancials } from "@/lib/finance/deal-financials"
+import { resolveDeal } from "@/lib/finance/pipeline"
 
 export const metadata: Metadata = {
   title: "Financial Modeling & Valuation Hub | Visualcns Finance",
@@ -32,20 +34,20 @@ const modelIconStyles: Record<ModelIconStyle, string> = {
 }
 
 const badgeToneStyles: Record<ModelBadgeTone, string> = {
-  green: "border-green-100 bg-green-50 text-green-700",
-  amber: "border-amber-100 bg-amber-50 text-amber-700",
-  blue: "border-blue-100 bg-blue-50 text-blue-700",
+  green: "border-(--fin-secondary-container) bg-(--fin-secondary-container) text-(--fin-on-secondary-container)",
+  amber: "border-(--fin-outline-variant) bg-(--fin-surface-container-high) text-(--fin-on-surface-variant)",
+  blue: "border-(--fin-primary-container) bg-(--fin-primary-container) text-(--fin-on-primary-container)",
 }
 
 const statusToneStyles: Record<SyncStatusTone, string> = {
-  green: "bg-green-100 text-green-800",
-  amber: "bg-amber-100 text-amber-800",
-  blue: "bg-blue-100 text-blue-800",
+  green: "bg-(--fin-secondary-container) text-(--fin-on-secondary-container)",
+  amber: "bg-(--fin-surface-container-high) text-(--fin-on-surface-variant)",
+  blue: "bg-(--fin-primary-container) text-(--fin-on-primary-container)",
 }
 
 const integrityToneStyles: Record<"green" | "amber", string> = {
-  green: "text-green-600",
-  amber: "text-amber-600",
+  green: "text-(--fin-secondary)",
+  amber: "text-(--fin-on-surface-variant)",
 }
 
 const avatarStyles: Record<"primary" | "secondary" | "tertiary", string> = {
@@ -54,17 +56,38 @@ const avatarStyles: Record<"primary" | "secondary" | "tertiary", string> = {
   tertiary: "bg-(--fin-tertiary)",
 }
 
-export default function ModelingHubPage() {
+interface ModelingHubPageProps {
+  searchParams: Promise<{ deal?: string }>
+}
+
+export default async function ModelingHubPage({ searchParams }: ModelingHubPageProps) {
+  const { deal: dealId } = await searchParams
+  const deal = resolveDeal(dealId)
+  // The featured "active model" is scoped to the selected deal; the rest of the
+  // library (other models/sync rows) stays as-is.
+  const activeModel = {
+    ...featuredDeal,
+    name: `${deal.name} — Platform LBO`,
+    sector: `Sector: ${deal.sector}`,
+    ev: formatEvShort(deriveFinancials(getFinancials(deal.id)).enterpriseValueM),
+  }
+
   return (
     <>
       {/* Page header */}
       <PageHeader
-        eyebrow="Analysis"
+        breadcrumbs={[
+          { label: "Home", href: "/finance/app" },
+          { label: "Analysis", href: "/finance/app/analysis" },
+          { label: deal.name, href: `/finance/app/analysis?deal=${deal.id}` },
+          { label: "Financial Modeling" },
+        ]}
+        eyebrow={deal.name}
         title="Financial Modeling"
-        subtitle="Linked valuation workbooks, active models, and synchronization status across the deal library."
+        subtitle="Valuation workbooks and synchronization status for this deal."
       />
 
-      <AnalysisSubnav />
+      <AnalysisSubnav dealId={deal.id} />
 
       <section className="mb-8 flex items-center gap-4">
         <div className="relative">
@@ -78,10 +101,10 @@ export default function ModelingHubPage() {
           </span>
         </div>
         <div className="ml-2 flex items-center gap-2 border-l border-(--fin-outline-variant) pl-4">
-          <button className="rounded-full p-2 text-(--fin-on-surface-variant) transition-colors hover:bg-(--fin-surface-container)">
+          <button aria-label="Filter models" className="rounded-full p-2 text-(--fin-on-surface-variant) transition-colors hover:bg-(--fin-surface-container)">
             <span className="material-symbols-outlined">filter_list</span>
           </button>
-          <button className="rounded-full p-2 text-(--fin-on-surface-variant) transition-colors hover:bg-(--fin-surface-container)">
+          <button aria-label="Toggle view layout" className="rounded-full p-2 text-(--fin-on-surface-variant) transition-colors hover:bg-(--fin-surface-container)">
             <span className="material-symbols-outlined">view_module</span>
           </button>
         </div>
@@ -106,29 +129,29 @@ export default function ModelingHubPage() {
               )}
             >
               <div className="relative h-48 md:h-auto md:w-2/5">
-                <img alt={featuredDeal.imageAlt} className="h-full w-full object-cover" src={featuredDeal.image} />
+                <img alt={activeModel.imageAlt} className="h-full w-full object-cover" src={activeModel.image} />
                 <div className="absolute inset-0 bg-(--fin-primary)/10" />
                 <div className="absolute left-4 top-4">
                   <span className="rounded-full bg-(--fin-primary) px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-(--fin-on-primary)">
-                    {featuredDeal.badge}
+                    {activeModel.badge}
                   </span>
                 </div>
               </div>
               <div className="flex flex-1 flex-col p-6">
                 <div className="flex items-start justify-between">
                   <div>
-                    <p className="text-xl font-bold text-(--fin-primary)">{featuredDeal.name}</p>
-                    <p className={cn(labelMd, "text-(--fin-on-surface-variant)")}>{featuredDeal.sector}</p>
+                    <p className="text-xl font-bold text-(--fin-primary)">{activeModel.name}</p>
+                    <p className={cn(labelMd, "text-(--fin-on-surface-variant)")}>{activeModel.sector}</p>
                   </div>
                   <div className="text-right">
-                    <p className="text-xl font-semibold leading-7 text-(--fin-primary)">{featuredDeal.ev}</p>
+                    <p className="text-xl font-semibold leading-7 text-(--fin-primary)">{activeModel.ev}</p>
                     <p className="text-[10px] font-bold uppercase text-(--fin-on-surface-variant)">
-                      {featuredDeal.evLabel}
+                      {activeModel.evLabel}
                     </p>
                   </div>
                 </div>
                 <div className="mt-6 grid flex-1 grid-cols-2 gap-4">
-                  {featuredDeal.meta.map((item) => (
+                  {activeModel.meta.map((item) => (
                     <div
                       key={item.label}
                       className="rounded-[4px] border border-(--fin-outline-variant)/30 bg-(--fin-surface-container-low) p-3"
@@ -158,7 +181,7 @@ export default function ModelingHubPage() {
                     )}
                   >
                     <span className="material-symbols-outlined text-[18px]">edit_document</span>
-                    {featuredDeal.primaryAction}
+                    {activeModel.primaryAction}
                   </button>
                   <button
                     className={cn(
@@ -167,7 +190,7 @@ export default function ModelingHubPage() {
                     )}
                   >
                     <span className="material-symbols-outlined text-[18px]">table_chart</span>
-                    {featuredDeal.secondaryAction}
+                    {activeModel.secondaryAction}
                   </button>
                 </div>
               </div>
@@ -245,7 +268,7 @@ export default function ModelingHubPage() {
                 key={model.name}
                 className={cn(
                   cardDepth,
-                  "group flex flex-col rounded-[4px] border border-(--fin-outline-variant) bg-white p-5",
+                  "group flex flex-col rounded-[8px] border border-(--fin-outline-variant) bg-white p-5",
                 )}
               >
                 <div className="mb-4 flex items-start justify-between">
@@ -267,13 +290,13 @@ export default function ModelingHubPage() {
                       >
                         {model.badge.label}
                       </span>
-                      <button className="text-(--fin-on-surface-variant) hover:text-(--fin-primary)">
+                      <button aria-label="More options" className="text-(--fin-on-surface-variant) hover:text-(--fin-primary)">
                         <span className="material-symbols-outlined text-[20px]">more_vert</span>
                       </button>
                     </div>
                   )}
                 </div>
-                <p className="cursor-pointer text-xl font-semibold leading-7 text-(--fin-primary) transition-colors group-hover:text-(--fin-secondary)">
+                <p className="text-xl font-semibold leading-7 text-(--fin-primary) transition-colors group-hover:text-(--fin-secondary)">
                   {model.name}
                 </p>
                 <p className={cn(labelMd, "mt-1 text-(--fin-on-surface-variant)")}>{model.type}</p>

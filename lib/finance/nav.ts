@@ -32,6 +32,12 @@ export const financeAppNav: FinanceAppNavItem[] = [
   { label: "Reports", href: "/finance/app/reports", icon: Users },
 ]
 
+export const portfolioNav: FinanceAppNavItem[] = [
+  { label: "Overview", href: "/finance/app/portfolio", icon: LayoutDashboard },
+  { label: "Holdings", href: "/finance/app/portfolio/holdings", icon: Building2 },
+  { label: "Value Creation", href: "/finance/app/portfolio/initiatives", icon: BarChart3 },
+]
+
 export const analysisNav: FinanceAppNavItem[] = [
   { label: "Overview", href: "/finance/app/analysis", icon: ClipboardList },
   { label: "Business Info", href: "/finance/app/analysis/business-info", icon: Building2 },

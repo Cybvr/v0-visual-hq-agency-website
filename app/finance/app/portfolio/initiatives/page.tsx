@@ -1,10 +1,10 @@
-import Link from "next/link"
 import { cn } from "@/lib/utils"
 import {
   initiatives,
   type InitiativeStatusTone,
 } from "@/lib/finance/portfolio"
 import { PageHeader } from "@/components/finance/page-header"
+import { PortfolioSubnav } from "@/components/finance/portfolio-subnav"
 
 const initiativeStatusClasses: Record<InitiativeStatusTone, string> = {
   "on-track": "bg-(--fin-primary)/10 text-(--fin-primary)",
@@ -16,22 +16,17 @@ export default function InitiativesPage() {
   return (
     <>
       <PageHeader
+        breadcrumbs={[
+          { label: "Home", href: "/finance/app" },
+          { label: "Portfolio", href: "/finance/app/portfolio" },
+          { label: "Value Creation Initiatives" },
+        ]}
         eyebrow="Portfolio"
         title="Value Creation Initiatives"
         subtitle="Track operating improvement workstreams, current status, and execution progress across the portfolio."
       />
 
-      <div className="mb-8 flex items-center justify-between">
-        <Link
-          href="/finance/app/portfolio"
-          className="text-xs font-semibold tracking-[0.02em] text-(--fin-secondary) hover:underline"
-        >
-          Back to portfolio
-        </Link>
-        <button className="rounded-[4px] bg-(--fin-primary) px-4 py-2 text-xs font-semibold tracking-[0.02em] text-(--fin-on-primary)">
-          Log New Initiative
-        </button>
-      </div>
+      <PortfolioSubnav />
 
       <section className="grid grid-cols-1 gap-4 xl:grid-cols-2">
         {initiatives.map((initiative) => (

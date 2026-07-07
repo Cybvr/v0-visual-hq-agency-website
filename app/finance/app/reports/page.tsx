@@ -29,6 +29,10 @@ export default function ReportsPage() {
   return (
     <>
       <PageHeader
+        breadcrumbs={[
+          { label: "Home", href: "/finance/app" },
+          { label: "Reports" },
+        ]}
         eyebrow="Reporting"
         title="Reports"
         subtitle="Fund performance, reporting packages, capital activity, and investor communications in one workspace."

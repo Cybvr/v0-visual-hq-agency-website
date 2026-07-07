@@ -2,14 +2,8 @@ import type { Metadata } from "next"
 import { cn } from "@/lib/utils"
 import { AnalysisSubnav } from "@/components/finance/analysis-subnav"
 import { PageHeader } from "@/components/finance/page-header"
-import {
-  qofeBridgeBars,
-  qofeInsight,
-  qofeReportMeta,
-  qofeTableRows,
-  type QofeBridgeTone,
-  type QofeRowVariant,
-} from "@/lib/finance/report"
+import { getQofeReport, qofeReportMeta, type QofeBridgeTone, type QofeRowVariant } from "@/lib/finance/report"
+import { resolveDeal } from "@/lib/finance/pipeline"
 
 export const metadata: Metadata = {
   title: "Visualcns Finance - QofE Report",
@@ -99,13 +93,32 @@ const rowStyles: Record<QofeRowVariant, RowStyle> = {
   },
 }
 
-export default function QofeReportPage() {
+interface QofeReportPageProps {
+  searchParams: Promise<{ deal?: string }>
+}
+
+export default async function QofeReportPage({ searchParams }: QofeReportPageProps) {
+  const { deal: dealId } = await searchParams
+  const deal = resolveDeal(dealId)
+  const report = getQofeReport(deal)
+  const reportSubtitle = `Reporting period: ${report.periodLabel}`
+
   return (
     <>
       {/* Page header */}
-      <PageHeader eyebrow="Analysis" title="QofE Report" subtitle={qofeReportMeta.subtitle} />
+      <PageHeader
+        breadcrumbs={[
+          { label: "Home", href: "/finance/app" },
+          { label: "Analysis", href: "/finance/app/analysis" },
+          { label: deal.name, href: `/finance/app/analysis?deal=${deal.id}` },
+          { label: "QofE Report" },
+        ]}
+        eyebrow={deal.name}
+        title="QofE Report"
+        subtitle={reportSubtitle}
+      />
 
-      <AnalysisSubnav />
+      <AnalysisSubnav dealId={deal.id} />
 
       <section className="mb-8 flex items-center gap-4">
         <button
@@ -138,7 +151,7 @@ export default function QofeReportPage() {
               <span className={cn(labelMd, "text-(--fin-on-surface-variant)")}>{qofeReportMeta.currencyNote}</span>
             </div>
             <div className="flex h-64 items-end justify-between gap-4 px-4">
-              {qofeBridgeBars.map((bar) => (
+              {report.bridgeBars.map((bar) => (
                 <div key={bar.label} className="flex w-full max-w-[60px] flex-col items-center">
                   <div
                     className={cn("relative w-full", bridgeBarClasses[bar.tone])}
@@ -168,15 +181,17 @@ export default function QofeReportPage() {
           <div className="flex flex-col rounded-[8px] border border-(--fin-primary) bg-(--fin-primary-container) p-6 text-(--fin-on-primary)">
             <div className="mb-4 flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-[4px] bg-[#455f88]/20">
-                <span className="material-symbols-outlined text-(--fin-secondary-fixed-dim)">{qofeInsight.icon}</span>
+                <span className="material-symbols-outlined text-(--fin-secondary-fixed-dim)">
+                  {report.insight.icon}
+                </span>
               </div>
-              <p className="text-xl font-semibold leading-7">{qofeInsight.title}</p>
+              <p className="text-xl font-semibold leading-7">{report.insight.title}</p>
             </div>
-            <p className="mb-6 text-sm leading-relaxed text-(--fin-on-primary-container)">{qofeInsight.body}</p>
+            <p className="mb-6 text-sm leading-relaxed text-(--fin-on-primary-container)">{report.insight.body}</p>
             <div className="mt-auto">
               <div className="flex items-center justify-between border-t border-(--fin-on-primary-container)/30 py-3">
-                <span className={cn(labelMd, "opacity-70")}>{qofeInsight.confidenceLabel}</span>
-                <span className="font-bold text-(--fin-secondary-fixed-dim)">{qofeInsight.confidence}</span>
+                <span className={cn(labelMd, "opacity-70")}>{report.insight.confidenceLabel}</span>
+                <span className="font-bold text-(--fin-secondary-fixed-dim)">{report.insight.confidence}</span>
               </div>
               <button
                 className={cn(
@@ -184,7 +199,7 @@ export default function QofeReportPage() {
                   "mt-4 w-full rounded-[4px] bg-white py-2 text-(--fin-primary) transition-colors hover:bg-(--fin-surface-bright)",
                 )}
               >
-                {qofeInsight.ctaLabel}
+                {report.insight.ctaLabel}
               </button>
             </div>
           </div>
@@ -195,10 +210,10 @@ export default function QofeReportPage() {
           <div className="flex items-center justify-between border-b border-(--fin-outline-variant) p-6">
             <p className="text-xl font-semibold leading-7 text-(--fin-primary)">Adjusted EBITDA Calculation</p>
             <div className="flex gap-2">
-              <button className="rounded-[4px] p-2 text-(--fin-on-surface-variant) hover:bg-(--fin-surface-container)">
+              <button aria-label="Filter line items" className="rounded-[4px] p-2 text-(--fin-on-surface-variant) hover:bg-(--fin-surface-container)">
                 <span className="material-symbols-outlined">filter_list</span>
               </button>
-              <button className="rounded-[4px] p-2 text-(--fin-on-surface-variant) hover:bg-(--fin-surface-container)">
+              <button aria-label="More options" className="rounded-[4px] p-2 text-(--fin-on-surface-variant) hover:bg-(--fin-surface-container)">
                 <span className="material-symbols-outlined">more_vert</span>
               </button>
             </div>
@@ -245,7 +260,7 @@ export default function QofeReportPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-(--fin-outline-variant)">
-                {qofeTableRows.map((row) => {
+                {report.tableRows.map((row) => {
                   const styles = rowStyles[row.variant]
                   return (
                     <tr key={row.description} className={styles.row}>
@@ -283,7 +298,7 @@ export default function QofeReportPage() {
           <div className="w-full space-y-4 md:w-64">
             <div className="flex items-center justify-between text-xs">
               <span className="text-(--fin-on-surface-variant)">Report ID:</span>
-              <span className="font-mono font-bold">{qofeReportMeta.reportId}</span>
+              <span className="font-mono font-bold">{report.reportId}</span>
             </div>
             <div className="flex items-center justify-between text-xs">
               <span className="text-(--fin-on-surface-variant)">Analyst:</span>
@@ -292,7 +307,7 @@ export default function QofeReportPage() {
             <div className="flex items-center justify-between text-xs">
               <span className="text-(--fin-on-surface-variant)">Review Status:</span>
               <span className="rounded-[2px] border border-(--fin-secondary-container) bg-white px-2 py-0.5 text-[10px] text-(--fin-on-secondary-container)">
-                {qofeReportMeta.reviewStatus}
+                {report.reviewStatus}
               </span>
             </div>
           </div>

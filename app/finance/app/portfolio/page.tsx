@@ -1,7 +1,6 @@
 import Link from "next/link"
 import {
   aiInsight,
-  documentLensStatus,
   heatmapCells,
   holdingCompanies,
   holdingsTotal,
@@ -16,6 +15,7 @@ import {
 } from "@/lib/finance/portfolio"
 import { cn } from "@/lib/utils"
 import { PageHeader } from "@/components/finance/page-header"
+import { PortfolioSubnav } from "@/components/finance/portfolio-subnav"
 
 const kpiDeltaClasses: Record<KpiDeltaTone, string> = {
   positive: "bg-(--fin-secondary-fixed) text-[#1a365d]",
@@ -50,35 +50,33 @@ const initiativeStatusClasses: Record<InitiativeStatusTone, string> = {
 export default function PortfolioMonitoringPage() {
   return (
     <>
-      {/* Top Header Bar */}
       <PageHeader
-        eyebrow="Platform"
+        breadcrumbs={[
+          { label: "Home", href: "/finance/app" },
+          { label: "Portfolio" },
+        ]}
         title="Portfolio"
-        subtitle="Monitor portfolio company health, value creation progress, and post-close reporting across active holdings."
+        subtitle="Post-acquisition company health, value creation progress, and reporting across active holdings."
+        actions={
+          <>
+            <div className="flex flex-col items-end">
+              <span className="text-[10px] font-semibold uppercase tracking-[0.08em] text-(--fin-on-surface-variant)">
+                Last Updated
+              </span>
+              <span className="text-sm font-semibold text-(--fin-on-surface)">{portfolioLastUpdated}</span>
+            </div>
+            <button className="flex items-center gap-2 rounded-[4px] border border-(--fin-outline) px-4 py-2 text-xs font-semibold tracking-[0.02em] transition-colors hover:bg-(--fin-surface-container)">
+              <span className="material-symbols-outlined text-[18px]">download</span>
+              Export Board Pack
+            </button>
+          </>
+        }
       />
 
-      <section className="mb-8 flex items-center justify-between">
-        <nav className="flex gap-2 text-xs font-semibold tracking-[0.02em]">
-          <span className="text-(--fin-on-surface-variant)">Portfolio</span>
-          <span className="text-(--fin-on-surface-variant)">/</span>
-          <span className="font-bold text-(--fin-primary)">Post-Acquisition Monitor</span>
-        </nav>
-        <div className="flex gap-4">
-          <div className="flex flex-col items-end">
-            <span className="text-xs font-semibold tracking-[0.02em] text-(--fin-on-surface-variant)">
-              Last Updated
-            </span>
-            <span className="text-xl font-semibold leading-7 text-(--fin-on-surface)">{portfolioLastUpdated}</span>
-          </div>
-          <button className="flex items-center gap-2 rounded-[4px] border border-(--fin-outline) px-4 py-2 text-xs font-semibold tracking-[0.02em] transition-colors hover:bg-(--fin-surface-container)">
-            <span className="material-symbols-outlined text-[18px]">download</span>
-            Export QofE
-          </button>
-        </div>
-      </section>
+      <PortfolioSubnav />
 
       {/* KPI Summary Ribbon */}
-      <div className="mb-8 grid grid-cols-4 gap-4">
+      <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {portfolioKpis.map((kpi) => (
           <div
             key={kpi.label}
@@ -98,7 +96,7 @@ export default function PortfolioMonitoringPage() {
       {/* Main Dashboard Grid */}
       <div className="grid grid-cols-12 gap-4">
         {/* Portfolio Companies Table */}
-        <section className="col-span-8 space-y-4">
+        <section className="col-span-12 space-y-4 lg:col-span-8">
           <div className="overflow-hidden rounded-[4px] border border-(--fin-outline-variant) bg-(--fin-surface-container-lowest)">
             <div className="flex items-center justify-between border-b border-(--fin-outline-variant) px-6 py-4">
               <p className="text-xl font-semibold leading-7 text-(--fin-primary)">Holding Companies</p>
@@ -132,7 +130,7 @@ export default function PortfolioMonitoringPage() {
                   <tr
                     key={company.name}
                     className={cn(
-                      "cursor-pointer transition-colors hover:bg-(--fin-surface-container-low)/50",
+                      "transition-colors hover:bg-(--fin-surface-container-low)/50",
                       company.highlighted && "bg-(--fin-secondary-fixed)/10",
                     )}
                   >
@@ -196,7 +194,8 @@ export default function PortfolioMonitoringPage() {
                 </div>
               </div>
             </div>
-            <div className="grid h-64 grid-cols-4 grid-rows-3 gap-2">
+            <div className="overflow-x-auto">
+            <div className="grid h-64 min-w-[480px] grid-cols-4 grid-rows-3 gap-2">
               {heatmapCells.map((cell) => (
                 <div
                   key={cell.label}
@@ -211,11 +210,12 @@ export default function PortfolioMonitoringPage() {
                 </div>
               ))}
             </div>
+            </div>
           </div>
         </section>
 
         {/* Sidebar: Value Creation & Alerts */}
-        <aside className="col-span-4 space-y-4">
+        <aside className="col-span-12 space-y-4 lg:col-span-4">
           {/* Value Creation Status */}
           <div className="rounded-[4px] border border-(--fin-outline-variant) bg-(--fin-surface-container-lowest) p-6">
             <p className="mb-6 text-xl font-semibold leading-7 text-(--fin-primary)">Value Creation Initiatives</p>
@@ -296,19 +296,6 @@ export default function PortfolioMonitoringPage() {
             </div>
           </div>
         </aside>
-      </div>
-
-      {/* Document Lens Overlay (Contextual Component) */}
-      <div className="fixed bottom-8 right-8 z-50">
-        <div className="flex animate-bounce items-center gap-4 rounded-[8px] border border-(--fin-primary)/20 bg-white p-4 shadow-xl">
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-(--fin-primary) text-white">
-            <span className="material-symbols-outlined">{documentLensStatus.icon}</span>
-          </div>
-          <div>
-            <p className="text-xs font-semibold tracking-[0.02em] text-(--fin-primary)">{documentLensStatus.title}</p>
-            <p className="text-[10px] text-(--fin-on-surface-variant)">{documentLensStatus.subtitle}</p>
-          </div>
-        </div>
       </div>
     </>
   )

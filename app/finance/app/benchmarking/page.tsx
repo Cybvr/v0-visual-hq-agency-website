@@ -2,16 +2,12 @@ import type { Metadata } from "next"
 import { AnalysisSubnav } from "@/components/finance/analysis-subnav"
 import { PageHeader } from "@/components/finance/page-header"
 import {
-  aiLensCard,
   benchmarkAiConfidence,
   benchmarkFilters,
-  benchmarkMatrix,
   benchmarkMatrixFootnote,
-  ebitdaMultiples,
-  qofeCards,
-  revenueGrowthBenchmarks,
-  revenueGrowthSummary,
+  getBenchmarkData,
 } from "@/lib/finance/benchmarking"
+import { resolveDeal } from "@/lib/finance/pipeline"
 
 export const metadata: Metadata = {
   title: "Benchmarking | Visualcns Finance",
@@ -23,17 +19,32 @@ const growthToneClasses: Record<string, string> = {
   median: "bg-(--fin-outline-variant)",
 }
 
-export default function BenchmarkingPage() {
+interface BenchmarkingPageProps {
+  searchParams: Promise<{ deal?: string }>
+}
+
+export default async function BenchmarkingPage({ searchParams }: BenchmarkingPageProps) {
+  const { deal: dealId } = await searchParams
+  const deal = resolveDeal(dealId)
+  const { ebitdaMultiples, revenueGrowthBenchmarks, revenueGrowthSummary, benchmarkMatrix, qofeCards, aiLensCard } =
+    getBenchmarkData(deal)
+
   return (
     <>
       {/* Page header */}
       <PageHeader
-        eyebrow="Analysis"
+        breadcrumbs={[
+          { label: "Home", href: "/finance/app" },
+          { label: "Analysis", href: "/finance/app/analysis" },
+          { label: deal.name, href: `/finance/app/analysis?deal=${deal.id}` },
+          { label: "Benchmarking" },
+        ]}
+        eyebrow={deal.name}
         title="Benchmarking"
-        subtitle="Compare current deal performance against verified peers, market quartiles, and QofE-derived operating signals."
+        subtitle="Compare against verified peers, market quartiles, and QofE-derived operating signals."
       />
 
-      <AnalysisSubnav />
+      <AnalysisSubnav dealId={deal.id} />
 
       <section className="mb-8 flex flex-wrap gap-3">
         {benchmarkFilters.map((filter) => (
@@ -62,7 +73,7 @@ export default function BenchmarkingPage() {
         {/* Bento grid charts */}
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
           {/* Chart 1: EBITDA multiples (large) */}
-          <div className="flex flex-col gap-6 rounded-[4px] border border-(--fin-outline-variant) bg-white p-6 lg:col-span-8">
+          <div className="flex flex-col gap-6 rounded-[8px] border border-(--fin-outline-variant) bg-white p-6 lg:col-span-8">
             <div className="flex items-start justify-between">
               <div>
                 <p className="fin-headline-md text-[24px] text-(--fin-primary)">EBITDA Multiples by Industry</p>
@@ -79,7 +90,7 @@ export default function BenchmarkingPage() {
                 <div key={bar.label} className="group relative flex h-full flex-1 flex-col items-center justify-end">
                   {bar.isCurrentDeal ? (
                     <div className="absolute -top-10 z-20 rounded-[2px] bg-(--fin-primary) px-2 py-1 text-[10px] font-bold text-(--fin-on-primary)">
-                      {bar.tooltip}
+                      {deal.name}: {bar.tooltip}
                     </div>
                   ) : (
                     <div className="invisible absolute -top-8 z-20 rounded-[2px] bg-(--fin-primary-container) px-2 py-1 text-[10px] font-bold text-(--fin-on-primary-container) opacity-0 transition-opacity group-hover:visible group-hover:opacity-100">
@@ -107,7 +118,7 @@ export default function BenchmarkingPage() {
           </div>
 
           {/* Chart 2: Revenue growth (small) */}
-          <div className="flex flex-col rounded-[4px] border border-(--fin-outline-variant) bg-white p-6 lg:col-span-4">
+          <div className="flex flex-col rounded-[8px] border border-(--fin-outline-variant) bg-white p-6 lg:col-span-4">
             <p className="fin-headline-md mb-1 text-[24px] text-(--fin-primary)">Revenue Growth</p>
             <p className="mb-8 text-xs font-semibold uppercase tracking-wider text-(--fin-on-surface-variant)">
               LTM Growth Rate
@@ -116,7 +127,7 @@ export default function BenchmarkingPage() {
               {revenueGrowthBenchmarks.map((row) => (
                 <div key={row.label} className="space-y-1">
                   <div className="flex justify-between text-xs font-semibold tracking-[0.02em]">
-                    <span>{row.label}</span>
+                    <span>{row.tone === "current" ? deal.name : row.label}</span>
                     <span className="font-bold text-(--fin-primary)">{row.value}</span>
                   </div>
                   <div className="h-2 w-full overflow-hidden rounded-full bg-(--fin-surface-container)">
@@ -139,7 +150,7 @@ export default function BenchmarkingPage() {
           </div>
 
           {/* Comparison table */}
-          <div className="overflow-hidden rounded-[4px] border border-(--fin-outline-variant) bg-white shadow-sm lg:col-span-12">
+          <div className="overflow-hidden rounded-[8px] border border-(--fin-outline-variant) bg-white shadow-sm lg:col-span-12">
             <div className="flex items-center justify-between border-b border-(--fin-outline-variant) bg-(--fin-surface-container-low) p-6">
               <p className="fin-headline-md text-[24px] text-(--fin-primary)">Benchmark Analysis Matrix</p>
               <div className="flex gap-2">
@@ -156,7 +167,7 @@ export default function BenchmarkingPage() {
                 <thead className="border-b border-(--fin-outline-variant) bg-(--fin-surface) text-xs font-semibold tracking-[0.02em] text-(--fin-on-surface-variant)">
                   <tr>
                     <th className="px-6 py-4 font-semibold">Key Performance Indicator</th>
-                    <th className="px-6 py-4 font-semibold">Current Deal</th>
+                    <th className="px-6 py-4 font-semibold">{deal.name}</th>
                     <th className="px-6 py-4 font-semibold">Median Peer</th>
                     <th className="px-6 py-4 font-semibold">Top Quartile</th>
                     <th className="px-6 py-4 font-semibold">Variance (vs Med)</th>
@@ -171,17 +182,22 @@ export default function BenchmarkingPage() {
                       <td className="px-6 py-4">{row.medianPeer}</td>
                       <td className="px-6 py-4">{row.topQuartile}</td>
                       <td
-                        className={`px-6 py-4 font-medium ${row.variancePositive ? "text-green-700" : "text-red-700"}`}
+                        className={`px-6 py-4 font-medium ${row.variancePositive ? "text-(--fin-primary)" : "text-(--fin-error)"}`}
                       >
-                        {row.variance}
+                        <span className="inline-flex items-center gap-0.5">
+                          <span className="material-symbols-outlined text-[16px]">
+                            {row.variancePositive ? "arrow_drop_up" : "arrow_drop_down"}
+                          </span>
+                          {row.variance}
+                        </span>
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex justify-center">
                           <span
                             className={`rounded-full px-2 py-0.5 text-[10px] font-semibold tracking-[0.02em] ${
                               row.confidence === "VERIFIED"
-                                ? "bg-green-100 text-green-800"
-                                : "bg-yellow-100 text-yellow-800"
+                                ? "bg-(--fin-secondary-container) text-(--fin-on-secondary-container)"
+                                : "bg-(--fin-surface-variant) text-(--fin-on-surface-variant)"
                             }`}
                           >
                             {row.confidence}
@@ -206,7 +222,7 @@ export default function BenchmarkingPage() {
           {qofeCards.map((card) => (
             <div
               key={card.title}
-              className="flex flex-col gap-4 rounded-[4px] border border-(--fin-outline-variant) bg-white p-5 lg:col-span-4"
+              className="flex flex-col gap-4 rounded-[8px] border border-(--fin-outline-variant) bg-white p-5 lg:col-span-4"
             >
               <div className="flex items-center justify-between">
                 <span className="text-xs font-semibold uppercase tracking-[0.02em] text-(--fin-on-surface-variant)">
@@ -218,7 +234,7 @@ export default function BenchmarkingPage() {
                 <span className="fin-tabular text-[32px] font-bold text-(--fin-primary)">{card.value}</span>
                 <span
                   className={`mb-1.5 flex items-center text-sm font-bold ${
-                    card.deltaDirection === "up" ? "text-green-700" : "text-red-700"
+                    card.deltaDirection === "up" ? "text-(--fin-primary)" : "text-(--fin-error)"
                   }`}
                 >
                   <span className="material-symbols-outlined text-[18px]">
@@ -244,7 +260,7 @@ export default function BenchmarkingPage() {
           ))}
 
           {/* AI Lens synthesis card */}
-          <div className="group relative flex flex-col gap-4 overflow-hidden rounded-[4px] border border-(--fin-outline-variant) bg-white p-5 lg:col-span-4">
+          <div className="group relative flex flex-col gap-4 overflow-hidden rounded-[8px] border border-(--fin-outline-variant) bg-white p-5 lg:col-span-4">
             <div className="absolute right-0 top-0 p-4 opacity-10 transition-opacity group-hover:opacity-20">
               <span className="material-symbols-outlined text-[120px]">smart_toy</span>
             </div>

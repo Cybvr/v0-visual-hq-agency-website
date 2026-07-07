@@ -6,6 +6,11 @@ export default function ReportArchivePage() {
   return (
     <>
       <PageHeader
+        breadcrumbs={[
+          { label: "Home", href: "/finance/app" },
+          { label: "Reports", href: "/finance/app/reports" },
+          { label: "Report Archive" },
+        ]}
         eyebrow="Reporting"
         title="Report Archive"
         subtitle="Browse previously prepared investor materials, download package files, and review reporting history."

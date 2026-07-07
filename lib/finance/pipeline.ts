@@ -1,3 +1,6 @@
+import { getCompany } from "./companies"
+import { deriveFinancials, formatDealSizeM, getFinancials } from "./deal-financials"
+
 export type PipelineStageTone = "primary" | "secondary" | "highlight" | "closed"
 
 export interface PipelineStage {
@@ -13,6 +16,8 @@ export type DealStageTone = "due-diligence" | "loi" | "neutral" | "stalled"
 export type PartnerAvatarTone = "primary" | "secondary" | "tertiary"
 
 export interface Deal {
+  /** Stable slug used to select this deal from the pipeline (e.g. in ?deal= links) */
+  id: string
   name: string
   /** Deal size in $M, formatted as in source */
   size: string
@@ -64,22 +69,30 @@ export const pipelineStages: PipelineStage[] = [
   { label: "CLOSED", count: 1, progress: 10, tone: "closed" },
 ]
 
-export const deals: Deal[] = [
+/**
+ * Deal-team attribution per company. Identity (name, sector, stage) comes from
+ * the canonical company registry; deal size is the enterprise value computed
+ * from that company's financial profile.
+ */
+interface DealAttribution {
+  id: string
+  stageTone: DealStageTone
+  partner: string
+  partnerInitials: string
+  partnerAvatarTone: PartnerAvatarTone
+  highlighted?: boolean
+}
+
+const dealAttributions: DealAttribution[] = [
   {
-    name: "AeroDynamic Systems",
-    size: "450.0",
-    sector: "Industrial Automation",
-    stage: "Due Diligence",
+    id: "aerodynamic-systems",
     stageTone: "due-diligence",
     partner: "Marcus Kane",
     partnerInitials: "MK",
     partnerAvatarTone: "primary",
   },
   {
-    name: "Veridia Health Group",
-    size: "1,200.5",
-    sector: "Healthcare SaaS",
-    stage: "LOI Issued",
+    id: "veridia-health-group",
     stageTone: "loi",
     partner: "Sarah White",
     partnerInitials: "SW",
@@ -87,36 +100,64 @@ export const deals: Deal[] = [
     highlighted: true,
   },
   {
-    name: "FinTech Velocity",
-    size: "85.0",
-    sector: "Payment Processing",
-    stage: "Sourcing",
+    id: "fintech-velocity",
     stageTone: "neutral",
     partner: "David Lee",
     partnerInitials: "DL",
     partnerAvatarTone: "tertiary",
   },
   {
-    name: "Solaris Energy Partners",
-    size: "320.0",
-    sector: "Renewable Infra",
-    stage: "NDA Signed",
+    id: "solaris-energy-partners",
     stageTone: "neutral",
     partner: "Marcus Kane",
     partnerInitials: "MK",
     partnerAvatarTone: "primary",
   },
   {
-    name: "OmniLogistics Corp",
-    size: "58.0",
-    sector: "Cold Chain Logistics",
-    stage: "Stalled",
+    id: "omnilogistics-corp",
     stageTone: "stalled",
     partner: "Sarah White",
     partnerInitials: "SW",
     partnerAvatarTone: "secondary",
   },
+  {
+    // Bridges the lifecycle: a closed deal that also appears as an owned
+    // holding (Avionics Group) on the Portfolio and LP Reports screens.
+    id: "avionics-group",
+    stageTone: "neutral",
+    partner: "Marcus Kane",
+    partnerInitials: "MK",
+    partnerAvatarTone: "primary",
+  },
 ]
+
+export const deals: Deal[] = dealAttributions.map((attribution) => {
+  const company = getCompany(attribution.id)
+  const derived = deriveFinancials(getFinancials(attribution.id))
+  return {
+    ...attribution,
+    name: company.name,
+    sector: company.sector,
+    stage: company.stage,
+    size: formatDealSizeM(derived.enterpriseValueM),
+  }
+})
+
+export function getDealById(id: string | undefined): Deal | undefined {
+  return id ? deals.find((deal) => deal.id === id) : undefined
+}
+
+/**
+ * The one fully-worked example deal (in Due Diligence). Used as the default
+ * subject for the Analysis workspace when no specific deal is selected, so
+ * every analysis screen always has a named company to render.
+ */
+export const flagshipDeal: Deal = deals.find((deal) => deal.stageTone === "due-diligence") ?? deals[0]
+
+/** Resolve the selected deal from an id, falling back to the flagship deal. */
+export function resolveDeal(id: string | undefined): Deal {
+  return getDealById(id) ?? flagshipDeal
+}
 
 export const recentActivity: ActivityItem[] = [
   {

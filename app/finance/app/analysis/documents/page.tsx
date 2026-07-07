@@ -8,6 +8,7 @@ import {
   intakeRequirements,
   type IntakeFileStatus,
 } from "@/lib/finance/analysis"
+import { resolveDeal } from "@/lib/finance/pipeline"
 
 const statusBadgeClass: Record<IntakeFileStatus, string> = {
   analyzing: "bg-(--fin-secondary-container) text-(--fin-on-secondary-container)",
@@ -26,19 +27,32 @@ const iconToneClass = {
   error: "text-(--fin-error)",
 } as const
 
-export default function DocumentIntakePage() {
+interface DocumentIntakePageProps {
+  searchParams: Promise<{ deal?: string }>
+}
+
+export default async function DocumentIntakePage({ searchParams }: DocumentIntakePageProps) {
+  const { deal: dealId } = await searchParams
+  const deal = resolveDeal(dealId)
+
   return (
     <>
       <PageHeader
-        eyebrow="Analysis"
+        breadcrumbs={[
+          { label: "Home", href: "/finance/app" },
+          { label: "Analysis", href: "/finance/app/analysis" },
+          { label: deal.name, href: `/finance/app/analysis?deal=${deal.id}` },
+          { label: "Document Intake" },
+        ]}
+        eyebrow={deal.name}
         title="Document Intake"
         subtitle="Upload source files, track processing, and prepare the working set for structured QofE analysis."
       />
 
-      <AnalysisSubnav />
+      <AnalysisSubnav dealId={deal.id} />
 
       <Link
-        href="/finance/app/analysis/business-info"
+        href={`/finance/app/analysis/business-info?deal=${deal.id}`}
         className="mb-8 inline-flex items-center gap-1 text-xs font-semibold tracking-[0.02em] text-(--fin-secondary) underline-offset-4 hover:underline"
       >
         <span className="material-symbols-outlined text-[16px]">arrow_back</span>
@@ -149,10 +163,11 @@ export default function DocumentIntakePage() {
                     </div>
                   </div>
                 ))}
-                {/* Empty/next slot placeholder */}
-                <div className="flex flex-col items-center justify-center p-8 text-center">
-                  <p className="text-sm text-(--fin-on-surface-variant)">Ready for next batch</p>
-                </div>
+                {intakeQueue.length === 0 && (
+                  <div className="flex flex-col items-center justify-center p-8 text-center">
+                    <p className="text-sm text-(--fin-on-surface-variant)">Ready for next batch</p>
+                  </div>
+                )}
               </div>
               <div className="flex items-center justify-between border-t border-(--fin-outline-variant) bg-(--fin-surface-container-low) p-6">
                 <button
@@ -162,7 +177,7 @@ export default function DocumentIntakePage() {
                   Clear Finished
                 </button>
                 <Link
-                  href="/finance/app/analysis/report"
+                  href={`/finance/app/analysis/report?deal=${deal.id}`}
                   className="flex items-center gap-2 rounded-[4px] bg-(--fin-secondary) px-4 py-2 text-xs font-semibold tracking-[0.02em] text-(--fin-on-secondary) shadow-md"
                 >
                   <span className="material-symbols-outlined text-sm">rocket_launch</span>

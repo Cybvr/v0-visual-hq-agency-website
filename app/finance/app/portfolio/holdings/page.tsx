@@ -1,4 +1,3 @@
-import Link from "next/link"
 import { cn } from "@/lib/utils"
 import {
   holdingCompanies,
@@ -6,6 +5,7 @@ import {
   type HoldingAvatarTone,
 } from "@/lib/finance/portfolio"
 import { PageHeader } from "@/components/finance/page-header"
+import { PortfolioSubnav } from "@/components/finance/portfolio-subnav"
 
 const holdingAvatarClasses: Record<HoldingAvatarTone, string> = {
   "primary-container": "bg-(--fin-primary-container) text-(--fin-on-primary-container)",
@@ -18,19 +18,17 @@ export default function HoldingsPage() {
   return (
     <>
       <PageHeader
+        breadcrumbs={[
+          { label: "Home", href: "/finance/app" },
+          { label: "Portfolio", href: "/finance/app/portfolio" },
+          { label: "Holdings" },
+        ]}
         eyebrow="Portfolio"
         title="Holdings"
         subtitle={`Review the current portfolio roster, operating profile, and trend direction across ${holdingsTotal} holdings.`}
       />
 
-      <div className="mb-8 flex items-center justify-between">
-        <Link
-          href="/finance/app/portfolio"
-          className="text-xs font-semibold tracking-[0.02em] text-(--fin-secondary) hover:underline"
-        >
-          Back to portfolio
-        </Link>
-      </div>
+      <PortfolioSubnav />
 
       <section className="overflow-hidden rounded-[8px] border border-(--fin-outline-variant) bg-white">
         <table className="fin-tabular w-full border-collapse text-left">

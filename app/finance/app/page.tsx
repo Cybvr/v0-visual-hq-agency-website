@@ -46,6 +46,7 @@ export default function FinanceOverviewPage() {
   return (
     <>
       <PageHeader
+        breadcrumbs={[{ label: "Home" }]}
         eyebrow="Finance Workspace"
         title="Overview"
         subtitle="A single home for pipeline priorities, analysis progress, portfolio signals, and investor reporting."

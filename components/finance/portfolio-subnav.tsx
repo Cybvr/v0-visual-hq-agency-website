@@ -2,28 +2,22 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { analysisNav } from "@/lib/finance/nav"
+import { portfolioNav } from "@/lib/finance/nav"
 import { cn } from "@/lib/utils"
 
-interface AnalysisSubnavProps {
-  /** Currently selected deal, appended to each nav link so the workspace stays in context */
-  dealId?: string
-}
-
-export function AnalysisSubnav({ dealId }: AnalysisSubnavProps) {
+export function PortfolioSubnav() {
   const pathname = usePathname()
 
   return (
     <nav className="mb-8 flex flex-wrap gap-2 border-b border-(--fin-outline-variant) pb-4">
-      {analysisNav.map((item) => {
+      {portfolioNav.map((item) => {
         const active = pathname === item.href
         const Icon = item.icon
-        const href = dealId ? `${item.href}?deal=${dealId}` : item.href
 
         return (
           <Link
             key={item.href}
-            href={href}
+            href={item.href}
             className={cn(
               "inline-flex items-center gap-2 rounded-[4px] px-3 py-2 text-xs font-semibold transition-colors",
               active
