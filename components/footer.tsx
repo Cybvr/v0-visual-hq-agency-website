@@ -10,6 +10,7 @@ const footerGroups = [
       { name: "Pasive", href: "/brands/pasive" },
       { name: "Juju", href: "/brands/juju" },
       { name: "Waddi", href: "/brands/waddi" },
+      { name: "Finance", href: "/finance" },
       { name: "Pricing", href: "/pricing" },
     ],
   },
