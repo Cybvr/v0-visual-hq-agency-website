@@ -42,7 +42,7 @@ const strengthsSection = {
     },
     {
       name: "Dashboard responsive patterns are correct where they're used",
-      body: "app/finance/app/page.tsx grids degrade cleanly (grid-cols-1 → md:grid-cols-2 → xl:grid-cols-4), which is the pattern every other KPI/card grid in the app should be matching but doesn't always.",
+      body: "app/finance/dashboard/page.tsx grids degrade cleanly (grid-cols-1 → md:grid-cols-2 → xl:grid-cols-4), which is the pattern every other KPI/card grid in the app should be matching but doesn't always.",
     },
   ],
 }
@@ -63,7 +63,7 @@ const findings: Finding[] = [
     id: "A-01",
     severity: "High",
     category: "Accessibility",
-    location: "app/finance/app/pipeline/page.tsx:107-112",
+    location: "app/finance/dashboard/pipeline/page.tsx:107-112",
     finding: "Icon-only filter and overflow-menu buttons have no aria-label.",
     detail:
       "Two buttons rendered as bare material-symbols spans (filter_list, more_vert) carry no accessible name. A screen-reader user gets no indication of what either control does.",
@@ -72,7 +72,7 @@ const findings: Finding[] = [
     id: "A-02",
     severity: "High",
     category: "Accessibility",
-    location: "app/finance/app/benchmarking/page.tsx:180-183",
+    location: "app/finance/dashboard/benchmarking/page.tsx:180-183",
     finding: "Peer variance is signaled by text color alone — no icon, sign, or label.",
     detail:
       "Over/under-performance against peer benchmarks uses text-green-700 / text-red-700 with nothing else distinguishing the two states. For colorblind users this is the one number on the page they can't read — and it's the one the page exists to show.",
@@ -81,7 +81,7 @@ const findings: Finding[] = [
     id: "A-03",
     severity: "Medium",
     category: "Accessibility",
-    location: "app/finance/app/modeling/page.tsx:99-104, 203-208, 288-290",
+    location: "app/finance/dashboard/modeling/page.tsx:99-104, 203-208, 288-290",
     finding: "Same icon-only-button pattern repeats on the modeling screen.",
     detail:
       "Filter/view-toggle and overflow-menu icon buttons again ship with no aria-label — this is the same defect as A-01, recurring on a second screen, which suggests it belongs in a shared IconButton pattern rather than a per-page fix.",
@@ -90,7 +90,7 @@ const findings: Finding[] = [
     id: "A-04",
     severity: "Medium",
     category: "Accessibility",
-    location: "app/finance/app/analysis/report/page.tsx:203-208",
+    location: "app/finance/dashboard/analysis/report/page.tsx:203-208",
     finding: "Icon-only filter_list / more_vert buttons, no aria-label — third occurrence.",
     detail: "Same defect as A-01 and A-03, now on three of fourteen screens.",
   },
@@ -98,7 +98,7 @@ const findings: Finding[] = [
     id: "N-01",
     severity: "High",
     category: "Navigation & Wayfinding",
-    location: "app/finance/app/analysis/page.tsx:50-54",
+    location: "app/finance/dashboard/analysis/page.tsx:50-54",
     finding: "The analysis hub is the only step in its own flow whose header drops the deal-context pill.",
     detail:
       "business-info, documents, report, benchmarking, and modeling all pass dealName into PageHeader. The analysis overview page — the entry point to the entire flow — calls PageHeader without it, relying only on the 'Selected Deal' banner further down the page. Scroll past that banner and the deal name disappears from view, on the one page where a user is choosing which deal to work on.",
@@ -107,7 +107,7 @@ const findings: Finding[] = [
     id: "N-02",
     severity: "Low",
     category: "Navigation & Wayfinding",
-    location: "app/finance/app/analysis/business-info/page.tsx:161-167",
+    location: "app/finance/dashboard/analysis/business-info/page.tsx:161-167",
     finding: "'Discard Draft' is styled as a plain text link with no confirmation.",
     detail:
       "It carries the same visual weight as benign back-navigation links elsewhere in the app, but it silently drops unsaved form input. A destructive action styled identically to a safe one is a trust problem in a form that holds financial data entry.",
@@ -116,7 +116,7 @@ const findings: Finding[] = [
     id: "C-01",
     severity: "Medium",
     category: "Consistency",
-    location: "app/finance/app/pipeline/page.tsx:31 and app/finance/app/analysis/page.tsx:63",
+    location: "app/finance/dashboard/pipeline/page.tsx:31 and app/finance/dashboard/analysis/page.tsx:63",
     finding: "Deal-stage badge uses a hardcoded hex pair instead of the --fin- variables used everywhere else.",
     detail:
       "bg-[#d3e4ff] text-[#001c38] is duplicated verbatim in two files while every comparable badge (page-header.tsx:18, analysis-subnav.tsx:30) draws from --fin-secondary-container / --fin-on-secondary-container. A future theme or dark-mode pass will miss both instances.",
@@ -125,7 +125,7 @@ const findings: Finding[] = [
     id: "C-02",
     severity: "Medium",
     category: "Consistency",
-    location: "app/finance/app/benchmarking/page.tsx:189-190, 227-228 and app/finance/app/modeling/page.tsx:37-50",
+    location: "app/finance/dashboard/benchmarking/page.tsx:189-190, 227-228 and app/finance/dashboard/modeling/page.tsx:37-50",
     finding: "Raw Tailwind green/red/amber/blue utilities used for status color instead of --fin- error/tertiary tokens.",
     detail:
       "pipeline/page.tsx:34 and portfolio/page.tsx:22 correctly use --fin-error / --fin-error-container for the same category of status signal. Benchmarking and modeling diverge from their own codebase's convention.",
@@ -143,7 +143,7 @@ const findings: Finding[] = [
     id: "C-04",
     severity: "Low",
     category: "Consistency",
-    location: "app/finance/app/portfolio/page.tsx:81 vs app/finance/app/page.tsx:86",
+    location: "app/finance/dashboard/portfolio/page.tsx:81 vs app/finance/dashboard/page.tsx:86",
     finding: "Two KPI-ribbon implementations of the same pattern use different responsive rules.",
     detail:
       "The dashboard's KPI grid steps grid-cols-1 → md:grid-cols-2 → xl:grid-cols-4. Portfolio's KPI ribbon is grid-cols-4 with no breakpoints at all — the same UI pattern, two different responsive contracts.",
@@ -152,7 +152,7 @@ const findings: Finding[] = [
     id: "F-01",
     severity: "High",
     category: "Interactive Affordance",
-    location: "app/finance/app/portfolio/page.tsx:131-137 and portfolio/holdings/page.tsx:49-86",
+    location: "app/finance/dashboard/portfolio/page.tsx:131-137 and portfolio/holdings/page.tsx:49-86",
     finding: "Holding-company table rows carry cursor-pointer and a hover state with no click handler or Link behind them.",
     detail:
       "Both the portfolio dashboard's table and the full holdings-list page style every row as clickable — pointer cursor, background highlight on hover — but nothing happens on click in either file. A PE user who tries to drill into a holding from the row gets silent failure, and the pattern is systemic (present on two pages), not a one-off typo.",
@@ -161,7 +161,7 @@ const findings: Finding[] = [
     id: "F-02",
     severity: "Medium",
     category: "Interactive Affordance",
-    location: "app/finance/app/modeling/page.tsx:294, 309-324",
+    location: "app/finance/dashboard/modeling/page.tsx:294, 309-324",
     finding: "A model card offers three distinct visual affordances (title hover, EDIT button, EXCEL button) and none of them are wired up.",
     detail: "No onClick or Link on the title, the EDIT button, or the EXCEL button — the card looks fully interactive and is entirely inert.",
   },
@@ -169,7 +169,7 @@ const findings: Finding[] = [
     id: "F-03",
     severity: "Medium",
     category: "Interactive Affordance",
-    location: "app/finance/app/portfolio/initiatives/page.tsx:31-33",
+    location: "app/finance/dashboard/portfolio/initiatives/page.tsx:31-33",
     finding: "'Log New Initiative' button is styled identically to real submit actions elsewhere but has no handler.",
     detail:
       "Visually indistinguishable from the working 'Save and Continue' button on the business-info page, so a user has no way to tell, before clicking, that this one does nothing.",
@@ -178,7 +178,7 @@ const findings: Finding[] = [
     id: "R-01",
     severity: "High",
     category: "Responsive Layout",
-    location: "app/finance/app/pipeline/page.tsx:81",
+    location: "app/finance/dashboard/pipeline/page.tsx:81",
     finding: "Pipeline-stage summary is a hard grid-cols-5 with no breakpoints.",
     detail:
       "On a 375px viewport this forces five stage cards into equal columns with no fallback, producing illegible cramped text — every other multi-column grid audited at least steps down to grid-cols-1 on mobile.",
@@ -187,7 +187,7 @@ const findings: Finding[] = [
     id: "R-02",
     severity: "High",
     category: "Responsive Layout",
-    location: "app/finance/app/portfolio/page.tsx:81",
+    location: "app/finance/dashboard/portfolio/page.tsx:81",
     finding: "Portfolio KPI ribbon is a hard grid-cols-4 with no mobile fallback.",
     detail: "Same defect as R-01 and C-04 — the dashboard's equivalent section handles this correctly one file over.",
   },
@@ -195,7 +195,7 @@ const findings: Finding[] = [
     id: "R-03",
     severity: "Medium",
     category: "Responsive Layout",
-    location: "app/finance/app/portfolio/page.tsx:99, 101, 218",
+    location: "app/finance/dashboard/portfolio/page.tsx:99, 101, 218",
     finding: "Main dashboard grid (grid-cols-12, col-span-8/col-span-4) has no md:/lg: prefix to collapse on narrow viewports.",
     detail:
       "The Holding Companies table renders at 8/12 width of an already-narrow mobile viewport instead of stacking full-width. Pipeline and modeling handle the same layout need correctly with col-span-12 lg:col-span-8.",
@@ -204,7 +204,7 @@ const findings: Finding[] = [
     id: "R-04",
     severity: "Medium",
     category: "Responsive Layout",
-    location: "app/finance/app/portfolio/page.tsx:199",
+    location: "app/finance/dashboard/portfolio/page.tsx:199",
     finding: "Sector Performance Heatmap is a fixed grid-cols-4 grid-rows-3 inside a fixed h-64 container.",
     detail:
       "No responsive fallback — on mobile this renders four tiny illegible cells per row, obscuring the over/underperformance labels that are the entire point of the widget.",
@@ -213,7 +213,7 @@ const findings: Finding[] = [
     id: "E-01",
     severity: "Medium",
     category: "Empty / Loading / Error States",
-    location: "app/finance/app/pipeline/page.tsx:128",
+    location: "app/finance/dashboard/pipeline/page.tsx:128",
     finding: "The Active Opportunities table has no empty-state guard.",
     detail:
       "If deals is empty, the table renders header-only with nothing telling the user whether the pipeline is genuinely empty or data failed to load.",
@@ -222,7 +222,7 @@ const findings: Finding[] = [
     id: "E-02",
     severity: "Medium",
     category: "Empty / Loading / Error States",
-    location: "app/finance/app/analysis/documents/page.tsx:116-165",
+    location: "app/finance/dashboard/analysis/documents/page.tsx:116-165",
     finding: "A hardcoded 'Ready for next batch' placeholder renders regardless of queue length.",
     detail: "An empty intake queue and a full one are visually indistinguishable except for the missing rows themselves.",
   },
@@ -230,7 +230,7 @@ const findings: Finding[] = [
     id: "D-01",
     severity: "Medium",
     category: "Data Formatting",
-    location: "app/finance/app/analysis/page.tsx:67 vs app/finance/app/modeling/page.tsx:72",
+    location: "app/finance/dashboard/analysis/page.tsx:67 vs app/finance/dashboard/modeling/page.tsx:72",
     finding: "Deal size is formatted two different ways for the same underlying figure.",
     detail:
       "Analysis renders `${deal.size}M` as raw string concatenation. Modeling computes the equivalent figure through formatEvShort(deriveFinancials(...).enterpriseValueM). Two independent formatting pipelines for one concept risks the same deal showing '$42M' on one screen and '$42.0M' on another.",
@@ -239,7 +239,7 @@ const findings: Finding[] = [
     id: "D-02",
     severity: "Low",
     category: "Data Formatting",
-    location: "app/finance/app/portfolio/page.tsx:71",
+    location: "app/finance/dashboard/portfolio/page.tsx:71",
     finding: "portfolioLastUpdated is a hand-authored string with no shared date-formatting utility.",
     detail: "Consistency with other date/time displays in the app (e.g. relative-time strings in Recent Activity) depends entirely on source-file discipline rather than a shared formatter.",
   },
@@ -424,7 +424,7 @@ export default function FinanceUxReportPage() {
           <p className="mb-10 leading-relaxed text-(--fin-on-surface-variant)">{signOffSection.body}</p>
           <div className="flex flex-col gap-4 sm:flex-row">
             <Link
-              href="/finance/app"
+              href="/finance/dashboard"
               className="rounded-[4px] bg-(--fin-primary) px-8 py-3 text-center text-sm font-bold text-(--fin-on-primary)"
             >
               {signOffSection.primaryCta}
@@ -442,3 +442,4 @@ export default function FinanceUxReportPage() {
     </div>
   )
 }
+

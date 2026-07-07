@@ -255,7 +255,7 @@ export default function FinancePeReportPage() {
           <p className="mb-10 leading-relaxed text-(--fin-on-surface-variant)">{signOffSection.body}</p>
           <div className="flex flex-col gap-4 sm:flex-row">
             <Link
-              href="/finance/app"
+              href="/finance/dashboard"
               className="rounded-[4px] bg-(--fin-primary) px-8 py-3 text-center text-sm font-bold text-(--fin-on-primary)"
             >
               {signOffSection.primaryCta}
@@ -273,3 +273,4 @@ export default function FinancePeReportPage() {
     </div>
   )
 }
+

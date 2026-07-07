@@ -32,8 +32,8 @@ export function FinanceAppShell({ children }: { children: ReactNode }) {
     "?"
 
   return (
-    <div className="min-h-screen bg-(--fin-surface)">
-      <header className="sticky top-0 z-10 border-b border-(--fin-outline-variant) bg-white/95 backdrop-blur">
+    <div className="min-h-screen bg-background">
+      <header className="sticky top-0 z-10 border-b bg-background/95 backdrop-blur">
         <div className="mx-auto flex h-14 max-w-7xl items-center gap-6 px-4 sm:px-6 lg:px-8">
           <Link href="/finance" className="shrink-0">
             <BrandLockup logoSize={22} />
@@ -67,7 +67,7 @@ export function FinanceAppShell({ children }: { children: ReactNode }) {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="sm" className="gap-2 font-medium">
-                <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-(--fin-primary-fixed) text-[10px] font-bold text-(--fin-on-primary-fixed)">
+                <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-primary/15 text-[10px] font-bold text-primary">
                   {initials}
                 </span>
                 <span className="hidden sm:block">

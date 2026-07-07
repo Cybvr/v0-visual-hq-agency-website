@@ -1,16 +1,13 @@
 import type { Deal } from "@/lib/finance/pipeline"
+import { Badge } from "@/components/ui/badge"
 
 /** Status / size / sector pills for a deal, used in the analysis workspace header meta row. */
 export function DealMeta({ deal }: { deal: Deal }) {
   return (
     <>
-      <span className="rounded-full bg-(--fin-secondary-container) px-3 py-1 text-xs font-semibold text-(--fin-on-secondary-container)">
-        {deal.stage}
-      </span>
-      <span className="rounded-full bg-(--fin-surface-container-low) px-3 py-1 text-xs font-semibold text-(--fin-primary)">
-        ${deal.size}M
-      </span>
-      <span className="text-xs font-medium text-(--fin-on-surface-variant)">{deal.sector}</span>
+      <Badge className="bg-accent/15 text-primary hover:bg-accent/15">{deal.stage}</Badge>
+      <Badge variant="secondary" className="tabular-nums">${deal.size}M</Badge>
+      <span className="text-xs font-medium text-muted-foreground">{deal.sector}</span>
     </>
   )
 }

@@ -20,29 +20,30 @@ export interface FinanceAppNavItem {
 }
 
 export const financeAppNav: FinanceAppNavItem[] = [
-  { label: "Overview", href: "/finance/app", icon: LayoutDashboard },
-  { label: "Deal Pipeline", href: "/finance/app/pipeline", icon: BriefcaseBusiness },
+  { label: "Overview", href: "/finance/dashboard", icon: LayoutDashboard },
+  { label: "Pipeline", href: "/finance/dashboard/pipeline", icon: BriefcaseBusiness },
   {
     label: "Analysis",
-    href: "/finance/app/analysis",
+    href: "/finance/dashboard/analysis",
     icon: ClipboardList,
-    activeMatchers: ["/finance/app/analysis", "/finance/app/benchmarking", "/finance/app/modeling"],
+    activeMatchers: ["/finance/dashboard/analysis", "/finance/dashboard/benchmarking", "/finance/dashboard/modeling"],
   },
-  { label: "Portfolio", href: "/finance/app/portfolio", icon: Activity },
-  { label: "Reports", href: "/finance/app/reports", icon: Users },
+  { label: "Portfolio", href: "/finance/dashboard/portfolio", icon: Activity },
+  { label: "Reports", href: "/finance/dashboard/reports", icon: Users },
 ]
 
 export const portfolioNav: FinanceAppNavItem[] = [
-  { label: "Overview", href: "/finance/app/portfolio", icon: LayoutDashboard },
-  { label: "Holdings", href: "/finance/app/portfolio/holdings", icon: Building2 },
-  { label: "Value Creation", href: "/finance/app/portfolio/initiatives", icon: BarChart3 },
+  { label: "Overview", href: "/finance/dashboard/portfolio", icon: LayoutDashboard },
+  { label: "Holdings", href: "/finance/dashboard/portfolio/holdings", icon: Building2 },
+  { label: "Value Creation", href: "/finance/dashboard/portfolio/initiatives", icon: BarChart3 },
 ]
 
 export const analysisNav: FinanceAppNavItem[] = [
-  { label: "Overview", href: "/finance/app/analysis", icon: ClipboardList },
-  { label: "Business Info", href: "/finance/app/analysis/business-info", icon: Building2 },
-  { label: "Document Intake", href: "/finance/app/analysis/documents", icon: FolderOpen },
-  { label: "QofE Report", href: "/finance/app/analysis/report", icon: FileText },
-  { label: "Benchmarking", href: "/finance/app/benchmarking", icon: BarChart3 },
-  { label: "Financial Modeling", href: "/finance/app/modeling", icon: Calculator },
+  { label: "Overview", href: "/finance/dashboard/analysis", icon: ClipboardList },
+  { label: "Business Info", href: "/finance/dashboard/analysis/business-info", icon: Building2 },
+  { label: "Document Intake", href: "/finance/dashboard/analysis/documents", icon: FolderOpen },
+  { label: "QofE Report", href: "/finance/dashboard/analysis/report", icon: FileText },
+  { label: "Benchmarking", href: "/finance/dashboard/benchmarking", icon: BarChart3 },
+  { label: "Financial Modeling", href: "/finance/dashboard/modeling", icon: Calculator },
 ]
+

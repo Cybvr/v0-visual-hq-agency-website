@@ -1,6 +1,6 @@
 import type { ReactNode } from "react"
 import Link from "next/link"
-import { House } from "lucide-react"
+import { House, ChevronRight } from "lucide-react"
 
 interface BreadcrumbItem {
   label: string
@@ -23,58 +23,53 @@ export function PageHeader({ breadcrumbs, eyebrow, title, subtitle, meta, action
   const showEyebrow = eyebrow && (!breadcrumbs || breadcrumbs.length === 0)
 
   return (
-    <header className="mb-8 border-b border-(--fin-outline-variant) pb-6">
+    <header className="mb-8 border-b pb-6">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="min-w-0">
           {breadcrumbs && breadcrumbs.length > 0 && (
             <nav
               aria-label="Breadcrumb"
-              className="mb-3 flex flex-wrap items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.1em] text-(--fin-on-surface-variant)"
+              className="mb-3 flex flex-wrap items-center gap-1.5 text-xs font-medium text-muted-foreground"
             >
               {breadcrumbs.map((item, index) => {
                 const isLast = index === breadcrumbs.length - 1
+                const isHome = index === 0 && item.label === "Home"
+                const content = isHome ? (
+                  <>
+                    <House aria-hidden="true" className="size-3.5" strokeWidth={2} />
+                    <span className="sr-only">{item.label}</span>
+                  </>
+                ) : (
+                  item.label
+                )
 
                 return (
-                  <div key={`${item.label}-${index}`} className="flex items-center gap-2">
+                  <div key={`${item.label}-${index}`} className="flex items-center gap-1.5">
                     {item.href && !isLast ? (
-                      <Link href={item.href} className="transition-colors hover:text-(--fin-secondary)">
-                        {index === 0 && item.label === "Home" ? (
-                          <>
-                            <House aria-hidden="true" className="h-3.5 w-3.5" strokeWidth={2} />
-                            <span className="sr-only">{item.label}</span>
-                          </>
-                        ) : (
-                          item.label
-                        )}
+                      <Link href={item.href} className="inline-flex items-center gap-1.5 transition-colors hover:text-foreground">
+                        {content}
                       </Link>
                     ) : (
-                      <span className={isLast ? "text-(--fin-primary)" : undefined}>
-                        {index === 0 && item.label === "Home" ? (
-                          <>
-                            <House aria-hidden="true" className="h-3.5 w-3.5" strokeWidth={2} />
-                            <span className="sr-only">{item.label}</span>
-                          </>
-                        ) : (
-                          item.label
-                        )}
+                      <span className={isLast ? "inline-flex items-center gap-1.5 text-foreground" : "inline-flex items-center gap-1.5"}>
+                        {content}
                       </span>
                     )}
-                    {!isLast && <span className="text-(--fin-outline)">&gt;</span>}
+                    {!isLast && <ChevronRight aria-hidden="true" className="size-3 text-muted-foreground/60" />}
                   </div>
                 )
               })}
             </nav>
           )}
           {showEyebrow && (
-            <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-(--fin-secondary)">
+            <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-primary">
               {eyebrow}
             </p>
           )}
-          <h1 className="fin-headline text-[40px] leading-[46px] text-(--fin-primary)">{title}</h1>
-          {subtitle && <p className="mt-2 max-w-3xl text-sm leading-6 text-(--fin-on-surface-variant)">{subtitle}</p>}
+          <h1 className="text-4xl text-primary">{title}</h1>
+          {subtitle && <p className="mt-2 max-w-3xl text-sm text-muted-foreground">{subtitle}</p>}
           {meta && <div className="mt-4 flex flex-wrap items-center gap-2">{meta}</div>}
         </div>
-        {actions && <div className="flex shrink-0 items-center gap-3">{actions}</div>}
+        {actions && <div className="flex shrink-0 items-center gap-2">{actions}</div>}
       </div>
     </header>
   )

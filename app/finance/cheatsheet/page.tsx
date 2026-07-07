@@ -234,7 +234,7 @@ export default function FinanceCheatsheetPage() {
           <h2 className="fin-headline-md mb-8 text-2xl text-(--fin-primary)">{cheatsheetCta.title}</h2>
           <div className="flex flex-col justify-center gap-4 sm:flex-row">
             <Link
-              href="/finance/app"
+              href="/finance/dashboard"
               className="rounded-[4px] bg-(--fin-primary) px-8 py-3 text-sm font-bold text-(--fin-on-primary)"
             >
               {cheatsheetCta.primaryCta}
@@ -252,3 +252,4 @@ export default function FinanceCheatsheetPage() {
     </div>
   )
 }
+

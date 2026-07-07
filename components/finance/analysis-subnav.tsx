@@ -3,6 +3,7 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { analysisNav } from "@/lib/finance/nav"
+import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 
 interface AnalysisSubnavProps {
@@ -14,26 +15,25 @@ export function AnalysisSubnav({ dealId }: AnalysisSubnavProps) {
   const pathname = usePathname()
 
   return (
-    <nav className="mb-8 flex flex-wrap gap-2 border-b border-(--fin-outline-variant) pb-4">
+    <nav className="mb-8 flex flex-wrap gap-1 border-b pb-4">
       {analysisNav.map((item) => {
         const active = pathname === item.href
         const Icon = item.icon
         const href = dealId ? `${item.href}?deal=${dealId}` : item.href
 
         return (
-          <Link
+          <Button
             key={item.href}
-            href={href}
-            className={cn(
-              "inline-flex items-center gap-2 rounded-[4px] px-3 py-2 text-xs font-semibold transition-colors",
-              active
-                ? "bg-(--fin-secondary-container) text-(--fin-on-secondary-container)"
-                : "text-(--fin-on-surface-variant) hover:bg-(--fin-surface-container-low)",
-            )}
+            variant="ghost"
+            size="sm"
+            asChild
+            className={cn("gap-1.5 font-medium", active && "bg-accent/15 text-primary")}
           >
-            <Icon className="h-4 w-4 shrink-0" strokeWidth={2} />
-            <span>{item.label}</span>
-          </Link>
+            <Link href={href}>
+              <Icon className="size-4" strokeWidth={2} />
+              {item.label}
+            </Link>
+          </Button>
         )
       })}
     </nav>
