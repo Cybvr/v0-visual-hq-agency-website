@@ -1,3 +1,6 @@
+import { deriveFinancials, getFinancials, type PeerStats } from "./deal-financials"
+import type { Deal } from "./pipeline"
+
 export interface BenchmarkFilter {
   label: string
   options: string[]
@@ -44,11 +47,6 @@ export interface AiLensCard {
   linkLabel: string
 }
 
-export const benchmarkingHeader = {
-  title: "Market Comparison",
-  subtitle: "Benchmarking Current Deal metrics against peer universe and industry standards.",
-}
-
 export const benchmarkFilters: BenchmarkFilter[] = [
   {
     label: "Industry",
@@ -67,102 +65,138 @@ export const benchmarkFilters: BenchmarkFilter[] = [
   },
 ]
 
-export const ebitdaMultiples: EbitdaMultipleBar[] = [
+export const benchmarkMatrixFootnote =
+  "* Peer universe includes 42 verified transactions in the target's sector and enterprise-value range (2022-2024)."
+
+export const benchmarkAiConfidence = "AI confidence score: 94% based on 1.2k data points"
+
+/** Industry median EV/EBITDA bars; the selected deal's bar is computed. */
+const peerEbitdaMultiples: EbitdaMultipleBar[] = [
   { label: "SaaS", tooltip: "14.2x", heightPct: 65 },
   { label: "FinTech", tooltip: "11.5x", heightPct: 52 },
-  { label: "Current", tooltip: "Current Deal: 16.5x", heightPct: 82, isCurrentDeal: true },
   { label: "Health", tooltip: "9.8x", heightPct: 44 },
   { label: "Logistics", tooltip: "8.1x", heightPct: 36 },
   { label: "Security", tooltip: "12.4x", heightPct: 58 },
 ]
 
-export const revenueGrowthBenchmarks: GrowthBenchmark[] = [
-  { label: "Upper Quartile", value: "28.4%", widthPct: 85, tone: "upper" },
-  { label: "Current Deal", value: "18.2%", widthPct: 55, tone: "current" },
-  { label: "Median", value: "12.5%", widthPct: 38, tone: "median" },
-]
+const GROWTH_UPPER_QUARTILE = { value: 28.4, widthPct: 85 }
+const GROWTH_MEDIAN = { value: 12.5, widthPct: 38 }
 
-export const revenueGrowthSummary = {
-  value: "High",
-  label: "Market Quartile",
+/** heightPct scale matching the static peer bars (multiple -> percent). */
+const MULTIPLE_HEIGHT_FACTOR = 4.6
+/** widthPct scale matching the static growth rows (growth % -> percent). */
+const GROWTH_WIDTH_FACTOR = 3
+
+const clampPct = (n: number) => Math.min(95, Math.max(6, Math.round(n)))
+const signedPct = (n: number) => `${n >= 0 ? "+" : "-"}${Math.abs(n).toFixed(1)}%`
+const relativeVariance = (current: number, median: number) => ((current - median) / median) * 100
+
+export interface BenchmarkData {
+  ebitdaMultiples: EbitdaMultipleBar[]
+  revenueGrowthBenchmarks: GrowthBenchmark[]
+  revenueGrowthSummary: { value: string; label: string }
+  benchmarkMatrix: BenchmarkMatrixRow[]
+  qofeCards: QofeCard[]
+  aiLensCard: AiLensCard
 }
 
-export const benchmarkMatrix: BenchmarkMatrixRow[] = [
-  {
-    kpi: "Gross Margin %",
-    currentDeal: "72.4%",
-    medianPeer: "64.1%",
-    topQuartile: "78.5%",
-    variance: "+12.9%",
-    variancePositive: true,
-    confidence: "VERIFIED",
-  },
-  {
-    kpi: "EBITDA Margin %",
-    currentDeal: "24.8%",
-    medianPeer: "18.2%",
-    topQuartile: "29.1%",
-    variance: "+36.2%",
-    variancePositive: true,
-    confidence: "VERIFIED",
-  },
-  {
-    kpi: "Rule of 40 Score",
-    currentDeal: "43.0",
-    medianPeer: "30.7",
-    topQuartile: "52.2",
-    variance: "+40.1%",
-    variancePositive: true,
-    confidence: "ESTIMATED",
-  },
-  {
-    kpi: "CAC Payback (Months)",
-    currentDeal: "14.2",
-    medianPeer: "12.5",
-    topQuartile: "8.4",
-    variance: "+13.6%",
-    variancePositive: false,
-    confidence: "VERIFIED",
-  },
-  {
-    kpi: "Net Retention (NRR)",
-    currentDeal: "108%",
-    medianPeer: "102%",
-    topQuartile: "115%",
-    variance: "+5.9%",
-    variancePositive: true,
-    confidence: "VERIFIED",
-  },
-]
+export function getBenchmarkData(deal: Deal): BenchmarkData {
+  const fin = getFinancials(deal.id)
+  const derived = deriveFinancials(fin)
 
-export const benchmarkMatrixFootnote =
-  "* Peer universe includes 42 verified SaaS transactions within the $100M-$500M enterprise value range (2022-2024)."
+  const ebitdaMultiples: EbitdaMultipleBar[] = [
+    ...peerEbitdaMultiples.slice(0, 2),
+    {
+      label: "Current",
+      tooltip: `${fin.evMultiple.toFixed(1)}x`,
+      heightPct: clampPct(fin.evMultiple * MULTIPLE_HEIGHT_FACTOR),
+      isCurrentDeal: true,
+    },
+    ...peerEbitdaMultiples.slice(2),
+  ]
 
-export const benchmarkAiConfidence = "AI confidence score: 94% based on 1.2k data points"
+  const revenueGrowthBenchmarks: GrowthBenchmark[] = [
+    { label: "Upper Quartile", value: `${GROWTH_UPPER_QUARTILE.value.toFixed(1)}%`, widthPct: GROWTH_UPPER_QUARTILE.widthPct, tone: "upper" },
+    {
+      label: "Subject Company",
+      value: `${fin.ltmGrowthPct.toFixed(1)}%`,
+      widthPct: clampPct(fin.ltmGrowthPct * GROWTH_WIDTH_FACTOR),
+      tone: "current",
+    },
+    { label: "Median", value: `${GROWTH_MEDIAN.value.toFixed(1)}%`, widthPct: GROWTH_MEDIAN.widthPct, tone: "median" },
+  ]
 
-export const qofeCards: QofeCard[] = [
-  {
-    title: "EBITDA Adjustments",
-    value: "$4.2M",
-    delta: "12.5%",
-    deltaDirection: "up",
-    sparklinePath: "M0,15 L10,12 L20,18 L30,5 L40,10 L50,8 L60,15 L70,12 L80,5 L90,10 L100,2",
-    confidencePct: 88,
-  },
-  {
-    title: "Working Capital Gap",
-    value: "$850K",
-    delta: "4.2%",
-    deltaDirection: "down",
-    sparklinePath: "M0,10 L10,15 L20,12 L30,18 L40,8 L50,12 L60,5 L70,15 L80,10 L90,12 L100,8",
-    confidencePct: 65,
-  },
-]
+  const revenueGrowthSummary = {
+    value:
+      fin.ltmGrowthPct >= GROWTH_UPPER_QUARTILE.value ? "Top" : fin.ltmGrowthPct >= GROWTH_MEDIAN.value ? "High" : "Below",
+    label: "Market Quartile",
+  }
 
-export const aiLensCard: AiLensCard = {
-  title: "AI Lens Synthesis",
-  badge: "PREMIUM",
-  quote:
-    "\"Current deal's gross margin profile sits in the 88th percentile of SaaS peers, likely due to optimized cloud infrastructure spend identified in the QofE bridge.\"",
-  linkLabel: "View Document Sources",
+  const median = fin.peerMedian
+  const topQuartile = fin.peerTopQuartile
+  const matrixRow = (
+    kpi: string,
+    current: number,
+    peer: (stats: PeerStats) => number,
+    format: (n: number) => string,
+    options: { lowerIsBetter?: boolean; confidence?: BenchmarkMatrixRow["confidence"] } = {},
+  ): BenchmarkMatrixRow => ({
+    kpi,
+    currentDeal: format(current),
+    medianPeer: format(peer(median)),
+    topQuartile: format(peer(topQuartile)),
+    variance: signedPct(relativeVariance(current, peer(median))),
+    variancePositive: options.lowerIsBetter ? current <= peer(median) : current >= peer(median),
+    confidence: options.confidence ?? "VERIFIED",
+  })
+
+  const pct1 = (n: number) => `${n.toFixed(1)}%`
+  const benchmarkMatrix: BenchmarkMatrixRow[] = [
+    matrixRow("Gross Margin %", fin.grossMarginPct, (stats) => stats.grossMarginPct, pct1),
+    matrixRow("EBITDA Margin %", derived.proFormaMarginPct, (stats) => stats.ebitdaMarginPct, pct1),
+    matrixRow("Rule of 40 Score", derived.ruleOf40, (stats) => stats.ruleOf40, (n) => n.toFixed(1), {
+      confidence: "ESTIMATED",
+    }),
+    matrixRow("CAC Payback (Months)", fin.cacPaybackMonths, (stats) => stats.cacPaybackMonths, (n) => n.toFixed(1), {
+      lowerIsBetter: true,
+    }),
+    matrixRow("Net Retention (NRR)", fin.netRetentionPct, (stats) => stats.netRetentionPct, (n) => `${Math.round(n)}%`),
+  ]
+
+  const qofeCards: QofeCard[] = [
+    {
+      title: "EBITDA Adjustments",
+      value: `$${Math.abs(derived.netAdjustmentsM).toFixed(1)}M`,
+      delta: `${Math.abs((derived.netAdjustmentsM / derived.reportedEbitdaM) * 100).toFixed(1)}%`,
+      deltaDirection: derived.netAdjustmentsM >= 0 ? "up" : "down",
+      sparklinePath: "M0,15 L10,12 L20,18 L30,5 L40,10 L50,8 L60,15 L70,12 L80,5 L90,10 L100,2",
+      confidencePct: 88,
+    },
+    {
+      title: "Working Capital Gap",
+      value:
+        fin.workingCapitalGapM < 1
+          ? `$${Math.round(fin.workingCapitalGapM * 1000)}K`
+          : `$${fin.workingCapitalGapM.toFixed(1)}M`,
+      delta: "4.2%",
+      deltaDirection: "down",
+      sparklinePath: "M0,10 L10,15 L20,12 L30,18 L40,8 L50,12 L60,5 L70,15 L80,10 L90,12 L100,8",
+      confidencePct: 65,
+    },
+  ]
+
+  const grossMarginPosition =
+    fin.grossMarginPct >= topQuartile.grossMarginPct
+      ? "in the top quartile of"
+      : fin.grossMarginPct >= median.grossMarginPct
+        ? "above the median of"
+        : "below the median of"
+  const aiLensCard: AiLensCard = {
+    title: "AI Lens Synthesis",
+    badge: "PREMIUM",
+    quote: `"${deal.name}'s gross margin profile sits ${grossMarginPosition} ${deal.sector} peers, consistent with the cost structure verified in the QofE bridge."`,
+    linkLabel: "View Document Sources",
+  }
+
+  return { ebitdaMultiples, revenueGrowthBenchmarks, revenueGrowthSummary, benchmarkMatrix, qofeCards, aiLensCard }
 }

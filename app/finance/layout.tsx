@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 
 export default function FinanceLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="bg-(--fin-background) text-(--fin-on-surface) min-h-screen font-sans">
+    <div className="min-h-screen bg-background text-foreground font-sans">
       {/* React 19 hoists these into <head> */}
       <link
         rel="stylesheet"

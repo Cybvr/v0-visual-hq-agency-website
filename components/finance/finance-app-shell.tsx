@@ -5,6 +5,15 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { BrandLockup } from "@/components/brand-lockup"
 import { useAuth } from "@/components/auth-provider"
+import { Button } from "@/components/ui/button"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { financeAppNav } from "@/lib/finance/nav"
 import { cn } from "@/lib/utils"
 
@@ -23,56 +32,63 @@ export function FinanceAppShell({ children }: { children: ReactNode }) {
     "?"
 
   return (
-    <div className="min-h-screen">
-      <aside className="fixed left-0 top-0 z-40 flex h-full w-60 flex-col gap-1.5 border-r border-(--fin-outline-variant) bg-(--fin-surface-container) p-3">
-        <div className="mb-4 px-1.5 pt-3">
-          <Link href="/finance" className="flex items-center gap-2">
-            <BrandLockup logoSize={24} />
+    <div className="min-h-screen bg-background">
+      <header className="sticky top-0 z-10 border-b bg-background/95 backdrop-blur">
+        <div className="mx-auto flex h-14 max-w-7xl items-center gap-6 px-4 sm:px-6 lg:px-8">
+          <Link href="/finance" className="shrink-0">
+            <BrandLockup logoSize={22} />
           </Link>
-          <p className="mt-1.5 text-xs font-semibold uppercase tracking-[0.14em] text-(--fin-secondary)">Finance</p>
-        </div>
-        <nav className="flex-1 space-y-0.5 overflow-y-auto">
-          {financeAppNav.map((item) => {
-            const active =
-              pathname === item.href || item.activeMatchers?.some((matcher) => pathname.startsWith(matcher)) === true
-            const Icon = item.icon
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={cn(
-                  "flex items-center gap-2.5 rounded-[4px] px-2.5 py-2 text-xs font-semibold transition-all",
-                  active
-                    ? "bg-(--fin-secondary-container) text-(--fin-on-secondary-container)"
-                    : "text-(--fin-on-surface-variant) hover:bg-(--fin-surface-container-high)",
-                )}
-              >
-                <Icon className="h-[18px] w-[18px] shrink-0" strokeWidth={2} />
-                <span>{item.label}</span>
-              </Link>
-            )
-          })}
-        </nav>
-        <div className="mt-auto border-t border-(--fin-outline-variant) pt-3">
-          <div className="flex items-center gap-2.5 px-1.5 py-1.5">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-(--fin-primary-fixed) text-[11px] font-bold text-(--fin-on-primary-fixed)">
-              {initials}
-            </div>
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-xs font-semibold text-(--fin-on-surface)">
-                {user?.displayName || user?.email || "Signed in"}
-              </p>
-              <button
-                onClick={signOut}
-                className="text-[11px] text-(--fin-on-surface-variant) transition-colors hover:text-(--fin-error)"
-              >
+
+          <nav className="flex flex-1 items-center gap-1 overflow-x-auto">
+            {financeAppNav.map((item) => {
+              const active =
+                pathname === item.href || item.activeMatchers?.some((m) => pathname.startsWith(m)) === true
+              const Icon = item.icon
+              return (
+                <Button
+                  key={item.href}
+                  variant="ghost"
+                  size="sm"
+                  asChild
+                  className={cn(
+                    "shrink-0 gap-1.5 font-medium",
+                    active && "bg-accent text-accent-foreground",
+                  )}
+                >
+                  <Link href={item.href}>
+                    <Icon className="size-4" strokeWidth={2} />
+                    {item.label}
+                  </Link>
+                </Button>
+              )
+            })}
+          </nav>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="sm" className="gap-2 font-medium">
+                <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-primary/15 text-[10px] font-bold text-primary">
+                  {initials}
+                </span>
+                <span className="hidden sm:block">
+                  {user?.displayName || user?.email?.split("@")[0] || "Account"}
+                </span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel className="font-normal">
+                <div className="text-sm font-medium">{user?.displayName || "Signed in"}</div>
+                <div className="text-xs text-muted-foreground">{user?.email}</div>
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem variant="destructive" onSelect={signOut}>
                 Sign out
-              </button>
-            </div>
-          </div>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
-      </aside>
-      <main className="ml-60 min-h-screen bg-(--fin-surface) p-8">{children}</main>
+      </header>
+      <main className="mx-auto min-h-screen max-w-7xl px-4 py-8 sm:px-6 lg:px-8">{children}</main>
     </div>
   )
 }

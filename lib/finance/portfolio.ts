@@ -1,3 +1,6 @@
+import { getCompany } from "./companies"
+import { deriveFinancials, getFinancials } from "./deal-financials"
+
 export type KpiDeltaTone = "positive" | "negative" | "neutral"
 
 export interface PortfolioKpi {
@@ -81,22 +84,27 @@ export const portfolioKpis: PortfolioKpi[] = [
   { label: "Active Initiatives", value: "14", delta: "Steady", deltaTone: "neutral" },
 ]
 
+// Avionics Group's holding metrics derive from the same financial profile
+// used for its pipeline deal and QofE report — one company, one set of books.
+const avionicsCompany = getCompany("avionics-group")
+const avionicsDerived = deriveFinancials(getFinancials("avionics-group"))
+
 export const holdingCompanies: HoldingCompany[] = [
   {
     initials: "AV",
     avatarTone: "primary-container",
-    name: "Avionics Group",
-    sector: "Aerospace & Defense",
-    revenue: "$1,240M",
-    ebitdaMargin: "18.4%",
+    name: avionicsCompany.name,
+    sector: avionicsCompany.sector,
+    revenue: `$${Math.round(avionicsDerived.revenueM).toLocaleString("en-US")}M`,
+    ebitdaMargin: `${avionicsDerived.reportedMarginPct.toFixed(1)}%`,
     netDebt: "2.8x",
     sparklinePath: "M0,25 L10,22 L20,24 L30,15 L40,18 L50,10 L60,12 L70,5 L80,8 L90,2 L100,6",
   },
   {
     initials: "NX",
     avatarTone: "secondary",
-    name: "NexGen Health",
-    sector: "Healthcare IT",
+    name: getCompany("nexgen-health").name,
+    sector: getCompany("nexgen-health").sector,
     revenue: "$856M",
     ebitdaMargin: "22.1%",
     netDebt: "4.1x",
@@ -106,8 +114,8 @@ export const holdingCompanies: HoldingCompany[] = [
   {
     initials: "ST",
     avatarTone: "tertiary",
-    name: "Stellar Tech",
-    sector: "SaaS / Enterprise",
+    name: getCompany("stellar-tech").name,
+    sector: getCompany("stellar-tech").sector,
     revenue: "$412M",
     ebitdaMargin: "31.5%",
     netDebt: "1.2x",
@@ -117,8 +125,8 @@ export const holdingCompanies: HoldingCompany[] = [
   {
     initials: "LM",
     avatarTone: "outline",
-    name: "LogiMaster",
-    sector: "Supply Chain",
+    name: getCompany("logimaster").name,
+    sector: getCompany("logimaster").sector,
     revenue: "$2,104M",
     ebitdaMargin: "12.8%",
     netDebt: "5.2x",
@@ -142,28 +150,28 @@ export const heatmapCells: HeatmapCell[] = [
 export const initiatives: Initiative[] = [
   {
     name: "ERP Implementation",
-    context: "NexGen Health • Phase 2/4",
+    context: `${getCompany("nexgen-health").name} • Phase 2/4`,
     status: "On Track",
     statusTone: "on-track",
     progress: 45,
   },
   {
     name: "Sales Force Restructuring",
-    context: "Avionics Group • Execution",
+    context: `${avionicsCompany.name} • Execution`,
     status: "On Track",
     statusTone: "on-track",
     progress: 82,
   },
   {
     name: "Supply Chain Re-shoring",
-    context: "LogiMaster • Initial Phase",
+    context: `${getCompany("logimaster").name} • Initial Phase`,
     status: "Delayed",
     statusTone: "delayed",
     progress: 12,
   },
   {
     name: "Pricing Optimization AI",
-    context: "Stellar Tech • Post-Launch",
+    context: `${getCompany("stellar-tech").name} • Post-Launch`,
     status: "Completed",
     statusTone: "completed",
     progress: 100,
@@ -173,15 +181,14 @@ export const initiatives: Initiative[] = [
 export const aiInsight: AiInsight = {
   label: "AI Strategic Insight",
   icon: "auto_awesome",
-  quote:
-    '"LogiMaster EBITDA margins are 420bps below sector benchmark. Correlating with high fuel surcharges and legacy carrier contracts. Renegotiation could unlock $12M annually."',
+  quote: `"${getCompany("logimaster").name} EBITDA margins are 420bps below sector benchmark. Correlating with high fuel surcharges and legacy carrier contracts. Renegotiation could unlock $12M annually."`,
   cta: "Review Scenario Analysis",
   backgroundIcon: "troubleshoot",
 }
 
 export const pendingDeliverables: Deliverable[] = [
   { icon: "verified_user", title: "Q3 Compliance Cert", subtitle: "Due in 2 days" },
-  { icon: "account_balance", title: "Tax Provision Memo", subtitle: "NexGen Health" },
+  { icon: "account_balance", title: "Tax Provision Memo", subtitle: getCompany("nexgen-health").name },
 ]
 
 export const documentLensStatus: DocumentLensStatus = {

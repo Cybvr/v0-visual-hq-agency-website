@@ -26,7 +26,7 @@ const financeNavItems = [
   { name: "Solutions", href: "/finance/solutions", description: "Sourcing, execution, and post-close workflows." },
   { name: "AI Reporting", href: "/finance/ai-reporting", description: "Document Lens and automated adjustments." },
   { name: "Case Studies", href: "/finance/case-studies", description: "Results from PE firms using Visualcns." },
-  { name: "Workspace", href: "/finance/app", description: "Sign in to your deal pipeline and reports." },
+  { name: "Workspace", href: "/finance/dashboard", description: "Sign in to your deal pipeline and reports." },
 ]
 
 const secondaryNavigation = [
@@ -240,3 +240,4 @@ export function Header() {
     </header>
   )
 }
+
