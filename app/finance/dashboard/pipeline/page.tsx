@@ -106,13 +106,13 @@ export default function PipelinePage() {
         {/* Deals table */}
         <div className="col-span-12 lg:col-span-8">
           <Card className="shadow-none">
-            <CardHeader className="border-b">
+            <CardHeader className="gap-3 border-b !grid-cols-1 has-data-[slot=card-action]:!grid-cols-1 sm:has-data-[slot=card-action]:!grid-cols-[1fr_auto]">
               <CardTitle>Active Opportunities</CardTitle>
-              <CardAction>
+              <CardAction className="col-start-1 row-start-2 row-span-1 justify-self-stretch sm:col-start-2 sm:row-start-1 sm:row-span-2 sm:justify-self-end">
                 <div className="flex items-center gap-2">
-                  <div className="relative">
+                  <div className="relative flex-1 sm:flex-none">
                     <Search className="absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
-                    <Input className="h-8 w-40 pl-8 text-xs" placeholder="Search targets…" />
+                    <Input className="h-8 w-full pl-8 text-xs sm:w-40" placeholder="Search targets…" />
                   </div>
                   <Button variant="ghost" size="icon-sm" aria-label="Filter">
                     <Filter className="size-4" />

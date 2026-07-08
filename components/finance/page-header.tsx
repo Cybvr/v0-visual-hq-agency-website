@@ -65,7 +65,7 @@ export function PageHeader({ breadcrumbs, eyebrow, title, subtitle, meta, action
               {eyebrow}
             </p>
           )}
-          <h1 className="text-4xl text-primary">{title}</h1>
+          <h1 className="text-2xl text-primary sm:text-3xl md:text-4xl">{title}</h1>
           {subtitle && <p className="mt-2 max-w-3xl text-sm text-muted-foreground">{subtitle}</p>}
           {meta && <div className="mt-4 flex flex-wrap items-center gap-2">{meta}</div>}
         </div>
