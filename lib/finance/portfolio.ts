@@ -13,6 +13,8 @@ export interface PortfolioKpi {
 export type HoldingAvatarTone = "primary-container" | "secondary" | "tertiary" | "outline"
 
 export interface HoldingCompany {
+  /** Company registry slug — used to route to the holding detail page and cross-reference initiatives / activity */
+  id: string
   initials: string
   avatarTone: HoldingAvatarTone
   name: string
@@ -48,6 +50,8 @@ export type InitiativeStatusTone = "on-track" | "delayed" | "completed"
 
 export interface Initiative {
   name: string
+  /** Company registry slug — used to scope this initiative to a holding detail page */
+  companyId?: string
   context: string
   status: string
   statusTone: InitiativeStatusTone
@@ -91,6 +95,7 @@ const avionicsDerived = deriveFinancials(getFinancials("avionics-group"))
 
 export const holdingCompanies: HoldingCompany[] = [
   {
+    id: "avionics-group",
     initials: "AV",
     avatarTone: "primary-container",
     name: avionicsCompany.name,
@@ -101,6 +106,7 @@ export const holdingCompanies: HoldingCompany[] = [
     sparklinePath: "M0,25 L10,22 L20,24 L30,15 L40,18 L50,10 L60,12 L70,5 L80,8 L90,2 L100,6",
   },
   {
+    id: "nexgen-health",
     initials: "NX",
     avatarTone: "secondary",
     name: getCompany("nexgen-health").name,
@@ -112,6 +118,7 @@ export const holdingCompanies: HoldingCompany[] = [
     sparklineStroke: "#ba1a1a",
   },
   {
+    id: "stellar-tech",
     initials: "ST",
     avatarTone: "tertiary",
     name: getCompany("stellar-tech").name,
@@ -123,6 +130,7 @@ export const holdingCompanies: HoldingCompany[] = [
     highlighted: true,
   },
   {
+    id: "logimaster",
     initials: "LM",
     avatarTone: "outline",
     name: getCompany("logimaster").name,
@@ -134,7 +142,11 @@ export const holdingCompanies: HoldingCompany[] = [
   },
 ]
 
-export const holdingsTotal = 18
+export const holdingsTotal = holdingCompanies.length
+
+export function getHoldingCompany(id: string): HoldingCompany | undefined {
+  return holdingCompanies.find((holding) => holding.id === id)
+}
 
 export const heatmapCells: HeatmapCell[] = [
   { label: "Aerospace", tone: "primary" },
@@ -150,6 +162,7 @@ export const heatmapCells: HeatmapCell[] = [
 export const initiatives: Initiative[] = [
   {
     name: "ERP Implementation",
+    companyId: "nexgen-health",
     context: `${getCompany("nexgen-health").name} • Phase 2/4`,
     status: "On Track",
     statusTone: "on-track",
@@ -157,6 +170,7 @@ export const initiatives: Initiative[] = [
   },
   {
     name: "Sales Force Restructuring",
+    companyId: "avionics-group",
     context: `${avionicsCompany.name} • Execution`,
     status: "On Track",
     statusTone: "on-track",
@@ -164,6 +178,7 @@ export const initiatives: Initiative[] = [
   },
   {
     name: "Supply Chain Re-shoring",
+    companyId: "logimaster",
     context: `${getCompany("logimaster").name} • Initial Phase`,
     status: "Delayed",
     statusTone: "delayed",
@@ -171,6 +186,7 @@ export const initiatives: Initiative[] = [
   },
   {
     name: "Pricing Optimization AI",
+    companyId: "stellar-tech",
     context: `${getCompany("stellar-tech").name} • Post-Launch`,
     status: "Completed",
     statusTone: "completed",

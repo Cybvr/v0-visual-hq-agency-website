@@ -6,7 +6,6 @@ import {
   Filter,
   Mail,
   MoreVertical,
-  Plus,
   Search,
   Target,
   UserPlus,
@@ -18,36 +17,21 @@ import {
   pipelineStages,
   recentActivity,
   type ActivityIconTone,
-  type DealStageTone,
-  type PartnerAvatarTone,
   type PipelineStageTone,
 } from "@/lib/finance/pipeline"
 import { cn } from "@/lib/utils"
+import { AddTargetDialog } from "@/components/finance/add-target-dialog"
+import { DealsTable } from "@/components/finance/deals-table"
 import { PageHeader } from "@/components/finance/page-header"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardAction } from "@/components/ui/card"
+import { Card, CardAction, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 
 const stageBarClasses: Record<PipelineStageTone, string> = {
   primary: "bg-primary",
   secondary: "bg-primary/70",
   highlight: "bg-accent",
   closed: "bg-muted-foreground/40",
-}
-
-const dealStageBadgeVariant: Record<DealStageTone, "default" | "secondary" | "outline" | "destructive"> = {
-  "due-diligence": "default",
-  loi: "secondary",
-  neutral: "outline",
-  stalled: "destructive",
-}
-
-const partnerAvatarClasses: Record<PartnerAvatarTone, string> = {
-  primary: "bg-primary text-primary-foreground",
-  secondary: "bg-primary/20 text-primary",
-  tertiary: "bg-muted text-muted-foreground",
 }
 
 const activityChipClasses: Record<ActivityIconTone, string> = {
@@ -74,12 +58,7 @@ export default function PipelinePage() {
         ]}
         title="Deal Pipeline"
         subtitle="Q4 acquisition targets, sourcing coverage, and diligence momentum across the active pipeline."
-        actions={
-          <Button>
-            <Plus className="size-4" />
-            Add Target
-          </Button>
-        }
+        actions={<AddTargetDialog />}
       />
 
       {/* Funnel stage summary */}
@@ -123,66 +102,26 @@ export default function PipelinePage() {
                 </div>
               </CardAction>
             </CardHeader>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="px-6">Target</TableHead>
-                  <TableHead className="px-6">Size ($M)</TableHead>
-                  <TableHead className="px-6">Sector</TableHead>
-                  <TableHead className="px-6">Stage</TableHead>
-                  <TableHead className="px-6">Lead Partner</TableHead>
-                  <TableHead className="px-6" />
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {deals.map((deal) => (
-                  <TableRow key={deal.id} className={cn(deal.highlighted && "bg-muted/40")}>
-                    <TableCell className="px-6 font-semibold text-primary">{deal.name}</TableCell>
-                    <TableCell className="px-6">{deal.size}</TableCell>
-                    <TableCell className="px-6 text-muted-foreground">{deal.sector}</TableCell>
-                    <TableCell className="px-6">
-                      <Badge variant={dealStageBadgeVariant[deal.stageTone]}>{deal.stage}</Badge>
-                    </TableCell>
-                    <TableCell className="px-6">
-                      <div className="flex items-center gap-2">
-                        <span
-                          className={cn(
-                            "flex size-6 items-center justify-center rounded-full text-[10px] font-bold",
-                            partnerAvatarClasses[deal.partnerAvatarTone],
-                          )}
-                        >
-                          {deal.partnerInitials}
-                        </span>
-                        <span className="text-sm">{deal.partner}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell className="px-6 text-right">
-                      <Button variant="ghost" size="sm" asChild>
-                        <Link href={`/finance/dashboard/analysis?deal=${deal.id}`}>
-                          Open <ArrowRight className="size-3.5" />
-                        </Link>
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            <DealsTable deals={deals} />
           </Card>
         </div>
 
         {/* Sidebar */}
         <div className="col-span-12 space-y-4 lg:col-span-4">
           {/* Recent Activity */}
-          <Link href="/finance/dashboard/activity" className="group block">
-          <Card className="shadow-none transition-colors hover:border-primary">
+          <Card className="shadow-none">
             <CardHeader className="border-b">
               <CardTitle>Recent Activity</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-5 px-6 py-5">
+            <CardContent className="space-y-3 px-6">
               {recentActivity.map((item) => {
                 const Icon = activityIconMap[item.icon] ?? FileText
                 return (
-                  <div key={item.title} className="flex gap-3">
+                  <Link
+                    key={item.title}
+                    href={item.href}
+                    className="flex gap-3 rounded-md border p-3 transition-colors hover:border-primary"
+                  >
                     <div
                       className={cn(
                         "flex size-8 shrink-0 items-center justify-center rounded-full",
@@ -198,64 +137,64 @@ export default function PipelinePage() {
                         {item.time}
                       </p>
                     </div>
-                  </div>
+                  </Link>
                 )
               })}
             </CardContent>
             <CardFooter className="border-t justify-center py-3">
-              <div className="inline-flex items-center gap-2 text-sm font-medium text-primary">
-                View all activity
-                <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" />
-              </div>
+              <Button variant="ghost" size="sm" asChild>
+                <Link href="/finance/dashboard/activity">
+                  View all activity
+                  <ArrowRight className="size-4" />
+                </Link>
+              </Button>
             </CardFooter>
           </Card>
-          </Link>
 
           {/* DD Confidence */}
           <Link href="/finance/dashboard/analysis" className="group block">
-          <Card className="shadow-none transition-colors hover:border-primary">
-            <CardContent className="px-6 py-6">
-              <div className="mb-5 flex items-start justify-between">
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-                    {ddConfidence.label}
-                  </p>
-                  <h3 className="mt-1 text-4xl text-primary">{ddConfidence.score}</h3>
-                </div>
-                <Target className="size-5 text-muted-foreground" />
-              </div>
-              <div className="space-y-4">
-                {ddConfidence.metrics.map((metric) => (
-                  <div key={metric.label}>
-                    <div className="mb-1.5 flex items-center justify-between">
-                      <span className="text-xs text-muted-foreground">{metric.label}</span>
-                      <span className="text-xs font-semibold">{metric.value}%</span>
-                    </div>
-                    <div className="h-1 w-full overflow-hidden rounded-full bg-muted">
-                      <div
-                        className={cn(
-                          "h-full rounded-full",
-                          metric.tone === "primary" ? "bg-primary" : "bg-primary/60",
-                        )}
-                        style={{ width: `${metric.value}%` }}
-                      />
-                    </div>
+            <Card className="shadow-none transition-colors hover:border-primary">
+              <CardContent className="px-6 py-6">
+                <div className="mb-5 flex items-start justify-between">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+                      {ddConfidence.label}
+                    </p>
+                    <h3 className="mt-1 text-4xl text-primary">{ddConfidence.score}</h3>
                   </div>
-                ))}
-              </div>
-              <p className="mt-5 border-t pt-4 text-xs italic leading-relaxed text-muted-foreground">
-                {ddConfidence.note}
-              </p>
-              <div className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-primary">
-                Open analysis
-                <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" />
-              </div>
-            </CardContent>
-          </Card>
+                  <Target className="size-5 text-muted-foreground" />
+                </div>
+                <div className="space-y-4">
+                  {ddConfidence.metrics.map((metric) => (
+                    <div key={metric.label}>
+                      <div className="mb-1.5 flex items-center justify-between">
+                        <span className="text-xs text-muted-foreground">{metric.label}</span>
+                        <span className="text-xs font-semibold">{metric.value}%</span>
+                      </div>
+                      <div className="h-1 w-full overflow-hidden rounded-full bg-muted">
+                        <div
+                          className={cn(
+                            "h-full rounded-full",
+                            metric.tone === "primary" ? "bg-primary" : "bg-primary/60",
+                          )}
+                          style={{ width: `${metric.value}%` }}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <p className="mt-5 border-t pt-4 text-xs italic leading-relaxed text-muted-foreground">
+                  {ddConfidence.note}
+                </p>
+                <div className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-primary">
+                  Open analysis
+                  <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" />
+                </div>
+              </CardContent>
+            </Card>
           </Link>
         </div>
       </div>
     </>
   )
 }
-

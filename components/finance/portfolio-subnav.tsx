@@ -12,7 +12,9 @@ export function PortfolioSubnav() {
   return (
     <nav className="mb-8 flex flex-wrap gap-1 border-b pb-4">
       {portfolioNav.map((item) => {
-        const active = pathname === item.href
+        const active =
+          pathname === item.href ||
+          (item.href !== "/finance/dashboard/portfolio" && pathname.startsWith(`${item.href}/`))
         const Icon = item.icon
 
         return (

@@ -2,14 +2,19 @@ import Link from "next/link"
 import {
   ArrowRight,
   BriefcaseBusiness,
+  CheckCircle2,
   ClipboardList,
-  LayoutDashboard,
+  FileText,
+  Mail,
   TrendingUp,
+  UserPlus,
   Users,
 } from "lucide-react"
+import type { LucideIcon } from "lucide-react"
 import { PageHeader } from "@/components/finance/page-header"
-import { pipelineStages, recentActivity } from "@/lib/finance/pipeline"
+import { pipelineStages, recentActivity, type ActivityIconTone } from "@/lib/finance/pipeline"
 import { portfolioKpis } from "@/lib/finance/portfolio"
+import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 
@@ -44,39 +49,26 @@ const workspaceCards = [
   },
 ]
 
-const secondaryCards = [
-  {
-    eyebrow: "Analysis",
-    title: "Run diligence from intake to output",
-    description:
-      "Move from company setup through document review, QofE findings, benchmarking, and valuation work in one connected flow.",
-    href: "/finance/dashboard/analysis",
-    cta: "Open analysis",
-  },
-  {
-    eyebrow: "Pipeline",
-    title: "Track sourcing and active opportunities",
-    description:
-      "Review the live funnel, search targets, and monitor diligence-stage movement across current deals.",
-    href: "/finance/dashboard/pipeline",
-    cta: "Open pipeline",
-  },
-  {
-    eyebrow: "Reporting",
-    title: "Prepare investor-facing updates",
-    description:
-      "Access fund performance materials, capital call activity, and investor communication workflows.",
-    href: "/finance/dashboard/reports",
-    cta: "Open reports",
-  },
-]
-
 const attentionLinks = [
   "/finance/dashboard/pipeline",
   "/finance/dashboard/pipeline",
   "/finance/dashboard/portfolio",
   "/finance/dashboard/portfolio",
 ] as const
+
+const activityChipClasses: Record<ActivityIconTone, string> = {
+  "secondary-container": "bg-accent/15 text-primary",
+  "tertiary-dark": "bg-foreground text-background",
+  "secondary-fixed": "bg-primary/10 text-primary",
+  muted: "bg-muted text-muted-foreground",
+}
+
+const activityIconMap: Record<string, LucideIcon> = {
+  history_edu: FileText,
+  check_circle: CheckCircle2,
+  mail: Mail,
+  person_add: UserPlus,
+}
 
 export default function FinanceDashboardPage() {
   const attentionItems = [
@@ -106,13 +98,13 @@ export default function FinanceDashboardPage() {
         subtitle="A single home for pipeline priorities, analysis progress, portfolio signals, and investor reporting."
       />
 
-      <section className="mb-8 grid grid-cols-1 gap-4 xl:grid-cols-4">
+      <section className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {workspaceCards.map((card) => {
           const Icon = card.icon
           return (
             <Link key={card.title} href={card.href} className="group block">
-              <Card className="shadow-none min-h-[220px] transition-colors hover:border-primary">
-                <CardContent className="flex min-h-[220px] flex-col justify-between px-6 pb-6 pt-0">
+              <Card className="h-full shadow-none transition-colors hover:border-primary">
+                <CardContent className="flex h-full flex-col justify-between gap-6 px-6">
                   <div>
                     <div className="mb-6 flex size-11 items-center justify-center rounded-md bg-muted text-primary">
                       <Icon className="size-5" strokeWidth={2} />
@@ -120,7 +112,7 @@ export default function FinanceDashboardPage() {
                     <h2 className="text-xl">{card.title}</h2>
                     <p className="mt-3 text-sm leading-6 text-muted-foreground">{card.description}</p>
                   </div>
-                  <div className="mt-8 inline-flex items-center gap-2 text-sm font-medium text-primary">
+                  <div className="inline-flex items-center gap-2 text-sm font-medium text-primary">
                     {card.cta}
                     <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" />
                   </div>
@@ -131,16 +123,13 @@ export default function FinanceDashboardPage() {
         })}
       </section>
 
-      <section className="mb-8 grid grid-cols-1 gap-6 lg:grid-cols-12">
+      <section className="grid grid-cols-1 gap-6 lg:grid-cols-12">
         <Card className="shadow-none lg:col-span-7">
           <CardHeader className="border-b">
-            <CardTitle className="flex items-center gap-2">
-              <LayoutDashboard className="size-5 text-primary" strokeWidth={2} />
-              What Needs Attention
-            </CardTitle>
+            <CardTitle>Key Metrics</CardTitle>
           </CardHeader>
-          <CardContent className="px-6 py-6">
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <CardContent className="px-6">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
               {attentionItems.map((item, index) => (
                 <Link
                   key={item.label}
@@ -165,20 +154,33 @@ export default function FinanceDashboardPage() {
           <CardHeader className="border-b">
             <CardTitle>Recent Activity</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4 px-6 py-6">
-            {recentActivity.slice(0, 4).map((item) => (
-              <Link
-                key={item.title}
-                href="/finance/dashboard/activity"
-                className="block rounded-md border p-4 transition-colors hover:border-primary"
-              >
-                <p className="text-sm font-semibold">{item.title}</p>
-                <p className="mt-1 text-sm text-muted-foreground">{item.description}</p>
-                <p className="mt-3 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
-                  {item.time}
-                </p>
-              </Link>
-            ))}
+          <CardContent className="space-y-3 px-6">
+            {recentActivity.slice(0, 4).map((item) => {
+              const Icon = activityIconMap[item.icon] ?? FileText
+              return (
+                <Link
+                  key={item.title}
+                  href={item.href}
+                  className="flex gap-3 rounded-md border p-4 transition-colors hover:border-primary"
+                >
+                  <div
+                    className={cn(
+                      "flex size-8 shrink-0 items-center justify-center rounded-full",
+                      activityChipClasses[item.iconTone],
+                    )}
+                  >
+                    <Icon className="size-4" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-semibold">{item.title}</p>
+                    <p className="mt-0.5 text-sm text-muted-foreground">{item.description}</p>
+                    <p className="mt-2 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+                      {item.time}
+                    </p>
+                  </div>
+                </Link>
+              )
+            })}
           </CardContent>
           <CardFooter className="justify-center border-t py-3">
             <Button variant="ghost" size="sm" asChild>
@@ -187,27 +189,6 @@ export default function FinanceDashboardPage() {
           </CardFooter>
         </Card>
       </section>
-
-      <section className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        {secondaryCards.map((card) => (
-          <Link key={card.title} href={card.href} className="group block">
-            <Card className="shadow-none h-full transition-colors hover:border-primary">
-              <CardContent className="px-6 py-6">
-                <p className="text-xs font-semibold uppercase tracking-widest text-primary">
-                  {card.eyebrow}
-                </p>
-                <h2 className="mt-3 text-xl">{card.title}</h2>
-                <p className="mt-3 text-sm leading-6 text-muted-foreground">{card.description}</p>
-                <div className="mt-6 inline-flex items-center gap-2 text-sm font-medium text-primary">
-                  {card.cta}
-                  <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" />
-                </div>
-              </CardContent>
-            </Card>
-          </Link>
-        ))}
-      </section>
     </>
   )
 }
-

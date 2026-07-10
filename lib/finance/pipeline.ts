@@ -38,6 +38,8 @@ export interface ActivityItem {
   title: string
   description: string
   time: string
+  /** Canonical destination for this activity — deep-links from cards on the overview and activity feed. */
+  href: string
 }
 
 export interface ConfidenceMetric {
@@ -166,6 +168,7 @@ export const recentActivity: ActivityItem[] = [
     title: "NDA Executed",
     description: "OmniLogistics Corp legal team finalized the bilateral NDA.",
     time: "2 hours ago",
+    href: "/finance/dashboard/pipeline",
   },
   {
     icon: "check_circle",
@@ -173,6 +176,7 @@ export const recentActivity: ActivityItem[] = [
     title: "DD Checklist Updated",
     description: "AeroDynamic Systems uploaded 14 new tax documents to the VDR.",
     time: "5 hours ago",
+    href: "/finance/dashboard/analysis/documents?deal=aerodynamic-systems",
   },
   {
     icon: "mail",
@@ -180,6 +184,7 @@ export const recentActivity: ActivityItem[] = [
     title: "Email Received",
     description: "Veridia Health CEO confirmed availability for the management meeting.",
     time: "Yesterday",
+    href: "/finance/dashboard/pipeline",
   },
   {
     icon: "person_add",
@@ -187,6 +192,7 @@ export const recentActivity: ActivityItem[] = [
     title: "New Lead",
     description: 'Marcus Kane added "Skyward Avionics" to the sourcing funnel.',
     time: "Yesterday",
+    href: "/finance/dashboard/pipeline",
   },
 ]
 

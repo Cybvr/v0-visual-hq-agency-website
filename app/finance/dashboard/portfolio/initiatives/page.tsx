@@ -1,11 +1,14 @@
+import { Plus } from "lucide-react"
 import { cn } from "@/lib/utils"
 import {
   initiatives,
   type InitiativeStatusTone,
 } from "@/lib/finance/portfolio"
+import { AddInitiativeDialog } from "@/components/finance/add-initiative-dialog"
 import { PageHeader } from "@/components/finance/page-header"
 import { PortfolioSubnav } from "@/components/finance/portfolio-subnav"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 
 const initiativeStatusVariant: Record<
@@ -29,6 +32,16 @@ export default function InitiativesPage() {
         eyebrow="Portfolio"
         title="Value Creation Initiatives"
         subtitle="Track operating improvement workstreams, current status, and execution progress across the portfolio."
+        actions={
+          <AddInitiativeDialog
+            trigger={
+              <Button>
+                <Plus className="size-4" />
+                Log New Initiative
+              </Button>
+            }
+          />
+        }
       />
 
       <PortfolioSubnav />

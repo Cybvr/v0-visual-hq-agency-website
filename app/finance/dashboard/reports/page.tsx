@@ -238,10 +238,22 @@ export default function ReportsPage() {
         </section>
 
         <section className="mt-12">
-          <h2 className="mb-6 text-2xl">Key Asset Progression</h2>
+          <div className="mb-6 flex items-end justify-between gap-4">
+            <h2 className="text-2xl">Key Asset Progression</h2>
+            <Button variant="ghost" size="sm" asChild>
+              <Link href="/finance/dashboard/portfolio/holdings">
+                View all holdings
+                <ArrowRight className="size-4" />
+              </Link>
+            </Button>
+          </div>
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
             {lpPortfolioAssets.map((asset) => (
-              <div key={asset.name} className="group relative h-64 overflow-hidden rounded-xl border">
+              <Link
+                key={asset.id}
+                href={`/finance/dashboard/portfolio/holdings/${asset.id}`}
+                className="group relative block h-64 overflow-hidden rounded-xl border transition-shadow hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+              >
                 <img
                   src={asset.image}
                   alt={asset.alt}
@@ -253,7 +265,7 @@ export default function ReportsPage() {
                   <p className="text-lg font-semibold">{asset.name}</p>
                   <p className="mt-1 text-sm text-background/80">{asset.detail}</p>
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
         </section>

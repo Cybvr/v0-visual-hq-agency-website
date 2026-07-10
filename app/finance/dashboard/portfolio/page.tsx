@@ -5,7 +5,6 @@ import {
   Download,
   Filter,
   Landmark,
-  Plus,
   Search,
   Search as SearchInsights,
   ShieldCheck,
@@ -23,29 +22,22 @@ import {
   portfolioKpis,
   portfolioLastUpdated,
   type HeatmapTone,
-  type HoldingAvatarTone,
   type InitiativeStatusTone,
   type KpiDeltaTone,
 } from "@/lib/finance/portfolio"
 import { cn } from "@/lib/utils"
+import { AddInitiativeDialog } from "@/components/finance/add-initiative-dialog"
+import { HoldingsTable } from "@/components/finance/holdings-table"
 import { PageHeader } from "@/components/finance/page-header"
 import { PortfolioSubnav } from "@/components/finance/portfolio-subnav"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardAction, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 
 const kpiDeltaClasses: Record<KpiDeltaTone, string> = {
   positive: "bg-accent/15 text-primary",
   negative: "bg-destructive/15 text-destructive",
   neutral: "bg-muted text-muted-foreground",
-}
-
-const holdingAvatarClasses: Record<HoldingAvatarTone, string> = {
-  "primary-container": "bg-primary/90 text-primary-foreground",
-  secondary: "bg-primary text-primary-foreground",
-  tertiary: "bg-foreground text-background",
-  outline: "bg-muted-foreground text-background",
 }
 
 const heatmapToneClasses: Record<HeatmapTone, string> = {
@@ -157,57 +149,13 @@ export default function PortfolioMonitoringPage() {
                 </div>
               </CardAction>
             </CardHeader>
-            <Table className="tabular-nums">
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="px-6">Company</TableHead>
-                  <TableHead className="px-6">Revenue (LTM)</TableHead>
-                  <TableHead className="px-6">EBITDA %</TableHead>
-                  <TableHead className="px-6">Net Debt</TableHead>
-                  <TableHead className="px-6">Trend</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {holdingCompanies.map((company) => (
-                  <TableRow key={company.name} className={cn(company.highlighted && "bg-muted/40")}>
-                    <TableCell className="px-6">
-                      <div className="flex items-center gap-3">
-                        <div
-                          className={cn(
-                            "flex size-8 items-center justify-center rounded-sm text-xs font-bold",
-                            holdingAvatarClasses[company.avatarTone],
-                          )}
-                        >
-                          {company.initials}
-                        </div>
-                        <div>
-                          <p className="text-sm font-semibold text-foreground">{company.name}</p>
-                          <p className="text-[10px] text-muted-foreground">{company.sector}</p>
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell className="px-6 text-sm">{company.revenue}</TableCell>
-                    <TableCell className="px-6 text-sm">{company.ebitdaMargin}</TableCell>
-                    <TableCell className="px-6 text-sm">{company.netDebt}</TableCell>
-                    <TableCell className="px-6 text-primary">
-                      <svg className="h-8 w-24" viewBox="0 0 100 30">
-                        <path
-                          d={company.sparklinePath}
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth={2}
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                      </svg>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            <HoldingsTable holdings={holdingCompanies} />
             <CardFooter className="border-t justify-center py-3">
               <Button variant="ghost" size="sm" asChild>
-                <Link href="/finance/dashboard/portfolio/holdings">View all {holdingsTotal} holdings</Link>
+                <Link href="/finance/dashboard/portfolio/holdings">
+                  View all {holdingsTotal} holdings
+                  <ArrowRight className="size-4" />
+                </Link>
               </Button>
             </CardFooter>
           </Card>
@@ -289,12 +237,7 @@ export default function PortfolioMonitoringPage() {
               ))}
             </CardContent>
             <CardFooter className="border-t justify-center py-3">
-              <Button variant="ghost" size="sm" asChild>
-                <Link href="/finance/dashboard/portfolio/initiatives">
-                  <Plus className="size-4" />
-                  Log New Initiative
-                </Link>
-              </Button>
+              <AddInitiativeDialog />
             </CardFooter>
           </Card>
 

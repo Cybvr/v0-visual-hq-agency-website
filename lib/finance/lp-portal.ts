@@ -46,6 +46,8 @@ export interface LpMessage {
 }
 
 export interface LpPortfolioAsset {
+  /** Company registry slug — used to route to the holding detail page */
+  id: string
   tag: string
   name: string
   detail: string
@@ -118,6 +120,7 @@ export const lpIrMessage: LpMessage = {
 
 export const lpPortfolioAssets: LpPortfolioAsset[] = [
   {
+    id: "stellar-tech",
     tag: getCompany("stellar-tech").sector,
     name: getCompany("stellar-tech").name,
     detail: "Valuation Uplift: +22% YoY",
@@ -126,6 +129,7 @@ export const lpPortfolioAssets: LpPortfolioAsset[] = [
     alt: "A cinematic, architectural shot of a futuristic data center campus at dusk with cool blue lighting and sleek metallic textures, representing a high-performing private equity asset within a modern institutional framework. The lighting is sophisticated and minimal, emphasizing clean lines and high-value technology infrastructure.",
   },
   {
+    id: "nexgen-health",
     tag: getCompany("nexgen-health").sector,
     name: getCompany("nexgen-health").name,
     detail: "Series C Completed successfully",
@@ -134,6 +138,7 @@ export const lpPortfolioAssets: LpPortfolioAsset[] = [
     alt: "An elegant, macro photograph of a sustainable laboratory setting with high-end glass equipment and soft, natural daylight. The aesthetic is clean, clinical, and prestigious, reflecting a high-growth biotech investment for an institutional portfolio. The color palette is dominated by soft whites and subtle teal accents.",
   },
   {
+    id: "logimaster",
     tag: getCompany("logimaster").sector,
     name: getCompany("logimaster").name,
     detail: "100% Leased to Tier-1 Tenants",
