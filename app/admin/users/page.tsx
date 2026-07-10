@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import {
@@ -15,6 +16,13 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet"
+import {
   Table,
   TableBody,
   TableCell,
@@ -22,12 +30,15 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { Pencil, Plus, Trash2, Loader2, User as UserIcon } from "lucide-react"
+import { Eye, Pencil, Plus, Trash2, Loader2, User as UserIcon } from "lucide-react"
 import { getUsers, deleteUser, type AppUser } from "@/lib/users"
 import { UserForm } from "@/components/admin/user-form"
+import { useAuth } from "@/components/auth-provider"
 import { cn } from "@/lib/utils"
 
 export default function UsersAdminPage() {
+  const router = useRouter()
+  const { viewAsUser } = useAuth()
   const [users, setUsers] = useState<AppUser[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -64,16 +75,21 @@ export default function UsersAdminPage() {
     }
   }
 
-  async function handleSaved(uid: string) {
+  async function handleSaved() {
     await fetchUsers()
-    setSelectedId(uid)
+    setSelectedId(null)
+  }
+
+  function handleViewAs(u: AppUser) {
+    viewAsUser(u)
+    router.push("/dashboard")
   }
 
   const selectedUser =
     typeof selectedId === "string" && selectedId !== "new" ? users.find((u) => u.uid === selectedId) ?? null : null
 
   return (
-    <main className="mx-auto max-w-6xl px-4 pt-10 pb-12 sm:px-6">
+    <main className="mx-auto w-full max-w-6xl px-4 pt-6 pb-12 sm:px-6">
       <div className="mb-8 flex items-center justify-between gap-4">
         <div>
           <h1 className="text-xl font-semibold">Users</h1>
@@ -87,19 +103,7 @@ export default function UsersAdminPage() {
         </Button>
       </div>
 
-      {selectedId !== null ? (
-        <div className="max-w-2xl">
-          <h2 className="mb-4 text-lg font-semibold">
-            {selectedId === "new" ? "New User" : `Edit: ${selectedUser?.displayName || selectedUser?.email || ""}`}
-          </h2>
-          <UserForm
-            key={selectedId}
-            user={selectedId === "new" ? null : selectedUser}
-            onSaved={handleSaved}
-            onCancel={() => setSelectedId(null)}
-          />
-        </div>
-      ) : loading ? (
+      {loading ? (
         <div className="flex items-center justify-center py-20">
           <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
         </div>
@@ -126,6 +130,7 @@ export default function UsersAdminPage() {
                 <TableHead>Email</TableHead>
                 <TableHead>Role</TableHead>
                 <TableHead>Company</TableHead>
+                <TableHead>View as</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -170,6 +175,17 @@ export default function UsersAdminPage() {
                     )}
                   </TableCell>
                   <TableCell className="text-muted-foreground">{u.company || "—"}</TableCell>
+                  <TableCell onClick={(e) => e.stopPropagation()}>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-8"
+                      onClick={() => handleViewAs(u)}
+                    >
+                      <Eye className="mr-2 h-3.5 w-3.5" />
+                      View as
+                    </Button>
+                  </TableCell>
                   <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
                     <div className="flex justify-end gap-1">
                       <Button
@@ -194,10 +210,10 @@ export default function UsersAdminPage() {
                         </AlertDialogTrigger>
                         <AlertDialogContent>
                           <AlertDialogHeader>
-                            <AlertDialogTitle>Delete user?</AlertDialogTitle>
+                            <AlertDialogTitle>Remove user?</AlertDialogTitle>
                             <AlertDialogDescription>
-                              This permanently deletes the Firestore doc for &quot;{u.displayName || u.email || u.uid}
-                              &quot;. It does not remove their Firebase Auth account. This cannot be undone.
+                              You&apos;re about to remove {u.displayName || u.email || "this user"}. This can&apos;t be
+                              undone.
                             </AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>
@@ -219,6 +235,27 @@ export default function UsersAdminPage() {
           </Table>
         </div>
       )}
+
+      <Sheet open={selectedId !== null} onOpenChange={(open) => !open && setSelectedId(null)}>
+        <SheetContent className="w-full gap-0 p-0 sm:max-w-md">
+          <SheetHeader className="border-b border-border">
+            <SheetTitle>{selectedId === "new" ? "New user" : "Edit user"}</SheetTitle>
+            <SheetDescription>
+              {selectedId === "new"
+                ? "Add someone to the users collection."
+                : selectedUser?.email || selectedUser?.displayName || ""}
+            </SheetDescription>
+          </SheetHeader>
+          {selectedId !== null && (
+            <UserForm
+              key={selectedId}
+              user={selectedId === "new" ? null : selectedUser}
+              onSaved={handleSaved}
+              onCancel={() => setSelectedId(null)}
+            />
+          )}
+        </SheetContent>
+      </Sheet>
     </main>
   )
 }

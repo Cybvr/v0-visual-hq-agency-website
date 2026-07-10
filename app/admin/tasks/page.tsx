@@ -110,7 +110,7 @@ export default function TasksAdminPage() {
     typeof selectedId === "string" && selectedId !== "new" ? tasks.find((t) => t.id === selectedId) ?? null : null
 
   return (
-    <main className="mx-auto max-w-6xl px-4 pt-10 pb-12 sm:px-6">
+    <main className="mx-auto w-full max-w-6xl px-4 pt-6 pb-12 sm:px-6">
       <div className="mb-8 flex items-center justify-between gap-4">
         <div>
           <h1 className="text-xl font-semibold">Tasks</h1>

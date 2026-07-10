@@ -24,7 +24,7 @@ export default function AdminHomePage() {
   const { user } = useAuth()
 
   return (
-    <main className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
+    <main className="mx-auto w-full max-w-6xl px-4 pt-6 pb-12 sm:px-6">
       <h1 className="text-xl font-semibold">
         Welcome{user?.displayName ? `, ${user.displayName.split(" ")[0]}` : ""}
       </h1>

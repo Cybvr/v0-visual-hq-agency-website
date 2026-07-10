@@ -3,7 +3,7 @@
 import { useEffect, type ReactNode } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { Briefcase, FolderKanban, LayoutDashboard, ListTodo, Loader2, LogOut, Megaphone, Users, UserCircle2 } from "lucide-react"
+import { Briefcase, FolderKanban, HardDrive, LayoutDashboard, ListTodo, Loader2, LogOut, Megaphone, Users } from "lucide-react"
 import { AuthProvider, useAuth } from "@/components/auth-provider"
 import { Button } from "@/components/ui/button"
 import { DashboardShell, type NavLink } from "@/components/dashboard-shell"
@@ -13,6 +13,7 @@ const NAV_LINKS: NavLink[] = [
   { label: "Projects", href: "/admin/projects", icon: Briefcase },
   { label: "Tasks", href: "/admin/tasks", icon: ListTodo },
   { label: "Portfolio", href: "/admin/portfolio", icon: FolderKanban },
+  { label: "Drive", href: "/admin/drive", icon: HardDrive },
   { label: "Marketing", href: "/admin/marketing", icon: Megaphone },
   { label: "Users", href: "/admin/users", icon: Users },
 ]
@@ -58,20 +59,7 @@ function AdminShell({ children }: { children: ReactNode }) {
   }
 
   return (
-    <DashboardShell
-      title="VisualCNS"
-      navLinks={NAV_LINKS}
-      rootHref="/admin"
-      navExtra={
-        <Link
-          href="/dashboard"
-          className="mt-2 flex items-center gap-3 rounded-lg border border-dashed border-border px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground"
-        >
-          <UserCircle2 className="h-4 w-4" />
-          View client dashboard
-        </Link>
-      }
-    >
+    <DashboardShell title="VisualCNS" navLinks={NAV_LINKS} rootHref="/admin">
       {children}
     </DashboardShell>
   )

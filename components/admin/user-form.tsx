@@ -5,7 +5,6 @@ import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Card, CardContent } from "@/components/ui/card"
 import {
   Select,
   SelectContent,
@@ -13,25 +12,21 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { Loader2 } from "lucide-react"
+import { Camera, Loader2, User as UserIcon } from "lucide-react"
 import { createUser, updateUser, type AppUser, type UserRole } from "@/lib/users"
 
 type FormState = {
-  uid: string
   email: string
   displayName: string
   company: string
-  clientId: string
   photoURL: string
   role: UserRole
 }
 
 const EMPTY_FORM: FormState = {
-  uid: "",
   email: "",
   displayName: "",
   company: "",
-  clientId: "",
   photoURL: "",
   role: "client",
 }
@@ -47,25 +42,25 @@ export function UserForm({ user, onSaved, onCancel }: UserFormProps) {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [form, setForm] = useState<FormState>(EMPTY_FORM)
+  const [editingPhoto, setEditingPhoto] = useState(false)
 
   useEffect(() => {
     if (user) {
       setForm({
-        uid: user.uid,
         email: user.email ?? "",
         displayName: user.displayName ?? "",
         company: user.company ?? "",
-        clientId: user.clientId ?? "",
         photoURL: user.photoURL ?? "",
         role: user.role === "admin" ? "admin" : "client",
       })
     } else {
       setForm(EMPTY_FORM)
     }
+    setEditingPhoto(false)
     setError(null)
   }, [user])
 
-  function set(field: keyof FormState, value: string) {
+  function set<K extends keyof FormState>(field: K, value: FormState[K]) {
     setForm((prev) => ({ ...prev, [field]: value }))
   }
 
@@ -73,22 +68,17 @@ export function UserForm({ user, onSaved, onCancel }: UserFormProps) {
     e.preventDefault()
     if (saving) return
     setError(null)
-
-    const uid = form.uid.trim()
-    if (!uid) {
-      setError("UID is required (must match the person's Firebase Auth uid).")
-      return
-    }
-
     setSaving(true)
     try {
+      // No manual UID needed: reuse the existing doc id on edit, or mint one on
+      // create. The workspace (clientId) defaults to the uid so every account
+      // gets its own space automatically.
+      const uid = isEdit && user ? user.uid : crypto.randomUUID()
       const payload = {
         email: form.email.trim(),
         displayName: form.displayName.trim(),
         company: form.company.trim(),
-        // Default the workspace id to the uid when left blank, so the account
-        // always resolves to a workspace (tasks/projects are scoped by clientId).
-        clientId: form.clientId.trim() || uid,
+        clientId: (isEdit && user?.clientId) || uid,
         photoURL: form.photoURL.trim(),
         role: form.role,
       }
@@ -110,27 +100,43 @@ export function UserForm({ user, onSaved, onCancel }: UserFormProps) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <Card>
-        <CardContent className="space-y-4 p-4">
-          <div className="space-y-1.5">
-            <Label htmlFor="uid">Firebase Auth UID {isEdit && <span className="text-muted-foreground">(read-only)</span>}</Label>
-            <Input
-              id="uid"
-              value={form.uid}
-              onChange={(e) => set("uid", e.target.value)}
-              placeholder="The person's Firebase Auth uid"
-              disabled={isEdit}
-              required
-            />
-            {!isEdit && (
-              <p className="text-xs text-muted-foreground">
-                Must match the uid Firebase assigns when they sign in with Google.
-              </p>
-            )}
+    <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
+      <div className="flex-1 space-y-5 overflow-y-auto px-4 pb-4">
+        {/* Avatar beside the name / email fields */}
+        <div className="flex items-start gap-4">
+          <div className="flex shrink-0 flex-col items-center gap-1.5">
+            <button
+              type="button"
+              onClick={() => setEditingPhoto((v) => !v)}
+              className="group relative h-16 w-16 overflow-hidden rounded-full border border-border bg-muted"
+              aria-label="Change picture"
+            >
+              {form.photoURL ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={form.photoURL} alt="" className="h-full w-full object-cover" referrerPolicy="no-referrer" />
+              ) : (
+                <span className="flex h-full w-full items-center justify-center">
+                  <UserIcon className="h-6 w-6 text-muted-foreground" />
+                </span>
+              )}
+              <span className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-opacity group-hover:opacity-100">
+                <Camera className="h-5 w-5 text-white" />
+              </span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setEditingPhoto((v) => !v)}
+              className="text-xs text-muted-foreground hover:text-foreground"
+            >
+              Change picture
+            </button>
           </div>
 
-          <div className="grid gap-3 md:grid-cols-2">
+          <div className="flex-1 space-y-3">
+            <div className="space-y-1.5">
+              <Label htmlFor="displayName">Name</Label>
+              <Input id="displayName" value={form.displayName} onChange={(e) => set("displayName", e.target.value)} />
+            </div>
             <div className="space-y-1.5">
               <Label htmlFor="email">Email</Label>
               <Input
@@ -141,60 +147,49 @@ export function UserForm({ user, onSaved, onCancel }: UserFormProps) {
                 required
               />
             </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="displayName">Name</Label>
-              <Input id="displayName" value={form.displayName} onChange={(e) => set("displayName", e.target.value)} />
-            </div>
           </div>
+        </div>
 
-          <div className="grid gap-3 md:grid-cols-2">
-            <div className="space-y-1.5">
-              <Label htmlFor="role">Role</Label>
-              <Select value={form.role} onValueChange={(v) => set("role", v)}>
-                <SelectTrigger id="role" className="w-full">
-                  <SelectValue placeholder="Select a role" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="admin">Admin</SelectItem>
-                  <SelectItem value="client">Client</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="company">Company</Label>
-              <Input
-                id="company"
-                value={form.company}
-                onChange={(e) => set("company", e.target.value)}
-                placeholder="For client accounts"
-              />
-            </div>
-          </div>
-
+        {editingPhoto && (
           <div className="space-y-1.5">
-            <Label htmlFor="clientId">Workspace ID (clientId)</Label>
+            <Label htmlFor="photoURL">Picture URL</Label>
             <Input
-              id="clientId"
-              value={form.clientId}
-              onChange={(e) => set("clientId", e.target.value)}
-              placeholder="Defaults to the user's UID"
+              id="photoURL"
+              value={form.photoURL}
+              onChange={(e) => set("photoURL", e.target.value)}
+              placeholder="https://..."
             />
-            <p className="text-xs text-muted-foreground">
-              Scopes this user&apos;s tasks and projects. Leave blank to use their UID, or share one ID across users to
-              give them a joint workspace.
-            </p>
           </div>
+        )}
 
+        <div className="grid gap-3 sm:grid-cols-2">
           <div className="space-y-1.5">
-            <Label htmlFor="photoURL">Photo URL</Label>
-            <Input id="photoURL" value={form.photoURL} onChange={(e) => set("photoURL", e.target.value)} placeholder="https://..." />
+            <Label htmlFor="role">Role</Label>
+            <Select value={form.role} onValueChange={(v) => set("role", v as UserRole)}>
+              <SelectTrigger id="role" className="w-full">
+                <SelectValue placeholder="Select a role" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="admin">Admin</SelectItem>
+                <SelectItem value="client">Client</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="company">Company</Label>
+            <Input
+              id="company"
+              value={form.company}
+              onChange={(e) => set("company", e.target.value)}
+              placeholder="For client accounts"
+            />
+          </div>
+        </div>
 
-          {error && <p className="text-sm text-destructive">{error}</p>}
-        </CardContent>
-      </Card>
+        {error && <p className="text-sm text-destructive">{error}</p>}
+      </div>
 
-      <div className="flex justify-end gap-3">
+      <div className="flex justify-end gap-3 border-t border-border p-4">
         <Button type="button" variant="outline" onClick={onCancel}>
           Cancel
         </Button>

@@ -4,7 +4,7 @@ import { useEffect, type ReactNode } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { LayoutDashboard, Loader2, LogOut, ShieldCheck } from "lucide-react"
+import { Eye, LayoutDashboard, Loader2, LogOut, ShieldCheck } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { AuthProvider, useAuth } from "@/components/auth-provider"
 import { DashboardShell, type NavLink } from "@/components/dashboard-shell"
@@ -12,7 +12,7 @@ import { DashboardShell, type NavLink } from "@/components/dashboard-shell"
 const NAV_LINKS: NavLink[] = [{ label: "Dashboard", href: "/dashboard", icon: LayoutDashboard }]
 
 function ClientDashboard({ children }: { children: ReactNode }) {
-  const { user, appUser, role, isAdmin, loading, signOut } = useAuth()
+  const { user, appUser, role, isAdmin, isImpersonating, impersonatedUser, stopViewingAs, loading, signOut } = useAuth()
   const router = useRouter()
 
   useEffect(() => {
@@ -73,6 +73,28 @@ function ClientDashboard({ children }: { children: ReactNode }) {
         ) : null
       }
     >
+      {isImpersonating && (
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-amber-200 bg-amber-50 px-4 py-2.5 text-sm text-amber-900 sm:px-6">
+          <span className="flex items-center gap-2">
+            <Eye className="h-4 w-4 shrink-0" />
+            Viewing as{" "}
+            <strong className="font-semibold">
+              {impersonatedUser?.displayName || impersonatedUser?.email || impersonatedUser?.uid}
+            </strong>
+          </span>
+          <Button
+            size="sm"
+            variant="outline"
+            className="h-7 border-amber-300 bg-white text-amber-900 hover:bg-amber-100"
+            onClick={() => {
+              stopViewingAs()
+              router.push("/admin/users")
+            }}
+          >
+            Exit view
+          </Button>
+        </div>
+      )}
       {children}
     </DashboardShell>
   )

@@ -7,7 +7,9 @@ import { ProjectsView } from "@/components/dashboard/projects-view"
 import { TasksView } from "@/components/dashboard/tasks-view"
 import { getProjectsByClientId, type Project } from "@/lib/projects"
 import { getTasksByClientId, deleteTask, updateTask, seedDefaultTasks, tsToMillis, type Task } from "@/lib/tasks"
+import { getDocumentsForClient, type SharedDocument } from "@/lib/documents"
 import { updateUser } from "@/lib/users"
+import { DocumentsView } from "@/components/dashboard/documents-view"
 
 export default function DashboardPage() {
   const { user, appUser } = useAuth()
@@ -18,6 +20,7 @@ export default function DashboardPage() {
 
   const [projects, setProjects] = useState<Project[]>([])
   const [tasks, setTasks] = useState<Task[]>([])
+  const [documents, setDocuments] = useState<SharedDocument[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [deleting, setDeleting] = useState<string | null>(null)
@@ -31,8 +34,13 @@ export default function DashboardPage() {
     }
     setError(null)
     try {
-      const [p, t] = await Promise.all([getProjectsByClientId(clientId), getTasksByClientId(clientId)])
+      const [p, t, d] = await Promise.all([
+        getProjectsByClientId(clientId),
+        getTasksByClientId(clientId),
+        getDocumentsForClient(clientId),
+      ])
       setProjects(p)
+      setDocuments(d)
 
       let list = t
       // First-time clients get a few starter tasks so the board isn't empty.
@@ -93,7 +101,7 @@ export default function DashboardPage() {
   const firstName = user.displayName?.split(" ")[0] ?? appUser?.company ?? "there"
 
   return (
-    <main className="mx-auto max-w-5xl px-4 py-10 sm:px-6">
+    <main className="mx-auto w-full max-w-5xl px-4 py-10 sm:px-6">
       <h1 className="text-xl font-semibold">Welcome, {firstName}</h1>
       <p className="mt-1 text-sm text-muted-foreground">
         Where your work stands and the latest tasks - all in one place.
@@ -108,6 +116,7 @@ export default function DashboardPage() {
       ) : (
         <>
           <ProjectsView projects={projects} />
+          <DocumentsView documents={documents} />
           <TasksView
             tasks={tasks}
             projects={projects}

@@ -1,7 +1,6 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import {
@@ -15,7 +14,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
-import { Plus, Trash2, FileText, Loader2, ArrowLeft } from "lucide-react"
+import { Plus, Trash2, FileText, Loader2 } from "lucide-react"
 import { getPortfolioProjects, deletePortfolioProject, type PortfolioProject } from "@/lib/portfolio"
 import { ProjectForm } from "@/components/admin/project-form"
 import { cn } from "@/lib/utils"
@@ -64,20 +63,20 @@ export default function AdminPage() {
   const allCategories = Array.from(new Set(projects.flatMap((p) => p.category || []))).sort()
 
   return (
-    <div className="min-h-screen bg-background">
-      <main className="max-w-6xl mx-auto px-4 sm:px-6 pt-10 pb-12">
-        <div className="flex items-center justify-between mb-8 gap-4">
-          <div className="flex items-center gap-3 min-w-0">
-            <Link href="/admin" className="text-muted-foreground hover:text-foreground transition-colors shrink-0">
-              <ArrowLeft className="w-5 h-5" />
-            </Link>
-            <h1 className="font-semibold text-xl truncate">Portfolio Admin</h1>
-          </div>
-          <Button className="shrink-0" onClick={() => setSelectedId("new")}>
-            <Plus className="w-4 h-4 mr-2" />
-            Add Project
-          </Button>
+    <main className="mx-auto w-full max-w-6xl px-4 pt-6 pb-12 sm:px-6">
+      <div className="mb-8 flex items-center justify-between gap-4">
+        <div>
+          <h1 className="text-xl font-semibold">Portfolio</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Case studies shown on the public site, live from the Firestore{" "}
+            <code className="rounded bg-muted px-1 py-0.5 text-xs">portfolio</code> collection.
+          </p>
         </div>
+        <Button className="shrink-0" onClick={() => setSelectedId("new")}>
+          <Plus className="mr-2 h-4 w-4" />
+          Add Project
+        </Button>
+      </div>
 
         <div className="grid gap-6 lg:grid-cols-[360px_1fr] items-start">
           {/* List */}
@@ -168,7 +167,6 @@ export default function AdminPage() {
             )}
           </div>
         </div>
-      </main>
-    </div>
+    </main>
   )
 }

@@ -96,7 +96,7 @@ export default function ProjectsAdminPage() {
     typeof selectedId === "string" && selectedId !== "new" ? projects.find((p) => p.id === selectedId) ?? null : null
 
   return (
-    <main className="mx-auto max-w-6xl px-4 pt-10 pb-12 sm:px-6">
+    <main className="mx-auto w-full max-w-6xl px-4 pt-6 pb-12 sm:px-6">
       <div className="mb-8 flex items-center justify-between gap-4">
         <div>
           <h1 className="text-xl font-semibold">Projects</h1>
