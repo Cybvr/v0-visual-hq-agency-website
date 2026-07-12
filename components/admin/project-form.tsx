@@ -165,12 +165,17 @@ export function ProjectForm({
     handleChange("location", value.trim())
   }
 
+  function clearLocation() {
+    handleChange("location", "")
+  }
+
   async function saveProject() {
     if (saving) return;
     setSaving(true)
     try {
       const dataToSave = {
         ...formData,
+        location: formData.location.trim(),
         status: formData.status?.trim().toLowerCase() === "published" ? "published" : "draft",
       }
       if (project) {
@@ -241,6 +246,20 @@ export function ProjectForm({
 
           <div className="space-y-1.5">
             <Label htmlFor="location">Location</Label>
+            {formData.location && (
+              <div className="flex flex-wrap gap-2">
+                <span className="inline-flex items-center gap-1 rounded bg-secondary px-2 py-1 text-sm">
+                  {formData.location}
+                  <button
+                    type="button"
+                    onClick={clearLocation}
+                    className="transition-colors hover:text-destructive"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </span>
+              </div>
+            )}
             <div className="flex gap-2">
               <Input
                 id="location"
