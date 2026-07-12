@@ -19,6 +19,7 @@ interface PortfolioSectionProps {
 export function PortfolioSection({ showHero = true }: PortfolioSectionProps) {
   const [activeFilter, setActiveFilter] = useState("All")
   const [industryFilter, setIndustryFilter] = useState("All")
+  const [locationFilter, setLocationFilter] = useState("All")
   const [projects, setProjects] = useState<PortfolioProject[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -38,10 +39,12 @@ export function PortfolioSection({ showHero = true }: PortfolioSectionProps) {
 
   const categories = ["All", ...Array.from(new Set(projects.flatMap((p) => p.category || []))).sort()]
   const industries = Array.from(new Set(projects.map((p) => p.industry).filter(Boolean))).sort()
+  const locations = Array.from(new Set(projects.map((p) => p.location).filter(Boolean))).sort()
 
   const filteredProjects = projects
     .filter((p) => activeFilter === "All" || p.category?.includes(activeFilter))
     .filter((p) => industryFilter === "All" || p.industry === industryFilter)
+    .filter((p) => locationFilter === "All" || p.location === locationFilter)
 
   return (
     <>
@@ -89,6 +92,26 @@ export function PortfolioSection({ showHero = true }: PortfolioSectionProps) {
                 {industries.map((industry) => (
                   <SelectItem key={industry} value={industry as string} className={itemClass}>
                     <h3 className="text-lg">{industry}</h3>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+
+          {locations.length > 0 && (
+            <Select value={locationFilter} onValueChange={setLocationFilter}>
+              <SelectTrigger className={triggerClass}>
+                <h2 className="text-2xl md:text-3xl">
+                  <SelectValue />
+                </h2>
+              </SelectTrigger>
+              <SelectContent className={contentClass}>
+                <SelectItem value="All" className={itemClass}>
+                  <h3 className="text-lg">All Locations</h3>
+                </SelectItem>
+                {locations.map((location) => (
+                  <SelectItem key={location} value={location as string} className={itemClass}>
+                    <h3 className="text-lg">{location}</h3>
                   </SelectItem>
                 ))}
               </SelectContent>
