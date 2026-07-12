@@ -140,6 +140,9 @@ export function Header() {
           </Button>
         </div>
 
+        <Link href="/" aria-label="VisualHQ home" className="md:hidden">
+          <BrandLockup logoSize={24} gapClassName="gap-1" />
+        </Link>
         <button
           className="flex size-10 items-center justify-center rounded-full md:hidden"
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -148,9 +151,6 @@ export function Header() {
         >
           {mobileMenuOpen ? <X className="size-6" /> : <Menu className="size-6" />}
         </button>
-        <Link href="/" aria-label="VisualHQ home" className="md:hidden">
-          <BrandLockup logoSize={24} gapClassName="gap-1" />
-        </Link>
       </nav>
 
       {mobileMenuOpen && (
