@@ -21,6 +21,7 @@ export interface PortfolioProject {
   excerpt?: string
   description: string
   category: string[]
+  location: string
   imageUrl: string
   logoUrl: string
   gallery: string[]

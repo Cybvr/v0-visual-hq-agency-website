@@ -25,6 +25,7 @@ type FormState = {
   excerpt: string
   description: string
   category: string[]
+  location: string
   imageUrl: string
   logoUrl: string
   gallery: string[]
@@ -47,6 +48,7 @@ const EMPTY_FORM: FormState = {
   excerpt: "",
   description: "",
   category: [],
+  location: "",
   imageUrl: "",
   logoUrl: "",
   gallery: [],
@@ -66,11 +68,18 @@ const EMPTY_FORM: FormState = {
 interface ProjectFormProps {
   project?: PortfolioProject | null
   existingCategories?: string[]
+  existingLocations?: string[]
   onSaved: (id: string) => void
   onCancel: () => void
 }
 
-export function ProjectForm({ project, existingCategories = [], onSaved, onCancel }: ProjectFormProps) {
+export function ProjectForm({
+  project,
+  existingCategories = [],
+  existingLocations = [],
+  onSaved,
+  onCancel,
+}: ProjectFormProps) {
   const [saving, setSaving] = useState(false)
   const [formData, setFormData] = useState<FormState>(EMPTY_FORM)
   const [newTech, setNewTech] = useState("")
@@ -84,6 +93,7 @@ export function ProjectForm({ project, existingCategories = [], onSaved, onCance
         excerpt: project.excerpt || "",
         description: project.description || "",
         category: project.category || [],
+        location: project.location || "",
         imageUrl: project.imageUrl || "",
         logoUrl: project.logoUrl || "",
         gallery: project.gallery || [],
@@ -149,6 +159,10 @@ export function ProjectForm({ project, existingCategories = [], onSaved, onCance
 
   function removeTechnology(index: number) {
     setFormData((prev) => ({ ...prev, technologies: prev.technologies.filter((_, i) => i !== index) }))
+  }
+
+  function applyLocation(value: string) {
+    handleChange("location", value.trim())
   }
 
   async function saveProject() {
@@ -223,6 +237,38 @@ export function ProjectForm({ project, existingCategories = [], onSaved, onCance
               onChange={(e) => handleChange("description", e.target.value)}
               rows={2}
             />
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="location">Location</Label>
+            <div className="flex gap-2">
+              <Input
+                id="location"
+                value={formData.location}
+                onChange={(e) => handleChange("location", e.target.value)}
+                placeholder="Add a location"
+                onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), applyLocation(formData.location))}
+              />
+              <Button type="button" variant="outline" onClick={() => applyLocation(formData.location)}>
+                Add
+              </Button>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {Array.from(new Set(existingLocations))
+                .sort()
+                .filter((location) => location && location !== formData.location)
+                .map((location) => (
+                  <Button
+                    key={location}
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => applyLocation(location)}
+                  >
+                    {location}
+                  </Button>
+                ))}
+            </div>
           </div>
 
           <div className="space-y-1.5">
