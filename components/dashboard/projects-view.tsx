@@ -1,10 +1,7 @@
 "use client"
 
-import { Card, CardContent } from "@/components/ui/card"
-import { projectStatusMeta, type Project, type ProjectStatus } from "@/lib/projects"
-
-// Column order for the Kanban board.
-const STATUS_ORDER: ProjectStatus[] = ["in-progress", "review", "done", "on-hold"]
+import { cn } from "@/lib/utils"
+import { projectStatusMeta, type Project } from "@/lib/projects"
 
 function ProgressBar({ value }: { value: number }) {
   return (
@@ -14,62 +11,43 @@ function ProgressBar({ value }: { value: number }) {
   )
 }
 
-function BoardView({ projects }: { projects: Project[] }) {
-  return (
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-      {STATUS_ORDER.map((status) => {
-        const meta = projectStatusMeta[status]
-        const items = projects.filter((p) => p.status === status)
-        return (
-          <div key={status} className="flex flex-col gap-3">
-            <div className="flex items-center justify-between px-1">
-              <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                {meta.label}
-              </span>
-              <span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">{items.length}</span>
-            </div>
-            <div className="flex flex-col gap-3">
-              {items.length === 0 ? (
-                <div className="rounded-lg border border-dashed border-border px-3 py-6 text-center text-xs text-muted-foreground">
-                  None
-                </div>
-              ) : (
-                items.map((project) => (
-                  <Card key={project.id}>
-                    <CardContent className="p-4">
-                      <div className="text-sm font-medium">{project.title}</div>
-                      <div className="mt-0.5 text-xs text-muted-foreground">{project.service}</div>
-                      <div className="mt-3">
-                        <ProgressBar value={project.progress} />
-                        <div className="mt-1.5 flex justify-between text-[11px] text-muted-foreground">
-                          <span>{project.progress}%</span>
-                          <span>Due {project.dueDate}</span>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))
-              )}
-            </div>
-          </div>
-        )
-      })}
-    </div>
-  )
-}
-
 export function ProjectsView({ projects }: { projects: Project[] }) {
   return (
-    <section className="mt-10">
-      <div className="flex items-center justify-between gap-4">
+    <section id="projects" className="mt-10 scroll-mt-20">
+      <div className="flex items-center gap-2">
         <h2 className="text-sm font-semibold uppercase tracking-widest text-muted-foreground">Projects</h2>
+        <span className="text-sm font-medium text-muted-foreground">{projects.length}</span>
       </div>
 
       <div className="mt-4">
         {projects.length === 0 ? (
           <p className="text-sm text-muted-foreground">No active projects.</p>
         ) : (
-          <BoardView projects={projects} />
+          <div className="flex flex-col gap-2">
+            {projects.map((project) => {
+              const meta = projectStatusMeta[project.status]
+              return (
+                <div key={project.id} className="flex items-center gap-4 rounded-lg border border-border/60 bg-card px-4 py-3 shadow-sm">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <span className="truncate text-sm font-medium text-foreground">{project.title}</span>
+                      <span className={cn("shrink-0 rounded-full px-2 py-0.5 text-xs font-medium", meta.className)}>
+                        {meta.label}
+                      </span>
+                    </div>
+                    <div className="mt-0.5 text-xs text-muted-foreground">{project.service}</div>
+                  </div>
+                  <div className="w-32 shrink-0">
+                    <ProgressBar value={project.progress} />
+                    <div className="mt-1 flex justify-between text-[11px] text-muted-foreground">
+                      <span>{project.progress}%</span>
+                      <span>Due {project.dueDate}</span>
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
         )}
       </div>
     </section>

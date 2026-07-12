@@ -37,7 +37,7 @@ export default function DashboardPage() {
       const [p, t, d] = await Promise.all([
         getProjectsByClientId(clientId),
         getTasksByClientId(clientId),
-        getDocumentsForClient(clientId),
+        getDocumentsForClient(clientId, uid ?? ""),
       ])
       setProjects(p)
       setDocuments(d)
@@ -98,7 +98,7 @@ export default function DashboardPage() {
 
   if (!user) return null
 
-  const firstName = user.displayName?.split(" ")[0] ?? appUser?.company ?? "there"
+  const firstName = appUser?.displayName?.split(" ")[0] ?? appUser?.company ?? user.displayName?.split(" ")[0] ?? "there"
 
   return (
     <main className="mx-auto w-full max-w-5xl px-4 py-10 sm:px-6">
@@ -115,8 +115,8 @@ export default function DashboardPage() {
         <p className="mt-10 text-sm text-destructive">{error}</p>
       ) : (
         <>
-          <ProjectsView projects={projects} />
           <DocumentsView documents={documents} />
+          <ProjectsView projects={projects} />
           <TasksView
             tasks={tasks}
             projects={projects}

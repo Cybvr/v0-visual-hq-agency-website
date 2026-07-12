@@ -21,10 +21,11 @@ import {
 
 export function NavUser() {
   const { isMobile } = useSidebar()
-  const { user, signOut } = useAuth()
+  const { user, appUser, isImpersonating, signOut } = useAuth()
 
-  const name = user?.displayName ?? "Account"
-  const email = user?.email ?? ""
+  const name = appUser?.displayName || appUser?.company || user?.displayName || "Account"
+  const email = appUser?.email || user?.email || ""
+  const photoURL = appUser?.photoURL || user?.photoURL
   const initials =
     name
       .split(" ")
@@ -43,7 +44,7 @@ export function NavUser() {
               className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
             >
               <Avatar className="h-8 w-8 rounded-lg">
-                {user?.photoURL && <AvatarImage src={user.photoURL} alt={name} referrerPolicy="no-referrer" />}
+                {photoURL && <AvatarImage src={photoURL} alt={name} referrerPolicy="no-referrer" />}
                 <AvatarFallback className="rounded-lg">{initials}</AvatarFallback>
               </Avatar>
               <div className="grid flex-1 text-left text-sm leading-tight">
@@ -62,12 +63,13 @@ export function NavUser() {
             <DropdownMenuLabel className="p-0 font-normal">
               <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                 <Avatar className="h-8 w-8 rounded-lg">
-                  {user?.photoURL && <AvatarImage src={user.photoURL} alt={name} referrerPolicy="no-referrer" />}
+                  {photoURL && <AvatarImage src={photoURL} alt={name} referrerPolicy="no-referrer" />}
                   <AvatarFallback className="rounded-lg">{initials}</AvatarFallback>
                 </Avatar>
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-medium">{name}</span>
                   <span className="truncate text-xs">{email}</span>
+                  {isImpersonating && <span className="truncate text-[10px] text-amber-700">Viewing as client</span>}
                 </div>
               </div>
             </DropdownMenuLabel>

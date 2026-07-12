@@ -9,8 +9,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { useAuth } from "@/components/auth-provider"
 
 function destinationFor(isAdmin: boolean) {
-  // Routing is by role: admins go to /admin, everyone else to /dashboard.
-  return isAdmin ? "/admin" : "/dashboard"
+  return "/dashboard"
 }
 
 function GoogleIcon() {

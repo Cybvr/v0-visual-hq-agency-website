@@ -35,9 +35,14 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
-    // Documents - admins full access; otherwise no access.
+    // Documents - admins manage; clients read documents shared with them,
+    // their client workspace, or their explicit user id.
     match /documents/{documentId} {
-      allow read, write: if isAdmin();
+      allow read: if isAdmin() || (isSignedIn() && (
+        resource.data.clientId == myClientId()
+        || request.auth.uid in resource.data.get('sharedWithUserIds', [])
+      ));
+      allow write: if isAdmin();
     }
 
     // Users - a user can read/write their OWN doc; admins can manage all.

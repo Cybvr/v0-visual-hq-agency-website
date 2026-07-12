@@ -53,7 +53,7 @@ export default function ProjectsAdminPage() {
 
   function clearNewProjectQuery() {
     if (!searchParams.get("new") && !searchParams.get("clientId")) return
-    router.replace("/admin/projects")
+    router.replace("/dashboard/projects")
   }
 
   async function fetchProjects() {

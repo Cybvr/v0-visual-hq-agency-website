@@ -1,5 +1,14 @@
 import { initializeApp } from 'firebase/app';
-import { getFirestore, collection, addDoc, Timestamp } from 'firebase/firestore';
+import {
+  getFirestore,
+  collection,
+  addDoc,
+  getDocs,
+  query,
+  Timestamp,
+  updateDoc,
+  where,
+} from 'firebase/firestore';
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -10,14 +19,41 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-console.log("Firebase config:", JSON.stringify(firebaseConfig, null, 2));
-
 // 2. Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 // 3. Define payload
 const projects = [
+  {
+    title: "Million Classics",
+    slug: "million-classics",
+    excerpt:
+      "A complete learning experience for Nigerian secondary school students, built around reading, reflection, writing, recognition, and reporting.",
+    description:
+      "Million Classics is a literacy and civic learning programme built for Nigerian secondary school students. The Launch Cycle runs across five public secondary schools in Lagos State from 15 June 2026, pairing classic literature with guided discussion, essay writing, independent judging, scholarships, and sponsor-facing impact reporting. VisualHQ's portfolio entry highlights the programme's editorial storytelling, social campaign system, and Impact Atlas dashboard experience.",
+    category: ["Web Development", "Presentation Design"],
+    imageUrl: "/images/screenshots/million-classics-impact-atlas.png",
+    logoUrl: "/images/logo.png.png",
+    gallery: [
+      "/images/screenshots/million-classics-impact-atlas.png",
+      "/social/were-live.jpg",
+      "/social/the-mission.jpg",
+      "/social/five-schools.jpg",
+      "/social/become-a-sponsor.jpg"
+    ],
+    client: "Million Classics",
+    clientValuation: "",
+    earnings: "",
+    founders: "",
+    industry: "Education",
+    projectUrl: "https://www.millionclassics.org",
+    status: "published",
+    featured: true,
+    order: 9,
+    tags: ["2026", "Education", "Literacy", "Lagos", "Impact"],
+    technologies: ["Next.js", "Firebase", "Figma", "Social Content"]
+  },
   {
     title: "Lagos Biennial",
     slug: "lagos-biennial",
@@ -86,6 +122,19 @@ async function seed() {
   
   for (const proj of projects) {
     try {
+      const existingQuery = query(colRef, where("slug", "==", proj.slug));
+      const existingSnapshot = await getDocs(existingQuery);
+
+      if (!existingSnapshot.empty) {
+        const existingDoc = existingSnapshot.docs[0];
+        await updateDoc(existingDoc.ref, {
+          ...proj,
+          updatedAt: Timestamp.now()
+        });
+        console.log(`Updated ${proj.title} with ID: ${existingDoc.id}`);
+        continue;
+      }
+
       const docRef = await addDoc(colRef, {
         ...proj,
         createdAt: Timestamp.now(),

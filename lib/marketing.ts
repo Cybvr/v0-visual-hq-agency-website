@@ -5,6 +5,14 @@ import type {
   InstagramPreviewProfile,
 } from "@/components/instagram-preview";
 
+export type MarketingPost = InstagramPreviewPost & {
+  title?: string;
+  primaryText?: string;
+  headline?: string;
+  description?: string;
+  cta?: string;
+};
+
 function comments(items: Array<{ username: string; avatar: string; text: string; timeAgo: string; likes: number }>): InstagramPreviewComment[] {
   return items;
 }
@@ -23,59 +31,6 @@ export const marketingProfile: InstagramPreviewProfile = {
   logoClassName: "w-[60%] object-contain",
 };
 
-export type MetaAdCampaign = {
-  slug: string;
-  title: string;
-  image: string;
-  primaryText: string;
-  headline: string;
-  description: string;
-  cta: string;
-};
-
-export const metaAdCampaigns: MetaAdCampaign[] = [
-  {
-    slug: "workflow-systems-audit",
-    title: "Systems That Run Themselves",
-    image: "/marketing/systems.png",
-    primaryText:
-      "Your tools don't talk to each other — so leads slip, follow-ups get missed, and you're the glue holding it all together.\n\nWe connect your leads, content, and follow-up into one system that runs itself. Book a free systems audit and see where you're losing time (and money). 🚀",
-    headline: "Systems That Run Themselves",
-    description: "Free systems audit · Lagos",
-    cta: "Book Now",
-  },
-  {
-    slug: "workflow-stop-manual",
-    title: "Stop The Sticky Notes",
-    image: "/marketing/sticky-notes.png",
-    primaryText:
-      "Running your business on sticky notes, open tabs, and \"I'll reply later\" DMs?\n\nWe replace the chaos with automated workflows built around how you actually work — leads answered instantly, content shipped on time, follow-ups that send themselves. Stop chasing. Start running. ⚡",
-    headline: "Stop Running On Sticky Notes",
-    description: "Automate the busywork",
-    cta: "Learn More",
-  },
-  {
-    slug: "workflow-outcome",
-    title: "More Leads. Zero Extra Staff.",
-    image: "/marketing/zero-extra-staff.png",
-    primaryText:
-      "Growth shouldn't mean hiring three more people.\n\nWe build the systems that capture every lead, follow up in seconds, win back drop-offs, and show you what's actually driving sales — no extra headcount required. More leads, faster follow-up, zero extra staff. 📈",
-    headline: "More Leads. Zero Extra Staff.",
-    description: "Scale without hiring",
-    cta: "Get Quote",
-  },
-  {
-    slug: "workflow-modular",
-    title: "Built Around You",
-    image: "/marketing/built-around-you.png",
-    primaryText:
-      "One system for the way YOUR business runs.\n\nMarketing, leads, content, follow-up, reporting, onboarding — pick the workflows you need, we build and run them with AI agents plugged into your existing tools. Live in days, managed monthly. From ₦200k/mo. 🧩",
-    headline: "A System Built Around You",
-    description: "Modular workflows from ₦200k/mo",
-    cta: "Get Quote",
-  },
-];
-
 export const marketingHighlights: InstagramPreviewHighlight[] = [
   { label: "Web", bg: "#0F3D84", text: "#ffffff", content: "WB", size: "text-xl" },
   { label: "Funnels", bg: "#101828", text: "#ffffff", content: "FN", size: "text-xl" },
@@ -83,7 +38,7 @@ export const marketingHighlights: InstagramPreviewHighlight[] = [
   { label: "Calls", bg: "#DCE7FF", text: "#0A1730", content: "DC", size: "text-xl" },
 ];
 
-export const marketingPosts: InstagramPreviewPost[] = [
+export const marketingPosts: MarketingPost[] = [
   {
     slug: "discovery-call",
     image: "/marketing/discovery-call.jpg",
@@ -318,6 +273,12 @@ export const marketingPosts: InstagramPreviewPost[] = [
   },
   {
     slug: "workflow-systems-audit",
+    title: "Systems That Run Themselves",
+    primaryText:
+      "Your tools don't talk to each other — so leads slip, follow-ups get missed, and you're the glue holding it all together.\n\nWe connect your leads, content, and follow-up into one system that runs itself. Book a free systems audit and see where you're losing time (and money). 🚀",
+    headline: "Systems That Run Themselves",
+    description: "Free systems audit · Lagos",
+    cta: "Book Now",
     image: "/marketing/systems.png",
     imageAlt: "VisualCNS systems that run themselves ad",
     location: "Lagos, Nigeria",
@@ -347,6 +308,12 @@ export const marketingPosts: InstagramPreviewPost[] = [
   },
   {
     slug: "workflow-stop-manual",
+    title: "Stop The Sticky Notes",
+    primaryText:
+      "Running your business on sticky notes, open tabs, and \"I'll reply later\" DMs?\n\nWe replace the chaos with automated workflows built around how you actually work — leads answered instantly, content shipped on time, follow-ups that send themselves. Stop chasing. Start running. ⚡",
+    headline: "Stop Running On Sticky Notes",
+    description: "Automate the busywork",
+    cta: "Learn More",
     image: "/marketing/sticky-notes.png",
     imageAlt: "VisualCNS stop the sticky notes ad",
     location: "Lagos, Nigeria",
@@ -376,6 +343,12 @@ export const marketingPosts: InstagramPreviewPost[] = [
   },
   {
     slug: "workflow-outcome",
+    title: "More Leads. Zero Extra Staff.",
+    primaryText:
+      "Growth shouldn't mean hiring three more people.\n\nWe build the systems that capture every lead, follow up in seconds, win back drop-offs, and show you what's actually driving sales — no extra headcount required. More leads, faster follow-up, zero extra staff. 📈",
+    headline: "More Leads. Zero Extra Staff.",
+    description: "Scale without hiring",
+    cta: "Get Quote",
     image: "/marketing/zero-extra-staff.png",
     imageAlt: "VisualCNS more leads zero extra staff ad",
     location: "visualcns.pro",
@@ -405,6 +378,12 @@ export const marketingPosts: InstagramPreviewPost[] = [
   },
   {
     slug: "workflow-modular",
+    title: "Built Around You",
+    primaryText:
+      "One system for the way YOUR business runs.\n\nMarketing, leads, content, follow-up, reporting, onboarding — pick the workflows you need, we build and run them with AI agents plugged into your existing tools. Live in days, managed monthly. From ₦200k/mo. 🧩",
+    headline: "A System Built Around You",
+    description: "Modular workflows from ₦200k/mo",
+    cta: "Get Quote",
     image: "/marketing/built-around-you.png",
     imageAlt: "VisualCNS built around you ad",
     location: "VisualCNS Studio",

@@ -55,6 +55,14 @@ function normalizeOptionLabel(value?: string | null) {
   return (value ?? "").trim().toLowerCase()
 }
 
+function normalizeTaskStatus(value?: string | null): TaskStatus {
+  const normalized = normalizeOptionLabel(value).replace(/[ _]+/g, "-")
+  if (["in-progress", "inprogress", "doing", "active"].includes(normalized)) return "in-progress"
+  if (["review", "in-review", "inreview"].includes(normalized)) return "review"
+  if (["done", "complete", "completed"].includes(normalized)) return "done"
+  return "todo"
+}
+
 interface TaskFormProps {
   task?: Task | null
   /**
@@ -109,7 +117,7 @@ export function TaskForm({ task, fixedClient, defaults, onSaved, onCancel }: Tas
         name: task.name ?? "",
         clientId: task.clientId ?? fixedClient?.clientId ?? "",
         projectId: task.projectId ?? "",
-        status: task.status ?? EMPTY_FORM.status,
+        status: normalizeTaskStatus(task.status),
         priority: task.priority ?? EMPTY_FORM.priority,
         dueDate: task.dueDate ?? "",
         content: task.content ?? "",
@@ -403,7 +411,7 @@ export function TaskForm({ task, fixedClient, defaults, onSaved, onCancel }: Tas
             <Label htmlFor="status">Status</Label>
             <Select value={form.status || undefined} onValueChange={(v) => set("status", v as TaskStatus)}>
               <SelectTrigger id="status" className="w-full">
-                <SelectValue />
+                <SelectValue>{taskStatusMeta[form.status]?.label ?? "Select status"}</SelectValue>
               </SelectTrigger>
               <SelectContent>
                 {(Object.keys(taskStatusMeta) as TaskStatus[]).map((s) => (

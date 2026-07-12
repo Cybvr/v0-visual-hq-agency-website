@@ -87,7 +87,7 @@ export function Header() {
 
   return (
     <header className="fixed left-0 right-0 top-0 z-50 border-b border-border/70 bg-background/90 backdrop-blur-md">
-      <nav className="mx-auto flex max-w-7xl items-center justify-between px-6 py-5">
+      <nav className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4 md:py-5">
         <div className="hidden items-center gap-8 md:flex">
           <Link href="/" aria-label="VisualHQ home">
             <BrandLockup logoSize={28} gapClassName="gap-1" />
@@ -140,6 +140,9 @@ export function Header() {
           </Button>
         </div>
 
+        <Link href="/" aria-label="VisualHQ home" className="flex min-h-10 items-center md:hidden">
+          <BrandLockup logoSize={24} gapClassName="gap-1" />
+        </Link>
         <button
           className="flex size-10 items-center justify-center rounded-full md:hidden"
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -148,9 +151,6 @@ export function Header() {
         >
           {mobileMenuOpen ? <X className="size-6" /> : <Menu className="size-6" />}
         </button>
-        <Link href="/" aria-label="VisualHQ home" className="md:hidden">
-          <BrandLockup logoSize={24} gapClassName="gap-1" />
-        </Link>
       </nav>
 
       {mobileMenuOpen && (

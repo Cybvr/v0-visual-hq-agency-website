@@ -175,7 +175,9 @@ export function ProjectForm({
     try {
       const dataToSave = {
         ...formData,
+        category: Array.from(new Set(formData.category.map((value) => value.trim()).filter(Boolean))),
         location: formData.location.trim(),
+        technologies: Array.from(new Set(formData.technologies.map((value) => value.trim()).filter(Boolean))),
         status: formData.status?.trim().toLowerCase() === "published" ? "published" : "draft",
       }
       if (project) {

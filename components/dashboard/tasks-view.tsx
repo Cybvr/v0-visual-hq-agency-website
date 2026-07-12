@@ -126,14 +126,10 @@ function AddRow({ label, onClick }: { label: string; onClick: () => void }) {
 function BoardCard({
   task,
   onEdit,
-  onDelete,
-  deleting,
   isOverlay = false,
 }: {
   task: Task
   onEdit: () => void
-  onDelete: () => void
-  deleting: boolean
   isOverlay?: boolean
 }) {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
@@ -151,8 +147,9 @@ function BoardCard({
       style={style}
       {...attributes}
       {...listeners}
+      onClick={() => { if (!isDragging && !isOverlay) onEdit() }}
       className={cn(
-        "group relative flex cursor-grab items-start justify-between gap-2 rounded-lg border bg-card p-3 shadow-sm transition-shadow hover:shadow-md active:cursor-grabbing touch-none",
+        "relative flex cursor-grab items-start gap-2 rounded-lg border bg-card p-3 shadow-sm transition-shadow hover:shadow-md active:cursor-grabbing touch-none",
         isDragging && !isOverlay ? "opacity-30 border-dashed" : "border-border/60",
         isOverlay && "cursor-grabbing rotate-2 scale-105 shadow-lg border-border"
       )}
@@ -166,11 +163,6 @@ function BoardCard({
           {task.project && <div className="mt-1 truncate text-xs text-muted-foreground">{task.project}</div>}
         </div>
       </div>
-      {!isDragging && !isOverlay && (
-        <div className="opacity-0 transition-opacity group-hover:opacity-100">
-          <RowActions task={task} onEdit={onEdit} onDelete={onDelete} deleting={deleting} />
-        </div>
-      )}
     </div>
   )
 }
@@ -297,7 +289,7 @@ export function TasksView({
   }
 
   return (
-    <section className="mt-10">
+    <section id="tasks" className="mt-10 scroll-mt-20">
       <div className="flex items-center justify-between gap-4">
         <h2 className="text-sm font-semibold uppercase tracking-widest text-muted-foreground">Tasks</h2>
         <div className="flex items-center gap-1 rounded-lg border border-border p-0.5">
@@ -353,8 +345,6 @@ export function TasksView({
                         key={t.id}
                         task={t}
                         onEdit={() => openEdit(t.id)}
-                        onDelete={() => onDelete(t.id)}
-                        deleting={deleting === t.id}
                       />
                     ))}
                   </DroppableColumn>
@@ -366,8 +356,6 @@ export function TasksView({
                 <BoardCard
                   task={activeTask}
                   onEdit={() => openEdit(activeTask.id)}
-                  onDelete={() => onDelete(activeTask.id)}
-                  deleting={false}
                   isOverlay
                 />
               ) : null}

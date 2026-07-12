@@ -11,7 +11,7 @@ export default function PortfolioPage() {
       <PortfolioSection />
 
       {/* CTA Section */}
-      <section className="py-20 px-12 bg-foreground text-primary-foreground md:px-20">
+      <section className="bg-foreground px-4 py-16 text-primary-foreground sm:px-8 md:px-20 md:py-20">
         <div className="max-w-7xl mx-auto text-center">
           <h2 className="text-3xl md:text-4xl font-semibold tracking-tight mb-4">Have a project in mind?</h2>
           <p className="text-primary-foreground/70 max-w-xl mx-auto mb-8">
