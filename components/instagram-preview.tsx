@@ -288,141 +288,12 @@ export function InstagramPreview({
   const previewPosts = posts.slice(0, previewPostCount);
 
   return (
-    <div className="flex h-screen flex-col overflow-hidden bg-background px-3 py-4 text-foreground sm:px-5 md:py-8">
-      <div className="mx-auto flex min-h-0 w-full max-w-[1120px] flex-1 flex-col overflow-hidden border border-border bg-background shadow-[0_24px_80px_rgba(10,10,10,0.08)]">
-        <div className="relative min-h-0 flex-1 overflow-y-auto bg-white text-[#262626] md:flex" style={appFont}>
-          <nav className="sticky top-0 hidden h-full max-h-[calc(100vh-170px)] w-[72px] flex-shrink-0 flex-col items-center border-r border-[#dbdbdb] py-2 pb-5 md:flex">
-            <div className="flex h-[76px] w-full items-center justify-center">
-              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth={2}>
-                <rect x="2" y="2" width="20" height="20" rx="6" />
-                <circle cx="12" cy="12" r="4.5" />
-                <circle cx="17.5" cy="6.5" r="1.2" fill="#000" stroke="none" />
-              </svg>
-            </div>
-
-            <div className="flex flex-1 flex-col items-center gap-1.5">
-              <a className="flex h-12 w-12 cursor-pointer items-center justify-center rounded-xl hover:bg-[#f2f2f2]"><Home size={24} strokeWidth={1.9} color="#000" /></a>
-              <a className="flex h-12 w-12 cursor-pointer items-center justify-center rounded-xl hover:bg-[#f2f2f2]"><ShoppingBag size={24} strokeWidth={1.7} color="#000" /></a>
-              <a className="relative flex h-12 w-12 cursor-pointer items-center justify-center rounded-xl hover:bg-[#f2f2f2]"><Send size={24} strokeWidth={1.8} color="#000" /><span className="absolute right-[5px] top-[5px] flex h-[17px] w-[17px] items-center justify-center rounded-full border-2 border-white bg-[#ff3040] text-[11px] font-bold text-white">8</span></a>
-              <a className="flex h-12 w-12 cursor-pointer items-center justify-center rounded-xl hover:bg-[#f2f2f2]"><Search size={24} strokeWidth={1.9} color="#000" /></a>
-              <a className="flex h-12 w-12 cursor-pointer items-center justify-center rounded-xl hover:bg-[#f2f2f2]"><Compass size={24} strokeWidth={1.9} color="#000" /></a>
-              <a className="relative flex h-12 w-12 cursor-pointer items-center justify-center rounded-xl hover:bg-[#f2f2f2]"><Heart size={24} strokeWidth={1.9} color="#000" /><span className="absolute right-[11px] top-2 h-2 w-2 rounded-full border-[1.5px] border-white bg-[#ff3040]" /></a>
-              <a className="flex h-12 w-12 cursor-pointer items-center justify-center rounded-xl hover:bg-[#f2f2f2]"><SquarePlus size={24} strokeWidth={1.9} color="#000" /></a>
-              <a className="flex h-12 w-12 cursor-pointer items-center justify-center rounded-xl hover:bg-[#f2f2f2]"><Clapperboard size={24} strokeWidth={1.9} color="#000" /></a>
-              <a className="flex h-12 w-12 cursor-pointer items-center justify-center rounded-xl hover:bg-[#f2f2f2]"><span className="block h-[26px] w-[26px] rounded-full border-[1.5px] border-black bg-gradient-to-br from-[#7a4de0] to-[#c93a86]" /></a>
-            </div>
-
-            <div className="flex flex-col items-center gap-1.5">
-              <a className="flex h-12 w-12 cursor-pointer items-center justify-center rounded-xl hover:bg-[#f2f2f2]"><Menu size={24} strokeWidth={1.9} color="#000" /></a>
-              <a className="flex h-12 w-12 cursor-pointer items-center justify-center rounded-xl hover:bg-[#f2f2f2]"><Grid2x2 size={24} strokeWidth={1.9} color="#000" /></a>
-            </div>
-          </nav>
-
-          <nav className="sticky top-0 z-40 flex w-full items-center justify-between border-b border-[#dbdbdb] bg-white px-4 py-3 md:hidden">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth={2}>
-              <rect x="2" y="2" width="20" height="20" rx="6" />
-              <circle cx="12" cy="12" r="4.5" />
-              <circle cx="17.5" cy="6.5" r="1.2" fill="#000" stroke="none" />
-            </svg>
-            <div className="flex items-center gap-5">
-              <SquarePlus size={24} strokeWidth={1.8} color="#000" />
-              <a className="relative"><Heart size={24} strokeWidth={1.8} color="#000" /><span className="absolute right-[-3px] top-[-3px] h-2 w-2 rounded-full border border-white bg-[#ff3040]" /></a>
-              <Menu size={24} strokeWidth={1.8} color="#000" />
-            </div>
-          </nav>
-
-          <div className="flex min-w-0 flex-1 flex-col pb-16 md:pb-0">
-            <main className="mx-auto w-full max-w-[935px] flex-1 px-3 pt-4 sm:px-5 md:pt-[30px]">
-              <header className="px-2 pb-6 sm:px-5 sm:pb-11 md:flex md:gap-[52px]">
-                <div className="flex items-center gap-5 md:block md:h-[168px] md:w-[168px] md:flex-shrink-0">
-                  <div className="flex h-[78px] w-[78px] flex-shrink-0 items-center justify-center rounded-full border border-[#e6e6e6] bg-white p-1 md:h-full md:w-full">
-                    <div className="flex h-full w-full items-center justify-center overflow-hidden rounded-full bg-white">
-                      <Image
-                        src={profile.logoSrc}
-                        alt={profile.logoAlt ?? profile.name}
-                        width={656}
-                        height={181}
-                        className={profile.logoClassName ?? "w-[78%] object-contain"}
-                      />
-                    </div>
-                  </div>
-                  <div className="flex min-w-0 flex-1 items-center gap-1.5 md:hidden">
-                    <span className="truncate text-lg font-normal text-[#262626]">{profile.handle}</span>
-                    <BadgeCheck size={16} fill="#3897f0" stroke="#fff" strokeWidth={2} />
-                  </div>
-                </div>
-
-                <div className="mt-4 min-w-0 md:mt-0 md:flex-1 md:pt-1.5">
-                  <div className="mb-5 hidden flex-wrap items-center gap-2 md:flex">
-                    <span className="text-xl font-normal text-[#262626]">{profile.handle}</span>
-                    <BadgeCheck size={18} fill="#3897f0" stroke="#fff" strokeWidth={2} />
-                    <div className="ml-3 flex gap-2">
-                      <button className="rounded-lg bg-[#efefef] px-4 py-2 text-sm font-semibold text-[#262626]">Following v</button>
-                      <button className="rounded-lg bg-[#efefef] px-4 py-2 text-sm font-semibold text-[#262626]">Message</button>
-                      <button className="rounded-lg bg-[#efefef] px-3 py-2 text-sm font-semibold text-[#262626]">v</button>
-                    </div>
-                  </div>
-
-                  <div className="mb-4 flex justify-around border-y border-[#dbdbdb] py-3 text-center md:hidden">
-                    <div><div className="text-base font-semibold text-[#262626]">{posts.length}</div><div className="text-xs text-[#8e8e8e]">posts</div></div>
-                    <div className="cursor-pointer"><div className="text-base font-semibold text-[#262626]">{profile.followers}</div><div className="text-xs text-[#8e8e8e]">followers</div></div>
-                    <div className="cursor-pointer"><div className="text-base font-semibold text-[#262626]">{profile.following}</div><div className="text-xs text-[#8e8e8e]">following</div></div>
-                  </div>
-
-                  <div className="mb-5 hidden gap-10 md:flex">
-                    <span className="text-base text-[#262626]"><b className="font-semibold">{posts.length}</b> posts</span>
-                    <span className="cursor-pointer text-base text-[#262626]"><b className="font-semibold">{profile.followers}</b> followers</span>
-                    <span className="cursor-pointer text-base text-[#262626]"><b className="font-semibold">{profile.following}</b> following</span>
-                  </div>
-
-                  <div className="max-w-[520px] px-2 text-sm leading-normal text-[#262626] sm:px-0">
-                    <div className="font-semibold">{profile.name}</div>
-                    <div className="mb-px text-[#737373]">{profile.category}</div>
-                    <div>{profile.blurb}</div>
-                    {profile.tagline && <div className="mt-0.5">{profile.tagline}</div>}
-                    <a href="#" className="mt-1 inline-flex items-center gap-1.5 font-semibold text-[#00376b] no-underline">
-                      <LinkIcon size={15} strokeWidth={2} color="#00376b" />
-                      {profile.site}
-                    </a>
-                  </div>
-
-                  <div className="mt-4 flex gap-2 px-2 sm:px-0 md:hidden">
-                    <button className="flex-1 rounded-lg bg-[#efefef] px-4 py-2 text-sm font-semibold text-[#262626]">Following v</button>
-                    <button className="flex-1 rounded-lg bg-[#efefef] px-4 py-2 text-sm font-semibold text-[#262626]">Message</button>
-                  </div>
-                </div>
-              </header>
-
-              {highlights.length > 0 && (
-                <div className="flex gap-6 overflow-x-auto px-2 pb-6 sm:gap-10 sm:px-10 sm:pb-[30px]">
-                  {highlights.map((h) => (
-                    <div key={h.label} className="flex flex-shrink-0 cursor-pointer flex-col items-center gap-2">
-                      <div className="flex h-[62px] w-[62px] items-center justify-center rounded-full border border-[#dbdbdb] p-[3px] sm:h-[86px] sm:w-[86px]">
-                        <div
-                          className={`flex h-full w-full items-center justify-center rounded-full font-bold ${h.size}`}
-                          style={{ backgroundColor: h.bg, color: h.text, fontFamily: "Georgia, 'Times New Roman', serif" }}
-                        >
-                          {h.content}
-                        </div>
-                      </div>
-                      <span className="text-xs text-[#262626]">{h.label}</span>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              <div className="flex justify-center gap-10 border-t border-[#dbdbdb] sm:gap-[60px]">
-                <div className="-mt-px flex items-center gap-1.5 border-t border-[#262626] py-4 text-xs font-semibold tracking-widest text-[#262626]">
-                  <Grid3x3 size={12} strokeWidth={2} color="#262626" />
-                  POSTS
-                </div>
-                <div className="flex items-center gap-1.5 py-4 text-xs font-semibold tracking-widest text-[#8e8e8e]">
-                  <Tag size={12} strokeWidth={2} color="#8e8e8e" />
-                  TAGGED
-                </div>
-              </div>
-
-              <section className="relative mb-16 text-[#262626] md:mb-10">
+    <div className="flex flex-col bg-background px-2 py-3 text-foreground sm:px-5 md:py-8">
+      <div className="mx-auto w-full max-w-[1120px] border border-border bg-background shadow-[0_24px_80px_rgba(10,10,10,0.08)]">
+        <div className="relative bg-white text-[#262626]" style={appFont}>
+          <div className="flex flex-col pb-16 md:pb-0">
+            <main className="mx-auto w-full max-w-[935px] flex-1 px-2 pt-3 sm:px-5 md:pt-[30px]">
+              <section className="relative mb-12 text-[#262626] md:mb-10">
                 <div className={`relative ${overlayCard ? "max-h-[1950px] overflow-hidden sm:max-h-none sm:overflow-visible" : ""}`}>
                   <div className="grid grid-cols-1 gap-1 sm:grid-cols-3">
                     {previewPosts.map((post, i) => (
@@ -462,14 +333,6 @@ export function InstagramPreview({
               </section>
             </main>
           </div>
-
-          <nav className="sticky bottom-0 z-40 flex items-center justify-around border-t border-[#dbdbdb] bg-white py-2.5 md:hidden">
-            <a className="flex h-9 w-9 items-center justify-center"><Home size={24} strokeWidth={1.9} color="#000" /></a>
-            <a className="flex h-9 w-9 items-center justify-center"><Search size={24} strokeWidth={1.9} color="#000" /></a>
-            <a className="flex h-9 w-9 items-center justify-center rounded-lg border-[1.5px] border-black"><SquarePlus size={20} strokeWidth={1.9} color="#000" /></a>
-            <a className="flex h-9 w-9 items-center justify-center"><Clapperboard size={24} strokeWidth={1.9} color="#000" /></a>
-            <a className="flex h-9 w-9 items-center justify-center"><span className="block h-6 w-6 rounded-full border-[1.5px] border-[#321A42] bg-gradient-to-br from-[#7a4de0] to-[#c93a86]" /></a>
-          </nav>
 
           {openIndex !== null && (
             <PostModal
