@@ -6,6 +6,10 @@ export interface NewsItem {
   author: string
   date: string
   url: string
+  image: string
+  imageAlt: string
+  imageCredit: string
+  imagePosition?: string
 }
 
 export const newsItems: NewsItem[] = [
@@ -18,6 +22,9 @@ export const newsItems: NewsItem[] = [
     author: "Ogunnoiki",
     date: "June 21, 2025",
     url: "https://guardian.ng/news/nigeria/metro/new-platform-to-link-digital-discovery-with-real-events-launched/",
+    image: "/news/funseekas-launch.jpg",
+    imageAlt: "Jide Ogunnoiki at the launch of Funseekas",
+    imageCredit: "The Guardian Nigeria",
   },
   {
     slug: "2026-msp-salary-guide",
@@ -28,6 +35,9 @@ export const newsItems: NewsItem[] = [
     author: "John Davenjay",
     date: "February 2026",
     url: "https://bowmanwilliams.com/msp-salary-guide/",
+    image: "/news/msp-salary-guide.jpg",
+    imageAlt: "Cover artwork for the 2026 MSP Salary Guide",
+    imageCredit: "Bowman Williams",
   },
   {
     slug: "afrindependent-publications",
@@ -38,6 +48,36 @@ export const newsItems: NewsItem[] = [
     author: "Manuel Tacanho",
     date: "2026",
     url: "https://www.afrindependent.org/publications?filter=latest_pub",
+    image: "/news/afrindependent-publications.jpg",
+    imageAlt: "Open books arranged around a reader",
+    imageCredit: "Afrindependent Institute",
+  },
+  {
+    slug: "shantanu-agarwal-mati-carbon",
+    title: "Shantanu Agarwal",
+    excerpt:
+      "When Shantanu Agarwal looked out at the rice paddies of Chhattisgarh, India, he saw a way to transfer wealth from companies in the Global North to farmers in the Global South through Mati Carbon, which spreads finely ground basalt rock on farmland to lock away carbon while restoring soil and boosting incomes. In April, Mati won the $50 million XPRIZE Carbon Removal.",
+    source: "TIME",
+    author: "Wendy Schmidt",
+    date: "September 30, 2025",
+    url: "https://time.com/collections/time100-next-2025/7318851/shantanu-agarwal/",
+    image: "/news/shantanu-agarwal.jpg",
+    imageAlt: "Shantanu Agarwal on stage at the TIME100 event",
+    imageCredit: "Jemal Countess/Getty Images for TIME",
+    imagePosition: "center 24%",
+  },
+  {
+    slug: "bezos-earth-fund-earthshot-prize-48-climate-solutions",
+    title: "Bezos Earth Fund to accelerate 48 transformative climate and nature solutions in collaboration with The Earthshot Prize",
+    excerpt:
+      "A $4.8 million partnership will scale breakthrough innovations tackling climate change and nature loss across the globe, backing 16 solutions a year for three years sourced from The Earthshot Prize's global pool of nominations.",
+    source: "Bezos Earth Fund",
+    author: "Press Release",
+    date: "February 4, 2026",
+    url: "https://www.bezosearthfund.org/news-and-insights/bezos-earth-fund-to-accelerate-48-transformative-climate-and-nature-solutions-in-collaboration-with-the-earthshot-prize",
+    image: "/news/earthshot-climate-solutions.jpg",
+    imageAlt: "Rolling green hills in north-west England",
+    imageCredit: "Shutterstock via Bezos Earth Fund",
   },
 ]
 
