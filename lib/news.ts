@@ -15,7 +15,7 @@ export interface NewsItem {
 export const newsItems: NewsItem[] = [
   {
     slug: "firms-donate-animal-farm-lagos-students",
-    title: "Firms donate 1,500 copies of Animal Farm to Lagos students",
+    title: "AcademyPress and Ekenua&Co donate 1,500 copies of Animal Farm to Lagos students",
     excerpt:
       "Academy Press Plc and Ekenua & Co. Limited distributed 1,500 copies of George Orwell’s Animal Farm to students at three Lagos secondary schools, launching the Million Classics Programme to promote reading and critical thinking.",
     source: "The Guardian Nigeria",
