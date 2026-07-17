@@ -14,6 +14,32 @@ export interface NewsItem {
 
 export const newsItems: NewsItem[] = [
   {
+    slug: "firms-donate-animal-farm-lagos-students",
+    title: "Firms donate 1,500 copies of Animal Farm to Lagos students",
+    excerpt:
+      "Academy Press Plc and Ekenua & Co. Limited distributed 1,500 copies of George Orwell’s Animal Farm to students at three Lagos secondary schools, launching the Million Classics Programme to promote reading and critical thinking.",
+    source: "The Guardian Nigeria",
+    author: "Isaac Chibuife",
+    date: "July 11, 2026",
+    url: "https://guardian.ng/news/firms-donate-1500-copies-of-animal-farm-to-lagos-students/",
+    image: "/news/animal-farm-lagos-students.jpg",
+    imageAlt: "Secondary school students walking together on a school campus",
+    imageCredit: "The Guardian Nigeria",
+  },
+  {
+    slug: "honeywell-flour-fy-2026-profit-dividend",
+    title: "Honeywell Flour’s FY 2026 profit hits N21.9 billion, declares 20 kobo dividend",
+    excerpt:
+      "Honeywell Flour Mills reported a 3.29% rise in full-year profit before tax to N21.896 billion, supported by lower cost of sales and stronger net finance income. The directors recommended a N1.59 billion dividend, equal to 20 kobo per share.",
+    source: "Nairametrics",
+    author: "Idika Aja",
+    date: "May 31, 2026",
+    url: "https://nairametrics.com/2026/05/31/honeywell-flours-fy-2026-profit-hits-n21-9-billion-declares-20-kobo-dividend/",
+    image: "/news/honeywell-flour-mills.jpg",
+    imageAlt: "Honeywell Flour Mills industrial facility in Lagos",
+    imageCredit: "Honeywell Group via Nairametrics",
+  },
+  {
     slug: "new-platform-to-link-digital-discovery-with-real-events-launched",
     title: "New platform to link digital discovery with real events launched",
     excerpt:
@@ -54,9 +80,9 @@ export const newsItems: NewsItem[] = [
   },
   {
     slug: "shantanu-agarwal-mati-carbon",
-    title: "Shantanu Agarwal",
+    title: "Time: The World’s Most Influential Rising Stars—Shantanu Agarwal",
     excerpt:
-      "When Shantanu Agarwal looked out at the rice paddies of Chhattisgarh, India, he saw a way to transfer wealth from companies in the Global North to farmers in the Global South through Mati Carbon, which spreads finely ground basalt rock on farmland to lock away carbon while restoring soil and boosting incomes. In April, Mati won the $50 million XPRIZE Carbon Removal.",
+      "The entrepreneur turning crushed rock into climate action — and a lifeline for smallholder farmers",
     source: "TIME",
     author: "Wendy Schmidt",
     date: "September 30, 2025",
@@ -82,7 +108,9 @@ export const newsItems: NewsItem[] = [
 ]
 
 export function getNewsItems(): NewsItem[] {
-  return newsItems
+  return [...newsItems].sort(
+    (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
+  )
 }
 
 export function getNewsItemBySlug(slug: string): NewsItem | undefined {
