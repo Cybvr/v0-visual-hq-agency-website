@@ -21,14 +21,6 @@ const consultingNavItems = [
   { name: "Industries", href: "/industries", description: "See the markets VisualHQ builds for." },
 ]
 
-const financeNavItems = [
-  { name: "Platform", href: "/finance", description: "Quality of Earnings, automated by AI." },
-  { name: "Solutions", href: "/finance/solutions", description: "Sourcing, execution, and post-close workflows." },
-  { name: "AI Reporting", href: "/finance/ai-reporting", description: "Document Lens and automated adjustments." },
-  { name: "Case Studies", href: "/finance/case-studies", description: "Results from PE firms using Visualcns." },
-  { name: "Workspace", href: "/finance/dashboard", description: "Sign in to your deal pipeline and reports." },
-]
-
 const secondaryNavigation = [
   { name: "Pricing", href: "/pricing" },
   { name: "Careers", href: "https://pasive.co/jobs" },
@@ -43,12 +35,14 @@ function DesktopHoverMenu({
   isOpen,
   onOpen,
   onClose,
+  columns = 1,
 }: {
   label: string
   items: Array<{ name: string; href: string; description: string }>
   isOpen: boolean
   onOpen: () => void
   onClose: () => void
+  columns?: 1 | 2
 }) {
   return (
     <div className="relative" onMouseEnter={onOpen} onMouseLeave={onClose}>
@@ -60,8 +54,12 @@ function DesktopHoverMenu({
         <ChevronDown className="size-3" />
       </button>
       {isOpen && (
-        <div className="absolute left-0 top-full z-50 w-64 pt-4">
-          <div className="rounded-2xl border border-border bg-background p-2 text-left text-foreground shadow-lg">
+        <div className={`absolute left-0 top-full z-50 pt-4 ${columns === 2 ? "w-[34rem]" : "w-64"}`}>
+          <div
+            className={`rounded-2xl border border-border bg-background p-2 text-left text-foreground shadow-lg ${
+              columns === 2 ? "grid grid-cols-2 gap-1" : ""
+            }`}
+          >
             {items.map((item) => (
               <Link
                 key={item.href}
@@ -83,7 +81,6 @@ export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [productsOpen, setProductsOpen] = useState(false)
   const [consultingOpen, setConsultingOpen] = useState(false)
-  const [financeOpen, setFinanceOpen] = useState(false)
 
   return (
     <header className="fixed left-0 right-0 top-0 z-50 border-b border-border/70 bg-background/90 backdrop-blur-md">
@@ -100,6 +97,7 @@ export function Header() {
               isOpen={productsOpen}
               onOpen={() => setProductsOpen(true)}
               onClose={() => setProductsOpen(false)}
+              columns={2}
             />
             <DesktopHoverMenu
               label="Consulting"
@@ -107,13 +105,6 @@ export function Header() {
               isOpen={consultingOpen}
               onOpen={() => setConsultingOpen(true)}
               onClose={() => setConsultingOpen(false)}
-            />
-            <DesktopHoverMenu
-              label="Finance"
-              items={financeNavItems}
-              isOpen={financeOpen}
-              onOpen={() => setFinanceOpen(true)}
-              onClose={() => setFinanceOpen(false)}
             />
             {secondaryNavigation.map((item) => (
               <Link
@@ -161,7 +152,7 @@ export function Header() {
                 <AccordionTrigger className="py-3 text-sm font-semibold uppercase tracking-[0.18em] text-foreground">
                   Software
                 </AccordionTrigger>
-                <AccordionContent className="grid gap-1 pb-3">
+                <AccordionContent className="grid grid-cols-2 gap-1 pb-3">
                   {productNavItems.map((item) => (
                     <Link
                       key={item.href}
@@ -181,24 +172,6 @@ export function Header() {
                 </AccordionTrigger>
                 <AccordionContent className="grid gap-1 pb-3">
                   {consultingNavItems.map((item) => (
-                    <Link
-                      key={item.href}
-                      href={item.href}
-                      className="flex flex-col items-start gap-1 rounded-xl px-3 py-2 text-left text-sm transition-colors hover:bg-accent/15"
-                      onClick={() => setMobileMenuOpen(false)}
-                    >
-                      <h3 className="text-sm">{item.name}</h3>
-                      <span className="text-xs leading-5 text-muted-foreground">{item.description}</span>
-                    </Link>
-                  ))}
-                </AccordionContent>
-              </AccordionItem>
-              <AccordionItem value="finance" className="border-border/70">
-                <AccordionTrigger className="py-3 text-sm font-semibold uppercase tracking-[0.18em] text-foreground">
-                  Finance
-                </AccordionTrigger>
-                <AccordionContent className="grid gap-1 pb-3">
-                  {financeNavItems.map((item) => (
                     <Link
                       key={item.href}
                       href={item.href}

@@ -56,6 +56,17 @@ export const brandItems: BrandItem[] = [
     websiteUrl: "https://wadd.cc",
     color: "#10b981",
   },
+  {
+    slug: "colussusiq",
+    name: "ColussusIQ",
+    product: "Marketing Intelligence",
+    description: "Marketing intelligence platform that turns campaign, audience, and channel data into clear, actionable insight.",
+    href: "/brands/colussusiq",
+    // TODO: replace with the real ColussusIQ logo asset when available
+    logo: "/images/brands/visualhqlogo.svg",
+    websiteUrl: "http://colussusiq.visualcns.com",
+    color: "#8b5cf6",
+  },
 ]
 
 export function getBrandItems(): BrandItem[] {
