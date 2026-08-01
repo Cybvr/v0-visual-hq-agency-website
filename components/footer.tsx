@@ -34,6 +34,21 @@ const footerGroups = [
   },
 ]
 
+const offices = [
+  {
+    country: "United States",
+    lines: ["30 N Gould St Ste R", "Sheridan, WY 82801", "USA"],
+  },
+  {
+    country: "Nigeria",
+    lines: [
+      "Plot 1 Block, Marwa Bus Stop",
+      "128 Remi Olowude St, Lekki Phase I",
+      "Lekki 105102, Lagos, Nigeria",
+    ],
+  },
+]
+
 const socialLinks = [
   { name: "X", href: "https://x.com/visualhq" },
   { name: "GH", href: "https://github.com/visualhq" },
@@ -97,6 +112,23 @@ export function Footer() {
               <span className="text-sm uppercase tracking-[0.18em]">Join -&gt;</span>
             </a>
           </div>
+        </div>
+
+        <div className="mt-16 grid gap-10 border-t border-primary-foreground/15 pt-10 md:grid-cols-4 md:gap-12">
+          {offices.map((office) => (
+            <address key={office.country} className="not-italic">
+              <h3 className="mb-5 flex items-baseline gap-2 text-sm uppercase tracking-[0.18em] text-primary-foreground">
+                <span>{office.country}</span>
+              </h3>
+              <p className="text-base leading-7 text-primary-foreground/65">
+                {office.lines.map((line) => (
+                  <span key={line} className="block">
+                    {line}
+                  </span>
+                ))}
+              </p>
+            </address>
+          ))}
         </div>
 
         <div className="mt-16 flex flex-col gap-6 border-t border-primary-foreground/15 pt-8 text-sm text-primary-foreground/55 md:flex-row md:items-center md:justify-between">
