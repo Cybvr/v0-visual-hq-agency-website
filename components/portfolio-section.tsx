@@ -14,9 +14,12 @@ const itemClass = "text-lg"
 
 interface PortfolioSectionProps {
   showHero?: boolean
+  /** Render without the page container's max-width and gutters, for use inside an already-constrained parent. */
+  inset?: boolean
 }
 
-export function PortfolioSection({ showHero = true }: PortfolioSectionProps) {
+export function PortfolioSection({ showHero = true, inset = false }: PortfolioSectionProps) {
+  const containerClass = inset ? "" : "mx-auto max-w-7xl px-4 sm:px-8 md:px-20"
   const [activeFilter, setActiveFilter] = useState("All")
   const [industryFilter, setIndustryFilter] = useState("All")
   const [locationFilter, setLocationFilter] = useState("All")
@@ -50,7 +53,7 @@ export function PortfolioSection({ showHero = true }: PortfolioSectionProps) {
     <>
       {showHero && (
         <section className="pt-30 pb-12">
-          <div className="mx-auto max-w-7xl px-4 sm:px-8 md:px-20">
+          <div className={containerClass}>
             <div className="max-w-3xl">
               <h1 className="text-sm uppercase tracking-[0.24em] text-foreground">
                 Portfolio {!loading && `(${filteredProjects.length})`}
@@ -62,7 +65,7 @@ export function PortfolioSection({ showHero = true }: PortfolioSectionProps) {
 
       {/* Filters */}
       <section className="pb-12">
-        <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-6 px-4 sm:px-8 md:px-20">
+        <div className={`flex flex-wrap items-center gap-6 ${containerClass}`}>
           <Select value={activeFilter} onValueChange={setActiveFilter}>
             <SelectTrigger className={triggerClass}>
               <h2 className="text-2xl md:text-3xl">
@@ -121,8 +124,8 @@ export function PortfolioSection({ showHero = true }: PortfolioSectionProps) {
       </section>
 
       {/* Projects Grid */}
-      <section className="pb-20">
-        <div className="mx-auto max-w-7xl px-4 sm:px-8 md:px-20">
+      <section className={inset ? "pb-4" : "pb-20"}>
+        <div className={containerClass}>
           {loading ? (
             <div className="flex items-center justify-center py-20">
               <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />

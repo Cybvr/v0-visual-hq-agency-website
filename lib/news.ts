@@ -54,7 +54,7 @@ export const newsItems: NewsItem[] = [
   },
   {
     slug: "2026-msp-salary-guide",
-    title: "2026 MSP Salary Guide",
+    title: "Bowman Williams benchmarks 2026 MSP salaries across 3,500 interviews and 3,000 roles filled",
     excerpt:
       "Salary data benchmarked from over 3,500 interviews with MSP professionals and 3,000 MSP jobs filled.",
     source: "Bowman Williams",
@@ -67,7 +67,7 @@ export const newsItems: NewsItem[] = [
   },
   {
     slug: "afrindependent-publications",
-    title: "Afrindependent Institute Publications",
+    title: "Afrindependent Institute publishes research advancing African economic sovereignty",
     excerpt:
       "Original research, essays, and frameworks advancing African intellectual and economic sovereignty through Africonomics.",
     source: "Afrindependent Institute",
