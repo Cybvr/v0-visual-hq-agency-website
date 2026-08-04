@@ -1,0 +1,97 @@
+/*
+ * VisualCNS Portfolio — section-scoped styles.
+ * Imported only by app/portfolio/layout.tsx. The site's globals.css is consumed
+ * as-is; everything here is namespaced (pf-*) so nothing leaks site-wide.
+ *
+ * The home accordion embeds PortfolioSection with `inset`, which renders the
+ * compact row list and uses none of these classes. Nothing here can reach it.
+ */
+
+/* ---------------------------------------------------------------------------
+ * Mosaic tiles
+ * Each tile is wiped in from its own bottom edge as it enters the viewport, so
+ * the wall assembles at reading pace rather than all at once on mount.
+ * Progressive enhancement: without view() support the tiles are simply there.
+ * ------------------------------------------------------------------------ */
+
+@keyframes pf-wipe {
+  from {
+    opacity: 0;
+    clip-path: inset(0 0 32% 0);
+    transform: translateY(2rem);
+  }
+  to {
+    opacity: 1;
+    clip-path: inset(0 0 0 0);
+    transform: none;
+  }
+}
+
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .pf-tile {
+      animation: pf-wipe linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 45%;
+    }
+  }
+}
+
+/* The image overshoots its frame so the hover settle has somewhere to travel. */
+.pf-shot img {
+  height: 100%;
+  width: 100%;
+  object-fit: cover;
+  transform: scale(1.04);
+  transition: transform 900ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.pf-tile:hover .pf-shot img,
+.pf-tile:focus-within .pf-shot img {
+  transform: scale(1);
+}
+
+/* ---------------------------------------------------------------------------
+ * Caption rule
+ * Draws left-to-right under the tile caption on hover, matching the index rule
+ * used on the capabilities pages.
+ * ------------------------------------------------------------------------ */
+
+.pf-rule {
+  position: relative;
+}
+
+.pf-rule::after {
+  content: "";
+  position: absolute;
+  top: -1px;
+  left: 0;
+  height: 1px;
+  width: 100%;
+  background-color: var(--accent);
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 700ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.pf-tile:hover .pf-rule::after,
+.pf-tile:focus-within .pf-rule::after {
+  transform: scaleX(1);
+}
+
+/* ---------------------------------------------------------------------------
+ * Detail hero
+ * The title block notches into the lower-left corner of the full-bleed hero.
+ * It carries its own background so the type never sits on the photograph.
+ * ------------------------------------------------------------------------ */
+
+.pf-hero-title {
+  background-color: var(--background);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pf-shot img,
+  .pf-rule::after {
+    transition-duration: 1ms;
+  }
+}
