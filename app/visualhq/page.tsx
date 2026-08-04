@@ -15,7 +15,7 @@ export default function VisualHQPage() {
               1. VisualHQ is a software and technology consulting firm.
             </AccordionTrigger>
             <AccordionContent className="text-muted-foreground">
-              Founded in Lagos, we help businesses design and build digital systems — from product strategy to production-ready software.
+              Founded in Lagos. We help businesses work out what to build, then build it and keep it running.
             </AccordionContent>
           </AccordionItem>
 
@@ -24,7 +24,7 @@ export default function VisualHQPage() {
               2. What we do
             </AccordionTrigger>
             <AccordionContent className="text-muted-foreground">
-              We work across the full stack — product design, engineering, and systems architecture. Our engagements range from early-stage builds to scaling existing platforms.
+              Product design, engineering, and systems architecture, usually all three on the same project. Some clients arrive with an idea and nothing else. Others have a platform that already works and is straining under it.
             </AccordionContent>
           </AccordionItem>
 
@@ -33,7 +33,7 @@ export default function VisualHQPage() {
               3. Why VisualHQ
             </AccordionTrigger>
             <AccordionContent className="text-muted-foreground">
-              We combine local market knowledge with international engineering standards. Every project is treated as a long-term partnership, not a transaction.
+              We know the market we work in, and we hold the same engineering standards we would anywhere else. We build for the version of the relationship that continues past launch, because that is when most of the real work shows up.
             </AccordionContent>
           </AccordionItem>
         </Accordion>

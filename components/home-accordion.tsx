@@ -9,11 +9,51 @@ import type { NewsItem } from "@/lib/news"
 
 // Matches the row styling used by PortfolioSection's project list.
 const listClass = "grid grid-cols-1 gap-y-8"
-const rowClass = "border-b border-border pb-4"
-const rowLinkClass =
-  "block text-2xl text-foreground transition-colors hover:text-accent md:text-3xl line-clamp-1"
 
 const triggerClass = "group text-left text-2xl hover:no-underline md:text-3xl"
+
+// Thumbnail + title row shared by Products, Capabilities, and News.
+function MediaRow({
+  href,
+  title,
+  image,
+  imageAlt,
+  imagePosition,
+  fit = "cover",
+}: {
+  href: string
+  title: string
+  image?: string
+  imageAlt?: string
+  imagePosition?: string
+  fit?: "cover" | "contain"
+}) {
+  return (
+    <li className="border-b border-border pb-4">
+      <Link href={href} className="block group">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center">
+          <div className="h-16 w-24 shrink-0 overflow-hidden bg-muted">
+            <img
+              src={image || "/placeholder.svg?height=300&width=480&query=visualcns"}
+              alt={imageAlt || title}
+              style={imagePosition ? { objectPosition: imagePosition } : undefined}
+              className={
+                fit === "contain"
+                  ? "h-full w-full object-contain p-3 transition-transform duration-500 group-hover:scale-105"
+                  : "h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+              }
+            />
+          </div>
+          <div className="min-w-0 flex-1">
+            <h2 className="text-2xl text-foreground transition-colors group-hover:text-accent md:text-3xl line-clamp-1">
+              {title}
+            </h2>
+          </div>
+        </div>
+      </Link>
+    </li>
+  )
+}
 
 // Right-aligned affordance: "+" when the item is closed, "−" when it is open.
 function ToggleIcon() {
@@ -41,11 +81,12 @@ export function HomeAccordion({
     <Accordion type="single" collapsible defaultValue="intro" className="w-full">
       <AccordionItem value="intro">
         <AccordionTrigger className={triggerClass}>
-          <span>1. VisualCNS builds software systems for modern businesses.</span>
+          <span>1. VisualCNS builds software systems and runs product businesses of its own.</span>
           <ToggleIcon />
         </AccordionTrigger>
         <AccordionContent className="text-muted-foreground">
-          We design and engineer digital products across ecommerce, AI tooling, and experience platforms.
+          We design and build digital products across ecommerce, AI tooling, and experience platforms. Some of it is
+          client work. Some of it is ours.
         </AccordionContent>
       </AccordionItem>
 
@@ -57,11 +98,15 @@ export function HomeAccordion({
         <AccordionContent>
           <ul className={listClass}>
             {products.map((p) => (
-              <li key={p.slug} className={rowClass}>
-                <Link href={p.href} className={rowLinkClass}>
-                  {p.name} — {p.product}
-                </Link>
-              </li>
+              <MediaRow
+                key={p.slug}
+                href={p.href}
+                title={`${p.name} — ${p.product}`}
+                image={p.screenshot || p.logo}
+                imageAlt={`${p.name} ${p.product}`}
+                // Logos need breathing room; product screenshots can fill the frame.
+                fit={p.screenshot ? "cover" : "contain"}
+              />
             ))}
           </ul>
         </AccordionContent>
@@ -75,11 +120,13 @@ export function HomeAccordion({
         <AccordionContent>
           <ul className={listClass}>
             {capabilities.map((c) => (
-              <li key={c.slug} className={rowClass}>
-                <Link href={`/capabilities/${c.slug}`} className={rowLinkClass}>
-                  {c.title}
-                </Link>
-              </li>
+              <MediaRow
+                key={c.slug}
+                href={`/capabilities/${c.slug}`}
+                title={c.title}
+                image={c.image}
+                imageAlt={c.imageAlt}
+              />
             ))}
           </ul>
         </AccordionContent>
@@ -100,27 +147,16 @@ export function HomeAccordion({
           <ToggleIcon />
         </AccordionTrigger>
         <AccordionContent>
-          <ul className="grid grid-cols-1 gap-y-8">
+          <ul className={listClass}>
             {news.map((item) => (
-              <li key={item.slug} className="border-b border-border pb-4">
-                <Link href={`/news/${item.slug}`} className="block group">
-                  <div className="flex flex-col gap-4 md:flex-row md:items-center">
-                    <div className="h-16 w-24 shrink-0 overflow-hidden bg-muted">
-                      <img
-                        src={item.image || "/placeholder.svg?height=300&width=480&query=news"}
-                        alt={item.imageAlt || item.title}
-                        style={item.imagePosition ? { objectPosition: item.imagePosition } : undefined}
-                        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                      />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <h2 className="text-2xl text-foreground transition-colors group-hover:text-accent md:text-3xl line-clamp-1">
-                        {item.title}
-                      </h2>
-                    </div>
-                  </div>
-                </Link>
-              </li>
+              <MediaRow
+                key={item.slug}
+                href={`/news/${item.slug}`}
+                title={item.title}
+                image={item.image}
+                imageAlt={item.imageAlt}
+                imagePosition={item.imagePosition}
+              />
             ))}
           </ul>
         </AccordionContent>

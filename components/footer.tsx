@@ -67,7 +67,7 @@ export function Footer() {
           </Link>
 
           <p className="max-w-md text-base leading-7 text-primary-foreground/70 md:ml-auto md:text-right md:text-xl">
-            Software systems, product businesses, and AI-enabled tools built from Lagos for modern teams.
+            We build software systems and AI tools from Lagos, and we run product businesses of our own.
           </p>
         </div>
 

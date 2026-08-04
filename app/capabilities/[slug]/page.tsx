@@ -31,6 +31,49 @@ export default async function CapabilityDetailPage({ params }: { params: Promise
           <p className="mt-12 text-sm font-semibold uppercase tracking-[0.24em] text-muted-foreground">Capability</p>
           <h1 className="mt-5 text-balance text-5xl font-semibold tracking-normal md:text-7xl">{capability.title}</h1>
           <p className="mt-8 text-xl leading-8 text-muted-foreground">{capability.description}</p>
+
+          {capability.image ? (
+            <div className="mt-12 aspect-[16/7] overflow-hidden bg-muted">
+              <img
+                src={capability.image}
+                alt={capability.imageAlt || capability.title}
+                className="h-full w-full object-cover"
+              />
+            </div>
+          ) : null}
+
+          {capability.body?.length ? (
+            <div className="mt-12 space-y-6 text-lg leading-8">
+              {capability.body.map((paragraph) => (
+                <p key={paragraph.slice(0, 40)}>{paragraph}</p>
+              ))}
+            </div>
+          ) : null}
+
+          {capability.includes?.length ? (
+            <div className="mt-16 border-t border-border pt-10">
+              <h2 className="text-sm font-semibold uppercase tracking-[0.24em] text-muted-foreground">
+                What the work usually covers
+              </h2>
+              <ul className="mt-8 grid gap-y-4">
+                {capability.includes.map((item) => (
+                  <li key={item} className="border-b border-border pb-4 text-lg leading-8">
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
+
+          <div className="mt-16 border-t border-border pt-10">
+            <p className="text-lg leading-8 text-muted-foreground">
+              If this is the kind of work you need,{" "}
+              <Link href="/contact" className="text-foreground underline underline-offset-4 hover:text-accent">
+                tell us what you are building
+              </Link>
+              .
+            </p>
+          </div>
         </div>
       </main>
       <Footer />
