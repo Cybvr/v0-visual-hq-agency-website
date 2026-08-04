@@ -7,7 +7,9 @@ import type { BrandItem } from "@/lib/brands"
 import type { Capability } from "@/lib/capabilities"
 import type { NewsItem } from "@/lib/news"
 
-// Matches the row styling used by PortfolioSection's project list.
+// Shared by the Products, Capabilities, and News lists. Portfolio deliberately
+// breaks the pattern: it renders PortfolioSection's mosaic so the work itself
+// carries that section rather than another row of thumbnails.
 const listClass = "grid grid-cols-1 gap-y-8"
 
 const triggerClass = "group text-left text-2xl hover:no-underline md:text-3xl"

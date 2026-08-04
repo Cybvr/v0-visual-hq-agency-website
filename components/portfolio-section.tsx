@@ -6,6 +6,8 @@ import { Loader2 } from "lucide-react"
 import { getPortfolioProjects, type PortfolioProject } from "@/lib/portfolio"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
+import "./portfolio.css"
+
 const triggerClass =
   "w-fit gap-1 border-0 bg-transparent p-0 h-auto shadow-none focus-visible:ring-0 text-foreground [&>svg]:size-5 [&>svg]:opacity-100"
 const contentClass =
@@ -18,12 +20,15 @@ const PLACEHOLDER = "/placeholder.svg?height=900&width=1200&query=project"
  * The mosaic repeats every four tiles. Spans are chosen so each pair tiles a
  * 12-column row: 7+4 on the first row, 5+6 indented on the second. The offsets
  * are positive only, so a short tile never overlaps the row above it.
+ *
+ * `insetLift` is the same rhythm at reduced amplitude, for the narrower column
+ * inside the home accordion where the full offsets read as dead space.
  */
 const TILE_PATTERN = [
-  { span: "md:col-span-7 md:col-start-1", ratio: "md:aspect-[4/3]", lift: "" },
-  { span: "md:col-span-4 md:col-start-9", ratio: "md:aspect-[3/4]", lift: "md:mt-28" },
-  { span: "md:col-span-5 md:col-start-2", ratio: "md:aspect-[1/1]", lift: "md:mt-16" },
-  { span: "md:col-span-6 md:col-start-7", ratio: "md:aspect-[16/11]", lift: "" },
+  { span: "md:col-span-7 md:col-start-1", ratio: "md:aspect-[4/3]", lift: "", insetLift: "" },
+  { span: "md:col-span-4 md:col-start-9", ratio: "md:aspect-[3/4]", lift: "md:mt-28", insetLift: "md:mt-16" },
+  { span: "md:col-span-5 md:col-start-2", ratio: "md:aspect-[1/1]", lift: "md:mt-16", insetLift: "md:mt-10" },
+  { span: "md:col-span-6 md:col-start-7", ratio: "md:aspect-[16/11]", lift: "", insetLift: "" },
 ]
 
 interface PortfolioSectionProps {
@@ -36,44 +41,20 @@ function metaLine(project: PortfolioProject) {
   return [project.category?.join(" & "), project.location].filter(Boolean).join(" · ")
 }
 
-/** Compact rows, matching the other sections of the home accordion. */
-function ProjectRows({ projects }: { projects: PortfolioProject[] }) {
+/** The gallery wall. The work leads on /portfolio and in the home accordion alike. */
+function ProjectMosaic({ projects, compact = false }: { projects: PortfolioProject[]; compact?: boolean }) {
   return (
-    <ul className="grid grid-cols-1 gap-y-8">
-      {projects.map((project) => (
-        <li key={project.id} className="border-b border-border pb-4">
-          <Link href={`/portfolio/${project.slug}`} className="block group">
-            <div className="flex flex-col md:flex-row gap-4 md:items-center">
-              <div className="w-24 h-16 bg-muted overflow-hidden shrink-0">
-                <img
-                  src={project.imageUrl || PLACEHOLDER}
-                  alt=""
-                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                />
-              </div>
-              <div className="flex-1 min-w-0">
-                <h2 className="text-2xl text-foreground group-hover:text-accent transition-colors md:text-3xl line-clamp-1">
-                  {project.title}
-                </h2>
-              </div>
-            </div>
-          </Link>
-        </li>
-      ))}
-    </ul>
-  )
-}
-
-/** The gallery wall used on /portfolio, where the work leads. */
-function ProjectMosaic({ projects }: { projects: PortfolioProject[] }) {
-  return (
-    <ul className="grid grid-cols-1 gap-x-8 gap-y-16 md:grid-cols-12 md:gap-x-10 md:gap-y-10">
+    <ul
+      className={`grid grid-cols-1 md:grid-cols-12 ${
+        compact ? "gap-x-6 gap-y-12 md:gap-x-8 md:gap-y-8" : "gap-x-8 gap-y-16 md:gap-x-10 md:gap-y-10"
+      }`}
+    >
       {projects.map((project, index) => {
         const tile = TILE_PATTERN[index % TILE_PATTERN.length]
         const meta = metaLine(project)
 
         return (
-          <li key={project.id} className={`pf-tile ${tile.span} ${tile.lift}`}>
+          <li key={project.id} className={`pf-tile ${tile.span} ${compact ? tile.insetLift : tile.lift}`}>
             <Link href={`/portfolio/${project.slug}`} className="group block outline-none">
               <figure>
                 <div className={`pf-shot aspect-[4/3] overflow-hidden bg-muted ${tile.ratio}`}>
@@ -225,10 +206,8 @@ export function PortfolioSection({ showHero = true, inset = false }: PortfolioSe
             <p className="py-20 text-center text-muted-foreground">
               No projects match these filters yet. Try widening one of them.
             </p>
-          ) : inset ? (
-            <ProjectRows projects={filteredProjects} />
           ) : (
-            <ProjectMosaic projects={filteredProjects} />
+            <ProjectMosaic projects={filteredProjects} compact={inset} />
           )}
         </div>
       </section>

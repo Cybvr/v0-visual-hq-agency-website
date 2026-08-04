@@ -1,10 +1,12 @@
 /*
- * VisualCNS Portfolio — section-scoped styles.
- * Imported only by app/portfolio/layout.tsx. The site's globals.css is consumed
- * as-is; everything here is namespaced (pf-*) so nothing leaks site-wide.
+ * VisualCNS Portfolio — component-scoped styles.
+ * Lives beside portfolio-section.tsx because the mosaic now renders in two
+ * places: the /portfolio index and the Portfolio slot of the home accordion.
+ * portfolio-section.tsx imports this directly so the styles travel with the
+ * component; app/portfolio/layout.tsx imports it as well for the detail route,
+ * which renders the same tiles without going through the component.
  *
- * The home accordion embeds PortfolioSection with `inset`, which renders the
- * compact row list and uses none of these classes. Nothing here can reach it.
+ * Everything is namespaced (pf-*). The site's globals.css is consumed as-is.
  */
 
 /* ---------------------------------------------------------------------------
