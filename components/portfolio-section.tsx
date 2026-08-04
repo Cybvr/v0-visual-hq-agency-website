@@ -132,7 +132,9 @@ export function PortfolioSection({ showHero = true, inset = false, limit }: Port
         <section className="pt-30 pb-12">
           <div className={containerClass}>
             <div className="max-w-3xl">
-              <h1 className="text-sm uppercase tracking-[0.24em] text-foreground">Portfolio</h1>
+              <h1 className="text-sm uppercase tracking-[0.24em] text-foreground">
+                Portfolio {!loading && `(${filteredProjects.length})`}
+              </h1>
             </div>
           </div>
         </section>
@@ -211,6 +213,13 @@ export function PortfolioSection({ showHero = true, inset = false, limit }: Port
             </p>
           ) : (
             <>
+              {/* The hero heading carries the count on /portfolio; inset has no heading, so it carries its own. */}
+              {limit && (
+                <p className="mb-8 font-mono text-[0.6875rem] uppercase tracking-[0.24em] text-muted-foreground">
+                  Showing {visibleProjects.length} of {filteredProjects.length} projects
+                </p>
+              )}
+
               <ProjectMosaic projects={visibleProjects} compact={inset} />
 
               {hasMore && (
@@ -219,7 +228,7 @@ export function PortfolioSection({ showHero = true, inset = false, limit }: Port
                     href="/portfolio"
                     className="group inline-flex items-center gap-3 font-mono text-[0.6875rem] uppercase tracking-[0.24em] text-muted-foreground transition-colors hover:text-accent"
                   >
-                    View more
+                    View all {filteredProjects.length} projects
                     <ArrowRight className="size-3.5 transition-transform duration-500 ease-out group-hover:translate-x-1 motion-reduce:transition-none" />
                   </Link>
                 </div>
