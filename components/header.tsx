@@ -1,12 +1,14 @@
 "use client"
 
 import Link from "next/link"
-import { useState } from "react"
-import { ChevronDown, Menu, X } from "lucide-react"
+import { usePathname } from "next/navigation"
+import { useEffect, useRef, useState, type CSSProperties } from "react"
+import { ArrowUpRight, Menu, X } from "lucide-react"
 import { BrandLockup } from "@/components/brand-lockup"
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { Button } from "@/components/ui/button"
 import { getBrandItems } from "@/lib/brands"
+
+import "./header.css"
 
 const brands = getBrandItems()
 
@@ -21,196 +23,182 @@ const consultingNavItems = [
   { name: "Industries", href: "/industries", description: "See the markets VisualHQ builds for." },
 ]
 
-const secondaryNavigation = [
-  { name: "Pricing", href: "/pricing" },
-  { name: "Careers", href: "https://pasive.co/jobs" },
-  { name: "News", href: "/news" },
-]
-
 const bookNowHref = "/contact"
 
-function DesktopHoverMenu({
-  label,
-  items,
-  isOpen,
-  onOpen,
-  onClose,
-  columns = 1,
-}: {
-  label: string
-  items: Array<{ name: string; href: string; description: string }>
-  isOpen: boolean
-  onOpen: () => void
-  onClose: () => void
-  columns?: 1 | 2
-}) {
-  return (
-    <div className="relative" onMouseEnter={onOpen} onMouseLeave={onClose}>
-      <button
-        type="button"
-        className="inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-[0.18em] text-foreground outline-none transition-colors hover:text-accent focus-visible:text-accent"
-      >
-        {label}
-        <ChevronDown className="size-3" />
-      </button>
-      {isOpen && (
-        <div className={`absolute left-0 top-full z-50 pt-4 ${columns === 2 ? "w-[34rem]" : "w-64"}`}>
-          <div
-            className={`rounded-2xl border border-border bg-background p-2 text-left text-foreground shadow-lg ${
-              columns === 2 ? "grid grid-cols-2 gap-1" : ""
-            }`}
-          >
-            {items.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className="flex flex-col items-start gap-1 rounded-xl px-3 py-2 text-left text-sm outline-none transition-colors hover:bg-accent/15 focus:bg-accent/15"
-              >
-                <h3 className="text-sm">{item.name}</h3>
-                <span className="text-xs leading-5 text-muted-foreground">{item.description}</span>
-              </Link>
-            ))}
-          </div>
-        </div>
-      )}
-    </div>
-  )
-}
+type IndexRow =
+  | { number: string; title: string; items: Array<{ name: string; href: string }>; href?: never }
+  | { number: string; title: string; href: string; items?: never }
+
+/** Same destinations the hover menus carried, reorganised as a single numbered index. */
+const INDEX_ROWS: IndexRow[] = [
+  { number: "01", title: "Software", items: productNavItems },
+  { number: "02", title: "Consulting", items: consultingNavItems },
+  { number: "03", title: "Pricing", href: "/pricing" },
+  { number: "04", title: "News", href: "/news" },
+  { number: "05", title: "Careers", href: "https://pasive.co/jobs" },
+  { number: "06", title: "Sign In", href: "/auth/login" },
+]
+
+const MONO_LABEL = "font-mono text-[0.6875rem] uppercase tracking-[0.24em]"
 
 export function Header() {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const [productsOpen, setProductsOpen] = useState(false)
-  const [consultingOpen, setConsultingOpen] = useState(false)
+  const [open, setOpen] = useState(false)
+  const headerRef = useRef<HTMLElement>(null)
+  const pathname = usePathname()
+
+  // Any navigation dismisses the index.
+  useEffect(() => {
+    setOpen(false)
+  }, [pathname])
+
+  useEffect(() => {
+    if (!open) return
+    const root = headerRef.current
+    if (!root) return
+
+    const previouslyFocused = document.activeElement as HTMLElement | null
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = "hidden"
+
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setOpen(false)
+        return
+      }
+      if (event.key !== "Tab" || !root) return
+
+      // Focus stays inside the header while the index owns the viewport.
+      const focusables = Array.from(
+        root.querySelectorAll<HTMLElement>('a[href], button:not([disabled])'),
+      ).filter((node) => node.offsetParent !== null)
+      if (focusables.length === 0) return
+
+      const first = focusables[0]
+      const last = focusables[focusables.length - 1]
+
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault()
+        last.focus()
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault()
+        first.focus()
+      }
+    }
+
+    document.addEventListener("keydown", onKeyDown)
+    return () => {
+      document.removeEventListener("keydown", onKeyDown)
+      document.body.style.overflow = previousOverflow
+      previouslyFocused?.focus()
+    }
+  }, [open])
+
+  const isCurrent = (href: string) => pathname === href || pathname.startsWith(`${href}/`)
 
   return (
-    <header className="fixed left-0 right-0 top-0 z-50 border-b border-border/70 bg-background/90 backdrop-blur-md">
-      <nav className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4 md:py-5">
-        <div className="hidden items-center gap-8 md:flex">
-          <Link href="/" aria-label="VisualHQ home">
+    // When the index is open the header owns the viewport, so the panel can be a
+    // flex child instead of chasing the bar's height with a hard-coded offset.
+    <header ref={headerRef} className={`fixed inset-x-0 top-0 z-50 flex flex-col ${open ? "bottom-0" : ""}`}>
+      <div className="shrink-0 border-b border-border bg-background/90 backdrop-blur-md">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-8 md:px-20 md:py-5">
+          <Link href="/" aria-label="VisualCNS home">
             <BrandLockup logoSize={28} gapClassName="gap-1" />
           </Link>
 
-          <div className="flex items-center gap-5">
-            <DesktopHoverMenu
-              label="Software"
-              items={productNavItems}
-              isOpen={productsOpen}
-              onOpen={() => setProductsOpen(true)}
-              onClose={() => setProductsOpen(false)}
-              columns={2}
-            />
-            <DesktopHoverMenu
-              label="Consulting"
-              items={consultingNavItems}
-              isOpen={consultingOpen}
-              onOpen={() => setConsultingOpen(true)}
-              onClose={() => setConsultingOpen(false)}
-            />
-            {secondaryNavigation.map((item) => (
-              <Link
-                key={item.name}
-                href={item.href}
-                className="text-xs font-semibold uppercase tracking-[0.18em] text-foreground transition-colors hover:text-accent"
-              >
-                {item.name}
-              </Link>
-            ))}
+          <div className="flex items-center gap-3 md:gap-6">
+            <Button asChild className={`hidden px-5 sm:inline-flex ${MONO_LABEL}`}>
+              <Link href={bookNowHref}>Book Now</Link>
+            </Button>
+
+            <button
+              type="button"
+              onClick={() => setOpen((value) => !value)}
+              aria-expanded={open}
+              aria-controls="site-index"
+              className={`group flex items-center gap-2 text-foreground outline-none transition-colors hover:text-accent focus-visible:text-accent ${MONO_LABEL}`}
+            >
+              {open ? "Close" : "Index"}
+              {open ? <X className="size-4" /> : <Menu className="size-4" />}
+            </button>
           </div>
         </div>
+      </div>
 
-        <div className="hidden items-center gap-2 md:flex">
-          <Button
-            asChild
-            variant="ghost"
-            className="rounded-full px-5 text-xs font-semibold uppercase tracking-[0.18em]"
-          >
-            <Link href="/auth/login">Sign In</Link>
-          </Button>
-          <Button asChild className="rounded-full px-5 text-xs font-semibold uppercase tracking-[0.18em]">
-            <Link href={bookNowHref}>Book Now</Link>
-          </Button>
-        </div>
-
-        <Link href="/" aria-label="VisualHQ home" className="flex min-h-10 items-center md:hidden">
-          <BrandLockup logoSize={24} gapClassName="gap-1" />
-        </Link>
-        <button
-          className="flex size-10 items-center justify-center rounded-full md:hidden"
-          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          aria-label="Toggle menu"
-          aria-expanded={mobileMenuOpen}
+      {open && (
+        <div
+          id="site-index"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Site index"
+          className="hdr-panel min-h-0 flex-1 overflow-y-auto bg-background"
         >
-          {mobileMenuOpen ? <X className="size-6" /> : <Menu className="size-6" />}
-        </button>
-      </nav>
+          <div className="mx-auto max-w-7xl px-4 pb-20 pt-6 sm:px-8 md:px-20 md:pt-10">
+            <ul>
+              {INDEX_ROWS.map((row, rowIndex) => (
+                <li
+                  key={row.number}
+                  className="hdr-row border-t border-border"
+                  style={{ "--i": rowIndex } as CSSProperties}
+                >
+                  {row.href ? (
+                    <Link
+                      href={row.href}
+                      onClick={() => setOpen(false)}
+                      aria-current={isCurrent(row.href) ? "page" : undefined}
+                      className="group grid grid-cols-[2.5rem_minmax(0,1fr)_1.5rem] items-baseline gap-x-4 py-6 outline-none md:grid-cols-[4rem_minmax(0,1fr)_2rem] md:gap-x-10 md:py-8"
+                    >
+                      <span
+                        className={`font-mono text-xs tabular-nums transition-colors group-hover:text-accent ${
+                          isCurrent(row.href) ? "text-accent" : "text-muted-foreground"
+                        }`}
+                      >
+                        {row.number}
+                      </span>
+                      <span className="text-3xl tracking-[-0.02em] text-foreground transition-colors group-hover:text-accent md:text-5xl">
+                        {row.title}
+                      </span>
+                      <ArrowUpRight className="size-5 justify-self-end text-muted-foreground transition-[transform,color] duration-500 ease-out group-hover:-translate-y-1 group-hover:translate-x-1 group-hover:text-accent motion-reduce:transition-none" />
+                    </Link>
+                  ) : (
+                    <div className="grid grid-cols-[2.5rem_minmax(0,1fr)] items-baseline gap-x-4 gap-y-4 py-6 md:grid-cols-[4rem_minmax(0,20rem)_minmax(0,1fr)] md:gap-x-10 md:py-8">
+                      <span className="col-start-1 row-start-1 font-mono text-xs tabular-nums text-muted-foreground">
+                        {row.number}
+                      </span>
+                      <span className="col-start-2 row-start-1 text-3xl tracking-[-0.02em] text-foreground md:text-5xl">
+                        {row.title}
+                      </span>
+                      <ul className="col-start-2 row-start-2 flex flex-wrap gap-x-6 gap-y-3 md:col-start-3 md:row-start-1 md:justify-end">
+                        {row.items.map((item) => (
+                          <li key={item.href}>
+                            <Link
+                              href={item.href}
+                              onClick={() => setOpen(false)}
+                              aria-current={isCurrent(item.href) ? "page" : undefined}
+                              className={`transition-colors hover:text-accent ${MONO_LABEL} ${
+                                isCurrent(item.href) ? "text-accent" : "text-muted-foreground"
+                              }`}
+                            >
+                              {item.name}
+                            </Link>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </li>
+              ))}
+            </ul>
 
-      {mobileMenuOpen && (
-        <div className="border-b border-border bg-background md:hidden">
-          <nav className="flex flex-col gap-1 px-6 pb-6">
-            <Accordion type="single" collapsible className="w-full">
-              <AccordionItem value="products" className="border-border/70">
-                <AccordionTrigger className="py-3 text-sm font-semibold uppercase tracking-[0.18em] text-foreground">
-                  Software
-                </AccordionTrigger>
-                <AccordionContent className="grid grid-cols-2 gap-1 pb-3">
-                  {productNavItems.map((item) => (
-                    <Link
-                      key={item.href}
-                      href={item.href}
-                      className="flex flex-col items-start gap-1 rounded-xl px-3 py-2 text-left text-sm transition-colors hover:bg-accent/15"
-                      onClick={() => setMobileMenuOpen(false)}
-                    >
-                      <h3 className="text-sm">{item.name}</h3>
-                      <span className="text-xs leading-5 text-muted-foreground">{item.description}</span>
-                    </Link>
-                  ))}
-                </AccordionContent>
-              </AccordionItem>
-              <AccordionItem value="consulting" className="border-border/70">
-                <AccordionTrigger className="py-3 text-sm font-semibold uppercase tracking-[0.18em] text-foreground">
-                  Consulting
-                </AccordionTrigger>
-                <AccordionContent className="grid gap-1 pb-3">
-                  {consultingNavItems.map((item) => (
-                    <Link
-                      key={item.href}
-                      href={item.href}
-                      className="flex flex-col items-start gap-1 rounded-xl px-3 py-2 text-left text-sm transition-colors hover:bg-accent/15"
-                      onClick={() => setMobileMenuOpen(false)}
-                    >
-                      <h3 className="text-sm">{item.name}</h3>
-                      <span className="text-xs leading-5 text-muted-foreground">{item.description}</span>
-                    </Link>
-                  ))}
-                </AccordionContent>
-              </AccordionItem>
-            </Accordion>
-            {secondaryNavigation.map((item) => (
-              <Link
-                key={item.name}
-                href={item.href}
-                className="py-3 text-sm font-semibold uppercase tracking-[0.18em] text-foreground"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                {item.name}
-              </Link>
-            ))}
-            <Link
-              href="/auth/login"
-              className="py-3 text-sm font-semibold uppercase tracking-[0.18em] text-foreground"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              Sign In
-            </Link>
-            <Button asChild className="mt-3 rounded-full text-sm font-semibold uppercase tracking-[0.18em]">
-              <Link href={bookNowHref} onClick={() => setMobileMenuOpen(false)}>
-                Book Now
-              </Link>
-            </Button>
-          </nav>
+            <div className="mt-10 border-t border-border pt-8 sm:hidden">
+              <Button asChild className={`w-full px-5 ${MONO_LABEL}`}>
+                <Link href={bookNowHref} onClick={() => setOpen(false)}>
+                  Book Now
+                </Link>
+              </Button>
+            </div>
+          </div>
         </div>
       )}
     </header>
   )
 }
-

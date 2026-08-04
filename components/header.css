@@ -1,0 +1,74 @@
+/*
+ * VisualCNS Header — component-scoped styles.
+ * Imported by header.tsx so the styles travel with the component onto every
+ * route. Namespaced (hdr-*); the site's globals.css is consumed as-is.
+ */
+
+.hdr-panel {
+  animation: hdr-panel-in 260ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes hdr-panel-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/*
+ * The index assembles top-down. --i is the row's position, set inline, so the
+ * stagger stays in CSS rather than becoming per-row inline transition state.
+ */
+@keyframes hdr-row-in {
+  from {
+    opacity: 0;
+    transform: translateY(1.5rem);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .hdr-row {
+    animation: hdr-row-in 640ms cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation-delay: calc(var(--i, 0) * 45ms);
+  }
+}
+
+/* Accent rule draws across the row's own top hairline, as on the other indexes. */
+.hdr-row {
+  position: relative;
+}
+
+.hdr-row::after {
+  content: "";
+  position: absolute;
+  top: -1px;
+  left: 0;
+  height: 1px;
+  width: 100%;
+  background-color: var(--accent);
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 700ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.hdr-row:hover::after,
+.hdr-row:focus-within::after {
+  transform: scaleX(1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hdr-panel,
+  .hdr-row {
+    animation: none;
+  }
+
+  .hdr-row::after {
+    transition-duration: 1ms;
+  }
+}
