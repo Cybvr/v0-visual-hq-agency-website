@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
-import { Loader2 } from "lucide-react"
+import { ArrowRight, Loader2 } from "lucide-react"
 import { getPortfolioProjects, type PortfolioProject } from "@/lib/portfolio"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
@@ -35,6 +35,8 @@ interface PortfolioSectionProps {
   showHero?: boolean
   /** Render without the page container's max-width and gutters, for use inside an already-constrained parent. */
   inset?: boolean
+  /** Cap the number of tiles and offer a link through to the full index. Omit to show everything. */
+  limit?: number
 }
 
 function metaLine(project: PortfolioProject) {
@@ -90,7 +92,7 @@ function ProjectMosaic({ projects, compact = false }: { projects: PortfolioProje
   )
 }
 
-export function PortfolioSection({ showHero = true, inset = false }: PortfolioSectionProps) {
+export function PortfolioSection({ showHero = true, inset = false, limit }: PortfolioSectionProps) {
   const containerClass = inset ? "" : "mx-auto max-w-7xl px-4 sm:px-8 md:px-20"
   const [activeFilter, setActiveFilter] = useState("All")
   const [industryFilter, setIndustryFilter] = useState("All")
@@ -121,15 +123,16 @@ export function PortfolioSection({ showHero = true, inset = false }: PortfolioSe
     .filter((p) => industryFilter === "All" || p.industry === industryFilter)
     .filter((p) => locationFilter === "All" || p.location === locationFilter)
 
+  const visibleProjects = limit ? filteredProjects.slice(0, limit) : filteredProjects
+  const hasMore = Boolean(limit) && filteredProjects.length > visibleProjects.length
+
   return (
     <>
       {showHero && (
         <section className="pt-30 pb-12">
           <div className={containerClass}>
             <div className="max-w-3xl">
-              <h1 className="text-sm uppercase tracking-[0.24em] text-foreground">
-                Portfolio {!loading && `(${filteredProjects.length})`}
-              </h1>
+              <h1 className="text-sm uppercase tracking-[0.24em] text-foreground">Portfolio</h1>
             </div>
           </div>
         </section>
@@ -207,7 +210,21 @@ export function PortfolioSection({ showHero = true, inset = false }: PortfolioSe
               No projects match these filters yet. Try widening one of them.
             </p>
           ) : (
-            <ProjectMosaic projects={filteredProjects} compact={inset} />
+            <>
+              <ProjectMosaic projects={visibleProjects} compact={inset} />
+
+              {hasMore && (
+                <div className="mt-12 border-t border-border pt-6">
+                  <Link
+                    href="/portfolio"
+                    className="group inline-flex items-center gap-3 font-mono text-[0.6875rem] uppercase tracking-[0.24em] text-muted-foreground transition-colors hover:text-accent"
+                  >
+                    View more
+                    <ArrowRight className="size-3.5 transition-transform duration-500 ease-out group-hover:translate-x-1 motion-reduce:transition-none" />
+                  </Link>
+                </div>
+              )}
+            </>
           )}
         </div>
       </section>

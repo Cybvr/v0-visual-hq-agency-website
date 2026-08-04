@@ -139,7 +139,7 @@ export function HomeAccordion({
           <ToggleIcon />
         </AccordionTrigger>
         <AccordionContent>
-          <PortfolioSection showHero={false} inset />
+          <PortfolioSection showHero={false} inset limit={6} />
         </AccordionContent>
       </AccordionItem>
 
