@@ -1,0 +1,131 @@
+/*
+ * VisualCNS Capabilities — section-scoped styles.
+ * Imported only by app/capabilities/layout.tsx. The site's globals.css is
+ * consumed as-is; everything here is namespaced (cap-*) so nothing leaks
+ * site-wide. Motion follows the site's existing restraint: one authored
+ * moment per surface, and nothing that moves without prefers-reduced-motion.
+ */
+
+/* ---------------------------------------------------------------------------
+ * Index rows
+ * The hairline above each row is the row's own top border. On hover an accent
+ * rule draws across it from the left, so the list reads as an index being
+ * ticked rather than a set of buttons lighting up.
+ * ------------------------------------------------------------------------ */
+
+.cap-row {
+  position: relative;
+}
+
+.cap-row::after {
+  content: "";
+  position: absolute;
+  top: -1px;
+  left: 0;
+  height: 1px;
+  width: 100%;
+  background-color: var(--accent);
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 700ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.cap-row:hover::after,
+.cap-row:focus-within::after {
+  transform: scaleX(1);
+}
+
+/* The final row closes the index with a hairline of its own. */
+.cap-list > li:last-child .cap-row {
+  border-bottom: 1px solid var(--border);
+}
+
+/* ---------------------------------------------------------------------------
+ * Cursor peek
+ * A single fixed frame holds every capability image stacked, so switching rows
+ * never waits on a network round trip. JS drives only the outer translate; the
+ * reveal itself stays in CSS.
+ * ------------------------------------------------------------------------ */
+
+.cap-peek {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 40;
+  pointer-events: none;
+  will-change: transform;
+}
+
+.cap-peek-inner {
+  --cap-tilt: 0deg;
+  position: relative;
+  width: 22rem;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  background-color: var(--muted);
+  opacity: 0;
+  filter: blur(10px);
+  transform: translate(-50%, -50%) scale(0.92) rotate(var(--cap-tilt));
+  transition:
+    opacity 480ms cubic-bezier(0.16, 1, 0.3, 1),
+    filter 480ms cubic-bezier(0.16, 1, 0.3, 1),
+    transform 480ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.cap-peek[data-active="true"] .cap-peek-inner {
+  opacity: 1;
+  filter: blur(0);
+  transform: translate(-50%, -50%) scale(1) rotate(var(--cap-tilt));
+}
+
+.cap-peek-frame {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 320ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.cap-peek-frame[data-shown="true"] {
+  opacity: 1;
+}
+
+.cap-peek-frame img {
+  height: 100%;
+  width: 100%;
+  object-fit: cover;
+}
+
+/* ---------------------------------------------------------------------------
+ * Detail page — "what the work covers"
+ * Scroll-driven so each line arrives as it is read. Progressive enhancement:
+ * without view() support the list is simply already in its final state.
+ * ------------------------------------------------------------------------ */
+
+@keyframes cap-rise {
+  from {
+    opacity: 0;
+    transform: translateY(1.5rem);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .cap-cover {
+      animation: cap-rise linear both;
+      animation-timeline: view();
+      animation-range: entry 5% entry 55%;
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cap-row::after,
+  .cap-peek-inner,
+  .cap-peek-frame {
+    transition-duration: 1ms;
+  }
+}
