@@ -43,9 +43,9 @@ export default function ContactPage() {
             <div>
               <div className="bg-secondary p-8 rounded-lg mb-8">
                 <h3 className="font-semibold text-lg mb-4">Prefer email?</h3>
-                <a href="mailto:hello@pasive.co" className="flex items-center gap-3 text-foreground hover:underline">
+                <a href="mailto:info@visualcns.com" className="flex items-center gap-3 text-foreground hover:underline">
                   <Mail className="w-5 h-5" />
-                  hello@pasive.co
+                  info@visualcns.com
                 </a>
               </div>
               <div className="bg-secondary p-8 rounded-lg mb-8">
