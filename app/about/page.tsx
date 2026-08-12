@@ -102,7 +102,7 @@ export default function AboutPage() {
 
       {/* Team Section */}
       <section className="py-20 px-6 bg-secondary">
-        <div className="max-w-7xl mx-auto">
+        <div className="max-w-5xl mx-auto">
           <div className="mb-12">
             <p className="text-sm font-medium text-muted-foreground mb-2">Our Team</p>
             <h2 className="font-serif text-3xl md:text-4xl font-bold">The people behind the work</h2>

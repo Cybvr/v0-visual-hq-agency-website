@@ -17,7 +17,7 @@ export const teamMembers: TeamMember[] = [
   {
     name: "Musa Asuku",
     role: "Design Director",
-    image: "/professional-african-man-developer-portrait.jpg",
+    image: "/team/musa-asuku.png",
     description:
       "Musa is an expert in design, concept development, and art direction, bringing a unique perspective to every project. He has developed impactful brand identities for prominent companies, including ASCON Oil, Oando, TecnoOil, Seplat Energy, ARM Pension, and the FirstBank 120th Anniversary. His portfolio features collaborations with major brands across sectors, such as UAC, MTN, Zain, TEENSMATA (a USAID initiative), UNICEF, Oando, Dangote, Sterling Bank, Nigeria Breweries (Strongbow), and Honeywell Group.",
   },
