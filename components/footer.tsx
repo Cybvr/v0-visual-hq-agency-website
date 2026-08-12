@@ -62,9 +62,12 @@ export function Footer() {
     <footer className="bg-foreground text-primary-foreground">
       <div className="mx-auto max-w-7xl px-6 py-16 md:py-20">
         <div className="grid gap-8 md:grid-cols-[1fr_420px] md:items-end">
-          <Link href="/" className="group inline-flex items-center gap-4" aria-label="VisualCNS home">
-            <BrandLockup invert logoSize={52} gapClassName="gap-1.5" wordmarkScale={0.98} />
-          </Link>
+          <div className="flex flex-col gap-3">
+            <Link href="/" className="group inline-flex items-center gap-4" aria-label="VisualCNS home">
+              <BrandLockup invert logoSize={52} gapClassName="gap-1.5" wordmarkScale={0.98} />
+            </Link>
+            <p className="text-lg font-medium tracking-tight text-primary-foreground md:text-xl">Dream.Execute</p>
+          </div>
 
           <p className="max-w-md text-base leading-7 text-primary-foreground/70 md:ml-auto md:text-right md:text-xl">
             We build software systems and AI tools from Lagos, and we run product businesses of our own.

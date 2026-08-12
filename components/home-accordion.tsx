@@ -83,7 +83,7 @@ export function HomeAccordion({
     <Accordion type="single" collapsible defaultValue="intro" className="w-full">
       <AccordionItem value="intro">
         <AccordionTrigger className={triggerClass}>
-          <span>1. VisualCNS builds software systems and runs product businesses of its own.</span>
+          <span>1. Dream.Execute</span>
           <ToggleIcon />
         </AccordionTrigger>
         <AccordionContent className="text-muted-foreground">
@@ -92,9 +92,19 @@ export function HomeAccordion({
         </AccordionContent>
       </AccordionItem>
 
+      <AccordionItem value="portfolio">
+        <AccordionTrigger className={triggerClass}>
+          <span>2. Portfolio</span>
+          <ToggleIcon />
+        </AccordionTrigger>
+        <AccordionContent>
+          <PortfolioSection showHero={false} inset limit={6} />
+        </AccordionContent>
+      </AccordionItem>
+
       <AccordionItem value="products">
         <AccordionTrigger className={triggerClass}>
-          <span>2. Products</span>
+          <span>3. Products</span>
           <ToggleIcon />
         </AccordionTrigger>
         <AccordionContent>
@@ -116,7 +126,7 @@ export function HomeAccordion({
 
       <AccordionItem value="capabilities">
         <AccordionTrigger className={triggerClass}>
-          <span>3. Capabilities</span>
+          <span>4. Capabilities</span>
           <ToggleIcon />
         </AccordionTrigger>
         <AccordionContent>
@@ -131,15 +141,6 @@ export function HomeAccordion({
               />
             ))}
           </ul>
-        </AccordionContent>
-      </AccordionItem>
-      <AccordionItem value="portfolio">
-        <AccordionTrigger className={triggerClass}>
-          <span>4. Portfolio</span>
-          <ToggleIcon />
-        </AccordionTrigger>
-        <AccordionContent>
-          <PortfolioSection showHero={false} inset limit={6} />
         </AccordionContent>
       </AccordionItem>
 
