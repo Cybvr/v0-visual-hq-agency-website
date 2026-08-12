@@ -18,6 +18,7 @@ const productNavItems = brands
 
 const consultingNavItems = [
   { name: "VisualHQ", href: "/visualhq", description: "Who we are and what we do." },
+  { name: "About", href: "/about", description: "Our story, values, and team." },
   { name: "Portfolio", href: "/portfolio", description: "Explore our work and client projects." },
   { name: "Capabilities", href: "/capabilities", description: "Browse every VisualHQ capability." },
   { name: "Industries", href: "/industries", description: "See the markets VisualHQ builds for." },
