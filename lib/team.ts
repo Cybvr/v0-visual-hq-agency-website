@@ -10,7 +10,7 @@ export const teamMembers: TeamMember[] = [
   {
     name: "Jide Pinheiro",
     role: "CEO, Founder",
-    image: "/professional-african-man-portrait.png",
+    image: "/team/jide-pinheiro.png",
     description:
       "Products are stories of people's experiences, and this perspective drives Jide's approach to finding solutions through design, storytelling, software development, and architecture. With over 10 years of experience, he has crafted digital products for B2B and B2C markets that are accessible, intuitive, and friendly. Asides founding Visual Africa, Jide's brand design and communications portfolio includes over 20 high-profile brands, such as MTN, FirstBank, Wema Bank, Stanbic IBTC, Nigerian Breweries, CocaCola, LVMH, LG, Honeywell Group, Henkel, and Mixta Africa.",
   },
@@ -24,7 +24,7 @@ export const teamMembers: TeamMember[] = [
   {
     name: "Muna Anazodo",
     role: "Director, Strategy",
-    image: "/professional-african-woman.png",
+    image: "/team/muna-anazodo.jpg",
     description:
       "Muna has years of experience in research, strategy, business development, project management, communications and social marketing. She has developed communications and corporate social responsibility strategy for various companies and organisations including UNICEF, Access Bank, Oando, NNPC, the Ministry of Finance, Purple/Voices4Change, Springster/Girl Effect and Wapic Insurance. Her interest in social development in the context of everyday realities has defined her career to date.",
   },
@@ -45,7 +45,7 @@ export const teamMembers: TeamMember[] = [
   {
     name: "Kola Olatunji",
     role: "Founder, DÚDÚ Creatives",
-    image: "/placeholder.svg",
+    image: "/team/kola-olatunji.jpg",
     description:
       "Kola is a Pan-African creative strategist, filmmaker, and communications leader. As the founder of DÚDÚ Creatives, he leads film, video production, brand consulting, and cultural programming that brings African stories and music communities to life.",
     profileUrl: "https://www.linkedin.com/in/kolawole-olatunji-002531179",
