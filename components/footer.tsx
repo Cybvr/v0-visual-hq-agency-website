@@ -18,6 +18,7 @@ const footerGroups = [
     number: "02",
     title: "Company",
     links: [
+      { name: "About", href: "/about" },
       { name: "Portfolio", href: "/portfolio" },
       { name: "News", href: "/news" },
       { name: "Careers", href: "https://pasive.co/jobs" },
