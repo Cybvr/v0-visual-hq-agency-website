@@ -3,6 +3,7 @@ export interface TeamMember {
   role: string
   image: string
   description: string
+  profileUrl?: string
 }
 
 export const teamMembers: TeamMember[] = [
@@ -43,31 +44,35 @@ export const teamMembers: TeamMember[] = [
   },
   {
     name: "Kola Olatunji",
-    role: "Creative Director",
+    role: "Founder, DÚDÚ Creatives",
     image: "/placeholder.svg",
     description:
-      "Kola sets the creative vision across brand and product work, shaping concepts from first idea to finished execution. He leads the design team in crafting identities and experiences that are distinctive, coherent, and built to last.",
+      "Kola is a Pan-African creative strategist, filmmaker, and communications leader. As the founder of DÚDÚ Creatives, he leads film, video production, brand consulting, and cultural programming that brings African stories and music communities to life.",
+    profileUrl: "https://www.linkedin.com/in/kolawole-olatunji-002531179",
   },
   {
     name: "Samuel Adekola",
-    role: "Art Director",
-    image: "/placeholder.svg",
+    role: "Visual Communication Designer",
+    image: "/team/samuel-adekola.png",
     description:
-      "Samuel directs the visual language of every project, translating strategy into art direction that is bold, consistent, and on-brand. He pairs a strong aesthetic sensibility with the discipline to carry an idea across every touchpoint.",
+      "Samuel is a visual communication designer focused on presentations, documents, brand design, and clear visual systems. His work turns ideas into compelling visuals that help brands communicate with clarity.",
+    profileUrl: "https://www.behance.net/sammystrings",
   },
   {
     name: "Lutfat Adeoye",
-    role: "UX Designer",
-    image: "/placeholder.svg",
+    role: "Brand & UX Designer",
+    image: "/team/lutfat-adeoye.jpg",
     description:
-      "Lutfat designs the flows and interfaces that make products feel effortless, grounding every decision in research and real user behaviour. She turns complex requirements into clear, usable, accessible experiences.",
+      "Lutfat is a brand and UX designer who treats design as more than aesthetics. She combines user experience, research, and visual identity to make complex ideas meaningful and usable.",
+    profileUrl: "https://www.behance.net/lutfatadeoye",
   },
   {
-    name: "Semudara Abayomi",
-    role: "UX Designer",
-    image: "/placeholder.svg",
+    name: "Abayomi Semudara",
+    role: "Product Designer",
+    image: "/team/abayomi-semudara.jpg",
     description:
-      "Semudara shapes intuitive, human-centred product experiences, from wireframes to polished interaction detail. He works closely with design and engineering to ensure what ships is both usable and beautiful.",
+      "Abayomi is a product designer based in Lagos. He focuses on strong ideas and brilliant creative work that solve business and organisational objectives.",
+    profileUrl: "https://www.behance.net/semudaraabayomi",
   },
 ]
 

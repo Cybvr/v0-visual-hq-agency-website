@@ -120,6 +120,16 @@ export default function AboutPage() {
                 <h3 className="mt-5 font-semibold text-lg">{member.name}</h3>
                 <p className="text-sm text-accent">{member.role}</p>
                 <p className="mt-3 text-muted-foreground text-sm leading-6">{member.description}</p>
+                {member.profileUrl && (
+                  <a
+                    href={member.profileUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="mt-4 inline-block text-sm underline underline-offset-4 transition-colors hover:text-accent"
+                  >
+                    View profile
+                  </a>
+                )}
               </div>
             ))}
           </div>
