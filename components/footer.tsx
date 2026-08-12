@@ -135,7 +135,7 @@ export function Footer() {
         </div>
 
         <div className="mt-16 flex flex-col gap-6 border-t border-primary-foreground/15 pt-8 text-sm text-primary-foreground/55 md:flex-row md:items-center md:justify-between">
-          <p>© {year} VisualCNS Systems · Privacy · Terms</p>
+          <p>© {year} Visual Core Nine Systems · Privacy · Terms</p>
           <div className="flex gap-8 text-sm font-semibold tracking-[0.16em] text-primary-foreground">
             {socialLinks.map((item) => (
               <a
