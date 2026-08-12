@@ -8,24 +8,38 @@ export interface TeamMember {
 export const teamMembers: TeamMember[] = [
   {
     name: "Jide Pinheiro",
-    role: "Founder & Creative Director",
+    role: "CEO, Founder",
     image: "/professional-african-man-portrait.png",
     description:
-      "Sets the creative direction across every engagement, pairing brand strategy with a builder's eye for what ships. Founded VisualHQ to bring world-class design to African businesses.",
+      "Products are stories of people's experiences, and this perspective drives Jide's approach to finding solutions through design, storytelling, software development, and architecture. With over 10 years of experience, he has crafted digital products for B2B and B2C markets that are accessible, intuitive, and friendly. Asides founding Visual Africa, Jide's brand design and communications portfolio includes over 20 high-profile brands, such as MTN, FirstBank, Wema Bank, Stanbic IBTC, Nigerian Breweries, CocaCola, LVMH, LG, Honeywell Group, Henkel, and Mixta Africa.",
   },
   {
-    name: "Adaeze Okonkwo",
-    role: "Lead Designer",
-    image: "/professional-african-woman.png",
-    description:
-      "Leads product and brand design end to end, turning ambiguous briefs into clear, usable interfaces. Obsessed with typography, systems, and the details users never notice but always feel.",
-  },
-  {
-    name: "Tunde Bakare",
-    role: "Senior Developer",
+    name: "Musa Asuku",
+    role: "Design Director",
     image: "/professional-african-man-developer-portrait.jpg",
     description:
-      "Builds the systems behind the work — fast, resilient, and maintainable. Bridges design and engineering so what gets designed is exactly what gets shipped.",
+      "Musa is an expert in design, concept development, and art direction, bringing a unique perspective to every project. He has developed impactful brand identities for prominent companies, including ASCON Oil, Oando, TecnoOil, Seplat Energy, ARM Pension, and the FirstBank 120th Anniversary. His portfolio features collaborations with major brands across sectors, such as UAC, MTN, Zain, TEENSMATA (a USAID initiative), UNICEF, Oando, Dangote, Sterling Bank, Nigeria Breweries (Strongbow), and Honeywell Group.",
+  },
+  {
+    name: "Muna Anazodo",
+    role: "Director, Strategy",
+    image: "/professional-african-woman.png",
+    description:
+      "Muna has years of experience in research, strategy, business development, project management, communications and social marketing. She has developed communications and corporate social responsibility strategy for various companies and organisations including UNICEF, Access Bank, Oando, NNPC, the Ministry of Finance, Purple/Voices4Change, Springster/Girl Effect and Wapic Insurance. Her interest in social development in the context of everyday realities has defined her career to date.",
+  },
+  {
+    name: "Nnenna Okoro",
+    role: "Project Manager",
+    image: "/placeholder.svg",
+    description:
+      "Nnenna is a seasoned project manager with a focus on delivering impactful brand and communications projects. With a strategic approach, she expertly manages timelines, budgets, and cross-functional teams to ensure seamless project execution from concept to completion. Nnenna's experience spans various industries, where her keen eye for detail and commitment to excellence consistently drive successful outcomes.",
+  },
+  {
+    name: "Ebere Okereke",
+    role: "Head of Marketing",
+    image: "/placeholder.svg",
+    description:
+      "Ebere leads marketing across brand, growth, and communications, translating strategy into campaigns that build audiences and move products. She brings a data-informed, story-first approach to positioning VisualCNS and its portfolio businesses in the market.",
   },
 ]
 
