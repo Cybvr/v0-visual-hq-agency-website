@@ -37,15 +37,38 @@ export default async function NewsItemPage({ params }: { params: Promise<{ slug:
             Image: {item.imageCredit}
           </figcaption>
         </figure>
-        <p className="mt-4 text-muted-foreground">{item.excerpt}</p>
-        <a
-          href={item.url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="mt-6 inline-block text-sm font-semibold hover:text-accent"
-        >
-          Read full article →
-        </a>
+        {item.body ? (
+          <article className="mt-8 max-w-2xl">
+            <p className="text-lg leading-8 text-foreground">{item.excerpt}</p>
+            {item.body.map((section, i) => (
+              <section key={i} className="mt-8">
+                {section.heading ? (
+                  <h2 className="mb-4 text-xl font-bold">{section.heading}</h2>
+                ) : null}
+                {section.paragraphs.map((paragraph, j) => (
+                  <p key={j} className="mt-4 leading-7 text-muted-foreground first:mt-0">
+                    {paragraph}
+                  </p>
+                ))}
+              </section>
+            ))}
+            <p className="mt-12 border-t border-border pt-6 text-sm text-muted-foreground">
+              {item.author} · {item.source}
+            </p>
+          </article>
+        ) : (
+          <>
+            <p className="mt-4 text-muted-foreground">{item.excerpt}</p>
+            <a
+              href={item.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-6 inline-block text-sm font-semibold hover:text-accent"
+            >
+              Read full article →
+            </a>
+          </>
+        )}
       </main>
       <Footer />
     </div>
