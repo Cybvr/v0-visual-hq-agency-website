@@ -24,7 +24,7 @@ export const teamMembers: TeamMember[] = [
   {
     name: "Muna Anazodo",
     role: "Director, Strategy",
-    image: "/team/muna-anazodo.jpg",
+    image: "/team/muna-anazodo.png",
     description:
       "Muna has years of experience in research, strategy, business development, project management, communications and social marketing. She has developed communications and corporate social responsibility strategy for various companies and organisations including UNICEF, Access Bank, Oando, NNPC, the Ministry of Finance, Purple/Voices4Change, Springster/Girl Effect and Wapic Insurance. Her interest in social development in the context of everyday realities has defined her career to date.",
   },
