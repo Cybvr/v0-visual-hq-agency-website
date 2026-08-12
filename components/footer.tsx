@@ -106,11 +106,11 @@ export function Footer() {
               Send a note when you are ready to build, price, or ship the next system.
             </p>
             <a
-              href="mailto:hello@pasive.co?subject=VisualCNS%20project%20inquiry"
+              href="mailto:info@visualcns.com?subject=VisualCNS%20project%20inquiry"
               className="group flex items-center justify-between border-b border-primary-foreground/70 pb-4 text-primary-foreground transition-colors hover:border-accent hover:text-accent"
             >
               <span className="text-base text-primary-foreground/70 transition-colors group-hover:text-accent">
-                hello@pasive.co
+                info@visualcns.com
               </span>
               <span className="text-sm uppercase tracking-[0.18em]">Join -&gt;</span>
             </a>
