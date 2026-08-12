@@ -32,16 +32,22 @@ const team = [
     name: "Jide Pinheiro",
     role: "Founder & Creative Director",
     image: "/professional-african-man-portrait.png",
+    description:
+      "Sets the creative direction across every engagement, pairing brand strategy with a builder's eye for what ships. Founded VisualHQ to bring world-class design to African businesses.",
   },
   {
     name: "Adaeze Okonkwo",
     role: "Lead Designer",
     image: "/professional-african-woman.png",
+    description:
+      "Leads product and brand design end to end, turning ambiguous briefs into clear, usable interfaces. Obsessed with typography, systems, and the details users never notice but always feel.",
   },
   {
     name: "Tunde Bakare",
     role: "Senior Developer",
     image: "/professional-african-man-developer-portrait.jpg",
+    description:
+      "Builds the systems behind the work — fast, resilient, and maintainable. Bridges design and engineering so what gets designed is exactly what gets shipped.",
   },
 ]
 
@@ -116,7 +122,30 @@ export default function AboutPage() {
       </section>
 
       {/* Team Section */}
-      
+      <section className="py-20 px-6 bg-secondary">
+        <div className="max-w-7xl mx-auto">
+          <div className="mb-12">
+            <p className="text-sm font-medium text-muted-foreground mb-2">Our Team</p>
+            <h2 className="font-serif text-3xl md:text-4xl font-bold">The people behind the work</h2>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+            {team.map((member) => (
+              <div key={member.name}>
+                <div className="aspect-square bg-muted rounded-lg overflow-hidden">
+                  <img
+                    src={member.image || "/placeholder.svg"}
+                    alt={member.name}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <h3 className="mt-5 font-semibold text-lg">{member.name}</h3>
+                <p className="text-sm text-accent">{member.role}</p>
+                <p className="mt-3 text-muted-foreground text-sm leading-6">{member.description}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
 
       {/* CTA Section */}
       <section className="py-20 px-6">
