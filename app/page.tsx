@@ -14,15 +14,14 @@ export default function HomePage() {
     <div className="min-h-screen bg-background text-foreground">
       <Header />
       <main className="mx-auto max-w-7xl px-4 pb-8 pt-28 sm:px-8 md:px-20 md:pt-32">
-        <section aria-label="Lagos video" className="mb-12 overflow-hidden bg-muted md:mb-16">
+        <section aria-label="Lagos video" className="mb-12 overflow-hidden rounded-md bg-muted md:mb-16">
           <video
-            className="aspect-video w-full object-cover"
+            className="aspect-video w-full rounded-md object-cover"
             src="/lagos.mp4"
             autoPlay
             loop
             muted
             playsInline
-            controls
             preload="metadata"
             aria-label="Lagos video"
           />
