@@ -41,6 +41,34 @@ export const teamMembers: TeamMember[] = [
     description:
       "Ebere leads marketing across brand, growth, and communications, translating strategy into campaigns that build audiences and move products. She brings a data-informed, story-first approach to positioning VisualCNS and its portfolio businesses in the market.",
   },
+  {
+    name: "Kola Olatunji",
+    role: "Creative Director",
+    image: "/placeholder.svg",
+    description:
+      "Kola sets the creative vision across brand and product work, shaping concepts from first idea to finished execution. He leads the design team in crafting identities and experiences that are distinctive, coherent, and built to last.",
+  },
+  {
+    name: "Samuel Adekola",
+    role: "Art Director",
+    image: "/placeholder.svg",
+    description:
+      "Samuel directs the visual language of every project, translating strategy into art direction that is bold, consistent, and on-brand. He pairs a strong aesthetic sensibility with the discipline to carry an idea across every touchpoint.",
+  },
+  {
+    name: "Lutfat Adeoye",
+    role: "UX Designer",
+    image: "/placeholder.svg",
+    description:
+      "Lutfat designs the flows and interfaces that make products feel effortless, grounding every decision in research and real user behaviour. She turns complex requirements into clear, usable, accessible experiences.",
+  },
+  {
+    name: "Semudara Abayomi",
+    role: "UX Designer",
+    image: "/placeholder.svg",
+    description:
+      "Semudara shapes intuitive, human-centred product experiences, from wireframes to polished interaction detail. He works closely with design and engineering to ensure what ships is both usable and beautiful.",
+  },
 ]
 
 export function getTeamMembers(): TeamMember[] {
