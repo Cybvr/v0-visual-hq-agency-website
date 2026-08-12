@@ -94,7 +94,7 @@ export function HomeAccordion({
 
       <AccordionItem value="portfolio">
         <AccordionTrigger className={triggerClass}>
-          <span>2. Portfolio</span>
+          <span>2. Case Studies</span>
           <ToggleIcon />
         </AccordionTrigger>
         <AccordionContent>
@@ -146,7 +146,7 @@ export function HomeAccordion({
 
       <AccordionItem value="news">
         <AccordionTrigger className={triggerClass}>
-          <span>5. News</span>
+          <span>5. Latest News and Insights</span>
           <ToggleIcon />
         </AccordionTrigger>
         <AccordionContent>
