@@ -17,7 +17,7 @@ export default function HomePage() {
         <section aria-label="Lagos video" className="relative h-screen min-h-[30rem] w-full overflow-hidden bg-muted supports-[height:100svh]:h-[100svh]">
           <video
             className="size-full object-cover"
-            src="/lagos.mp4"
+            src="/herov2.mp4"
             autoPlay
             loop
             muted
