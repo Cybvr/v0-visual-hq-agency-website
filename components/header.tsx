@@ -44,8 +44,18 @@ const MONO_LABEL = "font-mono text-[0.6875rem] uppercase tracking-[0.24em]"
 
 export function Header() {
   const [open, setOpen] = useState(false)
+  const [scrolled, setScrolled] = useState(false)
   const headerRef = useRef<HTMLElement>(null)
   const pathname = usePathname()
+  const overlaysHero = pathname === "/" && !open && !scrolled
+
+  useEffect(() => {
+    const updateHeader = () => setScrolled(window.scrollY > 24)
+
+    updateHeader()
+    window.addEventListener("scroll", updateHeader, { passive: true })
+    return () => window.removeEventListener("scroll", updateHeader)
+  }, [])
 
   // Any navigation dismisses the index.
   useEffect(() => {
@@ -100,10 +110,16 @@ export function Header() {
     // When the index is open the header owns the viewport, so the panel can be a
     // flex child instead of chasing the bar's height with a hard-coded offset.
     <header ref={headerRef} className={`fixed inset-x-0 top-0 z-50 flex flex-col ${open ? "bottom-0" : ""}`}>
-      <div className="shrink-0 border-b border-border bg-background/90 backdrop-blur-md">
+      <div
+        className={`shrink-0 border-b transition-colors duration-300 ${
+          overlaysHero
+            ? "border-white/20 bg-transparent text-white"
+            : "border-border bg-background/90 text-foreground backdrop-blur-md"
+        }`}
+      >
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-8 md:px-20 md:py-5">
           <Link href="/" aria-label="VisualCNS home">
-            <BrandLockup logoSize={28} gapClassName="gap-1" />
+            <BrandLockup logoSize={28} gapClassName="gap-1" invert={overlaysHero} />
           </Link>
 
           <div className="flex items-center gap-3 md:gap-6">
@@ -116,7 +132,9 @@ export function Header() {
               onClick={() => setOpen((value) => !value)}
               aria-expanded={open}
               aria-controls="site-index"
-              className={`group flex items-center gap-2 text-foreground outline-none transition-colors hover:text-accent focus-visible:text-accent ${MONO_LABEL}`}
+              className={`group flex items-center gap-2 outline-none transition-colors hover:text-accent focus-visible:text-accent ${
+                overlaysHero ? "text-white drop-shadow-sm" : "text-foreground"
+              } ${MONO_LABEL}`}
             >
               {open ? "Close" : "Index"}
               {open ? <X className="size-4" /> : <Menu className="size-4" />}

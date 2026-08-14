@@ -83,7 +83,7 @@ export function HomeAccordion({
     <Accordion type="single" collapsible defaultValue="intro" className="w-full">
       <AccordionItem value="intro">
         <AccordionTrigger className={triggerClass}>
-          <span>1. Dream.Execute</span>
+          <span>1. About</span>
           <ToggleIcon />
         </AccordionTrigger>
         <AccordionContent className="text-muted-foreground">
