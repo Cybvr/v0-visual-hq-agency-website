@@ -20,8 +20,9 @@ const consultingNavItems = [
   { name: "VisualHQ", href: "/visualhq", description: "Who we are and what we do." },
   { name: "About", href: "/about", description: "Our story, values, and team." },
   { name: "Portfolio", href: "/portfolio", description: "Explore our work and client projects." },
-  { name: "Capabilities", href: "/capabilities", description: "Browse every VisualHQ capability." },
+  { name: "Services", href: "/capabilities", description: "Explore VisualCNS services." },
   { name: "Industries", href: "/industries", description: "See the markets VisualHQ builds for." },
+  { name: "FAQ", href: "/faq", description: "Answers about VisualCNS and our services." },
 ]
 
 const bookNowHref = "/contact"

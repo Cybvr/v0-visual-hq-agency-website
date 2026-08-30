@@ -19,7 +19,7 @@ function comments(items: Array<{ username: string; avatar: string; text: string;
 
 export const marketingProfile: InstagramPreviewProfile = {
   handle: "visualcns.studio",
-  site: "visualcns.pro",
+  site: "visualcns.com",
   name: "VisualCNS",
   category: "Software company",
   blurb: "Software systems, launch funnels, and digital products for modern businesses.",
@@ -101,7 +101,7 @@ export const marketingPosts: MarketingPost[] = [
     slug: "website-launch",
     image: "/marketing/website-launch.jpg",
     imageAlt: "VisualCNS fast website launch ad",
-    location: "visualcns.pro",
+    location: "visualcns.com",
     caption:
       "Need a clean, conversion-focused site without a dragged-out timeline? We design and launch websites in days, not months.",
     hashtags: ["VisualCNS", "Webflow", "Framer", "WordPress"],
@@ -130,7 +130,7 @@ export const marketingPosts: MarketingPost[] = [
     slug: "website-launch-blue",
     image: "/marketing/website-launch-blue.jpg",
     imageAlt: "VisualCNS website launch blue ad",
-    location: "visualcns.pro",
+    location: "visualcns.com",
     caption:
       "Launch a website that looks polished, explains your value fast, and gives visitors a clear next step to take.",
     hashtags: ["VisualCNS", "WebsiteLaunch", "ConversionDesign"],
@@ -351,7 +351,7 @@ export const marketingPosts: MarketingPost[] = [
     cta: "Get Quote",
     image: "/marketing/zero-extra-staff.png",
     imageAlt: "VisualCNS more leads zero extra staff ad",
-    location: "visualcns.pro",
+    location: "visualcns.com",
     caption:
       "More leads, faster follow-up, zero extra staff. We build the systems that capture, nurture, and track your growth so scaling doesn't mean more headcount.",
     hashtags: ["VisualCNS", "LeadGeneration", "GrowthSystems", "Automation"],

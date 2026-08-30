@@ -20,8 +20,8 @@ function pad(index: number) {
  */
 function SiblingNav({ siblings }: { siblings: Array<Capability & { index: number }> }) {
   return (
-    <nav aria-label="More capabilities">
-      <p className="font-mono text-[0.6875rem] uppercase tracking-[0.24em] text-muted-foreground">More capabilities</p>
+    <nav aria-label="More services">
+      <p className="font-mono text-[0.6875rem] uppercase tracking-[0.24em] text-muted-foreground">More services</p>
       <ul className="mt-5">
         {siblings.map((sibling) => (
           <li key={sibling.slug}>
@@ -63,7 +63,7 @@ export default async function CapabilityDetailPage({ params }: { params: Promise
               href="/capabilities"
               className="font-mono text-[0.6875rem] uppercase tracking-[0.24em] text-muted-foreground transition-colors hover:text-accent"
             >
-              ← Capabilities
+              ← Services
             </Link>
 
             <p className="mt-10 font-mono text-xs tabular-nums text-muted-foreground">

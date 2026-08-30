@@ -4,21 +4,38 @@ import type { Metadata } from "next"
 import { Analytics } from "@vercel/analytics/next"
 import "./globals.css"
 
-import { EB_Garamond, Geist_Mono, Inter, Outfit } from "next/font/google"
+import { EB_Garamond, Geist_Mono, Inter, Outfit, Poppins } from "next/font/google"
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" })
 const geistMono = Geist_Mono({ subsets: ["latin"], variable: "--font-geist-mono" })
 const outfit = Outfit({ subsets: ["latin"], variable: "--font-outfit" })
 const ebGaramond = EB_Garamond({ subsets: ["latin"], variable: "--font-eb-garamond" })
+const poppins = Poppins({
+  subsets: ["latin"],
+  variable: "--font-poppins",
+  weight: ["500", "600", "700"],
+})
 
 const FIREBASE_FAVICON_URL =
   "https://firebasestorage.googleapis.com/v0/b/jujuagi-new.firebasestorage.app/o/favicon.ico?alt=media&token=e0666b35-06cb-41a4-8d0d-9b37740baa7a"
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://visualcns.com"),
   title: "VisualCNS - Software Systems for Modern Businesses",
   description:
     "VisualCNS builds software systems, product businesses, and AI-enabled tools from Lagos for modern teams.",
   keywords: ["software development", "AI", "VisualHQ", "VisualCNS", "Lagos", "Nigeria", "product company"],
+  alternates: {
+    canonical: "/",
+  },
+  openGraph: {
+    title: "VisualCNS - Software Systems for Modern Businesses",
+    description:
+      "VisualCNS builds software systems, product businesses, and AI-enabled tools from Lagos for modern teams.",
+    url: "https://visualcns.com",
+    siteName: "VisualCNS",
+    type: "website",
+  },
   generator: "v0.app",
   // --- FAVICON USING EXTERNAL URL ---
   icons: {
@@ -35,7 +52,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${inter.variable} ${geistMono.variable} ${outfit.variable} ${ebGaramond.variable}`}
+      className={`${inter.variable} ${geistMono.variable} ${outfit.variable} ${ebGaramond.variable} ${poppins.variable}`}
     >
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />

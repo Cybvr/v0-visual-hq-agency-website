@@ -81,7 +81,7 @@ export function CapabilitiesIndex({ capabilities }: { capabilities: Capability[]
   return (
     <>
       <div className="mt-16 flex items-baseline justify-between gap-6 pb-4 font-mono text-[0.6875rem] uppercase tracking-[0.24em] text-muted-foreground md:mt-24">
-        <span>Capability</span>
+        <span>Service</span>
         <span className="hidden md:inline">What it covers</span>
       </div>
 

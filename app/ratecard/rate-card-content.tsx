@@ -208,8 +208,9 @@ export function RateCardContent() {
 
         .ratecard-page .brand-name {
           font-size: 30px;
-          font-weight: 800;
-          letter-spacing: -0.3px;
+          font-family: var(--font-poppins), ui-sans-serif, system-ui, sans-serif;
+          font-weight: 700;
+          letter-spacing: -0.035em;
           color: var(--text);
         }
 
@@ -827,13 +828,13 @@ export function RateCardContent() {
               <div className="footer-divider" />
               <div className="footer-item">
                 <Mail className="footer-icon" size={18} />
-                <a href="mailto:hello@visualhq.com">hello@visualhq.com</a>
+                <a href="mailto:hello@visualcns.com">hello@visualcns.com</a>
               </div>
               <div className="footer-divider" />
               <div className="footer-item">
                 <Globe className="footer-icon" size={18} />
-                <a href="https://visualhq.space" target="_blank" rel="noreferrer">
-                  visualhq.space
+                <a href="https://visualcns.com" target="_blank" rel="noreferrer">
+                  visualcns.com
                 </a>
               </div>
             </footer>

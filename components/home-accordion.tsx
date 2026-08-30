@@ -87,8 +87,8 @@ export function HomeAccordion({
           <ToggleIcon />
         </AccordionTrigger>
         <AccordionContent className="text-muted-foreground">
-          We design and build digital products across ecommerce, AI tooling, and experience platforms. Some of it is
-          client work. Some of it is ours.
+          A global creative consultancy that develops digital experiences, brand systems, and technology solutions for
+          modern businesses.
         </AccordionContent>
       </AccordionItem>
 
@@ -126,7 +126,7 @@ export function HomeAccordion({
 
       <AccordionItem value="capabilities">
         <AccordionTrigger className={triggerClass}>
-          <span>4. Capabilities</span>
+          <span>4. Services</span>
           <ToggleIcon />
         </AccordionTrigger>
         <AccordionContent>

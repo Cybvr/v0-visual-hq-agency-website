@@ -43,9 +43,9 @@ export default function AboutPage() {
             <h1 className="font-serif text-4xl font-normal leading-[1.1] tracking-tight text-balance md:text-6xl">
               Building brands that <span className="text-accent">matter</span>
             </h1>
-            <p className="mt-6 text-lg text-muted-foreground">
-              VisualHQ was founded with a simple mission: to help businesses in Africa and beyond establish powerful
-              digital presences through exceptional brand and web development.
+            <p className="mt-6 max-w-2xl text-lg text-muted-foreground">
+              A global creative consultancy that develops digital experiences, brand systems, and technology solutions
+              for modern businesses.
             </p>
           </div>
         </div>

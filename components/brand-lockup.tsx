@@ -31,7 +31,7 @@ export function BrandLockup({
       />
       <span
         className={cn(
-          "geist-pixel-wordmark font-normal leading-none tracking-tight",
+          "poppins-wordmark leading-none",
           invert ? "text-primary-foreground" : "text-foreground",
           textClassName,
         )}
