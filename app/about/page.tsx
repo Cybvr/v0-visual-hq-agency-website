@@ -1,6 +1,3 @@
-"use client"
-
-import { useState } from "react"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
 import { Button } from "@/components/ui/button"
@@ -10,6 +7,7 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
+  DialogTrigger,
 } from "@/components/ui/dialog"
 import Link from "next/link"
 import { ArrowRight, ArrowUpRight, Target, Users, Lightbulb, Globe } from "lucide-react"
@@ -40,86 +38,64 @@ const values = [
 
 const team = getTeamMembers()
 
-function TeamLightbox() {
-  const [selectedMember, setSelectedMember] = useState<TeamMember | null>(null)
-
+function TeamMemberCard({ member }: { member: TeamMember }) {
   return (
-    <Dialog
-      open={selectedMember !== null}
-      onOpenChange={(open) => {
-        if (!open) setSelectedMember(null)
-      }}
-    >
-      <div className="grid grid-cols-1 gap-10 md:grid-cols-2 lg:grid-cols-4">
-        {team.map((member) => (
-          <div key={member.name}>
-            <button
-              type="button"
-              onClick={() => setSelectedMember(member)}
-              aria-label={`Open profile for ${member.name}`}
-              className="group block w-full text-left outline-none"
-            >
-              <div className="aspect-square overflow-hidden rounded-lg bg-muted">
-                <img
-                  src={member.image || "/placeholder.svg"}
-                  alt={member.name}
-                  className="size-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
-                />
-              </div>
-              <h3 className="mt-5 text-lg font-semibold transition-colors group-hover:text-accent">{member.name}</h3>
+    <Dialog>
+      <DialogTrigger asChild>
+        <button type="button" aria-label={`Open profile for ${member.name}`} className="group block w-full text-left outline-none">
+          <div className="aspect-square overflow-hidden rounded-lg bg-muted">
+            <img
+              src={member.image || "/placeholder.svg"}
+              alt={member.name}
+              className="size-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
+            />
+          </div>
+          <h3 className="mt-5 text-lg font-semibold transition-colors group-hover:text-accent">{member.name}</h3>
+          <p className="text-sm text-accent">{member.role}</p>
+        </button>
+      </DialogTrigger>
+      <DialogContent className="max-w-4xl overflow-hidden rounded-none border-0 p-0">
+        <div className="grid max-h-[calc(100vh-2rem)] overflow-y-auto md:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
+          <div className="min-h-72 bg-muted md:min-h-full">
+            <img
+              src={member.image || "/placeholder.svg"}
+              alt={member.name}
+              className="size-full min-h-72 object-cover md:min-h-[32rem]"
+            />
+          </div>
+          <div className="flex flex-col justify-center p-6 sm:p-10 md:p-12">
+            <DialogHeader>
               <p className="text-sm text-accent">{member.role}</p>
-            </button>
-            <p className="mt-3 text-sm leading-6 text-muted-foreground">{member.description}</p>
+              <DialogTitle className="mt-2 text-4xl tracking-[-0.03em] sm:text-5xl">{member.name}</DialogTitle>
+            </DialogHeader>
+            <DialogDescription className="mt-8 text-base leading-7 text-muted-foreground">
+              {member.description}
+            </DialogDescription>
             {member.profileUrl && (
               <a
                 href={member.profileUrl}
                 target="_blank"
                 rel="noreferrer"
-                className="mt-4 inline-block text-sm underline underline-offset-4 transition-colors hover:text-accent"
+                className="mt-8 inline-flex w-fit items-center gap-2 border-b border-foreground pb-1 text-sm transition-colors hover:border-accent hover:text-accent"
               >
-                View profile
+                View external profile
+                <ArrowUpRight className="size-3.5" aria-hidden="true" />
               </a>
             )}
           </div>
-        ))}
-      </div>
-
-      {selectedMember && (
-        <DialogContent className="max-w-4xl overflow-hidden rounded-none border-0 p-0">
-          <div className="grid max-h-[calc(100vh-2rem)] overflow-y-auto md:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
-            <div className="min-h-72 bg-muted md:min-h-full">
-              <img
-                src={selectedMember.image || "/placeholder.svg"}
-                alt={selectedMember.name}
-                className="size-full min-h-72 object-cover md:min-h-[32rem]"
-              />
-            </div>
-            <div className="flex flex-col justify-center p-6 sm:p-10 md:p-12">
-              <DialogHeader>
-                <p className="text-sm text-accent">{selectedMember.role}</p>
-                <DialogTitle className="mt-2 text-4xl tracking-[-0.03em] sm:text-5xl">
-                  {selectedMember.name}
-                </DialogTitle>
-              </DialogHeader>
-              <DialogDescription className="mt-8 text-base leading-7 text-muted-foreground">
-                {selectedMember.description}
-              </DialogDescription>
-              {selectedMember.profileUrl && (
-                <a
-                  href={selectedMember.profileUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="mt-8 inline-flex w-fit items-center gap-2 border-b border-foreground pb-1 text-sm transition-colors hover:border-accent hover:text-accent"
-                >
-                  View external profile
-                  <ArrowUpRight className="size-3.5" aria-hidden="true" />
-                </a>
-              )}
-            </div>
-          </div>
-        </DialogContent>
-      )}
+        </div>
+      </DialogContent>
     </Dialog>
+  )
+}
+
+function TeamLightbox() {
+  return (
+    <div className="grid grid-cols-1 gap-10 md:grid-cols-2 lg:grid-cols-4">
+      {team.map((member) => (
+        <TeamMemberCard key={member.name} member={member} />
+      ))}
+    </div>
   )
 }
 
