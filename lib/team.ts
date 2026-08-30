@@ -39,7 +39,7 @@ export const teamMembers: TeamMember[] = [
   {
     name: "Nnenna Okoro",
     role: "Project Manager",
-    image: "/placeholder.svg",
+    image: "/team/nnenna-okoro.png",
     description:
       "Nnenna is a seasoned project manager with a focus on delivering impactful brand and communications projects. With a strategic approach, she expertly manages timelines, budgets, and cross-functional teams to ensure seamless project execution from concept to completion. Nnenna's experience spans various industries, where her keen eye for detail and commitment to excellence consistently drive successful outcomes.",
   },
