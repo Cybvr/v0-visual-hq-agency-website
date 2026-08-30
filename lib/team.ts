@@ -46,7 +46,7 @@ export const teamMembers: TeamMember[] = [
   {
     name: "Ebere Okereke",
     role: "Head of Marketing",
-    image: "/placeholder.svg",
+    image: "/team/ebere-okereke-bw.png",
     description:
       "Ebere leads marketing across brand, growth, and communications, translating strategy into campaigns that build audiences and move products. She brings a data-informed, story-first approach to positioning VisualCNS and its portfolio businesses in the market.",
   },
