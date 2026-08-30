@@ -206,87 +206,225 @@ export const blogPosts: BlogPost[] = [
   },
   {
     slug: "effective-ways-to-boost-your-visibility-with-influencers",
-    title: "Effective Ways to Boost Your Visibility with Influencers",
+    title: "How to Work with Influencers Without Wasting Your Budget",
     excerpt:
-      "Are you planning to boost your visibility with influencers? The right creator can put your brand in front of a highly relevant audience, build credibility, and turn attention into measurable growth.",
-    categories: ["Influencer Marketing"],
-    source: "Dotts Media House",
-    author: "Dotts Media House",
+      "Influencer work is less about finding the biggest audience and more about finding a creator whose audience already cares about the problem your brand solves.",
+    categories: ["Influencer marketing"],
+    source: "VisualCNS",
+    author: "VisualCNS",
     date: "August 26, 2026",
     readTime: "5 min read",
-    url: "https://dottsmediahouse.com/effective-ways-to-boost-your-visibility-with-influencers/",
+    url: "/blog/effective-ways-to-boost-your-visibility-with-influencers",
     image: "/blog/effective-ways-to-boost-your-visibility-with-influencers.png",
     imageAlt: "Black influencer filming an unboxing in a sunlit apartment",
+    body: [
+      {
+        heading: "Choose the right kind of attention",
+        paragraphs: [
+          "Follower count is a quick way to compare creators, but it says little about whether the partnership will make sense. Start with the audience. What do they come to this person for, and does that overlap with the question your brand can answer?",
+          "A smaller creator with a clear point of view can be a better fit than a large account whose audience expects something else. Relevance gives the work a chance to feel like a recommendation instead of an interruption.",
+        ],
+      },
+      {
+        heading: "Give the creator a real brief",
+        paragraphs: [
+          "The brief should explain the job, the audience, the useful proof, and the action you want people to take. It should also leave room for the creator to use their own language and format.",
+          "People follow creators for their judgment and personality. A script that removes both usually produces an ad that feels out of place. Clear boundaries help the creator make the idea their own without losing the point.",
+        ],
+      },
+      {
+        heading: "Plan the handoff",
+        paragraphs: [
+          "Attention has to lead somewhere. Make sure the landing page, offer, sign-up flow, or sales conversation picks up the same idea the creator introduced.",
+          "Then look past views. Track the actions that matter to the campaign, read the comments for objections, and use what you learn to improve the next brief.",
+        ],
+      },
+    ],
   },
   {
     slug: "types-of-media-buying",
-    title: "What Are the Different Types of Media Buying?",
+    title: "Media Buying Explained: Where Should Your Ads Run?",
     excerpt:
-      "Media Buying types in this sense refer to the different ways brands purchase advertising space, airtime or digital inventory to reach specific audiences and achieve their campaign goals.",
-    categories: ["Media Buying"],
-    source: "Dotts Media House",
-    author: "Dotts Media House",
+      "Media buying is the work of choosing and purchasing the places where people will meet your campaign. The right mix depends on the audience, the message, and the action that comes next.",
+    categories: ["Media buying"],
+    source: "VisualCNS",
+    author: "VisualCNS",
     date: "August 25, 2026",
     readTime: "6 min read",
-    url: "https://dottsmediahouse.com/types-of-media-buying/",
+    url: "/blog/types-of-media-buying",
     image: "/blog/types-of-media-buying.png",
     imageAlt: "Digital billboard and campaign placements above a busy Lagos street",
+    body: [
+      {
+        heading: "Start with the audience",
+        paragraphs: [
+          "Media buying starts before a placement is chosen. Ask where the audience already spends time, what they are doing there, and how much attention the message needs.",
+          "A short offer may work in a fast, repeated format. A more involved decision may need a place where people have time to read, compare, or ask questions.",
+        ],
+      },
+      {
+        heading: "Know what each channel can do",
+        paragraphs: [
+          "Television and radio can build broad familiarity. Outdoor can put a simple message into a specific place. Digital placements can be adjusted as people respond and can lead directly to a next step.",
+          "These channels are not interchangeable. Treat each one as part of a job, then connect the jobs so the campaign feels like one experience wherever it appears.",
+        ],
+      },
+      {
+        heading: "Buy for the outcome",
+        paragraphs: [
+          "A low price does not make a placement efficient if it reaches the wrong people. Compare opportunities by the audience you can reach, the quality of the attention, and the action the placement supports.",
+          "Keep a record of what was bought and what happened after it ran. That history gives the next campaign a better starting point than guesswork.",
+        ],
+      },
+    ],
   },
   {
     slug: "traditional-vs-digital-media-buying-the-best-fit-for-your-brand",
-    title: "Traditional vs Digital Media Buying: The Best Fit for Your Brand?",
+    title: "Traditional or Digital Ads: Which Fits Your Brand?",
     excerpt:
-      "Traditional vs Digital Media Buying: which should your brand invest in? The answer is rarely as simple as choosing one over the other. Television, radio, print and digital each carry their own strengths.",
-    categories: ["Media Buying"],
-    source: "Dotts Media House",
-    author: "Dotts Media House",
+      "Traditional and digital media solve different parts of the same problem. The better choice depends on the audience you need, the story you are telling, and how quickly you need to learn.",
+    categories: ["Media buying"],
+    source: "VisualCNS",
+    author: "VisualCNS",
     date: "August 20, 2026",
     readTime: "7 min read",
-    url: "https://dottsmediahouse.com/traditional-vs-digital-media-buying-the-best-fit-for-your-brand/",
+    url: "/blog/traditional-vs-digital-media-buying-the-best-fit-for-your-brand",
     image: "/blog/traditional-vs-digital-media-buying.png",
     imageAlt: "Newspaper and smartphone showing the same fictional campaign",
+    body: [
+      {
+        heading: "The choice follows the job",
+        paragraphs: [
+          "If the job is to make a brand familiar across a place or a broad audience, television, radio, print, and outdoor can provide useful reach. They put the message into shared public spaces and routines.",
+          "If the job is to test a message, reach a defined group, or move someone straight to a page, digital can offer more control. The channel should follow the job rather than a preference for one format.",
+        ],
+      },
+      {
+        heading: "Use the strengths together",
+        paragraphs: [
+          "A campaign does not have to choose one side. A broad placement can create recognition, while digital content gives interested people a way to learn more or take action.",
+          "The connection needs to be deliberate. Carry the same promise, visual cue, or phrase across the campaign so people know they have found the right next step.",
+        ],
+      },
+      {
+        heading: "Leave room to learn",
+        paragraphs: [
+          "Digital reporting can show which messages and audiences are responding. Traditional media still needs a plan for learning through response codes, search behaviour, direct enquiries, or changes in demand.",
+          "Good planning makes room for both kinds of evidence. The goal is a clearer decision about the next spend, not a report full of numbers that nobody uses.",
+        ],
+      },
+    ],
   },
   {
     slug: "media-buying-strategies-to-maximise-advertising-roi",
-    title: "Media Buying Strategies to Maximise Advertising ROI",
+    title: "How to Get More from Your Ad Budget",
     excerpt:
-      "Brands can spend heavily on advertising and still struggle to see meaningful returns. Media Buying Strategies to Maximise Advertising ROI are therefore not about simply spending more, but spending smarter.",
-    categories: ["Media Buying"],
-    source: "Dotts Media House",
-    author: "Dotts Media House",
+      "A bigger media budget cannot fix an unclear audience, a weak offer, or a broken next step. Better returns start with a campaign that gives every placement a clear job.",
+    categories: ["Media buying"],
+    source: "VisualCNS",
+    author: "VisualCNS",
     date: "August 18, 2026",
     readTime: "7 min read",
-    url: "https://dottsmediahouse.com/media-buying-strategies-to-maximise-advertising-roi/",
+    url: "/blog/media-buying-strategies-to-maximise-advertising-roi",
     image: "/blog/media-buying-strategies-to-maximise-advertising-roi.png",
     imageAlt: "Media strategist reviewing campaign dashboards at a cluttered desk",
+    body: [
+      {
+        heading: "Make the objective specific",
+        paragraphs: [
+          "A campaign cannot be judged well if every placement is expected to do everything. Decide whether the priority is familiarity, qualified enquiries, visits, sales, or another concrete action.",
+          "The objective shapes the audience, the creative, the channel mix, and the way results are read. It also makes it easier to stop spending on work that is busy but not useful.",
+        ],
+      },
+      {
+        heading: "Spend where the message can work",
+        paragraphs: [
+          "Cheap inventory is expensive when the audience is wrong or the placement gives the message no chance to land. Look at context, attention, frequency, and the quality of the next step together.",
+          "Keep the number of moving parts manageable. A smaller set of placements with a clear role is easier to learn from than a wide spread of activity that nobody can explain.",
+        ],
+      },
+      {
+        heading: "Read results as decisions",
+        paragraphs: [
+          "A report should tell the team what to keep, what to change, and what to stop. Compare the response from different audiences and messages, then connect that response to the business outcome that matters.",
+          "Use the findings to improve the next round before the memory of the campaign disappears. That is how a budget gets more useful over time.",
+        ],
+      },
+    ],
   },
   {
     slug: "media-planning-and-media-buying-understanding-the-key-differences",
-    title: "Media Planning and Buying: Understanding the Key Differences",
+    title: "Media Planning vs Media Buying: What's the Difference?",
     excerpt:
-      "What happens when a brand has a strong media strategy but poor execution, or secures great advertising placements without a clear strategy? In both cases, results fall short of their potential.",
-    categories: ["Marketing Campaigns", "Media Buying"],
-    source: "Dotts Media House",
-    author: "Dotts Media House",
+      "Media planning decides who the campaign needs to reach and how the work should fit together. Media buying turns that plan into real placements, dates, and spend.",
+    categories: ["Campaign and content design", "Media buying"],
+    source: "VisualCNS",
+    author: "VisualCNS",
     date: "August 17, 2026",
     readTime: "6 min read",
-    url: "https://dottsmediahouse.com/media-planning-and-media-buying-understanding-the-key-differences/",
+    url: "/blog/media-planning-and-media-buying-understanding-the-key-differences",
     image: "/blog/media-planning-and-media-buying.png",
     imageAlt: "Two colleagues planning media placements around a table",
+    body: [
+      {
+        heading: "Planning asks the bigger questions",
+        paragraphs: [
+          "A media plan sets the direction. It describes the audience, the campaign objective, the role of each channel, the timing, and the evidence the team will use to judge the work.",
+          "It also forces useful choices. A campaign with limited attention and money needs to know which audience matters most and which message deserves the strongest support.",
+        ],
+      },
+      {
+        heading: "Buying makes the plan real",
+        paragraphs: [
+          "Buying covers the practical work of finding inventory, negotiating placements, booking dates, managing delivery, and checking that the campaign appears as agreed.",
+          "Good buying brings information back to the plan. Availability, pricing, audience quality, and early response may show that a channel or placement needs to change.",
+        ],
+      },
+      {
+        heading: "Keep both teams close",
+        paragraphs: [
+          "Planning without careful buying can produce a smart strategy that never reaches the right people. Buying without planning can produce activity with no clear reason behind it.",
+          "The best work keeps the two conversations connected from the first brief through the final report. Strategy guides the spend, and the spend teaches the strategy.",
+        ],
+      },
+    ],
   },
   {
     slug: "why-your-brands-social-media-isnt-working",
-    title: "Why Your Brand’s Social Media Isn’t Working (And How to Fix It)",
+    title: "Why Your Social Media Isn't Working",
     excerpt:
-      "Social media has become one of the most powerful channels for building brand awareness, engaging customers, and driving business growth. However, from our feedback, many brands still struggle to make it work.",
-    categories: ["Digital Marketing", "Social Media Marketing"],
-    source: "Dotts Media House",
-    author: "Dotts Media House",
+      "Posting more often will not fix a social channel that has no clear audience, point of view, or reason for people to return. Start with the job the channel needs to do.",
+    categories: ["Digital marketing", "Social media marketing"],
+    source: "VisualCNS",
+    author: "VisualCNS",
     date: "August 10, 2026",
     readTime: "8 min read",
-    url: "https://dottsmediahouse.com/why-your-brands-social-media-isnt-working/",
+    url: "/blog/why-your-brands-social-media-isnt-working",
     image: "/blog/why-your-brands-social-media-isnt-working.png",
     imageAlt: "Black founder checking her phone in a small product boutique",
+    body: [
+      {
+        heading: "Give the channel a job",
+        paragraphs: [
+          "A social feed can help a brand explain its offer, answer questions, show how it works, build familiarity, or support a campaign. It does not need to do all of these things in every post.",
+          "Choose the job that matters most right now. A clearer purpose makes decisions about topics, formats, and calls to action much easier.",
+        ],
+      },
+      {
+        heading: "Make the content recognisable",
+        paragraphs: [
+          "People should be able to tell what a brand cares about from more than its logo. Use a consistent point of view, a useful level of detail, and a voice that sounds like the people behind the business.",
+          "The feed also needs enough variety to stay useful. Teach something, answer a real question, show the work, and give people a reason to continue the conversation.",
+        ],
+      },
+      {
+        heading: "Listen before you optimise",
+        paragraphs: [
+          "Reach and likes can show whether a post travelled, but they do not always explain why it mattered. Read replies, saves, direct messages, and the questions people ask before deciding what to make next.",
+          "A healthy channel gets clearer as the team learns. Review a small set of posts together, keep what helped the audience, and drop the habits that only create noise.",
+        ],
+      },
+    ],
   },
   // News — formerly the standalone /news section, now a blog category.
   {
