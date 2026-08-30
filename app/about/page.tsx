@@ -51,7 +51,7 @@ function TeamMemberCard({ member }: { member: TeamMember }) {
             />
           </div>
           <h3 className="mt-5 text-lg font-semibold transition-colors group-hover:text-accent">{member.name}</h3>
-          <p className="text-sm text-accent">{member.role}</p>
+          <p className="text-xs text-accent">{member.role}</p>
         </button>
       </DialogTrigger>
       <DialogContent className="max-w-4xl overflow-hidden rounded-none border-0 p-0">
