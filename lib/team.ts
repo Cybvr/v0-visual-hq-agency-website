@@ -51,6 +51,14 @@ export const teamMembers: TeamMember[] = [
       "Ebere leads marketing across brand, growth, and communications, translating strategy into campaigns that build audiences and move products. She brings a data-informed, story-first approach to positioning VisualCNS and its portfolio businesses in the market.",
   },
   {
+    name: "Joshua Gapsiso",
+    role: "Marketing & Communications Strategist",
+    image: "/team/joshua-gapsiso-bw.png",
+    description:
+      "Joshua is a marketing and communications strategist focused on brand strategy, cultural and media intelligence, paid media, and digital marketing. He turns audience insight into campaigns that connect brands with the people they want to reach.",
+    profileUrl: "https://www.linkedin.com/in/joshua-gapsiso-1a456612a/",
+  },
+  {
     name: "Kola Olatunji",
     role: "Founder, DÚDÚ Creatives",
     image: "/team/kola-olatunji-bw.png",
