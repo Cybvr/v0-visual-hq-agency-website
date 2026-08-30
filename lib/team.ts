@@ -31,7 +31,7 @@ export const teamMembers: TeamMember[] = [
   {
     name: "Chuka J. Uzo",
     role: "Data Engineer & AI Solutions Developer",
-    image: "/team/chuka-uzo.jpg",
+    image: "/team/chuka-uzo.png",
     description:
       "Chuka is a data engineer and AI solutions developer based in Lagos. His work focuses on lightweight language models, AI infrastructure, and systems observability.",
     profileUrl: "https://ng.linkedin.com/in/chuka-j-uzo",
