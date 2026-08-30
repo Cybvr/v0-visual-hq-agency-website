@@ -3,10 +3,17 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useEffect, useRef, useState, type CSSProperties } from "react"
-import { ArrowUpRight, Menu, X } from "lucide-react"
+import { ArrowUpRight, ChevronDown, Menu, X } from "lucide-react"
 import { BrandLockup } from "@/components/brand-lockup"
 import { Button } from "@/components/ui/button"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { getBrandItems } from "@/lib/brands"
+import { capabilities } from "@/lib/capabilities"
 
 import "./header.css"
 
@@ -27,16 +34,33 @@ const consultingNavItems = [
 
 const bookNowHref = "/contact"
 
-type IndexRow =
+const primaryNavItems = [
+  { name: "About", href: "/about" },
+  { name: "Portfolio", href: "/portfolio" },
+]
+
+// Rendered after the Services dropdown so the order reads:
+// About, Portfolio, Services, News, Contact.
+const trailingNavItems = [
+  { name: "News", href: "/blog" },
+  { name: "Contact", href: "/contact" },
+]
+
+const serviceNavItems = capabilities.map((service) => ({
+  name: service.title,
+  href: `/capabilities/${service.slug}`,
+}))
+
+type MenuRow =
   | { number: string; title: string; items: Array<{ name: string; href: string }>; href?: never }
   | { number: string; title: string; href: string; items?: never }
 
-/** Same destinations the hover menus carried, reorganised as a single numbered index. */
-const INDEX_ROWS: IndexRow[] = [
+/** Secondary destinations, reorganised as a single numbered menu. */
+const MENU_ROWS: MenuRow[] = [
   { number: "01", title: "Software", items: productNavItems },
   { number: "02", title: "Consulting", items: consultingNavItems },
   { number: "03", title: "Pricing", href: "/pricing" },
-  { number: "04", title: "News", href: "/news" },
+  { number: "04", title: "Blog", href: "/blog" },
   { number: "05", title: "Careers", href: "https://pasive.co/jobs" },
   { number: "06", title: "Sign In", href: "/auth/login" },
 ]
@@ -58,7 +82,7 @@ export function Header() {
     return () => window.removeEventListener("scroll", updateHeader)
   }, [])
 
-  // Any navigation dismisses the index.
+  // Any navigation dismisses the menu.
   useEffect(() => {
     setOpen(false)
   }, [pathname])
@@ -79,7 +103,7 @@ export function Header() {
       }
       if (event.key !== "Tab" || !root) return
 
-      // Focus stays inside the header while the index owns the viewport.
+      // Focus stays inside the header while the menu owns the viewport.
       const focusables = Array.from(
         root.querySelectorAll<HTMLElement>('a[href], button:not([disabled])'),
       ).filter((node) => node.offsetParent !== null)
@@ -123,21 +147,76 @@ export function Header() {
             <BrandLockup logoSize={28} gapClassName="gap-1" invert={overlaysHero} />
           </Link>
 
-          <div className="flex items-center gap-3 md:gap-6">
-            <Button asChild className={`hidden px-5 sm:inline-flex ${MONO_LABEL}`}>
-              <Link href={bookNowHref}>Book Now</Link>
-            </Button>
+          <div className="flex items-center gap-4 md:gap-6">
+            <nav className="hidden items-center gap-5 lg:flex" aria-label="Primary navigation">
+              {primaryNavItems.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  aria-current={isCurrent(item.href) ? "page" : undefined}
+                  className={`transition-colors hover:text-accent ${MONO_LABEL} ${
+                    isCurrent(item.href) ? "text-accent" : ""
+                  }`}
+                >
+                  {item.name}
+                </Link>
+              ))}
+
+              {/* This is a lightweight navigation popover; keeping the page scrollable prevents the scrollbar from disappearing and shifting the layout. */}
+              <DropdownMenu modal={false}>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    type="button"
+                    aria-current={isCurrent("/capabilities") ? "page" : undefined}
+                    className={`inline-flex items-center gap-1 outline-none transition-colors hover:text-accent focus-visible:text-accent ${MONO_LABEL} ${
+                      isCurrent("/capabilities") ? "text-accent" : ""
+                    }`}
+                  >
+                    Services
+                    <ChevronDown className="size-3.5" aria-hidden="true" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-72 p-2">
+                  <DropdownMenuItem asChild>
+                    <Link href="/capabilities" className={`w-full font-medium ${MONO_LABEL}`}>
+                      All Services
+                    </Link>
+                  </DropdownMenuItem>
+                  {serviceNavItems.map((service) => (
+                    <DropdownMenuItem key={service.href} asChild>
+                      <Link href={service.href} className={`w-full ${MONO_LABEL}`}>
+                        {service.name}
+                      </Link>
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              {trailingNavItems.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  aria-current={isCurrent(item.href) ? "page" : undefined}
+                  className={`transition-colors hover:text-accent ${MONO_LABEL} ${
+                    isCurrent(item.href) ? "text-accent" : ""
+                  }`}
+                >
+                  {item.name}
+                </Link>
+              ))}
+            </nav>
 
             <button
               type="button"
               onClick={() => setOpen((value) => !value)}
               aria-expanded={open}
-              aria-controls="site-index"
+              aria-controls="site-menu"
+              aria-label={open ? "Close menu" : "Open more navigation"}
               className={`group flex items-center gap-2 outline-none transition-colors hover:text-accent focus-visible:text-accent ${
                 overlaysHero ? "text-white drop-shadow-sm" : "text-foreground"
               } ${MONO_LABEL}`}
             >
-              {open ? "Close" : "Index"}
+              {open ? "Close" : "More"}
               {open ? <X className="size-4" /> : <Menu className="size-4" />}
             </button>
           </div>
@@ -146,15 +225,15 @@ export function Header() {
 
       {open && (
         <div
-          id="site-index"
+          id="site-menu"
           role="dialog"
           aria-modal="true"
-          aria-label="Site index"
+          aria-label="More site navigation"
           className="hdr-panel min-h-0 flex-1 overflow-y-auto bg-background"
         >
           <div className="mx-auto max-w-7xl px-4 pb-20 pt-6 sm:px-8 md:px-20 md:pt-10">
             <ul>
-              {INDEX_ROWS.map((row, rowIndex) => (
+              {MENU_ROWS.map((row, rowIndex) => (
                 <li
                   key={row.number}
                   className="hdr-row border-t border-border"
@@ -209,10 +288,10 @@ export function Header() {
               ))}
             </ul>
 
-            <div className="mt-10 border-t border-border pt-8 sm:hidden">
+            <div className="mt-10 border-t border-border pt-8 lg:hidden">
               <Button asChild className={`w-full px-5 ${MONO_LABEL}`}>
                 <Link href={bookNowHref} onClick={() => setOpen(false)}>
-                  Book Now
+                  Contact Us
                 </Link>
               </Button>
             </div>

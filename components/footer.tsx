@@ -20,7 +20,6 @@ const footerGroups = [
     links: [
       { name: "About", href: "/about" },
       { name: "Portfolio", href: "/portfolio" },
-      { name: "News", href: "/news" },
       { name: "FAQ", href: "/faq" },
       { name: "Careers", href: "https://pasive.co/jobs" },
       { name: "Contact", href: "/contact" },
@@ -30,6 +29,7 @@ const footerGroups = [
     number: "03",
     title: "Resources",
     links: [
+      { name: "Blog", href: "/blog" },
       { name: "Capabilities", href: "/capabilities" },
       { name: "Industries", href: "/industries" },
     ],

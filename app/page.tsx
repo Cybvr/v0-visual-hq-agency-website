@@ -3,11 +3,11 @@ import { Header } from "@/components/header"
 import { HomeAccordion } from "@/components/home-accordion"
 import { getBrandItems } from "@/lib/brands"
 import { getCapabilities } from "@/lib/capabilities"
-import { getNewsItems } from "@/lib/news"
+import { getBlogPosts } from "@/lib/blog"
 
 const capabilities = getCapabilities()
 const products = getBrandItems().filter((b) => b.slug !== "visualhq")
-const news = getNewsItems()
+const news = getBlogPosts()
 
 export default function HomePage() {
   return (

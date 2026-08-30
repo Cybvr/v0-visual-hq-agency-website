@@ -2,13 +2,13 @@
 
 import Link from "next/link"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
-import { PortfolioSection } from "@/components/portfolio-section"
+import { PortfolioGrid } from "@/components/portfolio-grid"
 import type { BrandItem } from "@/lib/brands"
 import type { Capability } from "@/lib/capabilities"
-import type { NewsItem } from "@/lib/news"
+import type { BlogPost } from "@/lib/blog"
 
 // Shared by the Products, Capabilities, and News lists. Portfolio deliberately
-// breaks the pattern: it renders PortfolioSection's mosaic so the work itself
+// breaks the pattern: it renders the portfolio grid so the work itself
 // carries that section rather than another row of thumbnails.
 const listClass = "grid grid-cols-1 gap-y-8"
 
@@ -77,7 +77,7 @@ export function HomeAccordion({
 }: {
   products: BrandItem[]
   capabilities: Capability[]
-  news: NewsItem[]
+  news: BlogPost[]
 }) {
   return (
     <Accordion type="single" collapsible defaultValue="intro" className="w-full">
@@ -98,7 +98,7 @@ export function HomeAccordion({
           <ToggleIcon />
         </AccordionTrigger>
         <AccordionContent>
-          <PortfolioSection showHero={false} inset limit={6} />
+          <PortfolioGrid compact limit={8} showNumbers={false} />
         </AccordionContent>
       </AccordionItem>
 
@@ -154,7 +154,7 @@ export function HomeAccordion({
             {news.map((item) => (
               <MediaRow
                 key={item.slug}
-                href={`/news/${item.slug}`}
+                href={`/blog/${item.slug}`}
                 title={item.title}
                 image={item.image}
                 imageAlt={item.imageAlt}

@@ -38,9 +38,10 @@ export function BrandLockup({
         style={{
           fontSize: `${Math.round(logoSize * wordmarkScale)}px`,
           lineHeight: "0.82",
+          fontWeight: 400,
         }}
       >
-        VisualCNS
+        <span className="font-semibold">Visual</span><span className="font-normal">CNS</span>
       </span>
     </span>
   )
