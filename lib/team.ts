@@ -29,6 +29,14 @@ export const teamMembers: TeamMember[] = [
       "Muna has years of experience in research, strategy, business development, project management, communications and social marketing. She has experience working with UNICEF, Access Bank, NNPC, The World Bank, Adei Institute of Technology, Girl Effect and CSR-in-Action. She has experience working on training AI models in business and strategy as a domain expert for projects with Mercor, Micro1 and Cometis AG.",
   },
   {
+    name: "Chuka J. Uzo",
+    role: "Data Engineer & AI Solutions Developer",
+    image: "https://github.com/Chuka-J-Uzo.png?size=512",
+    description:
+      "Chuka is a data engineer and AI solutions developer based in Lagos. His work focuses on lightweight language models, AI infrastructure, and systems observability.",
+    profileUrl: "https://ng.linkedin.com/in/chuka-j-uzo",
+  },
+  {
     name: "Nnenna Okoro",
     role: "Project Manager",
     image: "/placeholder.svg",
