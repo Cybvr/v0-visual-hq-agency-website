@@ -267,7 +267,7 @@ export function Header() {
                         {row.title}
                       </span>
                       <ul className="col-start-2 row-start-2 flex flex-wrap gap-x-6 gap-y-3 md:col-start-3 md:row-start-1 md:justify-end">
-                        {row.items.map((item) => (
+                        {row.items?.map((item) => (
                           <li key={item.href}>
                             <Link
                               href={item.href}
