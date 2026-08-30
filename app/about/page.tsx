@@ -50,30 +50,37 @@ function TeamLightbox() {
         if (!open) setSelectedMember(null)
       }}
     >
-      <div className="grid grid-cols-1 gap-x-8 gap-y-2 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-10 md:grid-cols-2 lg:grid-cols-4">
         {team.map((member) => (
-          <button
-            key={member.name}
-            type="button"
-            onClick={() => setSelectedMember(member)}
-            className="group flex w-full items-center gap-4 border-t border-border py-4 text-left outline-none transition-colors hover:text-accent focus-visible:text-accent"
-          >
-            <span className="size-20 shrink-0 overflow-hidden bg-muted sm:size-24">
-              <img
-                src={member.image || "/placeholder.svg"}
-                alt=""
-                className="size-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
-              />
-            </span>
-            <span className="min-w-0 flex-1">
-              <span className="block text-2xl tracking-[-0.02em]">{member.name}</span>
-              <span className="mt-1 block text-sm text-accent">{member.role}</span>
-              <span className="mt-3 inline-flex items-center gap-2 font-mono text-[0.6875rem] uppercase tracking-[0.18em] text-muted-foreground transition-colors group-hover:text-accent">
+          <div key={member.name}>
+            <button
+              type="button"
+              onClick={() => setSelectedMember(member)}
+              aria-label={`Open profile for ${member.name}`}
+              className="group block w-full text-left outline-none"
+            >
+              <div className="aspect-square overflow-hidden rounded-lg bg-muted">
+                <img
+                  src={member.image || "/placeholder.svg"}
+                  alt={member.name}
+                  className="size-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
+                />
+              </div>
+              <h3 className="mt-5 text-lg font-semibold transition-colors group-hover:text-accent">{member.name}</h3>
+              <p className="text-sm text-accent">{member.role}</p>
+            </button>
+            <p className="mt-3 text-sm leading-6 text-muted-foreground">{member.description}</p>
+            {member.profileUrl && (
+              <a
+                href={member.profileUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="mt-4 inline-block text-sm underline underline-offset-4 transition-colors hover:text-accent"
+              >
                 View profile
-                <ArrowUpRight className="size-3.5" aria-hidden="true" />
-              </span>
-            </span>
-          </button>
+              </a>
+            )}
+          </div>
         ))}
       </div>
 
