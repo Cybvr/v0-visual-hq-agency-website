@@ -3,6 +3,7 @@ import type { Metadata } from "next"
 
 import { Analytics } from "@vercel/analytics/next"
 import "./globals.css"
+import { ThemeProvider } from "@/components/theme-provider"
 
 import { EB_Garamond, Geist_Mono, Inter, Outfit, Poppins } from "next/font/google"
 
@@ -52,6 +53,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
+      suppressHydrationWarning
       className={`${inter.variable} ${geistMono.variable} ${outfit.variable} ${ebGaramond.variable} ${poppins.variable}`}
     >
       <head>
@@ -60,7 +62,9 @@ export default function RootLayout({
         <link href="https://fonts.googleapis.com/css2?family=Geist+Pixel:wght@400&display=swap" rel="stylesheet" />
       </head>
       <body className="font-sans antialiased">
-        {children}
+        <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false} disableTransitionOnChange>
+          {children}
+        </ThemeProvider>
         <Analytics />
       </body>
     </html>

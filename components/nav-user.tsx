@@ -1,6 +1,7 @@
 "use client"
 
-import { ChevronsUpDown, LogOut } from "lucide-react"
+import Link from "next/link"
+import { ChevronsUpDown, LogOut, Palette, UserCog, UserRound } from "lucide-react"
 
 import { useAuth } from "@/components/auth-provider"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -56,7 +57,7 @@ export function NavUser() {
           </DropdownMenuTrigger>
           <DropdownMenuContent
             className="w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg"
-            side={isMobile ? "bottom" : "right"}
+            side={isMobile ? "bottom" : "top"}
             align="end"
             sideOffset={4}
           >
@@ -73,6 +74,25 @@ export function NavUser() {
                 </div>
               </div>
             </DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem asChild>
+              <Link href="/account">
+                <UserCog />
+                Account
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link href="/account/profile">
+                <UserRound />
+                Profile
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link href="/account/customization">
+                <Palette />
+                Customization
+              </Link>
+            </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={signOut}>
               <LogOut />

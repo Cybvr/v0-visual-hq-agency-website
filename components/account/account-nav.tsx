@@ -1,0 +1,38 @@
+"use client"
+
+import Link from "next/link"
+import { usePathname } from "next/navigation"
+
+import { cn } from "@/lib/utils"
+
+const LINKS = [
+  { label: "Account", href: "/account" },
+  { label: "Profile", href: "/account/profile" },
+  { label: "Customization", href: "/account/customization" },
+]
+
+export function AccountNav() {
+  const pathname = usePathname()
+
+  return (
+    <div className="mt-7 flex gap-6 border-b border-border" role="tablist" aria-label="Account settings">
+      {LINKS.map((link) => {
+        const active = pathname === link.href
+        return (
+          <Link
+            key={link.href}
+            href={link.href}
+            role="tab"
+            aria-selected={active}
+            className={cn(
+              "relative flex h-11 items-center text-sm font-medium text-muted-foreground outline-none transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+              active && "text-foreground after:absolute after:inset-x-0 after:bottom-[-1px] after:h-0.5 after:bg-foreground",
+            )}
+          >
+            {link.label}
+          </Link>
+        )
+      })}
+    </div>
+  )
+}

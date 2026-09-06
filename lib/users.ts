@@ -6,6 +6,8 @@ import {
   updateDoc,
   deleteDoc,
   doc,
+  query,
+  where,
   Timestamp,
 } from "firebase/firestore"
 import { db } from "./firebase"
@@ -20,6 +22,8 @@ export interface AppUser {
   photoURL?: string
   role?: UserRole
   company?: string
+  /** The user's own dashboard URL segment, e.g. /dashboard/ada-obi */
+  slug?: string
   /** Links a client user to their project/deliverable data. */
   clientId?: string
   /** Set once we've seeded a client's starter tasks, so we never re-seed. */
@@ -31,6 +35,60 @@ export interface AppUser {
 }
 
 const COLLECTION_NAME = "users"
+
+/**
+ * Words that are already dashboard sections. A user slug matching one of these
+ * would sit behind the real page forever, so they're never handed out.
+ */
+const RESERVED_SLUGS = new Set([
+  "agent",
+  "drive",
+  "email",
+  "seo",
+  "projects",
+  "tasks",
+  "portfolio",
+  "users",
+  "marketing",
+  "manage",
+  "settings",
+  "account",
+  "new",
+])
+
+export function slugifyUser(value: string): string {
+  return value
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 40)
+}
+
+export async function getUserBySlug(slug: string): Promise<AppUser | null> {
+  if (!slug) return null
+  const snapshot = await getDocs(query(collection(db, COLLECTION_NAME), where("slug", "==", slug)))
+  if (snapshot.empty) return null
+  const first = snapshot.docs[0]
+  return { ...(first.data() as object), uid: first.id } as AppUser
+}
+
+/**
+ * Build a slug from a name or email that no other user holds. `forUid` is the
+ * account claiming it, so re-saving your own slug isn't treated as a clash.
+ */
+export async function uniqueUserSlug(preferred: string, forUid: string): Promise<string> {
+  const base = slugifyUser(preferred) || "user"
+  let candidate = RESERVED_SLUGS.has(base) ? `${base}-1` : base
+
+  for (let attempt = 2; attempt < 50; attempt += 1) {
+    const taken = await getUserBySlug(candidate)
+    if (!taken || taken.uid === forUid) return candidate
+    candidate = `${base}-${attempt}`
+  }
+  // Every readable variant is spoken for, so fall back to something unique.
+  return `${base}-${forUid.slice(0, 6).toLowerCase()}`
+}
 
 export async function getUsers(): Promise<AppUser[]> {
   const snapshot = await getDocs(collection(db, COLLECTION_NAME))
@@ -96,6 +154,13 @@ export async function upsertUserOnLogin(profile: {
   // predate this. An admin can still point several users at one shared clientId.
   if (!existing.exists() || !existing.data()?.clientId) {
     base.clientId = profile.uid
+  }
+
+  // Same idea for the URL segment: new accounts get one, and older docs that
+  // predate slugs are backfilled on their next login.
+  if (!existing.exists() || !existing.data()?.slug) {
+    const preferred = profile.displayName || (profile.email ?? "").split("@")[0] || "user"
+    base.slug = await uniqueUserSlug(preferred, profile.uid)
   }
 
   await setDoc(ref, base, { merge: true })
