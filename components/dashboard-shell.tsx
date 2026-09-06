@@ -4,7 +4,7 @@ import { useState, type FormEvent, type ReactNode } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { CircleHelp, Search, SlidersHorizontal } from "lucide-react"
+import { Bell, CircleHelp, Search, SlidersHorizontal } from "lucide-react"
 
 import { AppSidebar, type NavLink } from "@/components/app-sidebar"
 import { Input } from "@/components/ui/input"
@@ -60,6 +60,8 @@ export function DashboardShell({
           { terms: ["portfolio", "work"], href: "/dashboard/portfolio" },
           { terms: ["email", "mail", "message", "template", "sender"], href: "/dashboard/email" },
           { terms: ["seo", "ranking", "keyword"], href: "/dashboard/seo" },
+          { terms: ["invoice", "billing", "payment", "finance"], href: "/dashboard/invoices" },
+          { terms: ["contract", "agreement", "signature"], href: "/dashboard/contracts" },
           { terms: ["user", "client", "settings"], href: "/dashboard/users" },
         ]
       : [
@@ -69,6 +71,8 @@ export function DashboardShell({
           { terms: ["drive", "file", "document"], href: "/dashboard/drive" },
           { terms: ["email", "mail", "message", "template", "sender"], href: "/dashboard/email" },
           { terms: ["seo", "ranking", "keyword"], href: "/dashboard/seo" },
+          { terms: ["invoice", "billing", "payment", "finance"], href: "/dashboard/invoices" },
+          { terms: ["contract", "agreement", "signature"], href: "/dashboard/contracts" },
         ]
     const match = destinations.find(({ terms }) => terms.some((term) => term.includes(query) || query.includes(term)))
     router.push(match?.href ?? "/dashboard")
@@ -109,13 +113,25 @@ export function DashboardShell({
             </form>
             <div className="ml-auto flex shrink-0 items-center gap-2">
               <Link
+                href="/pricing"
+                className="inline-flex h-10 items-center rounded-full border border-border px-3.5 text-sm font-medium text-foreground outline-none transition-colors hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                Upgrade
+              </Link>
+              <Link
                 href="/faq"
                 aria-label="Help"
-                className="inline-flex h-10 items-center gap-2 rounded-full px-3 text-sm font-medium text-muted-foreground outline-none transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
+                className="inline-flex size-10 items-center justify-center rounded-full text-muted-foreground outline-none transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
               >
                 <CircleHelp className="size-4" aria-hidden="true" />
-                <span className="hidden md:inline">Help</span>
               </Link>
+              <button
+                type="button"
+                aria-label="Notifications"
+                className="inline-flex size-10 items-center justify-center rounded-full text-muted-foreground outline-none transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                <Bell className="size-4" aria-hidden="true" />
+              </button>
               <Link
                 href="/dashboard/agent"
                 aria-label="Open Agent"

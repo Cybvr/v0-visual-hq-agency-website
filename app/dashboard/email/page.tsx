@@ -272,9 +272,6 @@ export default function EmailPage() {
         <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <h1 className="text-2xl font-semibold tracking-[-0.02em]">Email</h1>
-            <p className="mt-1.5 max-w-2xl text-sm leading-6 text-muted-foreground">
-              Send one-off messages and keep reusable email templates for your workspace.
-            </p>
           </div>
           {showOpsDetail && (
             <div className="flex items-center gap-2 text-sm">

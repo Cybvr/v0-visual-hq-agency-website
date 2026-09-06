@@ -85,6 +85,22 @@ service cloud.firestore {
       allow delete: if isAdmin() || (isSignedIn() && resource.data.clientId == myClientId());
     }
 
+    // Finance records - admins manage all; clients can only read issued
+    // records in their own workspace. Drafts remain internal.
+    match /invoices/{invoiceId} {
+      allow read: if isAdmin() || (isSignedIn()
+        && resource.data.clientId == myClientId()
+        && resource.data.status != 'draft');
+      allow write: if isAdmin();
+    }
+
+    match /contracts/{contractId} {
+      allow read: if isAdmin() || (isSignedIn()
+        && resource.data.clientId == myClientId()
+        && resource.data.status != 'draft');
+      allow write: if isAdmin();
+    }
+
     // Approvals - client deliverable sign-off (see lib/approvals.ts).
     // Signed-in users can read/write; admins included. Tighten to per-client
     // once approvals carry a clientId you can match against the user doc.

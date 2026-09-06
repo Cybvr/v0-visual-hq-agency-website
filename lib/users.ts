@@ -49,6 +49,8 @@ const RESERVED_SLUGS = new Set([
   "tasks",
   "portfolio",
   "users",
+  "invoices",
+  "contracts",
   "marketing",
   "manage",
   "settings",
@@ -93,6 +95,18 @@ export async function uniqueUserSlug(preferred: string, forUid: string): Promise
 export async function getUsers(): Promise<AppUser[]> {
   const snapshot = await getDocs(collection(db, COLLECTION_NAME))
   return snapshot.docs.map((d) => ({ ...(d.data() as object), uid: d.id })) as AppUser[]
+}
+
+/**
+ * The account owning a workspace. Several users can share a clientId, so this
+ * returns the first match, which is enough to open their record.
+ */
+export async function getUserByClientId(clientId: string): Promise<AppUser | null> {
+  if (!clientId) return null
+  const snapshot = await getDocs(query(collection(db, COLLECTION_NAME), where("clientId", "==", clientId)))
+  if (snapshot.empty) return null
+  const first = snapshot.docs[0]
+  return { ...(first.data() as object), uid: first.id } as AppUser
 }
 
 export async function getUser(uid: string): Promise<AppUser | null> {

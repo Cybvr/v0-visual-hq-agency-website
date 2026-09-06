@@ -4,7 +4,7 @@ import { useEffect, type ReactNode } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { Bot, Briefcase, Eye, FolderKanban, HardDrive, LayoutDashboard, ListTodo, Loader2, LogOut, Mail, Megaphone, TrendingUp, Users } from "lucide-react"
+import { Bot, Briefcase, Eye, FileSignature, FolderKanban, HardDrive, LayoutDashboard, ListTodo, Loader2, LogOut, Mail, Megaphone, Receipt, TrendingUp, Users, Wallet } from "lucide-react"
 import { AuthProvider, useAuth } from "@/components/auth-provider"
 import { Button } from "@/components/ui/button"
 import { DashboardShell, type NavLink } from "@/components/dashboard-shell"
@@ -31,6 +31,15 @@ const CLIENT_NAV: NavLink[] = [
       { label: "SEO", href: "/dashboard/seo", icon: TrendingUp },
     ],
   },
+  {
+    label: "Finance",
+    href: "/dashboard/invoices",
+    icon: Wallet,
+    items: [
+      { label: "Invoices", href: "/dashboard/invoices", icon: Receipt },
+      { label: "Contracts", href: "/dashboard/contracts", icon: FileSignature },
+    ],
+  },
 ]
 
 const ADMIN_NAV: NavLink[] = [
@@ -54,6 +63,15 @@ const ADMIN_NAV: NavLink[] = [
       { label: "Email", href: "/dashboard/email", icon: Mail },
       { label: "SEO", href: "/dashboard/seo", icon: TrendingUp },
       { label: "Portfolio", href: "/dashboard/portfolio", icon: FolderKanban },
+    ],
+  },
+  {
+    label: "Finance",
+    href: "/dashboard/invoices",
+    icon: Wallet,
+    items: [
+      { label: "Invoices", href: "/dashboard/invoices", icon: Receipt },
+      { label: "Contracts", href: "/dashboard/contracts", icon: FileSignature },
     ],
   },
   { label: "Users", href: "/dashboard/users", icon: Users },

@@ -16,13 +16,6 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet"
-import {
   Table,
   TableBody,
   TableCell,
@@ -32,7 +25,7 @@ import {
 } from "@/components/ui/table"
 import { Eye, Pencil, Plus, Trash2, Loader2, User as UserIcon } from "lucide-react"
 import { getUsers, deleteUser, type AppUser } from "@/lib/users"
-import { UserForm } from "@/components/admin/user-form"
+import { UserEditorSheet } from "@/components/admin/user-editor-sheet"
 import { useAuth } from "@/components/auth-provider"
 import { cn } from "@/lib/utils"
 
@@ -93,9 +86,6 @@ export default function UsersAdminPage() {
       <div className="mb-8 flex items-center justify-between gap-4">
         <div>
           <h1 className="text-xl font-semibold">Users</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Live from the Firestore <code className="rounded bg-muted px-1 py-0.5 text-xs">users</code> collection.
-          </p>
         </div>
         <Button className="shrink-0" onClick={() => setSelectedId("new")}>
           <Plus className="mr-2 h-4 w-4" />
@@ -236,26 +226,13 @@ export default function UsersAdminPage() {
         </div>
       )}
 
-      <Sheet open={selectedId !== null} onOpenChange={(open) => !open && setSelectedId(null)}>
-        <SheetContent className="w-full gap-0 p-0 sm:max-w-md">
-          <SheetHeader className="border-b border-border">
-            <SheetTitle>{selectedId === "new" ? "New user" : "Edit user"}</SheetTitle>
-            <SheetDescription>
-              {selectedId === "new"
-                ? "Add someone to the users collection."
-                : selectedUser?.email || selectedUser?.displayName || ""}
-            </SheetDescription>
-          </SheetHeader>
-          {selectedId !== null && (
-            <UserForm
-              key={selectedId}
-              user={selectedId === "new" ? null : selectedUser}
-              onSaved={handleSaved}
-              onCancel={() => setSelectedId(null)}
-            />
-          )}
-        </SheetContent>
-      </Sheet>
+      <UserEditorSheet
+        open={selectedId !== null}
+        user={selectedId === "new" ? null : selectedUser}
+        isNew={selectedId === "new"}
+        onClose={() => setSelectedId(null)}
+        onSaved={handleSaved}
+      />
     </main>
   )
 }

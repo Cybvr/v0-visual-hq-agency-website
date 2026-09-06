@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react"
 import Image from "next/image"
 import { Loader2 } from "lucide-react"
 import { useAuth } from "@/components/auth-provider"
+import { HomeBanner } from "@/components/dashboard/home-banner"
 import { HomeTaskList } from "@/components/dashboard/home-task-list"
 import { ProjectsView } from "@/components/dashboard/projects-view"
 import { getProjectsByClientId, type Project } from "@/lib/projects"
@@ -73,7 +74,7 @@ export function DashboardHome() {
 
   return (
     <main className="mx-auto w-full max-w-5xl px-4 py-10 sm:px-6">
-      <h1 className="text-xl font-semibold">Welcome, {firstName}</h1>
+      <HomeBanner firstName={firstName} onTrial={appUser?.plan === undefined || appUser?.plan === "trial"} />
 
       {loading ? (
         <div className="flex items-center justify-center py-20">
