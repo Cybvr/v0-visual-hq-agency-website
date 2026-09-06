@@ -26,8 +26,8 @@ const productNavItems = brands
 const consultingNavItems = [
   { name: "VisualHQ", href: "/visualhq", description: "Who we are and what we do." },
   { name: "About", href: "/about", description: "Our story, values, and team." },
-  { name: "Portfolio", href: "/portfolio", description: "Explore our work and client projects." },
-  { name: "Services", href: "/capabilities", description: "Explore VisualCNS services." },
+  { name: "Case Studies", href: "/case-studies", description: "Explore our work and client projects." },
+  { name: "Solutions", href: "/capabilities", description: "Explore VisualCNS solutions." },
   { name: "Industries", href: "/industries", description: "See the markets VisualHQ builds for." },
   { name: "FAQ", href: "/faq", description: "Answers about VisualCNS and our services." },
 ]
@@ -36,12 +36,13 @@ const bookNowHref = "/contact"
 
 const primaryNavItems = [
   { name: "About", href: "/about" },
-  { name: "Portfolio", href: "/portfolio" },
+  { name: "Case Studies", href: "/case-studies" },
 ]
 
-// Rendered after the Services dropdown so the order reads:
-// About, Portfolio, Services, Resources, Pricing.
+// Rendered after the Solutions dropdown so the order reads:
+// About, Case Studies, Solutions, Resources, Templates, Pricing.
 const trailingNavItems = [
+  { name: "Templates", href: "/templates" },
   { name: "Pricing", href: "/pricing" },
 ]
 
@@ -62,9 +63,10 @@ type MenuRow =
 const MENU_ROWS: MenuRow[] = [
   { number: "01", title: "Software", items: productNavItems },
   { number: "02", title: "Consulting", items: consultingNavItems },
-  { number: "03", title: "Pricing", href: "/pricing" },
-  { number: "04", title: "Resources", items: resourceNavItems },
-  { number: "05", title: "Careers", href: "https://pasive.co/jobs" },
+  { number: "03", title: "Templates", href: "/templates" },
+  { number: "04", title: "Pricing", href: "/pricing" },
+  { number: "05", title: "Resources", items: resourceNavItems },
+  { number: "06", title: "Careers", href: "https://pasive.co/jobs" },
 ]
 
 const MONO_LABEL = "font-mono text-[0.6875rem] uppercase tracking-[0.24em]"
@@ -160,14 +162,14 @@ export function Header() {
                       isCurrent("/capabilities") ? "text-accent" : ""
                     }`}
                   >
-                    Services
+                    Solutions
                     <ChevronDown className="size-3.5" aria-hidden="true" />
                   </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-72 p-2">
                   <DropdownMenuItem asChild>
                     <Link href="/capabilities" className={`w-full font-medium ${MONO_LABEL}`}>
-                      All Services
+                      All Solutions
                     </Link>
                   </DropdownMenuItem>
                   {serviceNavItems.map((service) => (

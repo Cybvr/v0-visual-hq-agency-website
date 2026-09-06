@@ -31,6 +31,11 @@ export interface Task {
   dueDate: string
   /** The body of the task - notes, links, the actual work */
   content: string
+  /**
+   * Set on the tasks of a published template, which makes them readable by
+   * anyone so the public templates page can list the steps of the workflow.
+   */
+  isPublic?: boolean
   createdAt?: Timestamp
   updatedAt?: Timestamp
 }
@@ -89,6 +94,48 @@ export async function getTasksByClientId(clientId: string): Promise<Task[]> {
   if (!clientId) return []
   const snapshot = await getDocs(query(collection(db, COLLECTION_NAME), where("clientId", "==", clientId)))
   return snapshot.docs.map((d) => ({ ...(d.data() as object), id: d.id })) as Task[]
+}
+
+/**
+ * Every task on one project, oldest first, which is the order they were
+ * authored in. Templates rely on that order - the task list is the workflow.
+ */
+export async function getTasksByProjectId(projectId: string): Promise<Task[]> {
+  if (!projectId) return []
+  const snapshot = await getDocs(query(collection(db, COLLECTION_NAME), where("projectId", "==", projectId)))
+  const tasks = snapshot.docs.map((d) => ({ ...(d.data() as object), id: d.id })) as Task[]
+  return tasks.sort((a, b) => tsToMillis(a.createdAt) - tsToMillis(b.createdAt))
+}
+
+/**
+ * Client-safe project task query. Including clientId lets Firestore prove that
+ * every returned task belongs to the signed-in workspace.
+ */
+export async function getTasksByProjectAndClientId(projectId: string, clientId: string): Promise<Task[]> {
+  if (!projectId || !clientId) return []
+  const snapshot = await getDocs(
+    query(
+      collection(db, COLLECTION_NAME),
+      where("projectId", "==", projectId),
+      where("clientId", "==", clientId),
+    ),
+  )
+  const tasks = snapshot.docs.map((d) => ({ ...(d.data() as object), id: d.id })) as Task[]
+  return tasks.sort((a, b) => tsToMillis(a.createdAt) - tsToMillis(b.createdAt))
+}
+
+/**
+ * The steps of a published template. Both filters are deliberate: the rules
+ * only open a task up when it carries isPublic, so the query has to say so for
+ * a visitor who is signed out, or signed in as a different client, to read it.
+ */
+export async function getPublicTasksByProjectId(projectId: string): Promise<Task[]> {
+  if (!projectId) return []
+  const snapshot = await getDocs(
+    query(collection(db, COLLECTION_NAME), where("projectId", "==", projectId), where("isPublic", "==", true)),
+  )
+  const tasks = snapshot.docs.map((d) => ({ ...(d.data() as object), id: d.id })) as Task[]
+  return tasks.sort((a, b) => tsToMillis(a.createdAt) - tsToMillis(b.createdAt))
 }
 
 export async function getTask(id: string): Promise<Task | null> {

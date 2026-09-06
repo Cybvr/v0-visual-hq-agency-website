@@ -3,7 +3,8 @@
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import { ArrowRight, Loader2 } from "lucide-react"
-import { getPortfolioProjects, type PortfolioProject } from "@/lib/portfolio"
+import { getCaseStudyProjects, type CaseStudyProject } from "@/lib/case-studies"
+import { PageHeading } from "@/components/page-heading"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { PortfolioGrid } from "@/components/portfolio-grid"
 
@@ -26,14 +27,13 @@ export function PortfolioSection({ showHero = true, inset = false, limit }: Port
   const [activeFilter, setActiveFilter] = useState("All")
   const [industryFilter, setIndustryFilter] = useState("All")
   const [locationFilter, setLocationFilter] = useState("All")
-  const [projects, setProjects] = useState<PortfolioProject[]>([])
+  const [projects, setProjects] = useState<CaseStudyProject[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     async function fetchProjects() {
       try {
-        const data = await getPortfolioProjects()
-        setProjects(data.filter((p) => p.status?.toLowerCase() === "published"))
+        setProjects(await getCaseStudyProjects())
       } catch (error) {
         console.error("Error fetching projects:", error)
       } finally {
@@ -58,13 +58,12 @@ export function PortfolioSection({ showHero = true, inset = false, limit }: Port
   return (
     <>
       {showHero && (
-        <section className="pt-30 pb-12">
+        <section className="pb-12 pt-32">
           <div className={containerClass}>
-            <div className="max-w-3xl">
-              <h1 className="text-sm uppercase tracking-[0.24em] text-foreground">
-                Portfolio {!loading && `(${filteredProjects.length})`}
-              </h1>
-            </div>
+            <PageHeading
+              title="Case Studies"
+              subtitle={loading ? undefined : `${filteredProjects.length} client projects across brand, product, and platform work.`}
+            />
           </div>
         </section>
       )}
@@ -142,7 +141,7 @@ export function PortfolioSection({ showHero = true, inset = false, limit }: Port
             </p>
           ) : (
             <>
-              {/* The hero heading carries the count on /portfolio; inset has no heading, so it carries its own. */}
+              {/* The hero heading carries the count on /case-studies; inset has no heading, so it carries its own. */}
               {limit && (
                 <p className="mb-8 font-mono text-[0.6875rem] uppercase tracking-[0.24em] text-muted-foreground">
                   Showing {visibleProjects.length} of {filteredProjects.length} projects
@@ -154,10 +153,10 @@ export function PortfolioSection({ showHero = true, inset = false, limit }: Port
               {hasMore && (
                 <div className="mt-12 border-t border-border pt-6">
                   <Link
-                    href="/portfolio"
+                    href="/case-studies"
                     className="group inline-flex items-center gap-3 font-mono text-[0.6875rem] uppercase tracking-[0.24em] text-muted-foreground transition-colors hover:text-accent"
                   >
-                    View all {filteredProjects.length} projects
+                    View all {filteredProjects.length} case studies
                     <ArrowRight className="size-3.5 transition-transform duration-500 ease-out group-hover:translate-x-1 motion-reduce:transition-none" />
                   </Link>
                 </div>

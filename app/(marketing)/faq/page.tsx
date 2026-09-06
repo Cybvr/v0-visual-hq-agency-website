@@ -46,8 +46,8 @@ const faqs = [
     answer: (
       <>
         Yes. You can explore selected work in our{" "}
-        <Link href="/portfolio" className="text-foreground underline underline-offset-4 hover:text-accent">
-          portfolio
+        <Link href="/case-studies" className="text-foreground underline underline-offset-4 hover:text-accent">
+          case studies
         </Link>
         . For a relevant example, share the kind of problem you are solving and we will point you to the closest work.
       </>

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import Link from "next/link"
 import { Loader2 } from "lucide-react"
-import { getPortfolioProjects, type PortfolioProject } from "@/lib/portfolio"
+import { getCaseStudyProjects, type CaseStudyProject } from "@/lib/case-studies"
 
 import "./portfolio.css"
 
@@ -11,7 +11,7 @@ const PLACEHOLDER = "/placeholder.svg?height=900&width=1200&query=project"
 
 export interface PortfolioGridProps {
   /** Pass projects when the parent already owns loading, filtering, or sorting. */
-  projects?: PortfolioProject[]
+  projects?: CaseStudyProject[]
   /** The compact spacing used when the grid sits inside the home accordion. */
   compact?: boolean
   /** Limit the number of projects rendered, without adding page controls. */
@@ -20,7 +20,7 @@ export interface PortfolioGridProps {
   showNumbers?: boolean
 }
 
-function metaLine(project: PortfolioProject) {
+function metaLine(project: CaseStudyProject) {
   return [project.category?.join(" & "), project.location].filter(Boolean).join(" · ")
 }
 
@@ -31,7 +31,7 @@ export function PortfolioGrid({
   limit,
   showNumbers = true,
 }: PortfolioGridProps) {
-  const [fetchedProjects, setFetchedProjects] = useState<PortfolioProject[]>([])
+  const [fetchedProjects, setFetchedProjects] = useState<CaseStudyProject[]>([])
   const [loading, setLoading] = useState(providedProjects === undefined)
 
   useEffect(() => {
@@ -39,8 +39,7 @@ export function PortfolioGrid({
 
     async function fetchProjects() {
       try {
-        const data = await getPortfolioProjects()
-        setFetchedProjects(data.filter((project) => project.status?.toLowerCase() === "published"))
+        setFetchedProjects(await getCaseStudyProjects())
       } catch (error) {
         console.error("Error fetching projects:", error)
       } finally {
@@ -56,14 +55,14 @@ export function PortfolioGrid({
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-20" aria-label="Loading portfolio">
+      <div className="flex items-center justify-center py-20" aria-label="Loading case studies">
         <Loader2 className="size-8 animate-spin text-muted-foreground" aria-hidden="true" />
       </div>
     )
   }
 
   if (visibleProjects.length === 0) {
-    return <p className="py-20 text-center text-muted-foreground">No portfolio projects are available yet.</p>
+    return <p className="py-20 text-center text-muted-foreground">No case studies are available yet.</p>
   }
 
   return (
@@ -77,7 +76,7 @@ export function PortfolioGrid({
 
         return (
           <li key={project.id} className="pf-tile">
-            <Link href={`/portfolio/${project.slug}`} className="group block outline-none">
+            <Link href={`/case-studies/${project.slug}`} className="group block outline-none">
               <figure>
                 <div className="pf-shot aspect-[4/3] overflow-hidden bg-muted">
                   <img src={project.imageUrl || PLACEHOLDER} alt="" loading="lazy" />

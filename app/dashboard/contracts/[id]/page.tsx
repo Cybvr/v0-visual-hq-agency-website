@@ -3,10 +3,10 @@
 import { useEffect, useState } from "react"
 import Link from "next/link"
 import { useParams } from "next/navigation"
-import { ArrowLeft, ExternalLink, Loader2 } from "lucide-react"
+import { ArrowLeft, Loader2 } from "lucide-react"
 
 import { useAuth } from "@/components/auth-provider"
-import { Button } from "@/components/ui/button"
+import { DocumentActions } from "@/components/dashboard/document-actions"
 import { contractStatusMeta, formatDate, getContract, type Contract } from "@/lib/billing"
 import { cn } from "@/lib/utils"
 
@@ -60,9 +60,7 @@ export default function ContractDetailPage() {
     <main className="mx-auto w-full max-w-4xl px-4 py-8 sm:px-6 sm:py-10">
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3 print:hidden">
         <Link href="/dashboard/contracts" className="inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"><ArrowLeft className="size-4" />Back to contracts</Link>
-        <div className="flex items-center gap-2">
-          {contract.url && <Button asChild variant="outline" size="sm"><a href={contract.url} target="_blank" rel="noreferrer">Open original<ExternalLink className="size-4" /></a></Button>}
-        </div>
+        <DocumentActions url={contract.url} />
       </div>
 
       <article className="mx-auto min-h-[70vh] border border-neutral-200 bg-white px-6 py-10 text-neutral-950 shadow-sm sm:px-14 sm:py-14 print:border-0 print:shadow-none">

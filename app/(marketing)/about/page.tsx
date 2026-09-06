@@ -1,5 +1,6 @@
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
+import { PageHeading } from "@/components/page-heading"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -105,23 +106,21 @@ export default function AboutPage() {
       <Header />
 
       {/* Hero Section */}
-      <section className="pt-32 pb-20 px-6">
+      <section className="px-4 pb-20 pt-32 sm:px-8 md:px-20">
         <div className="max-w-7xl mx-auto">
-          <div className="max-w-3xl">
-            <p className="text-sm font-medium text-muted-foreground mb-4">About Us</p>
-            <h1 className="font-serif text-4xl font-normal leading-[1.1] tracking-tight text-balance md:text-6xl">
-              Building brands that <span className="text-accent">matter</span>
-            </h1>
-            <p className="mt-6 max-w-2xl text-lg text-muted-foreground">
-              A global creative consultancy that develops digital experiences, brand systems, and technology solutions
-              for modern businesses.
-            </p>
-          </div>
+          <PageHeading
+            title={
+              <>
+                Building brands that <span className="text-accent">matter</span>
+              </>
+            }
+            subtitle="A global creative consultancy that develops digital experiences, brand systems, and technology solutions for modern businesses."
+          />
         </div>
       </section>
 
       {/* Story Section */}
-      <section className="py-20 px-6 bg-secondary">
+      <section className="bg-secondary px-4 py-20 sm:px-8 md:px-20">
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div>
@@ -151,7 +150,7 @@ export default function AboutPage() {
       </section>
 
       {/* Values Section */}
-      <section className="py-20 px-6">
+      <section className="px-4 py-20 sm:px-8 md:px-20">
         <div className="max-w-7xl mx-auto">
           <div className="mb-12">
             <p className="text-sm font-medium text-muted-foreground mb-2">Our Approach</p>
@@ -170,8 +169,8 @@ export default function AboutPage() {
       </section>
 
       {/* Team Section */}
-      <section className="py-20 px-6 bg-secondary">
-        <div className="max-w-5xl mx-auto">
+      <section className="bg-secondary px-4 py-20 sm:px-8 md:px-20">
+        <div className="max-w-7xl mx-auto">
           <div className="mb-12">
             <p className="text-sm font-medium text-muted-foreground mb-2">Our Team</p>
             <h2 className="font-serif text-3xl md:text-4xl font-bold">The people behind the work</h2>
@@ -181,7 +180,7 @@ export default function AboutPage() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 px-6">
+      <section className="px-4 py-20 sm:px-8 md:px-20">
         <div className="max-w-7xl mx-auto text-center">
           <h2 className="font-serif text-3xl md:text-4xl font-bold mb-4">Let's work together</h2>
           <p className="text-muted-foreground max-w-xl mx-auto mb-8">

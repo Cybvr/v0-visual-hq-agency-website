@@ -1,15 +1,31 @@
 "use client"
 
 import { useCallback, useEffect, useState } from "react"
-import Link from "next/link"
-import { useParams } from "next/navigation"
+import { useParams, useRouter } from "next/navigation"
 import { ArrowLeft, Loader2 } from "lucide-react"
 
 import { useAuth } from "@/components/auth-provider"
+import { ProjectShareButton } from "@/components/dashboard/project-share-button"
 import { TasksView } from "@/components/dashboard/tasks-view"
+import { Badge } from "@/components/ui/badge"
 import { getProjectBySlug, projectStatusMeta, type Project } from "@/lib/projects"
-import { deleteTask, getTasksByClientId, tsToMillis, updateTask, type Task } from "@/lib/tasks"
+import { deleteTask, formatTimestamp, getTasksByClientId, tsToMillis, updateTask, type Task } from "@/lib/tasks"
 import { cn } from "@/lib/utils"
+
+/** Goes back a step in history, falling back to the dashboard on a cold open. */
+function BackLink() {
+  const router = useRouter()
+  return (
+    <button
+      type="button"
+      onClick={() => (window.history.length > 1 ? router.back() : router.push("/dashboard"))}
+      className="inline-flex items-center gap-1.5 text-sm text-muted-foreground outline-none transition-colors hover:text-foreground"
+    >
+      <ArrowLeft className="size-4" aria-hidden="true" />
+      Back
+    </button>
+  )
+}
 
 export default function ProjectDetailPage() {
   const params = useParams<{ slug: string }>()
@@ -88,13 +104,7 @@ export default function ProjectDetailPage() {
   if (error || !project || forbidden) {
     return (
       <main className="mx-auto w-full max-w-5xl px-4 py-10 sm:px-6">
-        <Link
-          href="/dashboard"
-          className="inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
-        >
-          <ArrowLeft className="size-4" aria-hidden="true" />
-          Back to dashboard
-        </Link>
+        <BackLink />
         <p className="mt-8 text-sm text-muted-foreground">
           {error
             ? "Couldn't load this project right now. Please try again shortly."
@@ -108,33 +118,36 @@ export default function ProjectDetailPage() {
 
   return (
     <main className="mx-auto w-full max-w-5xl px-4 py-10 sm:px-6">
-      <Link
-        href="/dashboard"
-        className="inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
-      >
-        <ArrowLeft className="size-4" aria-hidden="true" />
-        Back to dashboard
-      </Link>
-
-      <div className="mt-5 flex flex-wrap items-start justify-between gap-4">
-        <div className="min-w-0">
-          <h1 className="text-xl font-semibold">{project.title}</h1>
-          <p className="mt-1 text-sm text-muted-foreground">{project.service}</p>
+      <section className="overflow-hidden rounded-lg bg-card">
+        <div className="flex flex-wrap items-start justify-between gap-4 p-5">
+          <div className="flex min-w-0 items-start gap-3">
+            <div className="pt-1">
+              <BackLink />
+            </div>
+            <span className="mt-1.5 h-4 w-px shrink-0 bg-border" aria-hidden="true" />
+            <div className="min-w-0">
+              <h1 className="truncate text-xl font-semibold">{project.title}</h1>
+              <Badge variant="secondary" className="mt-1.5 rounded-sm px-1.5 py-0">
+                {project.service}
+              </Badge>
+            </div>
+          </div>
+          <div className="flex shrink-0 items-center gap-3">
+            <span className={cn("rounded-full px-2.5 py-1 text-xs font-medium", meta.className)}>{meta.label}</span>
+            <ProjectShareButton project={project} stepCount={tasks.length} onChanged={fetchData} />
+          </div>
         </div>
-        <span className={cn("shrink-0 rounded-full px-2.5 py-1 text-xs font-medium", meta.className)}>
-          {meta.label}
-        </span>
-      </div>
-
-      <div className="mt-6 rounded-[14px] border border-border/60 bg-card p-5">
-        <div className="flex items-end justify-between gap-4 text-sm">
-          <span className="font-medium">{project.progress}% complete</span>
-          <span className="text-muted-foreground">Due {project.dueDate}</span>
-        </div>
-        <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-muted">
-          <div className="h-full rounded-full bg-accent" style={{ width: `${project.progress}%` }} />
-        </div>
-      </div>
+        <dl className="grid gap-4 border-t border-border/70 px-5 py-4 text-sm sm:grid-cols-2">
+          <div>
+            <dt className="text-xs text-muted-foreground">Client</dt>
+            <dd className="mt-1 font-medium">{project.client || "—"}</dd>
+          </div>
+          <div>
+            <dt className="text-xs text-muted-foreground">Last modified</dt>
+            <dd className="mt-1 font-medium">{formatTimestamp(project.updatedAt)}</dd>
+          </div>
+        </dl>
+      </section>
 
       <div className="mt-8">
         <TasksView

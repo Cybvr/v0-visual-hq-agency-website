@@ -30,10 +30,30 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet"
-import { Pencil, Plus, Trash2, Loader2 } from "lucide-react"
-import { getProjects, deleteProject, projectStatusMeta, type Project } from "@/lib/projects"
+import { CheckCircle2, Database, Eye, Loader2, Plus, Trash2 } from "lucide-react"
+import { getProjects, deleteProject, projectSlug, projectStatusMeta, type Project } from "@/lib/projects"
+import { migratePortfolioToProjects, type PortfolioMigrationResult } from "@/lib/migrate-portfolio"
 import { ClientProjectForm } from "@/components/admin/client-project-form"
+import { FilterBar, useFilterBar, type SortOption } from "@/components/dashboard/filter-bar"
 import { cn } from "@/lib/utils"
+
+const PROJECT_SORTS: SortOption<Project>[] = [
+  { value: "title", label: "Project", get: (p) => p.title, ascLabel: "A–Z", descLabel: "Z–A" },
+  { value: "client", label: "Client", get: (p) => p.client || p.clientId, ascLabel: "A–Z", descLabel: "Z–A" },
+  {
+    value: "status",
+    label: "Status",
+    get: (p) => projectStatusMeta[p.status]?.label ?? p.status,
+    ascLabel: "A–Z",
+    descLabel: "Z–A",
+  },
+  { value: "progress", label: "Progress", get: (p) => p.progress, ascLabel: "Lowest", descLabel: "Highest" },
+  { value: "dueDate", label: "Due date", get: (p) => p.dueDate, ascLabel: "Soonest", descLabel: "Latest" },
+]
+
+function searchProject(p: Project) {
+  return [p.title, p.client, p.clientId, p.service, projectStatusMeta[p.status]?.label]
+}
 
 export default function ProjectsAdminPage() {
   const router = useRouter()
@@ -42,12 +62,21 @@ export default function ProjectsAdminPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [deleting, setDeleting] = useState<string | null>(null)
-  const [selectedId, setSelectedId] = useState<string | "new" | null>(null)
+  const [creating, setCreating] = useState(false)
+  const [migrating, setMigrating] = useState(false)
+  const [migrationResult, setMigrationResult] = useState<PortfolioMigrationResult | null>(null)
+  const [migrationError, setMigrationError] = useState<string | null>(null)
   const initialClientId = searchParams.get("clientId") ?? ""
+  const { results: visibleProjects, bar } = useFilterBar({
+    items: projects,
+    search: searchProject,
+    sorts: PROJECT_SORTS,
+    defaultSort: "title",
+  })
 
   useEffect(() => {
     if (searchParams.get("new") === "1") {
-      setSelectedId("new")
+      setCreating(true)
     }
   }, [searchParams])
 
@@ -78,7 +107,6 @@ export default function ProjectsAdminPage() {
     try {
       await deleteProject(id)
       setProjects((prev) => prev.filter((p) => p.id !== id))
-      if (selectedId === id) setSelectedId(null)
     } catch (err) {
       console.error("Error deleting project:", err)
     } finally {
@@ -88,26 +116,87 @@ export default function ProjectsAdminPage() {
 
   async function handleSaved() {
     await fetchProjects()
-    setSelectedId(null)
+    setCreating(false)
     clearNewProjectQuery()
   }
 
-  const selectedProject =
-    typeof selectedId === "string" && selectedId !== "new" ? projects.find((p) => p.id === selectedId) ?? null : null
+  async function handleMigration() {
+    if (migrating) return
+    setMigrating(true)
+    setMigrationResult(null)
+    setMigrationError(null)
+    try {
+      const result = await migratePortfolioToProjects()
+      await fetchProjects()
+      setMigrationResult(result)
+    } catch (migrationFailure) {
+      console.error("Error migrating case studies:", migrationFailure)
+      setMigrationError(
+        migrationFailure instanceof Error
+          ? migrationFailure.message
+          : "The migration failed. Nothing was removed; check your connection and try again.",
+      )
+    } finally {
+      setMigrating(false)
+    }
+  }
 
   return (
     <main className="mx-auto w-full max-w-6xl px-4 pt-6 pb-12 sm:px-6">
       <div className="mb-8 flex items-center justify-between gap-4">
         <div>
           <h1 className="text-xl font-semibold">Projects</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Client projects, live from the Firestore <code className="rounded bg-muted px-1 py-0.5 text-xs">projects</code> collection.
-          </p>
         </div>
-        <Button className="shrink-0" onClick={() => setSelectedId("new")}>
-          <Plus className="mr-2 h-4 w-4" />
-          Add Project
-        </Button>
+        <div className="flex shrink-0 flex-wrap justify-end gap-2">
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="outline" disabled={loading || migrating}>
+                {migrating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Database className="mr-2 h-4 w-4" />}
+                {migrating ? "Adding case studies…" : "Add case studies to Projects"}
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Add all case studies to Projects?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Each existing case study will become a Project and will be marked as a case study during the move.
+                  Missing client workspaces will also be created. Running this again updates the same Projects instead
+                  of creating duplicates. Portfolio will stay untouched as a backup.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={() => void handleMigration()}>Add to Projects</AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+          <Button onClick={() => setCreating(true)}>
+            <Plus className="mr-2 h-4 w-4" />
+            Add Project
+          </Button>
+        </div>
+      </div>
+
+      <div aria-live="polite">
+        {migrationResult && (
+          <div className="mb-6 flex items-start gap-3 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-emerald-950 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-100">
+            <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0" />
+            <div className="min-w-0 text-sm">
+              <p className="font-medium">Case studies added to Projects</p>
+              <p className="mt-1 text-emerald-800 dark:text-emerald-200">
+                {migrationResult.caseStudies} processed; {migrationResult.projectsCreated} projects and{" "}
+                {migrationResult.usersCreated} client workspaces created, {migrationResult.projectsUpdated} existing
+                projects updated.
+              </p>
+            </div>
+          </div>
+        )}
+        {migrationError && (
+          <div className="mb-6 rounded-xl border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">
+            <p className="font-medium">Case studies could not be migrated</p>
+            <p className="mt-1">{migrationError}</p>
+          </div>
+        )}
       </div>
 
       {loading ? (
@@ -122,13 +211,22 @@ export default function ProjectsAdminPage() {
         <Card>
           <CardContent className="py-16 text-center">
             <p className="mb-4 text-muted-foreground">No projects yet.</p>
-            <Button onClick={() => setSelectedId("new")}>
+            <Button onClick={() => setCreating(true)}>
               <Plus className="mr-2 h-4 w-4" />
               Add the first project
             </Button>
           </CardContent>
         </Card>
       ) : (
+        <>
+        <FilterBar {...bar} placeholder="Search projects" />
+        {visibleProjects.length === 0 ? (
+          <Card>
+            <CardContent className="py-16 text-center text-sm text-muted-foreground">
+              No projects match your search.
+            </CardContent>
+          </Card>
+        ) : (
         <div className="rounded-lg border border-border">
           <Table>
             <TableHeader>
@@ -143,11 +241,24 @@ export default function ProjectsAdminPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {projects.map((p) => {
+              {visibleProjects.map((p) => {
                 const meta = projectStatusMeta[p.status] ?? projectStatusMeta["in-progress"]
                 return (
-                  <TableRow key={p.id} className="cursor-pointer" onClick={() => setSelectedId(p.id)}>
-                    <TableCell className="font-medium">{p.title}</TableCell>
+                  <TableRow
+                    key={p.id}
+                    className="cursor-pointer"
+                    onClick={() => router.push(`/dashboard/projects/${projectSlug(p)}`)}
+                  >
+                    <TableCell className="font-medium">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span>{p.title}</span>
+                        {p.isCaseStudy && (
+                          <span className="rounded-full bg-violet-100 px-2 py-0.5 text-xs font-medium text-violet-700 dark:bg-violet-950 dark:text-violet-200">
+                            Case study
+                          </span>
+                        )}
+                      </div>
+                    </TableCell>
                     <TableCell className="text-muted-foreground">{p.client || p.clientId}</TableCell>
                     <TableCell className="text-muted-foreground">{p.service || "—"}</TableCell>
                     <TableCell>
@@ -163,10 +274,10 @@ export default function ProjectsAdminPage() {
                           variant="ghost"
                           size="icon"
                           className="h-8 w-8 text-muted-foreground hover:text-foreground"
-                          onClick={() => setSelectedId(p.id)}
-                          aria-label="Edit project"
+                          onClick={() => router.push(`/dashboard/projects/${projectSlug(p)}`)}
+                          aria-label={`Open ${p.title}`}
                         >
-                          <Pencil className="h-3.5 w-3.5" />
+                          <Eye className="h-3.5 w-3.5" />
                         </Button>
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
@@ -206,33 +317,33 @@ export default function ProjectsAdminPage() {
             </TableBody>
           </Table>
         </div>
+        )}
+        </>
       )}
 
       <Sheet
-        open={selectedId !== null}
+        open={creating}
         onOpenChange={(open) => {
           if (!open) {
-            setSelectedId(null)
+            setCreating(false)
             clearNewProjectQuery()
           }
         }}
       >
         <SheetContent side="right" className="w-full gap-0 overflow-y-auto sm:max-w-lg">
           <SheetHeader className="border-b">
-            <SheetTitle>{selectedId === "new" ? "New project" : "Edit project"}</SheetTitle>
-            <SheetDescription>
-              {selectedId === "new" ? "Create a project for a client." : selectedProject?.title ?? ""}
-            </SheetDescription>
+            <SheetTitle>New project</SheetTitle>
+            <SheetDescription>Create a project for a client.</SheetDescription>
           </SheetHeader>
           <div className="p-4">
-            {selectedId !== null && (
+            {creating && (
               <ClientProjectForm
-                key={selectedId}
-                project={selectedId === "new" ? null : selectedProject}
-                initialClientId={selectedId === "new" ? initialClientId : undefined}
+                key="new"
+                project={null}
+                initialClientId={initialClientId}
                 onSaved={handleSaved}
                 onCancel={() => {
-                  setSelectedId(null)
+                  setCreating(false)
                   clearNewProjectQuery()
                 }}
               />

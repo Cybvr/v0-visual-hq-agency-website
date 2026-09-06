@@ -66,23 +66,50 @@ service cloud.firestore {
     }
 
     // Projects - admins manage; clients can read and create projects only in
-    // their own workspace.
+    // their own workspace. A project with isPublic true is a template. A
+    // published isCaseStudy project is readable on the public marketing site.
+    // Clients can update their own projects, which is how they publish one,
+    // but they cannot hand it to another workspace.
     match /projects/{projectId} {
-      allow read: if isAdmin() || (isSignedIn() && resource.data.clientId == myClientId());
-      allow create: if isAdmin() || (isSignedIn() && request.resource.data.clientId == myClientId());
-      allow update, delete: if isAdmin();
-    }
-
-    // Tasks - admins manage all; a client has full CRUD on their OWN tasks
-    // (clientId must match, and an update can't move a task to another client).
-    match /tasks/{taskId} {
-      allow read: if isAdmin() || (isSignedIn() && resource.data.clientId == myClientId());
+      allow read: if isAdmin()
+        || (isSignedIn() && resource.data.clientId == myClientId())
+        || resource.data.isPublic == true
+        || (resource.data.isCaseStudy == true && resource.data.caseStudyStatus == 'published');
       allow create: if isAdmin() || (isSignedIn() && request.resource.data.clientId == myClientId());
       allow update: if isAdmin()
         || (isSignedIn()
             && resource.data.clientId == myClientId()
             && request.resource.data.clientId == resource.data.clientId);
       allow delete: if isAdmin() || (isSignedIn() && resource.data.clientId == myClientId());
+    }
+
+    // Tasks - admins manage all; a client has full CRUD on their OWN tasks
+    // (clientId must match, and an update can't move a task to another client).
+    // Tasks carrying isPublic true are the steps of a published template and
+    // are readable by anyone, so the templates page can list the workflow.
+    match /tasks/{taskId} {
+      allow read: if isAdmin()
+        || (isSignedIn() && resource.data.clientId == myClientId())
+        || resource.data.isPublic == true;
+      allow create: if isAdmin() || (isSignedIn() && request.resource.data.clientId == myClientId());
+      allow update: if isAdmin()
+        || (isSignedIn()
+            && resource.data.clientId == myClientId()
+            && request.resource.data.clientId == resource.data.clientId);
+      allow delete: if isAdmin() || (isSignedIn() && resource.data.clientId == myClientId());
+    }
+
+    // Comments - the thread on a task. Anyone signed in who can reach the task's
+    // workspace can read and post; a comment carries its author, and only that
+    // author or an admin can remove it. Comments are never public, so a template's
+    // thread stays with the workspace that wrote it.
+    match /comments/{commentId} {
+      allow read: if isAdmin() || (isSignedIn() && resource.data.clientId == myClientId());
+      allow create: if isSignedIn() && request.resource.data.authorUid == request.auth.uid;
+      allow update: if isAdmin() || (isSignedIn()
+        && resource.data.authorUid == request.auth.uid
+        && request.resource.data.authorUid == resource.data.authorUid);
+      allow delete: if isAdmin() || (isSignedIn() && resource.data.authorUid == request.auth.uid);
     }
 
     // Finance records - admins manage all; clients can only read issued

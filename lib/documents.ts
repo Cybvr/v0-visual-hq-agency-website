@@ -11,6 +11,7 @@ import {
 } from "firebase/firestore"
 import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage"
 import { db, storage } from "./firebase"
+import type { Contract } from "./billing"
 
 export interface SharedDocument {
   id: string
@@ -21,7 +22,7 @@ export interface SharedDocument {
   sharedWith?: string
   sharedWithUserIds?: string[]
   createdAt?: Timestamp
-  type?: "link" | "image" | "file"
+  type?: "link" | "image" | "file" | "doc"
   thumbnailUrl?: string
 }
 
@@ -80,4 +81,21 @@ export async function updateDocumentSharing(id: string, sharedWithUserIds: strin
     sharedWithUserIds,
     sharedWith: sharedWithUserIds.length ? "Selected users" : "Private",
   })
+}
+
+/**
+ * Contracts appear in Drive alongside shared files, so a client finds them
+ * where they go looking for documents rather than only under Finance.
+ */
+export function contractsAsDocuments(contracts: Contract[]): SharedDocument[] {
+  return contracts.map((contract) => ({
+    id: `contract-${contract.id}`,
+    title: contract.title,
+    // Written agreements live on their own page; linked ones point at the file.
+    url: contract.url || `/dashboard/contracts/${contract.id}`,
+    description: contract.project || "",
+    clientId: contract.clientId,
+    type: "doc" as const,
+    createdAt: contract.createdAt,
+  }))
 }

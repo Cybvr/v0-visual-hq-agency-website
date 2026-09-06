@@ -45,9 +45,39 @@ import {
 import { getProjects, type Project } from "@/lib/projects"
 import { Badge, InlineDate, InlineProject, InlineSelect, InlineText } from "@/components/inline-table-cells"
 import { TaskForm } from "@/components/admin/task-form"
+import { FilterBar, useFilterBar, type SortOption } from "@/components/dashboard/filter-bar"
 
 const STATUS_OPTIONS: TaskStatus[] = ["todo", "in-progress", "review", "done"]
 const PRIORITY_OPTIONS: TaskPriority[] = ["low", "medium", "high"]
+
+const STATUS_RANK: Record<TaskStatus, number> = { todo: 0, "in-progress": 1, review: 2, done: 3 }
+const PRIORITY_RANK: Record<TaskPriority, number> = { low: 0, medium: 1, high: 2 }
+
+const TASK_SORTS: SortOption<Task>[] = [
+  {
+    value: "createdAt",
+    label: "Date created",
+    get: (t) => tsToMillis(t.createdAt),
+    ascLabel: "Oldest",
+    descLabel: "Newest",
+  },
+  { value: "name", label: "Task", get: (t) => t.name, ascLabel: "A–Z", descLabel: "Z–A" },
+  { value: "client", label: "Client", get: (t) => t.client || t.clientId, ascLabel: "A–Z", descLabel: "Z–A" },
+  { value: "project", label: "Project", get: (t) => t.project, ascLabel: "A–Z", descLabel: "Z–A" },
+  { value: "status", label: "Status", get: (t) => STATUS_RANK[t.status] ?? 0, ascLabel: "To do first", descLabel: "Done first" },
+  {
+    value: "priority",
+    label: "Priority",
+    get: (t) => PRIORITY_RANK[t.priority] ?? 0,
+    ascLabel: "Lowest",
+    descLabel: "Highest",
+  },
+  { value: "dueDate", label: "Due date", get: (t) => t.dueDate, ascLabel: "Soonest", descLabel: "Latest" },
+]
+
+function searchTask(t: Task) {
+  return [t.name, t.client, t.clientId, t.project, taskStatusMeta[t.status]?.label, taskPriorityMeta[t.priority]?.label]
+}
 
 export default function TasksAdminPage() {
   const [tasks, setTasks] = useState<Task[]>([])
@@ -106,6 +136,14 @@ export default function TasksAdminPage() {
     setSelectedId(null)
   }
 
+  const { results: visibleTasks, bar } = useFilterBar({
+    items: tasks,
+    search: searchTask,
+    sorts: TASK_SORTS,
+    defaultSort: "createdAt",
+    defaultDirection: "desc",
+  })
+
   const selectedTask =
     typeof selectedId === "string" && selectedId !== "new" ? tasks.find((t) => t.id === selectedId) ?? null : null
 
@@ -138,6 +176,15 @@ export default function TasksAdminPage() {
           </CardContent>
         </Card>
       ) : (
+        <>
+        <FilterBar {...bar} placeholder="Search tasks" />
+        {visibleTasks.length === 0 ? (
+          <Card>
+            <CardContent className="py-16 text-center text-sm text-muted-foreground">
+              No tasks match your search.
+            </CardContent>
+          </Card>
+        ) : (
         <div className="rounded-lg border border-border">
           <Table>
             <TableHeader>
@@ -153,7 +200,7 @@ export default function TasksAdminPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {tasks.map((t) => (
+              {visibleTasks.map((t) => (
                 <TableRow key={t.id}>
                   <TableCell className="font-medium">
                     <InlineText value={t.name} onCommit={(name) => handlePatch(t.id, { name })} />
@@ -243,6 +290,8 @@ export default function TasksAdminPage() {
             </TableBody>
           </Table>
         </div>
+        )}
+        </>
       )}
 
       <Sheet open={selectedId !== null} onOpenChange={(open) => !open && setSelectedId(null)}>

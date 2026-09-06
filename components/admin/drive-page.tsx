@@ -18,7 +18,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import {
-  ArrowUp,
   Copy,
   Download,
   File,
@@ -45,6 +44,24 @@ import {
   uploadFileToStorage,
   type SharedDocument,
 } from "@/lib/documents"
+import { FilterBar, useFilterBar, type SortOption } from "@/components/dashboard/filter-bar"
+import { tsToMillis } from "@/lib/tasks"
+
+const DOCUMENT_SORTS: SortOption<SharedDocument>[] = [
+  { value: "title", label: "Name", get: (d) => d.title, ascLabel: "A–Z", descLabel: "Z–A" },
+  {
+    value: "createdAt",
+    label: "Date added",
+    get: (d) => tsToMillis(d.createdAt),
+    ascLabel: "Oldest",
+    descLabel: "Newest",
+  },
+  { value: "type", label: "File type", get: (d) => d.type ?? "file", ascLabel: "A–Z", descLabel: "Z–A" },
+]
+
+function searchDocument(d: SharedDocument) {
+  return [d.title, d.description, d.sharedWith, d.type]
+}
 
 function clientLabel(u: AppUser) {
   return u.company || u.displayName || u.email || u.uid
@@ -276,6 +293,12 @@ export default function DriveAdminPage() {
 
   const isEmpty = documents.length === 0 && uploading.length === 0
   const selectedDocument = documents.find((document) => document.id === selectedId)
+  const { results: visibleDocuments, bar } = useFilterBar({
+    items: documents,
+    search: searchDocument,
+    sorts: DOCUMENT_SORTS,
+    defaultSort: "title",
+  })
 
   return (
     <main className="relative mx-auto w-full max-w-6xl px-4 pt-6 pb-12 sm:px-6">
@@ -338,10 +361,12 @@ export default function DriveAdminPage() {
         </div>
       ) : (
         <section>
-          <div className="mb-5 flex items-center gap-2 px-2 text-sm font-semibold text-foreground/80">
-            <span>Name</span>
-            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-sky-100 text-sky-800 dark:bg-sky-950 dark:text-sky-300"><ArrowUp className="h-4 w-4" /></span>
-          </div>
+          <FilterBar {...bar} placeholder="Search files" />
+          {visibleDocuments.length === 0 && uploading.length === 0 && (
+            <div className="rounded-xl border border-dashed border-border py-16 text-center text-sm text-muted-foreground">
+              No files match your search.
+            </div>
+          )}
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {uploading.map((u) => (
               <div key={u.id} className="flex flex-col overflow-hidden rounded-2xl bg-[#edf2f8] p-3 dark:bg-muted">
@@ -359,7 +384,7 @@ export default function DriveAdminPage() {
               </div>
             ))}
 
-            {documents.map((d) => (
+            {visibleDocuments.map((d) => (
               <div
                 key={d.id}
                 role="button"

@@ -57,12 +57,12 @@ export function DashboardShell({
           { terms: ["project"], href: "/dashboard/projects" },
           { terms: ["task"], href: "/dashboard/tasks" },
           { terms: ["drive", "file", "document"], href: "/dashboard/drive" },
-          { terms: ["portfolio", "work"], href: "/dashboard/portfolio" },
           { terms: ["email", "mail", "message", "template", "sender"], href: "/dashboard/email" },
           { terms: ["seo", "ranking", "keyword"], href: "/dashboard/seo" },
           { terms: ["invoice", "billing", "payment", "finance"], href: "/dashboard/invoices" },
           { terms: ["contract", "agreement", "signature"], href: "/dashboard/contracts" },
-          { terms: ["user", "client", "settings"], href: "/dashboard/users" },
+          { terms: ["client", "company", "workspace"], href: "/dashboard/clients" },
+          { terms: ["user", "account", "settings"], href: "/dashboard/users" },
         ]
       : [
           { terms: ["agent", "chat", "assistant"], href: "/dashboard/agent" },

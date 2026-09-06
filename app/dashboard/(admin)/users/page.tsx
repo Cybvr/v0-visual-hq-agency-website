@@ -27,7 +27,27 @@ import { Eye, Pencil, Plus, Trash2, Loader2, User as UserIcon } from "lucide-rea
 import { getUsers, deleteUser, type AppUser } from "@/lib/users"
 import { UserEditorSheet } from "@/components/admin/user-editor-sheet"
 import { useAuth } from "@/components/auth-provider"
+import { FilterBar, useFilterBar, type SortOption } from "@/components/dashboard/filter-bar"
+import { tsToMillis } from "@/lib/tasks"
 import { cn } from "@/lib/utils"
+
+const USER_SORTS: SortOption<AppUser>[] = [
+  { value: "name", label: "Name", get: (u) => u.displayName || u.email, ascLabel: "A–Z", descLabel: "Z–A" },
+  { value: "email", label: "Email", get: (u) => u.email, ascLabel: "A–Z", descLabel: "Z–A" },
+  { value: "role", label: "Role", get: (u) => u.role, ascLabel: "A–Z", descLabel: "Z–A" },
+  { value: "company", label: "Company", get: (u) => u.company, ascLabel: "A–Z", descLabel: "Z–A" },
+  {
+    value: "createdAt",
+    label: "Date added",
+    get: (u) => tsToMillis(u.createdAt),
+    ascLabel: "Oldest",
+    descLabel: "Newest",
+  },
+]
+
+function searchUser(u: AppUser) {
+  return [u.displayName, u.email, u.company, u.role, u.clientId]
+}
 
 export default function UsersAdminPage() {
   const router = useRouter()
@@ -78,6 +98,13 @@ export default function UsersAdminPage() {
     router.push("/dashboard")
   }
 
+  const { results: visibleUsers, bar } = useFilterBar({
+    items: users,
+    search: searchUser,
+    sorts: USER_SORTS,
+    defaultSort: "name",
+  })
+
   const selectedUser =
     typeof selectedId === "string" && selectedId !== "new" ? users.find((u) => u.uid === selectedId) ?? null : null
 
@@ -112,6 +139,15 @@ export default function UsersAdminPage() {
           </CardContent>
         </Card>
       ) : (
+        <>
+        <FilterBar {...bar} placeholder="Search users" />
+        {visibleUsers.length === 0 ? (
+          <Card>
+            <CardContent className="py-16 text-center text-sm text-muted-foreground">
+              No users match your search.
+            </CardContent>
+          </Card>
+        ) : (
         <div className="rounded-lg border border-border">
           <Table>
             <TableHeader>
@@ -125,7 +161,7 @@ export default function UsersAdminPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {users.map((u) => (
+              {visibleUsers.map((u) => (
                 <TableRow
                   key={u.uid}
                   className="cursor-pointer"
@@ -224,6 +260,8 @@ export default function UsersAdminPage() {
             </TableBody>
           </Table>
         </div>
+        )}
+        </>
       )}
 
       <UserEditorSheet

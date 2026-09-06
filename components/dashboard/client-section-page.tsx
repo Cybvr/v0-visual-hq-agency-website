@@ -6,11 +6,13 @@ import { Loader2 } from "lucide-react"
 import { useAuth } from "@/components/auth-provider"
 import { ClientProjectCreateSheet } from "@/components/dashboard/client-project-create-sheet"
 import { ProjectsView } from "@/components/dashboard/projects-view"
+import { TemplatesView } from "@/components/dashboard/templates-view"
 import { TasksView } from "@/components/dashboard/tasks-view"
 import { DocumentsView } from "@/components/dashboard/documents-view"
 import { getProjectsByClientId, type Project } from "@/lib/projects"
 import { deleteTask, getTasksByClientId, updateTask, type Task } from "@/lib/tasks"
-import { getDocumentsForClient, type SharedDocument } from "@/lib/documents"
+import { contractsAsDocuments, getDocumentsForClient, type SharedDocument } from "@/lib/documents"
+import { getContractsByClientId } from "@/lib/billing"
 
 export function ClientSectionPage({ section }: { section: "projects" | "tasks" | "drive" }) {
   const { appUser } = useAuth()
@@ -71,7 +73,12 @@ export function ClientSectionPage({ section }: { section: "projects" | "tasks" |
       <main className="mx-auto w-full max-w-5xl px-4 pb-12 sm:px-6">
         {loading ? <div className="flex justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>
           : error ? <p className="py-12 text-sm text-destructive">Couldn&apos;t load this section.</p>
-          : section === "projects" ? <ProjectsView projects={projects} />
+          : section === "projects" ? (
+            <>
+              <ProjectsView projects={projects} onChanged={fetchData} />
+              <TemplatesView clientId={clientId} clientName={clientName} onCreated={fetchData} />
+            </>
+          )
           : section === "tasks" ? <TasksView tasks={tasks} projects={projects} clientId={clientId} clientName={clientName} deleting={deleting} onDelete={handleDelete} onPatch={handlePatch} onSaved={fetchData} />
           : <DocumentsView documents={documents} />}
       </main>

@@ -134,7 +134,7 @@ export const growthPlanRows: GrowthPlan[] = [
     price: { amount: 200000 },
     timeline: "Monthly",
     included: "Strategy, ads, automation, Notion OS & campaign design",
-    paymentHref: "https://paystack.shop/pay/visualhqpro",
+    paymentHref: "https://paystack.shop/pay/vcnsmarketing",
     features: [
       "Digital strategy that maps the next 30 days",
       "Meta Business Suite ad buy management to reach the right audience",
@@ -157,7 +157,7 @@ export const workflowPlanRows: WorkflowPlan[] = [
     price: { amount: 200000 },
     timeline: "Monthly",
     included: "Digital strategy, ad management, SendPulse automation, Notion campaign board, campaign design",
-    paymentHref: "https://paystack.shop/pay/visualhqpro",
+    paymentHref: "https://paystack.shop/pay/vcnsmarketing",
   },
   {
     service: "Orbit",
@@ -170,6 +170,7 @@ export const workflowPlanRows: WorkflowPlan[] = [
     price: { amount: 680000, prefix: "From " },
     timeline: "Setup + monthly",
     included: "Lead routing, qualification rules, reminders, booking handoff, and pipeline visibility",
+    paymentHref: "https://paystack.shop/pay/vcnsorbit",
   },
   {
     service: "Studio",
@@ -182,6 +183,7 @@ export const workflowPlanRows: WorkflowPlan[] = [
     price: { amount: 560000, prefix: "From " },
     timeline: "Setup + monthly",
     included: "Campaign board, content calendar, approval flow, asset library, and publishing checklist",
+    paymentHref: "https://paystack.shop/pay/vcnsstudio",
   },
   {
     service: "Launch",
@@ -194,6 +196,7 @@ export const workflowPlanRows: WorkflowPlan[] = [
     price: { amount: 850000, prefix: "From " },
     timeline: "Setup + monthly",
     included: "Campaign funnel map, landing-page handoff, CRM tagging, retargeting audiences, and conversion tracking",
+    paymentHref: "https://paystack.shop/pay/vcnslaunch",
   },
   {
     service: "Pulse",
@@ -206,6 +209,7 @@ export const workflowPlanRows: WorkflowPlan[] = [
     price: { amount: 520000, prefix: "From " },
     timeline: "Setup + monthly",
     included: "Drop-off triggers, reminder sequences, quote follow-up, abandoned cart recovery, and reactivation lists",
+    paymentHref: "https://paystack.shop/pay/vcnspulse",
   },
   {
     service: "Signal",
@@ -218,6 +222,7 @@ export const workflowPlanRows: WorkflowPlan[] = [
     price: { amount: 480000, prefix: "From " },
     timeline: "Setup + monthly",
     included: "Data source map, reporting dashboard, weekly summary format, KPI tracking, and action recommendations",
+    paymentHref: "https://paystack.shop/pay/vcnssignal",
   },
   {
     service: "Atlas",
@@ -230,6 +235,7 @@ export const workflowPlanRows: WorkflowPlan[] = [
     price: { amount: 620000, prefix: "From " },
     timeline: "Setup + monthly",
     included: "Onboarding form, project workspace, folder automation, approval checkpoints, and status update flow",
+    paymentHref: "https://paystack.shop/pay/vcnsatlas",
   },
 ]
 

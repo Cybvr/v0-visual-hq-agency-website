@@ -12,6 +12,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet"
 import { getUserByClientId, type AppUser } from "@/lib/users"
+import type { UserRole } from "@/lib/users"
 
 /**
  * The user record editor. Callers either hand it the user, ask for a blank one
@@ -22,6 +23,8 @@ export function UserEditorSheet({
   user,
   clientId,
   isNew,
+  fixedRole,
+  subjectNoun = "user",
   onClose,
   onSaved,
 }: {
@@ -29,6 +32,8 @@ export function UserEditorSheet({
   user?: AppUser | null
   clientId?: string
   isNew?: boolean
+  fixedRole?: UserRole
+  subjectNoun?: "user" | "client"
   onClose: () => void
   onSaved: (uid: string) => void | Promise<void>
 }) {
@@ -65,12 +70,13 @@ export function UserEditorSheet({
   }, [lookup, clientId])
 
   const subject = isNew ? null : resolved
+  const subjectLabel = subjectNoun === "client" ? "client" : "user"
 
   return (
     <Sheet open={open} onOpenChange={(next) => !next && onClose()}>
       <SheetContent className="w-full gap-0 p-0 sm:max-w-md">
         <SheetHeader className="border-b border-border">
-          <SheetTitle>{isNew ? "New user" : "Edit user"}</SheetTitle>
+          <SheetTitle>{isNew ? `New ${subjectLabel}` : `Edit ${subjectLabel}`}</SheetTitle>
           <SheetDescription>
             {isNew ? "" : subject?.email || subject?.displayName || ""}
           </SheetDescription>
@@ -89,6 +95,8 @@ export function UserEditorSheet({
             <UserForm
               key={subject?.uid ?? "new"}
               user={subject}
+              fixedRole={fixedRole}
+              subjectNoun={subjectNoun}
               onSaved={onSaved}
               onCancel={onClose}
             />

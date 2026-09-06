@@ -1,6 +1,6 @@
 /*
  * VisualCNS Finance — section-scoped styles.
- * Imported only by app/finance/layout.tsx. The site's globals.css is consumed
+ * Imported only by app/(marketing)/finance/layout.tsx. The site's globals.css is consumed
  * as-is; everything here is namespaced (fin-*) so nothing leaks site-wide.
  * Palette/typography source: docs/finance-stitch/visualcns_finance/DESIGN.md
  */
@@ -54,7 +54,7 @@
   --fin-on-background: #181c1e;
 }
 
-/* Icon font for the finance section (font file loaded via <link> in app/finance/layout.tsx) */
+/* Icon font for the finance section (font file loaded via <link> in app/(marketing)/finance/layout.tsx) */
 .material-symbols-outlined {
   font-family: "Material Symbols Outlined";
   font-weight: normal;

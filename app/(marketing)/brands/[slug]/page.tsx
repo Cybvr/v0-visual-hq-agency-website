@@ -64,7 +64,7 @@ export default async function BrandDetailPage({ params }: { params: Promise<{ sl
                 >
                   {item.websiteUrl.startsWith("/") ? (
                     <Link href={item.websiteUrl}>
-                      {item.slug === "visualhq" ? "View Portfolio" : "Visit Website"}
+                      {item.slug === "visualhq" ? "View Case Studies" : "Visit Website"}
                       <ArrowUpRight className="ml-2 size-4" />
                     </Link>
                   ) : (

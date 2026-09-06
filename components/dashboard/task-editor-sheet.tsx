@@ -1,6 +1,7 @@
 "use client"
 
 import { TaskForm } from "@/components/admin/task-form"
+import { TaskComments } from "@/components/dashboard/task-comments"
 import {
   Sheet,
   SheetContent,
@@ -55,6 +56,9 @@ export function TaskEditorSheet({
               onCancel={onClose}
             />
           )}
+
+          {/* Only an existing task has an id to hang a thread off. */}
+          {open && task && <TaskComments taskId={task.id} clientId={task.clientId || clientId} />}
         </div>
       </SheetContent>
     </Sheet>

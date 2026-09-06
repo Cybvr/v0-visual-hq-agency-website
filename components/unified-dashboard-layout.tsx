@@ -4,7 +4,7 @@ import { useEffect, type ReactNode } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { Bot, Briefcase, Eye, FileSignature, FolderKanban, HardDrive, LayoutDashboard, ListTodo, Loader2, LogOut, Mail, Megaphone, Receipt, TrendingUp, Users, Wallet } from "lucide-react"
+import { Bot, Briefcase, Building2, Eye, FileSignature, HardDrive, LayoutDashboard, LayoutTemplate, ListTodo, Loader2, LogOut, Mail, Megaphone, Receipt, TrendingUp, Users, Wallet } from "lucide-react"
 import { AuthProvider, useAuth } from "@/components/auth-provider"
 import { Button } from "@/components/ui/button"
 import { DashboardShell, type NavLink } from "@/components/dashboard-shell"
@@ -53,6 +53,9 @@ const ADMIN_NAV: NavLink[] = [
     items: [
       { label: "Projects", href: "/dashboard/projects", icon: Briefcase },
       { label: "Tasks", href: "/dashboard/tasks", icon: ListTodo },
+      { label: "Templates", href: "/dashboard/templates", icon: LayoutTemplate },
+      { label: "Clients", href: "/dashboard/clients", icon: Building2 },
+      { label: "Users", href: "/dashboard/users", icon: Users },
     ],
   },
   {
@@ -62,7 +65,6 @@ const ADMIN_NAV: NavLink[] = [
     items: [
       { label: "Email", href: "/dashboard/email", icon: Mail },
       { label: "SEO", href: "/dashboard/seo", icon: TrendingUp },
-      { label: "Portfolio", href: "/dashboard/portfolio", icon: FolderKanban },
     ],
   },
   {
@@ -74,7 +76,6 @@ const ADMIN_NAV: NavLink[] = [
       { label: "Contracts", href: "/dashboard/contracts", icon: FileSignature },
     ],
   },
-  { label: "Users", href: "/dashboard/users", icon: Users },
 ]
 
 function UnifiedDashboardShell({ children, requireAdmin = false }: { children: ReactNode; requireAdmin?: boolean }) {

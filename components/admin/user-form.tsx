@@ -33,12 +33,15 @@ const EMPTY_FORM: FormState = {
 
 interface UserFormProps {
   user?: AppUser | null
+  fixedRole?: UserRole
+  subjectNoun?: "user" | "client"
   onSaved: (uid: string) => void
   onCancel: () => void
 }
 
-export function UserForm({ user, onSaved, onCancel }: UserFormProps) {
+export function UserForm({ user, fixedRole, subjectNoun = "user", onSaved, onCancel }: UserFormProps) {
   const isEdit = Boolean(user)
+  const subjectLabel = subjectNoun === "client" ? "Client" : "User"
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [form, setForm] = useState<FormState>(EMPTY_FORM)
@@ -51,14 +54,14 @@ export function UserForm({ user, onSaved, onCancel }: UserFormProps) {
         displayName: user.displayName ?? "",
         company: user.company ?? "",
         photoURL: user.photoURL ?? "",
-        role: user.role === "admin" ? "admin" : "client",
+        role: fixedRole ?? (user.role === "admin" ? "admin" : "client"),
       })
     } else {
-      setForm(EMPTY_FORM)
+      setForm({ ...EMPTY_FORM, role: fixedRole ?? EMPTY_FORM.role })
     }
     setEditingPhoto(false)
     setError(null)
-  }, [user])
+  }, [user, fixedRole])
 
   function set<K extends keyof FormState>(field: K, value: FormState[K]) {
     setForm((prev) => ({ ...prev, [field]: value }))
@@ -80,7 +83,7 @@ export function UserForm({ user, onSaved, onCancel }: UserFormProps) {
         company: form.company.trim(),
         clientId: (isEdit && user?.clientId) || uid,
         photoURL: form.photoURL.trim(),
-        role: form.role,
+        role: fixedRole ?? form.role,
       }
       if (isEdit && user) {
         // Spread the original doc first so any fields we don't edit are preserved.
@@ -162,19 +165,21 @@ export function UserForm({ user, onSaved, onCancel }: UserFormProps) {
           </div>
         )}
 
-        <div className="grid gap-3 sm:grid-cols-2">
-          <div className="space-y-1.5">
-            <Label htmlFor="role">Role</Label>
-            <Select value={form.role} onValueChange={(v) => set("role", v as UserRole)}>
-              <SelectTrigger id="role" className="w-full">
-                <SelectValue placeholder="Select a role" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="admin">Admin</SelectItem>
-                <SelectItem value="client">Client</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+        <div className={fixedRole ? "space-y-1.5" : "grid gap-3 sm:grid-cols-2"}>
+          {!fixedRole && (
+            <div className="space-y-1.5">
+              <Label htmlFor="role">Role</Label>
+              <Select value={form.role} onValueChange={(v) => set("role", v as UserRole)}>
+                <SelectTrigger id="role" className="w-full">
+                  <SelectValue placeholder="Select a role" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="admin">Admin</SelectItem>
+                  <SelectItem value="client">Client</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          )}
           <div className="space-y-1.5">
             <Label htmlFor="company">Company</Label>
             <Input
@@ -195,7 +200,7 @@ export function UserForm({ user, onSaved, onCancel }: UserFormProps) {
         </Button>
         <Button type="submit" disabled={saving}>
           {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          {isEdit ? "Save Changes" : "Create User"}
+          {isEdit ? "Save Changes" : `Create ${subjectLabel}`}
         </Button>
       </div>
     </form>

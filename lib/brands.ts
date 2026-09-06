@@ -19,7 +19,7 @@ export const brandItems: BrandItem[] = [
     description: "Digital product design and engineering for web platforms, internal tools, and launch-ready systems.",
     href: "/brands/visualhq",
     logo: "/images/brands/visualhqlogo.svg",
-    websiteUrl: "/portfolio",
+    websiteUrl: "/case-studies",
     color: "#3b82f6",
   },
   {

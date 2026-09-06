@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import { Download, Eye, Loader2, Pencil, Plus, Trash2 } from "lucide-react"
 
 import { useAuth } from "@/components/auth-provider"
@@ -33,7 +33,34 @@ import {
   getContractsByClientId,
   type Contract,
 } from "@/lib/billing"
+import { FilterBar, useFilterBar, type SortOption } from "@/components/dashboard/filter-bar"
+import { tsToMillis } from "@/lib/tasks"
 import { cn } from "@/lib/utils"
+
+const CONTRACT_SORTS: SortOption<Contract>[] = [
+  {
+    value: "createdAt",
+    label: "Date created",
+    get: (c) => tsToMillis(c.createdAt),
+    ascLabel: "Oldest",
+    descLabel: "Newest",
+  },
+  { value: "title", label: "Title", get: (c) => c.title, ascLabel: "A–Z", descLabel: "Z–A" },
+  { value: "client", label: "Client", get: (c) => c.client || c.clientId, ascLabel: "A–Z", descLabel: "Z–A" },
+  { value: "startsOn", label: "Start date", get: (c) => c.startsOn, ascLabel: "Oldest", descLabel: "Newest" },
+  { value: "endsOn", label: "End date", get: (c) => c.endsOn, ascLabel: "Soonest", descLabel: "Latest" },
+  {
+    value: "status",
+    label: "Status",
+    get: (c) => contractStatusMeta[c.status]?.label ?? c.status,
+    ascLabel: "A–Z",
+    descLabel: "Z–A",
+  },
+]
+
+function searchContract(c: Contract) {
+  return [c.title, c.client, c.clientId, c.project, contractStatusMeta[c.status]?.label]
+}
 
 export default function ContractsPage() {
   const { user, appUser, isAdmin, isImpersonating } = useAuth()
@@ -77,6 +104,18 @@ export default function ContractsPage() {
     }
   }
 
+
+  const sorts = useMemo(
+    () => (adminView ? CONTRACT_SORTS : CONTRACT_SORTS.filter((option) => option.value !== "client")),
+    [adminView],
+  )
+  const { results: visibleContracts, bar } = useFilterBar({
+    items: contracts,
+    search: searchContract,
+    sorts,
+    defaultSort: "createdAt",
+    defaultDirection: "desc",
+  })
 
   if (!user) return null
 
@@ -126,6 +165,12 @@ export default function ContractsPage() {
           )}
 
           <div className="mt-6">
+            <FilterBar {...bar} placeholder="Search contracts" />
+            {visibleContracts.length === 0 ? (
+              <div className="rounded-[14px] border border-dashed border-border bg-card px-5 py-12 text-center">
+                <p className="text-sm text-muted-foreground">No contracts match your search.</p>
+              </div>
+            ) : (
             <Table>
               <TableHeader>
                 <TableRow>
@@ -142,7 +187,7 @@ export default function ContractsPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {contracts.map((contract) => {
+                {visibleContracts.map((contract) => {
                   const meta = contractStatusMeta[contract.status] ?? contractStatusMeta.draft
                   return (
                     <TableRow key={contract.id}>
@@ -244,6 +289,7 @@ export default function ContractsPage() {
                 })}
               </TableBody>
             </Table>
+            )}
           </div>
         </>
       )}

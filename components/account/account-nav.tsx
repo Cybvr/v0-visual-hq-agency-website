@@ -6,9 +6,9 @@ import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
 
 const LINKS = [
-  { label: "Account", href: "/account" },
-  { label: "Profile", href: "/account/profile" },
-  { label: "Customization", href: "/account/customization" },
+  { label: "Account", href: "/dashboard/account" },
+  { label: "Profile", href: "/dashboard/account/profile" },
+  { label: "Customization", href: "/dashboard/account/customization" },
 ]
 
 export function AccountNav() {

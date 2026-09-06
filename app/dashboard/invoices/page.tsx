@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import { Eye, Loader2, Pencil, Plus, Trash2 } from "lucide-react"
 
 import { useAuth } from "@/components/auth-provider"
@@ -34,7 +34,27 @@ import {
   invoiceStatusMeta,
   type Invoice,
 } from "@/lib/billing"
+import { FilterBar, useFilterBar, type SortOption } from "@/components/dashboard/filter-bar"
 import { cn } from "@/lib/utils"
+
+const INVOICE_SORTS: SortOption<Invoice>[] = [
+  { value: "issuedOn", label: "Issue date", get: (i) => i.issuedOn, ascLabel: "Oldest", descLabel: "Newest" },
+  { value: "dueOn", label: "Due date", get: (i) => i.dueOn, ascLabel: "Soonest", descLabel: "Latest" },
+  { value: "invoiceNumber", label: "Invoice no.", get: (i) => i.invoiceNumber, ascLabel: "A–Z", descLabel: "Z–A" },
+  { value: "client", label: "Client", get: (i) => i.client || i.clientId, ascLabel: "A–Z", descLabel: "Z–A" },
+  { value: "amount", label: "Amount", get: (i) => i.amount ?? 0, ascLabel: "Lowest", descLabel: "Highest" },
+  {
+    value: "status",
+    label: "Status",
+    get: (i) => invoiceStatusMeta[i.status]?.label ?? i.status,
+    ascLabel: "A–Z",
+    descLabel: "Z–A",
+  },
+]
+
+function searchInvoice(i: Invoice) {
+  return [i.invoiceNumber, i.client, i.clientId, i.project, i.poReference, invoiceStatusMeta[i.status]?.label]
+}
 
 export default function InvoicesPage() {
   const { user, appUser, isAdmin, isImpersonating } = useAuth()
@@ -77,6 +97,18 @@ export default function InvoicesPage() {
       setDeleting(false)
     }
   }
+
+  const sorts = useMemo(
+    () => (adminView ? INVOICE_SORTS : INVOICE_SORTS.filter((option) => option.value !== "client")),
+    [adminView],
+  )
+  const { results: visibleInvoices, bar } = useFilterBar({
+    items: invoices,
+    search: searchInvoice,
+    sorts,
+    defaultSort: "issuedOn",
+    defaultDirection: "desc",
+  })
 
   if (!user) return null
 
@@ -129,6 +161,12 @@ export default function InvoicesPage() {
           )}
 
           <div className="mt-6">
+            <FilterBar {...bar} placeholder="Search invoices" />
+            {visibleInvoices.length === 0 ? (
+              <div className="rounded-[14px] border border-dashed border-border bg-card px-5 py-12 text-center">
+                <p className="text-sm text-muted-foreground">No invoices match your search.</p>
+              </div>
+            ) : (
             <Table>
               <TableHeader>
                 <TableRow>
@@ -145,7 +183,7 @@ export default function InvoicesPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {invoices.map((invoice) => {
+                {visibleInvoices.map((invoice) => {
                   const meta = invoiceStatusMeta[invoice.status] ?? invoiceStatusMeta.draft
                   return (
                     <TableRow key={invoice.id}>
@@ -233,6 +271,7 @@ export default function InvoicesPage() {
                 })}
               </TableBody>
             </Table>
+            )}
           </div>
         </>
       )}

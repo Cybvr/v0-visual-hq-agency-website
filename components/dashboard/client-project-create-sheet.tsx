@@ -80,8 +80,9 @@ export function ClientProjectCreateSheet({
       <SheetContent side="right" className="w-full gap-0 overflow-y-auto sm:max-w-md">
         <SheetHeader className="border-b border-border">
           <SheetTitle>New project</SheetTitle>
-          <SheetDescription>Add a project to your workspace.</SheetDescription>
+          <SheetDescription>Name it and set a due date. You can add tasks once it exists.</SheetDescription>
         </SheetHeader>
+
         <form onSubmit={handleSubmit} className="space-y-5 p-5">
           <div className="space-y-2">
             <Label htmlFor="client-project-title">Project name</Label>
@@ -91,7 +92,6 @@ export function ClientProjectCreateSheet({
               onChange={(event) => setTitle(event.target.value)}
               maxLength={120}
               placeholder="Website redesign"
-              autoFocus
               required
             />
           </div>

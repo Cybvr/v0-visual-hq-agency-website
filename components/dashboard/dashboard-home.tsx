@@ -7,6 +7,7 @@ import { useAuth } from "@/components/auth-provider"
 import { HomeBanner } from "@/components/dashboard/home-banner"
 import { HomeTaskList } from "@/components/dashboard/home-task-list"
 import { ProjectsView } from "@/components/dashboard/projects-view"
+import { TemplatesView } from "@/components/dashboard/templates-view"
 import { getProjectsByClientId, type Project } from "@/lib/projects"
 import { getTasksByClientId, seedDefaultTasks, tsToMillis, type Task } from "@/lib/tasks"
 import { updateUser } from "@/lib/users"
@@ -84,7 +85,8 @@ export function DashboardHome() {
         <p className="mt-10 text-sm text-destructive">{error}</p>
       ) : (
         <>
-          <ProjectsView projects={projects} />
+          <ProjectsView projects={projects} onChanged={fetchData} />
+          <TemplatesView clientId={clientId} clientName={clientName} onCreated={fetchData} />
           <div className="mt-8 grid items-start gap-6 lg:grid-cols-2">
             <HomeTaskList
               tasks={tasks}

@@ -1,7 +1,8 @@
 "use client"
 
 import { useState } from "react"
-import { FileText } from "lucide-react"
+import Link from "next/link"
+import { FileSignature, FileText } from "lucide-react"
 import type { SharedDocument } from "@/lib/documents"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 
@@ -10,6 +11,9 @@ function DocumentPreview({ document }: { document: SharedDocument }) {
   if (isImage) {
     // eslint-disable-next-line @next/next/no-img-element
     return <img src={document.thumbnailUrl ?? document.url} alt={document.title} className="h-full w-full object-cover" />
+  }
+  if (document.type === "doc") {
+    return <div className="flex h-full w-full items-center justify-center bg-background"><FileSignature className="h-12 w-12 text-blue-600" /></div>
   }
   return <div className="flex h-full w-full items-center justify-center bg-background"><FileText className="h-12 w-12 text-blue-600" /></div>
 }

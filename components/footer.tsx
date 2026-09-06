@@ -11,6 +11,7 @@ const footerGroups = [
       { name: "Juju", href: "/brands/juju" },
       { name: "Waddi", href: "/brands/waddi" },
       { name: "Finance", href: "/finance" },
+      { name: "Templates", href: "/templates" },
       { name: "Pricing", href: "/pricing" },
     ],
   },
@@ -19,7 +20,7 @@ const footerGroups = [
     title: "Company",
     links: [
       { name: "About", href: "/about" },
-      { name: "Portfolio", href: "/portfolio" },
+      { name: "Case Studies", href: "/case-studies" },
       { name: "FAQ", href: "/faq" },
       { name: "Careers", href: "https://pasive.co/jobs" },
       { name: "Contact", href: "/contact" },

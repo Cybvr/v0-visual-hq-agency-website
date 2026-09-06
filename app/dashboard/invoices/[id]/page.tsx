@@ -3,9 +3,10 @@
 import { useEffect, useState } from "react"
 import Link from "next/link"
 import { useParams } from "next/navigation"
-import { ArrowLeft, ExternalLink, Loader2 } from "lucide-react"
+import { ArrowLeft, Loader2 } from "lucide-react"
 
 import { useAuth } from "@/components/auth-provider"
+import { DocumentActions } from "@/components/dashboard/document-actions"
 import {
   Table,
   TableBody,
@@ -14,7 +15,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { Button } from "@/components/ui/button"
 import {
   INVOICE_ISSUER,
   formatDate,
@@ -76,7 +76,7 @@ export default function InvoiceDetailPage() {
     <main className="mx-auto w-full max-w-5xl px-4 py-8 sm:px-6 sm:py-10">
       <div className="mb-6 flex items-center justify-between gap-4 print:hidden">
         <Link href="/dashboard/invoices" className="inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"><ArrowLeft className="size-4" />Back to invoices</Link>
-        {invoice.url && <Button asChild variant="outline" size="sm"><a href={invoice.url} target="_blank" rel="noreferrer">Open original<ExternalLink className="size-4" /></a></Button>}
+        <DocumentActions url={invoice.url} />
       </div>
 
       <article className="overflow-hidden rounded-[16px] border border-border bg-card print:border-0">

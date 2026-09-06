@@ -7,7 +7,7 @@ import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
 import { Button } from "@/components/ui/button"
 import { ArrowLeft, ExternalLink, Loader2 } from "lucide-react"
-import { getPortfolioProjectBySlug, getPortfolioProjects, type PortfolioProject } from "@/lib/portfolio"
+import { getCaseStudyProjectBySlug, getCaseStudyProjects, type CaseStudyProject } from "@/lib/case-studies"
 
 const PLACEHOLDER = "/placeholder.svg?height=900&width=1600&query=project"
 const CONTAINER = "mx-auto max-w-7xl px-4 sm:px-8 md:px-20"
@@ -16,19 +16,19 @@ const LABEL = "font-mono text-[0.6875rem] uppercase tracking-[0.24em] text-muted
 export default function SingleProjectPage() {
   const params = useParams()
   const slug = params.slug as string
-  const [project, setProject] = useState<PortfolioProject | null>(null)
-  const [relatedProjects, setRelatedProjects] = useState<PortfolioProject[]>([])
+  const [project, setProject] = useState<CaseStudyProject | null>(null)
+  const [relatedProjects, setRelatedProjects] = useState<CaseStudyProject[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     async function fetchProject() {
       try {
-        const data = await getPortfolioProjectBySlug(slug)
+        const data = await getCaseStudyProjectBySlug(slug)
         setProject(data)
 
-        const all = await getPortfolioProjects()
+        const all = await getCaseStudyProjects()
         const related = all
-          .filter((p) => p.status?.toLowerCase() === "published" && p.slug !== slug)
+          .filter((p) => p.slug !== slug)
           .slice(0, 3)
         setRelatedProjects(related)
       } catch (error) {
@@ -60,9 +60,9 @@ export default function SingleProjectPage() {
           <h1 className="mb-4 text-4xl">Project Not Found</h1>
           <p className="mb-8 text-muted-foreground">The project you're looking for doesn't exist.</p>
           <Button asChild>
-            <Link href="/portfolio">
+            <Link href="/case-studies">
               <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to Portfolio
+              Back to Case Studies
             </Link>
           </Button>
         </div>
@@ -86,8 +86,8 @@ export default function SingleProjectPage() {
       <Header />
 
       <section className={`${CONTAINER} pb-6 pt-24 md:pt-28`}>
-        <Link href="/portfolio" className={`${LABEL} transition-colors hover:text-accent`}>
-          ← Portfolio
+        <Link href="/case-studies" className={`${LABEL} transition-colors hover:text-accent`}>
+          ← Case Studies
         </Link>
       </section>
 
@@ -182,7 +182,7 @@ export default function SingleProjectPage() {
           <ul className="mt-6 grid grid-cols-1 gap-x-8 gap-y-10 md:grid-cols-3">
             {relatedProjects.map((related) => (
               <li key={related.id} className="pf-tile">
-                <Link href={`/portfolio/${related.slug}`} className="group block outline-none">
+                <Link href={`/case-studies/${related.slug}`} className="group block outline-none">
                   <div className="pf-shot aspect-[4/3] overflow-hidden bg-muted">
                     <img src={related.imageUrl || PLACEHOLDER} alt="" loading="lazy" />
                   </div>

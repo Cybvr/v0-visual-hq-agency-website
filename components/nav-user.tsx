@@ -76,19 +76,19 @@ export function NavUser() {
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
-              <Link href="/account">
+              <Link href="/dashboard/account">
                 <UserCog />
                 Account
               </Link>
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
-              <Link href="/account/profile">
+              <Link href="/dashboard/account/profile">
                 <UserRound />
                 Profile
               </Link>
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
-              <Link href="/account/customization">
+              <Link href="/dashboard/account/customization">
                 <Palette />
                 Customization
               </Link>

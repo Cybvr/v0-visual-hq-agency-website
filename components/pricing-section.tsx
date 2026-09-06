@@ -1,39 +1,15 @@
 "use client"
 
-import { createElement, useEffect, useState, type ComponentType } from "react"
+import { useEffect, useState } from "react"
 import Link from "next/link"
-import { Check } from "lucide-react"
-import type { IconType } from "react-icons"
-import {
-  FiActivity,
-  FiBarChart2,
-  FiClock,
-  FiCode,
-  FiCompass,
-  FiEdit3,
-  FiGlobe,
-  FiImage,
-  FiLayers,
-  FiMap,
-  FiMousePointer,
-  FiRepeat,
-  FiSend,
-  FiServer,
-  FiShield,
-  FiShoppingCart,
-  FiTool,
-  FiTrendingUp,
-  FiZap,
-} from "react-icons/fi"
 import {
   customDevelopmentRows,
   formatPrice,
   platformRows,
   retainers,
-  workflowPlanRows,
   type Currency,
 } from "@/lib/plans"
-import { getToolIconSpecs } from "@/lib/tool-icons"
+import { OfferCard } from "@/components/offer-card"
 import { Button } from "@/components/ui/button"
 
 const pricingTabs = [
@@ -41,11 +17,6 @@ const pricingTabs = [
     id: "technology",
     label: "Technology",
     description: "For businesses that need websites, web apps, platforms, or technical implementation.",
-  },
-  {
-    id: "workflows",
-    label: "Workflows",
-    description: "For businesses that need their existing tools connected into clear growth systems.",
   },
   {
     id: "consulting",
@@ -62,159 +33,6 @@ const retainerDescriptions: Record<string, string> = {
 
 type PricingTab = (typeof pricingTabs)[number]["id"]
 
-const planIcons: Record<string, IconType> = {
-  cart: FiShoppingCart,
-  chart: FiBarChart2,
-  clock: FiClock,
-  code: FiCode,
-  compass: FiCompass,
-  edit: FiEdit3,
-  globe: FiGlobe,
-  image: FiImage,
-  layers: FiLayers,
-  layout: FiMousePointer,
-  map: FiMap,
-  orbit: FiRepeat,
-  pulse: FiActivity,
-  rocket: FiSend,
-  server: FiServer,
-  shield: FiShield,
-  tool: FiTool,
-  trending: FiTrendingUp,
-  zap: FiZap,
-}
-
-function toSentenceCase(value: string) {
-  const trimmed = value.trim().replace(/^and /, "")
-  return trimmed ? `${trimmed.charAt(0).toUpperCase()}${trimmed.slice(1)}` : trimmed
-}
-
-function ToolChip({ tool }: { tool: string }) {
-  const icons = getToolIconSpecs(tool)
-
-  return (
-    <span className="inline-flex items-center gap-2 rounded-full bg-muted px-3 py-1 text-xs text-muted-foreground">
-      {icons.length > 0 ? (
-        <span className="flex items-center gap-1.5">
-          {icons.map(({ icon: Icon, color, label, textMark }) => (
-            <span key={`${tool}-${label}`} aria-label={label} title={label}>
-              {Icon
-                ? createElement(Icon as ComponentType<{ className?: string; color?: string }>, {
-                    className: "size-3.5",
-                    color,
-                  })
-                : (
-                  <span
-                    className="inline-flex h-4 min-w-4 items-center justify-center rounded-[4px] px-1 text-[9px] font-bold uppercase"
-                    style={{ backgroundColor: `${color}18`, color }}
-                  >
-                    {textMark}
-                  </span>
-                )}
-            </span>
-          ))}
-        </span>
-      ) : null}
-      <span>{tool}</span>
-    </span>
-  )
-}
-
-type OfferCardProps = {
-  eyebrow: string
-  badge?: string
-  featured?: boolean
-  title: string
-  icon?: string
-  price: string
-  timeline: string
-  description?: string
-  features: string[]
-  chips?: string[]
-  ctaLabel: string
-  ctaHref: string
-}
-
-function OfferCard({
-  eyebrow,
-  badge,
-  featured,
-  title,
-  icon,
-  price,
-  timeline,
-  description,
-  features,
-  chips,
-  ctaLabel,
-  ctaHref,
-}: OfferCardProps) {
-  const Icon = icon ? (planIcons[icon] as ComponentType<{ className?: string }>) : undefined
-
-  return (
-    <div
-      className={`group flex h-full flex-col rounded-2xl border p-6 transition-colors ${
-        featured ? "border-accent bg-accent/10 shadow-sm" : "border-border bg-card hover:border-accent/50"
-      }`}
-    >
-      <div className="flex-1">
-        <div className="flex items-start justify-between gap-3">
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">{eyebrow}</p>
-          {badge ? (
-            <span className="rounded-full bg-accent px-3 py-1 text-xs font-semibold text-accent-foreground">
-              {badge}
-            </span>
-          ) : (
-            <span className="rounded-full bg-muted px-3 py-1 text-xs font-medium text-muted-foreground">
-              {timeline}
-            </span>
-          )}
-        </div>
-
-        <div className="mt-4 flex items-center gap-3">
-          {Icon && (
-            <span className="flex size-11 items-center justify-center rounded-full bg-accent/10 text-accent">
-              {createElement(Icon, { className: "size-5" })}
-            </span>
-          )}
-          <h3 className="text-2xl font-bold">{title}</h3>
-        </div>
-
-        {description && <p className="mt-3 text-sm leading-6 text-muted-foreground">{description}</p>}
-
-        <div className="mt-3 flex items-baseline gap-2">
-          <span className="text-3xl font-bold">{price}</span>
-          {badge && <span className="text-sm text-muted-foreground">{timeline}</span>}
-        </div>
-
-        {chips && chips.length > 0 && (
-          <div className="mt-4 flex flex-wrap gap-2">
-            {chips.map((chip) => (
-              <ToolChip key={chip} tool={chip} />
-            ))}
-          </div>
-        )}
-
-        <div className="mt-6 border-t border-border pt-5">
-          <p className="mb-3 font-semibold">What&apos;s included</p>
-          <ul className="space-y-3">
-            {features.map((feature) => (
-              <li key={feature} className="flex gap-3">
-                <Check className="mt-0.5 h-5 w-5 flex-shrink-0 text-accent" />
-                <span className="text-sm text-muted-foreground">{feature}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      </div>
-
-      <Button asChild className="mt-6 w-full" variant={featured ? "default" : "outline"}>
-        <Link href={ctaHref}>{ctaLabel}</Link>
-      </Button>
-    </div>
-  )
-}
-
 export function PricingSection() {
   const [currency, setCurrency] = useState<Currency>("USD")
   const [activeTab, setActiveTab] = useState<PricingTab>("technology")
@@ -228,6 +46,12 @@ export function PricingSection() {
   useEffect(() => {
     function syncTabFromHash() {
       const hashTab = window.location.hash.replace("#", "")
+      // Workflows used to be a tab here and are now templates on their own
+      // page, so old links land where the cards actually live.
+      if (hashTab === "workflows") {
+        window.location.replace("/templates")
+        return
+      }
       const nextTab = pricingTabs.find((tab) => tab.id === hashTab)?.id
       if (nextTab) setActiveTab(nextTab)
     }
@@ -265,7 +89,7 @@ export function PricingSection() {
         </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-[6px] rounded-[10px] border border-border bg-[#f3f2f0] p-[6px]">
+      <div className="grid grid-cols-2 gap-[6px] rounded-[10px] border border-border bg-[#f3f2f0] p-[6px]">
         {pricingTabs.map((tab) => (
           <a
             key={tab.id}
@@ -294,11 +118,6 @@ export function PricingSection() {
             {activeTab === "technology" && (
               <>
                 Build the <span className="text-accent">product and platform</span> layer.
-              </>
-            )}
-            {activeTab === "workflows" && (
-              <>
-                Connect existing tools into <span className="text-accent">growth workflows</span>.
               </>
             )}
             {activeTab === "consulting" && (
@@ -359,28 +178,6 @@ export function PricingSection() {
         </div>
       )}
 
-      {activeTab === "workflows" && (
-        <section className="space-y-6">
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
-            {workflowPlanRows.map((plan) => (
-              <OfferCard
-                key={plan.service}
-                eyebrow="Workflow"
-                title={plan.service}
-                icon={plan.icon}
-                price={formatPrice(plan.price, currency)}
-                timeline={plan.timeline}
-                description={plan.outcome}
-                features={plan.included.split(", ").map(toSentenceCase)}
-                chips={plan.tools}
-                ctaLabel="Get plan"
-                ctaHref="/contact"
-              />
-            ))}
-          </div>
-        </section>
-      )}
-
       {activeTab === "consulting" && (
         <div className="space-y-14">
           <section className="space-y-6">
@@ -412,7 +209,12 @@ export function PricingSection() {
         <div>
           <p className="text-lg font-semibold">Need a custom quote?</p>
           <p className="text-sm text-muted-foreground">
-            If your build or workflow falls outside these standard scopes, start with a discovery call and we&apos;ll scope it properly.
+            If your build falls outside these standard scopes, start with a discovery call and we&apos;ll scope it
+            properly. Ready-made growth workflows now live on{" "}
+            <Link href="/templates" className="underline underline-offset-2">
+              templates
+            </Link>
+            .
           </p>
         </div>
         <Button asChild>
