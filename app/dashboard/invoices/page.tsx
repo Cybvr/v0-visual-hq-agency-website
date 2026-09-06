@@ -5,7 +5,7 @@ import { useCallback, useEffect, useMemo, useState } from "react"
 import { Eye, Loader2, Pencil, Plus, Trash2 } from "lucide-react"
 
 import { useAuth } from "@/components/auth-provider"
-import { UserEditorSheet } from "@/components/admin/user-editor-sheet"
+import { UserEditorSheet } from "@/components/dashboard/user-editor-sheet"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -167,110 +167,110 @@ export default function InvoicesPage() {
                 <p className="text-sm text-muted-foreground">No invoices match your search.</p>
               </div>
             ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Invoice no.</TableHead>
-                  {adminView && <TableHead>Client</TableHead>}
-                  <TableHead>Project</TableHead>
-                  <TableHead>Issued</TableHead>
-                  <TableHead>Due</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Amount</TableHead>
-                  <TableHead className="w-24 text-right">
-                    <span className="sr-only">Actions</span>
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {visibleInvoices.map((invoice) => {
-                  const meta = invoiceStatusMeta[invoice.status] ?? invoiceStatusMeta.draft
-                  return (
-                    <TableRow key={invoice.id}>
-                      <TableCell className="font-medium">
-                        <Link
-                          href={
-                            adminView
-                              ? `/dashboard/invoices/${invoice.id}/edit`
-                              : `/dashboard/invoices/${invoice.id}`
-                          }
-                          className="rounded-sm outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring"
-                        >
-                          {invoice.invoiceNumber}
-                        </Link>
-                      </TableCell>
-                      {adminView && (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Invoice no.</TableHead>
+                    {adminView && <TableHead>Client</TableHead>}
+                    <TableHead>Project</TableHead>
+                    <TableHead>Issued</TableHead>
+                    <TableHead>Due</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="text-right">Amount</TableHead>
+                    <TableHead className="w-24 text-right">
+                      <span className="sr-only">Actions</span>
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {visibleInvoices.map((invoice) => {
+                    const meta = invoiceStatusMeta[invoice.status] ?? invoiceStatusMeta.draft
+                    return (
+                      <TableRow key={invoice.id}>
+                        <TableCell className="font-medium">
+                          <Link
+                            href={
+                              adminView
+                                ? `/dashboard/invoices/${invoice.id}/edit`
+                                : `/dashboard/invoices/${invoice.id}`
+                            }
+                            className="rounded-sm outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring"
+                          >
+                            {invoice.invoiceNumber}
+                          </Link>
+                        </TableCell>
+                        {adminView && (
+                          <TableCell>
+                            {invoice.clientId ? (
+                              <button
+                                type="button"
+                                onClick={() => setClientSheet(invoice.clientId)}
+                                className="rounded-sm text-left outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring"
+                              >
+                                {invoice.client || "Client"}
+                              </button>
+                            ) : (
+                              "—"
+                            )}
+                          </TableCell>
+                        )}
                         <TableCell>
-                          {invoice.clientId ? (
-                            <button
-                              type="button"
-                              onClick={() => setClientSheet(invoice.clientId)}
-                              className="rounded-sm text-left outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring"
+                          {invoice.projectId ? (
+                            <Link
+                              href={`/dashboard/projects/${invoice.projectId}`}
+                              className="rounded-sm outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring"
                             >
-                              {invoice.client || "Client"}
-                            </button>
+                              {invoice.project || "Project"}
+                            </Link>
                           ) : (
                             "—"
                           )}
                         </TableCell>
-                      )}
-                      <TableCell>
-                        {invoice.projectId ? (
-                          <Link
-                            href={`/dashboard/projects/${invoice.projectId}`}
-                            className="rounded-sm outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring"
-                          >
-                            {invoice.project || "Project"}
-                          </Link>
-                        ) : (
-                          "—"
-                        )}
-                      </TableCell>
-                      <TableCell>{formatDate(invoice.issuedOn)}</TableCell>
-                      <TableCell>{formatDate(invoice.dueOn)}</TableCell>
-                      <TableCell>
-                        <span className={cn("inline-flex rounded-full px-2 py-0.5 text-xs font-medium", meta.className)}>
-                          {meta.label}
-                        </span>
-                      </TableCell>
-                      <TableCell className="text-right font-medium">
-                        {formatMoney(invoice.amount, invoice.currency)}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center justify-end gap-0.5">
-                          <Link
-                            href={`/dashboard/invoices/${invoice.id}`}
-                            aria-label={`View invoice ${invoice.invoiceNumber}`}
-                            className="inline-flex size-8 items-center justify-center rounded-md text-muted-foreground outline-none transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
-                          >
-                            <Eye className="size-4" aria-hidden="true" />
-                          </Link>
-                          {adminView && (
-                            <>
-                              <Link
-                                href={`/dashboard/invoices/${invoice.id}/edit`}
-                                aria-label={`Edit invoice ${invoice.invoiceNumber}`}
-                                className="inline-flex size-8 items-center justify-center rounded-md text-muted-foreground outline-none transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
-                              >
-                                <Pencil className="size-4" aria-hidden="true" />
-                              </Link>
-                              <button
-                                type="button"
-                                onClick={() => setConfirmDelete(invoice)}
-                                aria-label={`Delete invoice ${invoice.invoiceNumber}`}
-                                className="inline-flex size-8 items-center justify-center rounded-md text-muted-foreground outline-none transition-colors hover:bg-muted hover:text-destructive focus-visible:ring-2 focus-visible:ring-ring"
-                              >
-                                <Trash2 className="size-4" aria-hidden="true" />
-                              </button>
-                            </>
-                          )}
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  )
-                })}
-              </TableBody>
-            </Table>
+                        <TableCell>{formatDate(invoice.issuedOn)}</TableCell>
+                        <TableCell>{formatDate(invoice.dueOn)}</TableCell>
+                        <TableCell>
+                          <span className={cn("inline-flex rounded-full px-2 py-0.5 text-xs font-medium", meta.className)}>
+                            {meta.label}
+                          </span>
+                        </TableCell>
+                        <TableCell className="text-right font-medium">
+                          {formatMoney(invoice.amount, invoice.currency)}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center justify-end gap-0.5">
+                            <Link
+                              href={`/dashboard/invoices/${invoice.id}`}
+                              aria-label={`View invoice ${invoice.invoiceNumber}`}
+                              className="inline-flex size-8 items-center justify-center rounded-md text-muted-foreground outline-none transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
+                            >
+                              <Eye className="size-4" aria-hidden="true" />
+                            </Link>
+                            {adminView && (
+                              <>
+                                <Link
+                                  href={`/dashboard/invoices/${invoice.id}/edit`}
+                                  aria-label={`Edit invoice ${invoice.invoiceNumber}`}
+                                  className="inline-flex size-8 items-center justify-center rounded-md text-muted-foreground outline-none transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
+                                >
+                                  <Pencil className="size-4" aria-hidden="true" />
+                                </Link>
+                                <button
+                                  type="button"
+                                  onClick={() => setConfirmDelete(invoice)}
+                                  aria-label={`Delete invoice ${invoice.invoiceNumber}`}
+                                  className="inline-flex size-8 items-center justify-center rounded-md text-muted-foreground outline-none transition-colors hover:bg-muted hover:text-destructive focus-visible:ring-2 focus-visible:ring-ring"
+                                >
+                                  <Trash2 className="size-4" aria-hidden="true" />
+                                </button>
+                              </>
+                            )}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    )
+                  })}
+                </TableBody>
+              </Table>
             )}
           </div>
         </>

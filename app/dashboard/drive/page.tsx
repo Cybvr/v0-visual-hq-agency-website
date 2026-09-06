@@ -1,7 +1,7 @@
 "use client"
 
 import { useAuth } from "@/components/auth-provider"
-import AdminDrivePage from "@/components/admin/drive-page"
+import AdminDrivePage from "@/components/dashboard/drive-page"
 import { ClientSectionPage } from "@/components/dashboard/client-section-page"
 
 export default function DrivePage() {

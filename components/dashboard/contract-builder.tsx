@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation"
 import { ArrowLeft, Loader2 } from "lucide-react"
 import { toast } from "sonner"
 
-import { RichTextEditor } from "@/components/admin/rich-text-editor"
+import { RichTextEditor } from "@/components/dashboard/rich-text-editor"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"

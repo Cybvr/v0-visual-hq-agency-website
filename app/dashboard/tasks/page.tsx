@@ -1,7 +1,7 @@
 "use client"
 
 import { useAuth } from "@/components/auth-provider"
-import AdminTasksPage from "@/components/admin/tasks-page"
+import AdminTasksPage from "@/components/dashboard/tasks-page"
 import { ClientSectionPage } from "@/components/dashboard/client-section-page"
 
 export default function TasksPage() {

@@ -4,7 +4,7 @@ import { useEffect, type ReactNode } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { Bot, Briefcase, Building2, Eye, FileSignature, HardDrive, LayoutDashboard, LayoutTemplate, ListTodo, Loader2, LogOut, Mail, Megaphone, Receipt, TrendingUp, Users, Wallet } from "lucide-react"
+import { Bot, Briefcase, Building2, Eye, FileSignature, HardDrive, LayoutDashboard, ListTodo, Loader2, LogOut, Mail, Megaphone, Receipt, TrendingUp, Users, Wallet } from "lucide-react"
 import { AuthProvider, useAuth } from "@/components/auth-provider"
 import { Button } from "@/components/ui/button"
 import { DashboardShell, type NavLink } from "@/components/dashboard-shell"
@@ -53,8 +53,7 @@ const ADMIN_NAV: NavLink[] = [
     items: [
       { label: "Projects", href: "/dashboard/projects", icon: Briefcase },
       { label: "Tasks", href: "/dashboard/tasks", icon: ListTodo },
-      { label: "Templates", href: "/dashboard/templates", icon: LayoutTemplate },
-      { label: "Clients", href: "/dashboard/clients", icon: Building2 },
+      { label: "Companies", href: "/dashboard/companies", icon: Building2 },
       { label: "Users", href: "/dashboard/users", icon: Users },
     ],
   },

@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation"
 import { Loader2 } from "lucide-react"
 
 import { useAuth } from "@/components/auth-provider"
-import { ContractBuilder } from "@/components/admin/contract-builder"
+import { ContractBuilder } from "@/components/dashboard/contract-builder"
 import { getContract, type Contract } from "@/lib/billing"
 
 export default function EditContractPage() {

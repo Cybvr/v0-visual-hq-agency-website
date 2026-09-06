@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation"
 import { Loader2 } from "lucide-react"
 
 import { useAuth } from "@/components/auth-provider"
-import { ContractBuilder } from "@/components/admin/contract-builder"
+import { ContractBuilder } from "@/components/dashboard/contract-builder"
 
 export default function NewContractPage() {
   const router = useRouter()

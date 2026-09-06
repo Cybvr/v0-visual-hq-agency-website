@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { Loader2 } from "lucide-react"
 
-import { UserForm } from "@/components/admin/user-form"
+import { UserForm } from "@/components/dashboard/user-form"
 import {
   Sheet,
   SheetContent,
@@ -25,6 +25,8 @@ export function UserEditorSheet({
   isNew,
   fixedRole,
   subjectNoun = "user",
+  joinWorkspaceId,
+  joinWorkspaceName,
   onClose,
   onSaved,
 }: {
@@ -33,7 +35,10 @@ export function UserEditorSheet({
   clientId?: string
   isNew?: boolean
   fixedRole?: UserRole
-  subjectNoun?: "user" | "client"
+  subjectNoun?: "user" | "client" | "company"
+  /** When creating, attach the new person to this existing workspace instead of giving them their own. */
+  joinWorkspaceId?: string
+  joinWorkspaceName?: string
   onClose: () => void
   onSaved: (uid: string) => void | Promise<void>
 }) {
@@ -70,7 +75,7 @@ export function UserEditorSheet({
   }, [lookup, clientId])
 
   const subject = isNew ? null : resolved
-  const subjectLabel = subjectNoun === "client" ? "client" : "user"
+  const subjectLabel = joinWorkspaceId ? "person" : subjectNoun === "company" ? "company" : subjectNoun === "client" ? "client" : "user"
 
   return (
     <Sheet open={open} onOpenChange={(next) => !next && onClose()}>
@@ -97,6 +102,8 @@ export function UserEditorSheet({
               user={subject}
               fixedRole={fixedRole}
               subjectNoun={subjectNoun}
+              workspaceId={isNew ? joinWorkspaceId : undefined}
+              workspaceName={joinWorkspaceName}
               onSaved={onSaved}
               onCancel={onClose}
             />

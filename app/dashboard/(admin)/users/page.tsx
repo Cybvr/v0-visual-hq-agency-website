@@ -25,7 +25,7 @@ import {
 } from "@/components/ui/table"
 import { Eye, Pencil, Plus, Trash2, Loader2, User as UserIcon } from "lucide-react"
 import { getUsers, deleteUser, type AppUser } from "@/lib/users"
-import { UserEditorSheet } from "@/components/admin/user-editor-sheet"
+import { UserEditorSheet } from "@/components/dashboard/user-editor-sheet"
 import { useAuth } from "@/components/auth-provider"
 import { FilterBar, useFilterBar, type SortOption } from "@/components/dashboard/filter-bar"
 import { tsToMillis } from "@/lib/tasks"
@@ -140,127 +140,127 @@ export default function UsersAdminPage() {
         </Card>
       ) : (
         <>
-        <FilterBar {...bar} placeholder="Search users" />
-        {visibleUsers.length === 0 ? (
-          <Card>
-            <CardContent className="py-16 text-center text-sm text-muted-foreground">
-              No users match your search.
-            </CardContent>
-          </Card>
-        ) : (
-        <div className="rounded-lg border border-border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>User</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Role</TableHead>
-                <TableHead>Company</TableHead>
-                <TableHead>View as</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {visibleUsers.map((u) => (
-                <TableRow
-                  key={u.uid}
-                  className="cursor-pointer"
-                  onClick={() => setSelectedId(u.uid)}
-                >
-                  <TableCell>
-                    <div className="flex items-center gap-3">
-                      {u.photoURL ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
-                          src={u.photoURL}
-                          alt=""
-                          className="h-8 w-8 shrink-0 rounded-full"
-                          referrerPolicy="no-referrer"
-                        />
-                      ) : (
-                        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-muted">
-                          <UserIcon className="h-4 w-4 text-muted-foreground" />
-                        </span>
-                      )}
-                      <span className="font-medium">{u.displayName || "—"}</span>
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">{u.email || "—"}</TableCell>
-                  <TableCell>
-                    {u.role ? (
-                      <span
-                        className={cn(
-                          "rounded-full px-2 py-0.5 text-xs font-medium",
-                          u.role === "admin" ? "bg-purple-100 text-purple-700" : "bg-muted text-muted-foreground",
-                        )}
-                      >
-                        {u.role}
-                      </span>
-                    ) : (
-                      <span className="text-muted-foreground">—</span>
-                    )}
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">{u.company || "—"}</TableCell>
-                  <TableCell onClick={(e) => e.stopPropagation()}>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="h-8"
-                      onClick={() => handleViewAs(u)}
+          <FilterBar {...bar} placeholder="Search users" />
+          {visibleUsers.length === 0 ? (
+            <Card>
+              <CardContent className="py-16 text-center text-sm text-muted-foreground">
+                No users match your search.
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="rounded-lg border border-border">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>User</TableHead>
+                    <TableHead>Email</TableHead>
+                    <TableHead>Role</TableHead>
+                    <TableHead>Company</TableHead>
+                    <TableHead>View as</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {visibleUsers.map((u) => (
+                    <TableRow
+                      key={u.uid}
+                      className="cursor-pointer"
+                      onClick={() => setSelectedId(u.uid)}
                     >
-                      <Eye className="mr-2 h-3.5 w-3.5" />
-                      View as
-                    </Button>
-                  </TableCell>
-                  <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
-                    <div className="flex justify-end gap-1">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 text-muted-foreground hover:text-foreground"
-                        onClick={() => setSelectedId(u.uid)}
-                        aria-label="Edit user"
-                      >
-                        <Pencil className="h-3.5 w-3.5" />
-                      </Button>
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
+                      <TableCell>
+                        <div className="flex items-center gap-3">
+                          {u.photoURL ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img
+                              src={u.photoURL}
+                              alt=""
+                              className="h-8 w-8 shrink-0 rounded-full"
+                              referrerPolicy="no-referrer"
+                            />
+                          ) : (
+                            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-muted">
+                              <UserIcon className="h-4 w-4 text-muted-foreground" />
+                            </span>
+                          )}
+                          <span className="font-medium">{u.displayName || "—"}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">{u.email || "—"}</TableCell>
+                      <TableCell>
+                        {u.role ? (
+                          <span
+                            className={cn(
+                              "rounded-full px-2 py-0.5 text-xs font-medium",
+                              u.role === "admin" ? "bg-purple-100 text-purple-700" : "bg-muted text-muted-foreground",
+                            )}
+                          >
+                            {u.role}
+                          </span>
+                        ) : (
+                          <span className="text-muted-foreground">—</span>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">{u.company || "—"}</TableCell>
+                      <TableCell onClick={(e) => e.stopPropagation()}>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-8"
+                          onClick={() => handleViewAs(u)}
+                        >
+                          <Eye className="mr-2 h-3.5 w-3.5" />
+                          View as
+                        </Button>
+                      </TableCell>
+                      <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
+                        <div className="flex justify-end gap-1">
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                            aria-label="Delete user"
+                            className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                            onClick={() => setSelectedId(u.uid)}
+                            aria-label="Edit user"
                           >
-                            <Trash2 className="h-3.5 w-3.5" />
+                            <Pencil className="h-3.5 w-3.5" />
                           </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Remove user?</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              You&apos;re about to remove {u.displayName || u.email || "this user"}. This can&apos;t be
-                              undone.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction
-                              onClick={() => handleDelete(u.uid)}
-                              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                            >
-                              {deleting === u.uid ? <Loader2 className="h-4 w-4 animate-spin" /> : "Delete"}
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
-        )}
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                                aria-label="Delete user"
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Remove user?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  You&apos;re about to remove {u.displayName || u.email || "this user"}. This can&apos;t be
+                                  undone.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction
+                                  onClick={() => handleDelete(u.uid)}
+                                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                >
+                                  {deleting === u.uid ? <Loader2 className="h-4 w-4 animate-spin" /> : "Delete"}
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
         </>
       )}
 

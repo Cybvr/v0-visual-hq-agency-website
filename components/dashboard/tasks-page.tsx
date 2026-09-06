@@ -44,7 +44,7 @@ import {
 } from "@/lib/tasks"
 import { getProjects, type Project } from "@/lib/projects"
 import { Badge, InlineDate, InlineProject, InlineSelect, InlineText } from "@/components/inline-table-cells"
-import { TaskForm } from "@/components/admin/task-form"
+import { TaskForm } from "@/components/dashboard/task-form"
 import { FilterBar, useFilterBar, type SortOption } from "@/components/dashboard/filter-bar"
 
 const STATUS_OPTIONS: TaskStatus[] = ["todo", "in-progress", "review", "done"]
@@ -177,120 +177,120 @@ export default function TasksAdminPage() {
         </Card>
       ) : (
         <>
-        <FilterBar {...bar} placeholder="Search tasks" />
-        {visibleTasks.length === 0 ? (
-          <Card>
-            <CardContent className="py-16 text-center text-sm text-muted-foreground">
-              No tasks match your search.
-            </CardContent>
-          </Card>
-        ) : (
-        <div className="rounded-lg border border-border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Task</TableHead>
-                <TableHead>Client</TableHead>
-                <TableHead>Project</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Priority</TableHead>
-                <TableHead>Created</TableHead>
-                <TableHead>Due</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {visibleTasks.map((t) => (
-                <TableRow key={t.id}>
-                  <TableCell className="font-medium">
-                    <InlineText value={t.name} onCommit={(name) => handlePatch(t.id, { name })} />
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">{t.client || t.clientId || "—"}</TableCell>
-                  <TableCell>
-                    <InlineProject
-                      projectId={t.projectId}
-                      projects={projects.filter((p) => p.clientId === t.clientId)}
-                      onChange={(p) => handlePatch(t.id, { projectId: p.id, project: p.title })}
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <InlineSelect
-                      value={t.status}
-                      options={STATUS_OPTIONS}
-                      onChange={(status) => handlePatch(t.id, { status })}
-                      renderOption={(s) => taskStatusMeta[s].label}
-                      trigger={
-                        <Badge className={(taskStatusMeta[t.status] ?? taskStatusMeta.todo).className}>
-                          {(taskStatusMeta[t.status] ?? taskStatusMeta.todo).label}
-                        </Badge>
-                      }
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <InlineSelect
-                      value={t.priority}
-                      options={PRIORITY_OPTIONS}
-                      onChange={(priority) => handlePatch(t.id, { priority })}
-                      renderOption={(p) => taskPriorityMeta[p].label}
-                      trigger={
-                        <Badge className={(taskPriorityMeta[t.priority] ?? taskPriorityMeta.medium).className}>
-                          {(taskPriorityMeta[t.priority] ?? taskPriorityMeta.medium).label}
-                        </Badge>
-                      }
-                    />
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">{formatTimestamp(t.createdAt)}</TableCell>
-                  <TableCell>
-                    <InlineDate value={t.dueDate} onCommit={(dueDate) => handlePatch(t.id, { dueDate })} />
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end gap-1">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 text-muted-foreground hover:text-foreground"
-                        onClick={() => setSelectedId(t.id)}
-                        aria-label="Edit task"
-                      >
-                        <Pencil className="h-3.5 w-3.5" />
-                      </Button>
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
+          <FilterBar {...bar} placeholder="Search tasks" />
+          {visibleTasks.length === 0 ? (
+            <Card>
+              <CardContent className="py-16 text-center text-sm text-muted-foreground">
+                No tasks match your search.
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="rounded-lg border border-border">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Task</TableHead>
+                    <TableHead>Client</TableHead>
+                    <TableHead>Project</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Priority</TableHead>
+                    <TableHead>Created</TableHead>
+                    <TableHead>Due</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {visibleTasks.map((t) => (
+                    <TableRow key={t.id}>
+                      <TableCell className="font-medium">
+                        <InlineText value={t.name} onCommit={(name) => handlePatch(t.id, { name })} />
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">{t.client || t.clientId || "—"}</TableCell>
+                      <TableCell>
+                        <InlineProject
+                          projectId={t.projectId}
+                          projects={projects.filter((p) => p.clientId === t.clientId)}
+                          onChange={(p) => handlePatch(t.id, { projectId: p.id, project: p.title })}
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <InlineSelect
+                          value={t.status}
+                          options={STATUS_OPTIONS}
+                          onChange={(status) => handlePatch(t.id, { status })}
+                          renderOption={(s) => taskStatusMeta[s].label}
+                          trigger={
+                            <Badge className={(taskStatusMeta[t.status] ?? taskStatusMeta.todo).className}>
+                              {(taskStatusMeta[t.status] ?? taskStatusMeta.todo).label}
+                            </Badge>
+                          }
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <InlineSelect
+                          value={t.priority}
+                          options={PRIORITY_OPTIONS}
+                          onChange={(priority) => handlePatch(t.id, { priority })}
+                          renderOption={(p) => taskPriorityMeta[p].label}
+                          trigger={
+                            <Badge className={(taskPriorityMeta[t.priority] ?? taskPriorityMeta.medium).className}>
+                              {(taskPriorityMeta[t.priority] ?? taskPriorityMeta.medium).label}
+                            </Badge>
+                          }
+                        />
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">{formatTimestamp(t.createdAt)}</TableCell>
+                      <TableCell>
+                        <InlineDate value={t.dueDate} onCommit={(dueDate) => handlePatch(t.id, { dueDate })} />
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end gap-1">
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                            aria-label="Delete task"
+                            className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                            onClick={() => setSelectedId(t.id)}
+                            aria-label="Edit task"
                           >
-                            <Trash2 className="h-3.5 w-3.5" />
+                            <Pencil className="h-3.5 w-3.5" />
                           </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Delete task?</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              This permanently deletes &quot;{t.name || "this task"}&quot;. This cannot be undone.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction
-                              onClick={() => handleDelete(t.id)}
-                              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                            >
-                              {deleting === t.id ? <Loader2 className="h-4 w-4 animate-spin" /> : "Delete"}
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
-        )}
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                                aria-label="Delete task"
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Delete task?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  This permanently deletes &quot;{t.name || "this task"}&quot;. This cannot be undone.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction
+                                  onClick={() => handleDelete(t.id)}
+                                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                >
+                                  {deleting === t.id ? <Loader2 className="h-4 w-4 animate-spin" /> : "Delete"}
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
         </>
       )}
 

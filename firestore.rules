@@ -128,6 +128,14 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    // Organizations - the company a client user belongs to (see lib/organizations.ts).
+    // Doc id is the same clientId used everywhere else. Admins manage all;
+    // a client can read their own organization's doc.
+    match /organizations/{organizationId} {
+      allow read: if isAdmin() || (isSignedIn() && organizationId == myClientId());
+      allow write: if isAdmin();
+    }
+
     // Approvals - client deliverable sign-off (see lib/approvals.ts).
     // Signed-in users can read/write; admins included. Tighten to per-client
     // once approvals carry a clientId you can match against the user doc.

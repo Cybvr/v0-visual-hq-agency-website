@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation"
 import { ArrowLeft, Loader2 } from "lucide-react"
 
 import { useAuth } from "@/components/auth-provider"
+import { CaseStudyForm } from "@/components/dashboard/case-study-form"
 import { ProjectShareButton } from "@/components/dashboard/project-share-button"
 import { TasksView } from "@/components/dashboard/tasks-view"
 import { Badge } from "@/components/ui/badge"
@@ -30,6 +31,7 @@ function BackLink() {
 export default function ProjectDetailPage() {
   const params = useParams<{ slug: string }>()
   const slug = params?.slug ?? ""
+  const router = useRouter()
   const { user, appUser, isAdmin } = useAuth()
   const clientId = appUser?.clientId ?? ""
   const clientName = appUser?.company || appUser?.displayName || ""
@@ -161,6 +163,20 @@ export default function ProjectDetailPage() {
           onSaved={fetchData}
         />
       </div>
+
+      {isAdmin && (
+        <div className="mt-8">
+          <CaseStudyForm
+            project={project}
+            onSaved={(patch) => {
+              setProject((current) => (current ? { ...current, ...patch } : current))
+              // The page is addressed by slug, so a renamed case study moves
+              // the URL with it rather than leaving a stale address behind.
+              if (patch.slug && patch.slug !== slug) router.replace(`/dashboard/projects/${patch.slug}`)
+            }}
+          />
+        </div>
+      )}
     </main>
   )
 }

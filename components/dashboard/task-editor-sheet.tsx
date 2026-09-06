@@ -1,6 +1,6 @@
 "use client"
 
-import { TaskForm } from "@/components/admin/task-form"
+import { TaskForm } from "@/components/dashboard/task-form"
 import { TaskComments } from "@/components/dashboard/task-comments"
 import {
   Sheet,

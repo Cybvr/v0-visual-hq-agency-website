@@ -5,7 +5,7 @@ import { useEffect } from "react"
 import { Loader2 } from "lucide-react"
 
 import { useAuth } from "@/components/auth-provider"
-import { InvoiceBuilder } from "@/components/admin/invoice-builder"
+import { InvoiceBuilder } from "@/components/dashboard/invoice-builder"
 
 export default function NewInvoicePage() {
   const router = useRouter()

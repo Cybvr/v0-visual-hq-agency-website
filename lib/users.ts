@@ -49,6 +49,9 @@ const RESERVED_SLUGS = new Set([
   "tasks",
   "portfolio",
   "users",
+  "clients",
+  "companies",
+  "templates",
   "invoices",
   "contracts",
   "marketing",
@@ -73,6 +76,21 @@ export async function getUserBySlug(slug: string): Promise<AppUser | null> {
   if (snapshot.empty) return null
   const first = snapshot.docs[0]
   return { ...(first.data() as object), uid: first.id } as AppUser
+}
+
+/**
+ * Resolve a user from a URL segment. Slugs are what the links carry; a raw uid
+ * still resolves so older links, and accounts that have never signed in and so
+ * have no slug yet, keep working.
+ */
+export async function getUserByRef(ref: string): Promise<AppUser | null> {
+  if (!ref) return null
+  return (await getUserBySlug(ref)) ?? (await getUser(ref))
+}
+
+/** The URL segment for a user. */
+export function userRef(user: AppUser): string {
+  return user.slug || user.uid
 }
 
 /**
@@ -107,6 +125,13 @@ export async function getUserByClientId(clientId: string): Promise<AppUser | nul
   if (snapshot.empty) return null
   const first = snapshot.docs[0]
   return { ...(first.data() as object), uid: first.id } as AppUser
+}
+
+/** Every person who belongs to a workspace, for the company's People tab. */
+export async function getUsersByClientId(clientId: string): Promise<AppUser[]> {
+  if (!clientId) return []
+  const snapshot = await getDocs(query(collection(db, COLLECTION_NAME), where("clientId", "==", clientId)))
+  return snapshot.docs.map((d) => ({ ...(d.data() as object), uid: d.id })) as AppUser[]
 }
 
 export async function getUser(uid: string): Promise<AppUser | null> {

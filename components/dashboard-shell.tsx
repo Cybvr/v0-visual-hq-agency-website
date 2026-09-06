@@ -61,7 +61,7 @@ export function DashboardShell({
           { terms: ["seo", "ranking", "keyword"], href: "/dashboard/seo" },
           { terms: ["invoice", "billing", "payment", "finance"], href: "/dashboard/invoices" },
           { terms: ["contract", "agreement", "signature"], href: "/dashboard/contracts" },
-          { terms: ["client", "company", "workspace"], href: "/dashboard/clients" },
+          { terms: ["client", "company", "workspace"], href: "/dashboard/companies" },
           { terms: ["user", "account", "settings"], href: "/dashboard/users" },
         ]
       : [

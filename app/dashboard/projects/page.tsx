@@ -1,7 +1,7 @@
 "use client"
 
 import { useAuth } from "@/components/auth-provider"
-import AdminProjectsPage from "@/components/admin/projects-page"
+import AdminProjectsPage from "@/components/dashboard/projects-page"
 import { ClientSectionPage } from "@/components/dashboard/client-section-page"
 
 export default function ProjectsPage() {

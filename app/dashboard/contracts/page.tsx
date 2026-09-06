@@ -5,7 +5,7 @@ import { useCallback, useEffect, useMemo, useState } from "react"
 import { Download, Eye, Loader2, Pencil, Plus, Trash2 } from "lucide-react"
 
 import { useAuth } from "@/components/auth-provider"
-import { UserEditorSheet } from "@/components/admin/user-editor-sheet"
+import { UserEditorSheet } from "@/components/dashboard/user-editor-sheet"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -171,124 +171,124 @@ export default function ContractsPage() {
                 <p className="text-sm text-muted-foreground">No contracts match your search.</p>
               </div>
             ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Title</TableHead>
-                  {adminView && <TableHead>Client</TableHead>}
-                  <TableHead>Project</TableHead>
-                  <TableHead>Starts</TableHead>
-                  <TableHead>Ends</TableHead>
-                  <TableHead>Signed</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="w-24 text-right">
-                    <span className="sr-only">Actions</span>
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {visibleContracts.map((contract) => {
-                  const meta = contractStatusMeta[contract.status] ?? contractStatusMeta.draft
-                  return (
-                    <TableRow key={contract.id}>
-                      <TableCell className="font-medium">
-                        {adminView ? (
-                          <Link
-                            href={`/dashboard/contracts/${contract.id}/edit`}
-                            className="rounded-sm outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring"
-                          >
-                            {contract.title}
-                          </Link>
-                        ) : (
-                          <Link
-                            href={`/dashboard/contracts/${contract.id}`}
-                            className="rounded-sm outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring"
-                          >
-                            {contract.title}
-                          </Link>
-                        )}
-                      </TableCell>
-                      {adminView && (
-                        <TableCell>
-                          {contract.clientId ? (
-                            <button
-                              type="button"
-                              onClick={() => setClientSheet(contract.clientId)}
-                              className="rounded-sm text-left outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring"
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Title</TableHead>
+                    {adminView && <TableHead>Client</TableHead>}
+                    <TableHead>Project</TableHead>
+                    <TableHead>Starts</TableHead>
+                    <TableHead>Ends</TableHead>
+                    <TableHead>Signed</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="w-24 text-right">
+                      <span className="sr-only">Actions</span>
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {visibleContracts.map((contract) => {
+                    const meta = contractStatusMeta[contract.status] ?? contractStatusMeta.draft
+                    return (
+                      <TableRow key={contract.id}>
+                        <TableCell className="font-medium">
+                          {adminView ? (
+                            <Link
+                              href={`/dashboard/contracts/${contract.id}/edit`}
+                              className="rounded-sm outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring"
                             >
-                              {contract.client || "Client"}
-                            </button>
+                              {contract.title}
+                            </Link>
+                          ) : (
+                            <Link
+                              href={`/dashboard/contracts/${contract.id}`}
+                              className="rounded-sm outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring"
+                            >
+                              {contract.title}
+                            </Link>
+                          )}
+                        </TableCell>
+                        {adminView && (
+                          <TableCell>
+                            {contract.clientId ? (
+                              <button
+                                type="button"
+                                onClick={() => setClientSheet(contract.clientId)}
+                                className="rounded-sm text-left outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring"
+                              >
+                                {contract.client || "Client"}
+                              </button>
+                            ) : (
+                              "—"
+                            )}
+                          </TableCell>
+                        )}
+                        <TableCell>
+                          {contract.projectId ? (
+                            <Link
+                              href={`/dashboard/projects/${contract.projectId}`}
+                              className="rounded-sm outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring"
+                            >
+                              {contract.project || "Project"}
+                            </Link>
                           ) : (
                             "—"
                           )}
                         </TableCell>
-                      )}
-                      <TableCell>
-                        {contract.projectId ? (
-                          <Link
-                            href={`/dashboard/projects/${contract.projectId}`}
-                            className="rounded-sm outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring"
-                          >
-                            {contract.project || "Project"}
-                          </Link>
-                        ) : (
-                          "—"
-                        )}
-                      </TableCell>
-                      <TableCell>{formatDate(contract.startsOn)}</TableCell>
-                      <TableCell>{formatDate(contract.endsOn)}</TableCell>
-                      <TableCell>{formatDate(contract.signedOn)}</TableCell>
-                      <TableCell>
-                        <span className={cn("inline-flex rounded-full px-2 py-0.5 text-xs font-medium", meta.className)}>
-                          {meta.label}
-                        </span>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center justify-end gap-0.5">
-                          <Link
-                            href={`/dashboard/contracts/${contract.id}`}
-                            aria-label={`View contract ${contract.title}`}
-                            className="inline-flex size-8 items-center justify-center rounded-md text-muted-foreground outline-none transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
-                          >
-                            <Eye className="size-4" aria-hidden="true" />
-                          </Link>
-                          {contract.url && (
-                            <a
-                              href={contract.url}
-                              target="_blank"
-                              rel="noreferrer"
-                              aria-label={`Open contract ${contract.title}`}
+                        <TableCell>{formatDate(contract.startsOn)}</TableCell>
+                        <TableCell>{formatDate(contract.endsOn)}</TableCell>
+                        <TableCell>{formatDate(contract.signedOn)}</TableCell>
+                        <TableCell>
+                          <span className={cn("inline-flex rounded-full px-2 py-0.5 text-xs font-medium", meta.className)}>
+                            {meta.label}
+                          </span>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center justify-end gap-0.5">
+                            <Link
+                              href={`/dashboard/contracts/${contract.id}`}
+                              aria-label={`View contract ${contract.title}`}
                               className="inline-flex size-8 items-center justify-center rounded-md text-muted-foreground outline-none transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
                             >
-                              <Download className="size-4" aria-hidden="true" />
-                            </a>
-                          )}
-                          {adminView && (
-                            <>
-                              <Link
-                                href={`/dashboard/contracts/${contract.id}/edit`}
-                                aria-label={`Edit contract ${contract.title}`}
+                              <Eye className="size-4" aria-hidden="true" />
+                            </Link>
+                            {contract.url && (
+                              <a
+                                href={contract.url}
+                                target="_blank"
+                                rel="noreferrer"
+                                aria-label={`Open contract ${contract.title}`}
                                 className="inline-flex size-8 items-center justify-center rounded-md text-muted-foreground outline-none transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
                               >
-                                <Pencil className="size-4" aria-hidden="true" />
-                              </Link>
-                              <button
-                                type="button"
-                                onClick={() => setConfirmDelete(contract)}
-                                aria-label={`Delete contract ${contract.title}`}
-                                className="inline-flex size-8 items-center justify-center rounded-md text-muted-foreground outline-none transition-colors hover:bg-muted hover:text-destructive focus-visible:ring-2 focus-visible:ring-ring"
-                              >
-                                <Trash2 className="size-4" aria-hidden="true" />
-                              </button>
-                            </>
-                          )}
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  )
-                })}
-              </TableBody>
-            </Table>
+                                <Download className="size-4" aria-hidden="true" />
+                              </a>
+                            )}
+                            {adminView && (
+                              <>
+                                <Link
+                                  href={`/dashboard/contracts/${contract.id}/edit`}
+                                  aria-label={`Edit contract ${contract.title}`}
+                                  className="inline-flex size-8 items-center justify-center rounded-md text-muted-foreground outline-none transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
+                                >
+                                  <Pencil className="size-4" aria-hidden="true" />
+                                </Link>
+                                <button
+                                  type="button"
+                                  onClick={() => setConfirmDelete(contract)}
+                                  aria-label={`Delete contract ${contract.title}`}
+                                  className="inline-flex size-8 items-center justify-center rounded-md text-muted-foreground outline-none transition-colors hover:bg-muted hover:text-destructive focus-visible:ring-2 focus-visible:ring-ring"
+                                >
+                                  <Trash2 className="size-4" aria-hidden="true" />
+                                </button>
+                              </>
+                            )}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    )
+                  })}
+                </TableBody>
+              </Table>
             )}
           </div>
         </>

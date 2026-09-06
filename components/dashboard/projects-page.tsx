@@ -30,10 +30,12 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet"
-import { CheckCircle2, Database, Eye, Loader2, Plus, Trash2 } from "lucide-react"
+import { DropdownMenuItem } from "@/components/ui/dropdown-menu"
+import { CheckCircle2, Database, Eye, LayoutGrid, List, Loader2, Plus, Trash2 } from "lucide-react"
 import { getProjects, deleteProject, projectSlug, projectStatusMeta, type Project } from "@/lib/projects"
 import { migratePortfolioToProjects, type PortfolioMigrationResult } from "@/lib/migrate-portfolio"
-import { ClientProjectForm } from "@/components/admin/client-project-form"
+import { ClientProjectForm } from "@/components/dashboard/client-project-form"
+import { ProjectCard } from "@/components/project-card"
 import { FilterBar, useFilterBar, type SortOption } from "@/components/dashboard/filter-bar"
 import { cn } from "@/lib/utils"
 
@@ -55,13 +57,45 @@ function searchProject(p: Project) {
   return [p.title, p.client, p.clientId, p.service, projectStatusMeta[p.status]?.label]
 }
 
+/** Card / list switch for the projects grid. Cards are the default. */
+function ViewToggle({ view, onChange }: { view: "card" | "list"; onChange: (view: "card" | "list") => void }) {
+  return (
+    <div className="flex shrink-0 items-center gap-1 rounded-lg border border-border p-1">
+      <Button
+        type="button"
+        variant={view === "card" ? "secondary" : "ghost"}
+        size="icon"
+        className="h-7 w-7"
+        onClick={() => onChange("card")}
+        aria-label="Card view"
+        aria-pressed={view === "card"}
+      >
+        <LayoutGrid className="h-3.5 w-3.5" />
+      </Button>
+      <Button
+        type="button"
+        variant={view === "list" ? "secondary" : "ghost"}
+        size="icon"
+        className="h-7 w-7"
+        onClick={() => onChange("list")}
+        aria-label="List view"
+        aria-pressed={view === "list"}
+      >
+        <List className="h-3.5 w-3.5" />
+      </Button>
+    </div>
+  )
+}
+
 export default function ProjectsAdminPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [projects, setProjects] = useState<Project[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [view, setView] = useState<"card" | "list">("card")
   const [deleting, setDeleting] = useState<string | null>(null)
+  const [pendingDelete, setPendingDelete] = useState<Project | null>(null)
   const [creating, setCreating] = useState(false)
   const [migrating, setMigrating] = useState(false)
   const [migrationResult, setMigrationResult] = useState<PortfolioMigrationResult | null>(null)
@@ -102,11 +136,12 @@ export default function ProjectsAdminPage() {
     fetchProjects()
   }, [])
 
-  async function handleDelete(id: string) {
-    setDeleting(id)
+  async function handleDelete(project: Project) {
+    setDeleting(project.id)
     try {
-      await deleteProject(id)
-      setProjects((prev) => prev.filter((p) => p.id !== id))
+      await deleteProject(project.id)
+      setProjects((prev) => prev.filter((p) => p.id !== project.id))
+      setPendingDelete(null)
     } catch (err) {
       console.error("Error deleting project:", err)
     } finally {
@@ -219,107 +254,152 @@ export default function ProjectsAdminPage() {
         </Card>
       ) : (
         <>
-        <FilterBar {...bar} placeholder="Search projects" />
-        {visibleProjects.length === 0 ? (
-          <Card>
-            <CardContent className="py-16 text-center text-sm text-muted-foreground">
-              No projects match your search.
-            </CardContent>
-          </Card>
-        ) : (
-        <div className="rounded-lg border border-border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Project</TableHead>
-                <TableHead>Client</TableHead>
-                <TableHead>Service</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Progress</TableHead>
-                <TableHead>Due</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
+          <div className="mb-6 flex flex-wrap items-center gap-3">
+            <div className="min-w-0 flex-1">
+              <FilterBar {...bar} placeholder="Search projects" className="mb-0" />
+            </div>
+            <ViewToggle view={view} onChange={setView} />
+          </div>
+
+          {visibleProjects.length === 0 ? (
+            <Card>
+              <CardContent className="py-16 text-center text-sm text-muted-foreground">
+                No projects match your search.
+              </CardContent>
+            </Card>
+          ) : view === "card" ? (
+            <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
               {visibleProjects.map((p) => {
                 const meta = projectStatusMeta[p.status] ?? projectStatusMeta["in-progress"]
                 return (
-                  <TableRow
-                    key={p.id}
-                    className="cursor-pointer"
-                    onClick={() => router.push(`/dashboard/projects/${projectSlug(p)}`)}
-                  >
-                    <TableCell className="font-medium">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span>{p.title}</span>
-                        {p.isCaseStudy && (
-                          <span className="rounded-full bg-violet-100 px-2 py-0.5 text-xs font-medium text-violet-700 dark:bg-violet-950 dark:text-violet-200">
-                            Case study
+                  <li key={p.id}>
+                    <ProjectCard
+                      project={p}
+                      href={`/dashboard/projects/${projectSlug(p)}`}
+                      subtitle={p.client || p.clientId}
+                      footer={
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          <span className={cn("rounded-full px-2 py-0.5 text-[11px] font-medium", meta.className)}>
+                            {meta.label}
                           </span>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">{p.client || p.clientId}</TableCell>
-                    <TableCell className="text-muted-foreground">{p.service || "—"}</TableCell>
-                    <TableCell>
-                      <span className={cn("rounded-full px-2 py-0.5 text-xs font-medium", meta.className)}>
-                        {meta.label}
-                      </span>
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">{p.progress}%</TableCell>
-                    <TableCell className="text-muted-foreground">{p.dueDate || "—"}</TableCell>
-                    <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
-                      <div className="flex justify-end gap-1">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 text-muted-foreground hover:text-foreground"
-                          onClick={() => router.push(`/dashboard/projects/${projectSlug(p)}`)}
-                          aria-label={`Open ${p.title}`}
-                        >
-                          <Eye className="h-3.5 w-3.5" />
-                        </Button>
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
+                          {p.isCaseStudy && (
+                            <span className="rounded-full bg-violet-100 px-2 py-0.5 text-[11px] font-medium text-violet-700 dark:bg-violet-950 dark:text-violet-200">
+                              Case study
+                            </span>
+                          )}
+                        </div>
+                      }
+                      menuLabel={`Options for ${p.title}`}
+                      menu={
+                        <>
+                          <DropdownMenuItem onSelect={() => router.push(`/dashboard/projects/${projectSlug(p)}`)}>
+                            Open project
+                          </DropdownMenuItem>
+                          <DropdownMenuItem variant="destructive" onSelect={() => setPendingDelete(p)}>
+                            Delete project
+                          </DropdownMenuItem>
+                        </>
+                      }
+                    />
+                  </li>
+                )
+              })}
+            </ul>
+          ) : (
+            <div className="rounded-lg border border-border">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Project</TableHead>
+                    <TableHead>Client</TableHead>
+                    <TableHead>Service</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Progress</TableHead>
+                    <TableHead>Due</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {visibleProjects.map((p) => {
+                    const meta = projectStatusMeta[p.status] ?? projectStatusMeta["in-progress"]
+                    return (
+                      <TableRow
+                        key={p.id}
+                        className="cursor-pointer"
+                        onClick={() => router.push(`/dashboard/projects/${projectSlug(p)}`)}
+                      >
+                        <TableCell className="font-medium">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span>{p.title}</span>
+                            {p.isCaseStudy && (
+                              <span className="rounded-full bg-violet-100 px-2 py-0.5 text-xs font-medium text-violet-700 dark:bg-violet-950 dark:text-violet-200">
+                                Case study
+                              </span>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-muted-foreground">{p.client || p.clientId}</TableCell>
+                        <TableCell className="text-muted-foreground">{p.service || "—"}</TableCell>
+                        <TableCell>
+                          <span className={cn("rounded-full px-2 py-0.5 text-xs font-medium", meta.className)}>
+                            {meta.label}
+                          </span>
+                        </TableCell>
+                        <TableCell className="text-muted-foreground">{p.progress}%</TableCell>
+                        <TableCell className="text-muted-foreground">{p.dueDate || "—"}</TableCell>
+                        <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
+                          <div className="flex justify-end gap-1">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                              onClick={() => router.push(`/dashboard/projects/${projectSlug(p)}`)}
+                              aria-label={`Open ${p.title}`}
+                            >
+                              <Eye className="h-3.5 w-3.5" />
+                            </Button>
                             <Button
                               variant="ghost"
                               size="icon"
                               className="h-8 w-8 text-muted-foreground hover:text-destructive"
                               aria-label="Delete project"
+                              onClick={() => setPendingDelete(p)}
                             >
                               <Trash2 className="h-3.5 w-3.5" />
                             </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>Delete project?</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                This permanently deletes &quot;{p.title}&quot;. Tasks under it are not deleted
-                                automatically. This cannot be undone.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Cancel</AlertDialogCancel>
-                              <AlertDialogAction
-                                onClick={() => handleDelete(p.id)}
-                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                              >
-                                {deleting === p.id ? <Loader2 className="h-4 w-4 animate-spin" /> : "Delete"}
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                )
-              })}
-            </TableBody>
-          </Table>
-        </div>
-        )}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    )
+                  })}
+                </TableBody>
+              </Table>
+            </div>
+          )}
         </>
       )}
+
+      <AlertDialog open={Boolean(pendingDelete)} onOpenChange={(open) => !open && !deleting && setPendingDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete project?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This permanently deletes &quot;{pendingDelete?.title}&quot;. Tasks under it are not deleted
+              automatically. This cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting !== null}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={deleting !== null}
+              onClick={() => pendingDelete && void handleDelete(pendingDelete)}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <Sheet
         open={creating}
