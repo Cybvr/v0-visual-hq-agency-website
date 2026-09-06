@@ -76,6 +76,13 @@ export default function ContractDetailPage() {
           <p className="max-w-2xl text-base leading-8 text-neutral-700">
             This agreement is recorded for <strong className="font-semibold text-neutral-950">{contract.client || "the client"}</strong>{contract.project ? <> in connection with <strong className="font-semibold text-neutral-950">{contract.project}</strong></> : null}.
           </p>
+          {contract.body && (
+            <div
+              className="mt-8 text-base text-neutral-700 [&_h2]:mt-5 [&_h2]:text-lg [&_h2]:font-semibold [&_h3]:mt-4 [&_h3]:text-base [&_h3]:font-semibold [&_p]:my-2 [&_p]:leading-7 [&_ul]:my-2 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:my-2 [&_ol]:list-decimal [&_ol]:pl-5 [&_li]:my-1 [&_strong]:font-semibold [&_blockquote]:my-3 [&_blockquote]:border-l-2 [&_blockquote]:pl-3 [&_blockquote]:italic [&_blockquote]:border-neutral-300 [&_h2]:text-neutral-950 [&_h3]:text-neutral-950"
+              dangerouslySetInnerHTML={{ __html: contract.body }}
+            />
+          )}
+
           <dl className="mt-10 grid gap-8 border-y border-neutral-200 py-8 sm:grid-cols-3">
             <div><dt className="text-xs font-medium uppercase tracking-[0.12em] text-neutral-500">Effective date</dt><dd className="mt-2 text-sm font-medium">{formatDate(contract.startsOn)}</dd></div>
             <div><dt className="text-xs font-medium uppercase tracking-[0.12em] text-neutral-500">End date</dt><dd className="mt-2 text-sm font-medium">{formatDate(contract.endsOn)}</dd></div>

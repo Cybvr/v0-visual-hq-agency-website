@@ -6,8 +6,6 @@ import { Download, Eye, Loader2, Pencil, Plus, Trash2 } from "lucide-react"
 
 import { useAuth } from "@/components/auth-provider"
 import { UserEditorSheet } from "@/components/admin/user-editor-sheet"
-import { ContractForm } from "@/components/admin/contract-form"
-import { BillingEditorSheet } from "@/components/dashboard/billing-editor-sheet"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -45,8 +43,6 @@ export default function ContractsPage() {
   const [contracts, setContracts] = useState<Contract[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(false)
-  const [editing, setEditing] = useState<Contract | null>(null)
-  const [creating, setCreating] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState<Contract | null>(null)
   const [clientSheet, setClientSheet] = useState<string | null>(null)
   const [deleting, setDeleting] = useState(false)
@@ -81,16 +77,6 @@ export default function ContractsPage() {
     }
   }
 
-  async function handleSaved() {
-    setCreating(false)
-    setEditing(null)
-    await fetchData()
-  }
-
-  function closeEditor() {
-    setCreating(false)
-    setEditing(null)
-  }
 
   if (!user) return null
 
@@ -104,9 +90,11 @@ export default function ContractsPage() {
         </div>
 
         {adminView && (
-          <Button onClick={() => setCreating(true)}>
-            <Plus className="mr-2 size-4" aria-hidden="true" />
-            New contract
+          <Button asChild>
+            <Link href="/dashboard/contracts/new">
+              <Plus className="mr-2 size-4" aria-hidden="true" />
+              New contract
+            </Link>
           </Button>
         )}
       </div>
@@ -121,9 +109,11 @@ export default function ContractsPage() {
         <div className="mt-8 rounded-[14px] border border-dashed border-border bg-card px-5 py-12 text-center">
           <p className="text-sm text-muted-foreground">No contracts yet.</p>
           {adminView && (
-            <Button variant="outline" className="mt-4" onClick={() => setCreating(true)}>
-              <Plus className="mr-2 size-4" aria-hidden="true" />
-              New contract
+            <Button asChild variant="outline" className="mt-4">
+              <Link href="/dashboard/contracts/new">
+                <Plus className="mr-2 size-4" aria-hidden="true" />
+                New contract
+              </Link>
             </Button>
           )}
         </div>
@@ -158,13 +148,12 @@ export default function ContractsPage() {
                     <TableRow key={contract.id}>
                       <TableCell className="font-medium">
                         {adminView ? (
-                          <button
-                            type="button"
-                            onClick={() => setEditing(contract)}
-                            className="rounded-sm text-left outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring"
+                          <Link
+                            href={`/dashboard/contracts/${contract.id}/edit`}
+                            className="rounded-sm outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring"
                           >
                             {contract.title}
-                          </button>
+                          </Link>
                         ) : (
                           <Link
                             href={`/dashboard/contracts/${contract.id}`}
@@ -231,14 +220,13 @@ export default function ContractsPage() {
                           )}
                           {adminView && (
                             <>
-                              <button
-                                type="button"
-                                onClick={() => setEditing(contract)}
+                              <Link
+                                href={`/dashboard/contracts/${contract.id}/edit`}
                                 aria-label={`Edit contract ${contract.title}`}
                                 className="inline-flex size-8 items-center justify-center rounded-md text-muted-foreground outline-none transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
                               >
                                 <Pencil className="size-4" aria-hidden="true" />
-                              </button>
+                              </Link>
                               <button
                                 type="button"
                                 onClick={() => setConfirmDelete(contract)}
@@ -262,18 +250,6 @@ export default function ContractsPage() {
 
       {adminView && (
         <>
-          <BillingEditorSheet
-            open={creating || editing !== null}
-            title={editing ? "Edit contract" : "New contract"}
-            onClose={closeEditor}
-          >
-            <ContractForm
-              key={editing?.id ?? "new"}
-              contract={editing}
-              onSaved={handleSaved}
-              onCancel={closeEditor}
-            />
-          </BillingEditorSheet>
 
           <AlertDialog open={confirmDelete !== null} onOpenChange={(open) => !open && setConfirmDelete(null)}>
             <AlertDialogContent>

@@ -85,6 +85,8 @@ export interface Contract {
   projectId?: string
   project?: string
   status: ContractStatus
+  /** The agreement itself as HTML, when it is written here rather than linked */
+  body?: string
   /** Date the client signed, empty until they do */
   signedOn?: string
   startsOn?: string
