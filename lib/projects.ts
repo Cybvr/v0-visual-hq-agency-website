@@ -24,6 +24,8 @@ export interface Project {
   status: ProjectStatus
   progress: number
   dueDate: string
+  /** Cover image for the project card. Cards fall back to a lettered tile when unset. */
+  thumbnailUrl?: string
   createdAt?: Timestamp
   updatedAt?: Timestamp
 }
