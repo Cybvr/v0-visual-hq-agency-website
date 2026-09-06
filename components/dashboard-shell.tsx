@@ -59,6 +59,7 @@ export function DashboardShell({
           { terms: ["drive", "file", "document"], href: "/dashboard/drive" },
           { terms: ["portfolio", "work"], href: "/dashboard/portfolio" },
           { terms: ["email", "mail", "message", "template", "sender"], href: "/dashboard/email" },
+          { terms: ["seo", "ranking", "keyword"], href: "/dashboard/seo" },
           { terms: ["user", "client", "settings"], href: "/dashboard/users" },
         ]
       : [
@@ -67,6 +68,7 @@ export function DashboardShell({
           { terms: ["task"], href: "/dashboard/tasks" },
           { terms: ["drive", "file", "document"], href: "/dashboard/drive" },
           { terms: ["email", "mail", "message", "template", "sender"], href: "/dashboard/email" },
+          { terms: ["seo", "ranking", "keyword"], href: "/dashboard/seo" },
         ]
     const match = destinations.find(({ terms }) => terms.some((term) => term.includes(query) || query.includes(term)))
     router.push(match?.href ?? "/dashboard")
@@ -92,7 +94,7 @@ export function DashboardShell({
               <Separator orientation="vertical" className="data-[orientation=vertical]:h-4" />
               <BrandLockup logoSize={20} gapClassName="gap-0.5" />
             </div>
-            <form onSubmit={handleSearch} className="relative mr-auto hidden w-full max-w-sm sm:block">
+            <form onSubmit={handleSearch} className="relative mr-auto hidden w-full max-w-[260px] sm:block">
               <Search className="pointer-events-none absolute left-3 top-1/2 z-10 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
               <Input
                 value={search}

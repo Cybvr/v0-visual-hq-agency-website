@@ -75,7 +75,9 @@ function formatMessageDate(value: string) {
 }
 
 export default function EmailPage() {
-  const { user, appUser } = useAuth()
+  const { user, appUser, isAdmin, isImpersonating } = useAuth()
+  // An admin "viewing as" a client sees exactly what that client sees.
+  const showOpsDetail = isAdmin && !isImpersonating
   const workspaceId = appUser?.clientId || user?.uid || "workspace"
   const templateStorageKey = `visualcns-email-templates:${workspaceId}`
   const messageStorageKey = `visualcns-email-messages:${workspaceId}`
@@ -195,7 +197,7 @@ export default function EmailPage() {
       setSubject("")
       setBody("")
       setSelectedTemplateId("")
-      setSendNotice({ tone: "success", text: "Message accepted by the email provider." })
+      setSendNotice({ tone: "success", text: "Message sent." })
     } catch (error) {
       setSendNotice({
         tone: "error",
@@ -274,22 +276,24 @@ export default function EmailPage() {
               Send one-off messages and keep reusable email templates for your workspace.
             </p>
           </div>
-          <div className="flex items-center gap-2 text-sm">
-            <span
-              className={cn(
-                "size-2 rounded-full",
-                senderConfigured === null
-                  ? "bg-muted-foreground/40"
-                  : senderConfigured
-                    ? "bg-emerald-500"
-                    : "bg-amber-500",
-              )}
-              aria-hidden="true"
-            />
-            <span className="font-medium">
-              {senderConfigured === null ? "Checking sender" : senderConfigured ? "Sender ready" : "Sender setup required"}
-            </span>
-          </div>
+          {showOpsDetail && (
+            <div className="flex items-center gap-2 text-sm">
+              <span
+                className={cn(
+                  "size-2 rounded-full",
+                  senderConfigured === null
+                    ? "bg-muted-foreground/40"
+                    : senderConfigured
+                      ? "bg-emerald-500"
+                      : "bg-amber-500",
+                )}
+                aria-hidden="true"
+              />
+              <span className="font-medium">
+                {senderConfigured === null ? "Checking sender" : senderConfigured ? "Sender ready" : "Sender setup required"}
+              </span>
+            </div>
+          )}
         </div>
 
         <div className="mt-7 flex gap-6 border-b border-border" role="tablist" aria-label="Email tools">
@@ -320,7 +324,9 @@ export default function EmailPage() {
           <section className="pt-7" role="tabpanel">
             {!senderConfigured && senderConfigured !== null && (
               <div className="mb-5 rounded-[12px] bg-amber-500/10 px-4 py-3 text-sm leading-6 text-amber-900 dark:text-amber-200">
-                Sending is off until <code className="font-medium">RESEND_API_KEY</code> and <code className="font-medium">EMAIL_FROM</code> are added to the server environment. You can still create templates now.
+                {showOpsDetail
+                  ? "Sending is turned off until a sending address is connected for this workspace. You can still write and save templates."
+                  : "Sending isn't available on your workspace yet. You can still write and save templates."}
               </div>
             )}
 
@@ -328,7 +334,7 @@ export default function EmailPage() {
               <div className="grid gap-px bg-border sm:grid-cols-2">
                 <div className="bg-card px-4 py-3.5 sm:px-5">
                   <span className="text-xs font-medium text-muted-foreground">From</span>
-                  <p className="mt-1 truncate text-sm">{senderAddress || "Not configured"}</p>
+                  <p className="mt-1 truncate text-sm">{senderAddress || (showOpsDetail ? "Not configured" : "Not available yet")}</p>
                 </div>
                 <div className="bg-card px-4 py-3.5 sm:px-5">
                   <Label htmlFor="email-template" className="text-xs text-muted-foreground">Template</Label>

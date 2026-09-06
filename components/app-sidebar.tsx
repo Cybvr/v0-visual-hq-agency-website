@@ -3,11 +3,13 @@
 import * as React from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import { ChevronRight } from "lucide-react"
 import type { ComponentType, ReactNode } from "react"
 
 import { BrandLockup } from "@/components/brand-lockup"
 import { NavUser } from "@/components/nav-user"
 import { cn } from "@/lib/utils"
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import {
   Sidebar,
   SidebarContent,
@@ -17,6 +19,9 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarMenuSub,
+  SidebarMenuSubButton,
+  SidebarMenuSubItem,
   SidebarRail,
   SidebarTrigger,
 } from "@/components/ui/sidebar"
@@ -25,6 +30,8 @@ export type NavLink = {
   label: string
   href: string
   icon: ComponentType<{ className?: string }>
+  /** When present the item is a collapsible dropdown and href is only its default destination. */
+  items?: Array<{ label: string; href: string; icon: ComponentType<{ className?: string }> }>
 }
 
 function isActive(pathname: string, href: string, rootHref: string) {
@@ -50,7 +57,7 @@ export function AppSidebar({
     <Sidebar
       collapsible="icon"
       className={cn(
-        "bg-background group-data-[side=left]:border-r-0 [&_[data-slot=sidebar-inner]]:bg-background",
+        "bg-background text-muted-foreground group-data-[side=left]:border-r-0 [&_[data-slot=sidebar-inner]]:bg-background",
         className,
       )}
       {...props}
@@ -74,16 +81,49 @@ export function AppSidebar({
         <SidebarContent>
           <SidebarGroup className="group-data-[collapsible=icon]:p-1">
             <SidebarMenu>
-              {navLinks.map((link) => (
-                <SidebarMenuItem key={link.href}>
-                  <SidebarMenuButton asChild isActive={isActive(pathname, link.href, rootHref)} tooltip={link.label}>
-                    <Link href={link.href}>
-                      <link.icon className="h-4 w-4" />
-                      <span>{link.label}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
+              {navLinks.map((link) =>
+                link.items ? (
+                  <Collapsible
+                    key={link.label}
+                    asChild
+                    defaultOpen={link.items.some((item) => isActive(pathname, item.href, rootHref))}
+                    className="group/collapsible"
+                  >
+                    <SidebarMenuItem>
+                      <CollapsibleTrigger asChild>
+                        <SidebarMenuButton tooltip={link.label}>
+                          <link.icon className="h-4 w-4" />
+                          <span>{link.label}</span>
+                          <ChevronRight className="ml-auto h-4 w-4 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                        </SidebarMenuButton>
+                      </CollapsibleTrigger>
+                      <CollapsibleContent>
+                        <SidebarMenuSub>
+                          {link.items.map((item) => (
+                            <SidebarMenuSubItem key={item.href}>
+                              <SidebarMenuSubButton asChild isActive={isActive(pathname, item.href, rootHref)}>
+                                <Link href={item.href}>
+                                  <item.icon className="h-4 w-4" />
+                                  <span>{item.label}</span>
+                                </Link>
+                              </SidebarMenuSubButton>
+                            </SidebarMenuSubItem>
+                          ))}
+                        </SidebarMenuSub>
+                      </CollapsibleContent>
+                    </SidebarMenuItem>
+                  </Collapsible>
+                ) : (
+                  <SidebarMenuItem key={link.href}>
+                    <SidebarMenuButton asChild isActive={isActive(pathname, link.href, rootHref)} tooltip={link.label}>
+                      <Link href={link.href}>
+                        <link.icon className="h-4 w-4" />
+                        <span>{link.label}</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ),
+              )}
             </SidebarMenu>
             {navExtra && <div className="mt-2 group-data-[collapsible=icon]:hidden">{navExtra}</div>}
           </SidebarGroup>
