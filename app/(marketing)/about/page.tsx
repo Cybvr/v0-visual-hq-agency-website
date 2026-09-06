@@ -68,7 +68,7 @@ function TeamMemberCard({ member }: { member: TeamMember }) {
               <p className="text-sm text-accent">{member.role}</p>
               <DialogTitle className="mt-2 text-4xl tracking-[-0.03em] sm:text-5xl">{member.name}</DialogTitle>
             </DialogHeader>
-            <DialogDescription className="mt-8 text-base leading-7 text-muted-foreground">
+            <DialogDescription className="mt-8 whitespace-pre-line text-base leading-7 text-muted-foreground">
               {member.description}
             </DialogDescription>
             {member.profileUrl && (

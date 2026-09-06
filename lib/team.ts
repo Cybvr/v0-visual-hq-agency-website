@@ -12,7 +12,8 @@ export const teamMembers: TeamMember[] = [
     role: "CEO, Founder",
     image: "/team/jide-pinheiro-bw.png",
     description:
-      "Products are stories of people's experiences, and this perspective drives Jide's approach to finding solutions through design, storytelling, software development, and architecture. With over 10 years of experience, he has crafted digital products for B2B and B2C markets that are accessible, intuitive, and friendly. Asides founding Visual Africa, Jide's brand design and communications portfolio includes over 20 high-profile brands, such as MTN, FirstBank, Wema Bank, Stanbic IBTC, Nigerian Breweries, CocaCola, LVMH, LG, Honeywell Group, Henkel, and Mixta Africa.",
+      "Products are shaped by how people experience them, and this belief guides Jide's approach to design. He works across storytelling, software development, and architecture to turn complex ideas into thoughtful, practical solutions.\n\n" +
+      "For more than 10 years, Jide has designed digital products for B2B and B2C markets, with a focus on making technology accessible, intuitive, and easy to use. Jide has built an extensive portfolio in brand design and communications, working with organisations such as MTN, FirstBank, Wema Bank, Brown-Forman, Kaizen Games, Stanbic IBTC, Nigerian Breweries, Coca-Cola, LVMH, LG, Honeywell Group, Henkel, and Mixta Africa.",
   },
   {
     name: "Musa Asuku",

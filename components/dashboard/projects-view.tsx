@@ -4,7 +4,7 @@ import Link from "next/link"
 import { Plus } from "lucide-react"
 
 import { cn } from "@/lib/utils"
-import { projectStatusMeta, type Project } from "@/lib/projects"
+import { projectSlug, projectStatusMeta, type Project } from "@/lib/projects"
 
 function ProgressBar({ value }: { value: number }) {
   return (
@@ -68,9 +68,10 @@ export function ProjectsView({ projects }: { projects: Project[] }) {
         {projects.map((project) => {
           const meta = projectStatusMeta[project.status]
           return (
-            <div
+            <Link
               key={project.id}
-              className="flex flex-col rounded-[14px] border border-border/60 bg-card p-2 shadow-sm"
+              href={`/dashboard/projects/${projectSlug(project)}`}
+              className="flex flex-col rounded-[14px] border border-border/60 bg-card p-2 shadow-sm outline-none transition-colors hover:border-foreground/30 hover:bg-muted/40 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             >
               <Thumbnail project={project} />
               <div className="flex min-w-0 flex-1 flex-col px-1.5 pb-1 pt-2.5">
@@ -92,7 +93,7 @@ export function ProjectsView({ projects }: { projects: Project[] }) {
                   </div>
                 </div>
               </div>
-            </div>
+            </Link>
           )
         })}
 

@@ -14,7 +14,7 @@ import {
   type DragEndEvent,
 } from "@dnd-kit/core"
 import { CSS } from "@dnd-kit/utilities"
-import { CheckCircle2, Columns3, Loader2, Pencil, Plus, Table2, Trash2 } from "lucide-react"
+import { CheckCircle2, Columns3, List, Loader2, Pencil, Plus, Trash2 } from "lucide-react"
 
 // ... keep existing imports ...
 import { Button } from "@/components/ui/button"
@@ -307,8 +307,8 @@ export function TasksView({
               view === "table" ? "bg-muted text-foreground" : "text-muted-foreground hover:text-foreground",
             )}
           >
-            <Table2 className="h-3.5 w-3.5" />
-            Table
+            <List className="h-3.5 w-3.5" />
+            List
           </button>
         </div>
       </div>
