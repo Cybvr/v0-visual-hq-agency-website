@@ -1,8 +1,10 @@
 "use client"
 
 import { useCallback, useEffect, useState } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
 import { Loader2 } from "lucide-react"
 import { useAuth } from "@/components/auth-provider"
+import { ClientProjectCreateSheet } from "@/components/dashboard/client-project-create-sheet"
 import { ProjectsView } from "@/components/dashboard/projects-view"
 import { TasksView } from "@/components/dashboard/tasks-view"
 import { DocumentsView } from "@/components/dashboard/documents-view"
@@ -12,6 +14,8 @@ import { getDocumentsForClient, type SharedDocument } from "@/lib/documents"
 
 export function ClientSectionPage({ section }: { section: "projects" | "tasks" | "drive" }) {
   const { appUser } = useAuth()
+  const router = useRouter()
+  const searchParams = useSearchParams()
   const clientId = appUser?.clientId ?? ""
   const clientName = appUser?.company || appUser?.displayName || ""
   const uid = appUser?.uid ?? ""
@@ -55,13 +59,33 @@ export function ClientSectionPage({ section }: { section: "projects" | "tasks" |
     try { await updateTask(id, patch) } catch { await fetchData() }
   }
 
+  const creatingProject = section === "projects" && searchParams.get("new") === "1"
+
+  async function handleProjectCreated() {
+    await fetchData()
+    router.replace("/dashboard/projects")
+  }
+
   return (
-    <main className="mx-auto w-full max-w-5xl px-4 pb-12 sm:px-6">
-      {loading ? <div className="flex justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>
-        : error ? <p className="py-12 text-sm text-destructive">Couldn&apos;t load this section.</p>
-        : section === "projects" ? <ProjectsView projects={projects} />
-        : section === "tasks" ? <TasksView tasks={tasks} projects={projects} clientId={clientId} clientName={clientName} deleting={deleting} onDelete={handleDelete} onPatch={handlePatch} onSaved={fetchData} />
-        : <DocumentsView documents={documents} />}
-    </main>
+    <>
+      <main className="mx-auto w-full max-w-5xl px-4 pb-12 sm:px-6">
+        {loading ? <div className="flex justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>
+          : error ? <p className="py-12 text-sm text-destructive">Couldn&apos;t load this section.</p>
+          : section === "projects" ? <ProjectsView projects={projects} />
+          : section === "tasks" ? <TasksView tasks={tasks} projects={projects} clientId={clientId} clientName={clientName} deleting={deleting} onDelete={handleDelete} onPatch={handlePatch} onSaved={fetchData} />
+          : <DocumentsView documents={documents} />}
+      </main>
+      {section === "projects" && (
+        <ClientProjectCreateSheet
+          open={creatingProject}
+          clientId={clientId}
+          clientName={clientName}
+          onOpenChange={(open) => {
+            if (!open) router.replace("/dashboard/projects")
+          }}
+          onCreated={handleProjectCreated}
+        />
+      )}
+    </>
   )
 }

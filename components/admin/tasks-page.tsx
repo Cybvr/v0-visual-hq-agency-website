@@ -112,12 +112,7 @@ export default function TasksAdminPage() {
   return (
     <main className="mx-auto w-full max-w-6xl px-4 pt-6 pb-12 sm:px-6">
       <div className="mb-8 flex items-center justify-between gap-4">
-        <div>
-          <h1 className="text-xl font-semibold">Tasks</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            All client work, live from the Firestore <code className="rounded bg-muted px-1 py-0.5 text-xs">tasks</code> collection.
-          </p>
-        </div>
+        <h1 className="text-xl font-semibold">Tasks</h1>
         <Button className="shrink-0" onClick={() => setSelectedId("new")}>
           <Plus className="mr-2 h-4 w-4" />
           Add Task
@@ -251,7 +246,7 @@ export default function TasksAdminPage() {
       )}
 
       <Sheet open={selectedId !== null} onOpenChange={(open) => !open && setSelectedId(null)}>
-        <SheetContent side="right" className="w-full gap-0 overflow-y-auto sm:max-w-lg">
+        <SheetContent side="right" className="inset-y-2 right-2 h-[calc(100%-1rem)] w-[calc(100%-1rem)] gap-0 overflow-y-auto rounded-lg border sm:max-w-lg">
           <SheetHeader className="border-b">
             <SheetTitle>{selectedId === "new" ? "New task" : "Edit task"}</SheetTitle>
             <SheetDescription>

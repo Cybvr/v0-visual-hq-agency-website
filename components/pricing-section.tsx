@@ -242,7 +242,6 @@ export function PricingSection() {
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <p className="text-[11.5px] font-bold uppercase tracking-[0.05em] text-muted-foreground">Choose currency</p>
-          <p className="text-sm text-muted-foreground">View pricing in USD or Nigerian naira.</p>
         </div>
         <div className="inline-flex rounded-full border border-border bg-muted p-[3px]">
           <button

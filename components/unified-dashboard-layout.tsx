@@ -4,26 +4,28 @@ import { useEffect, type ReactNode } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { Briefcase, Eye, FolderKanban, HardDrive, LayoutDashboard, ListTodo, Loader2, LogOut, Megaphone, Users } from "lucide-react"
+import { Bot, Briefcase, Eye, FolderKanban, HardDrive, LayoutDashboard, ListTodo, Loader2, LogOut, Mail, Users } from "lucide-react"
 import { AuthProvider, useAuth } from "@/components/auth-provider"
 import { Button } from "@/components/ui/button"
 import { DashboardShell, type NavLink } from "@/components/dashboard-shell"
 
 const CLIENT_NAV: NavLink[] = [
   { label: "Home", href: "/dashboard", icon: LayoutDashboard },
+  { label: "Agent", href: "/dashboard/agent", icon: Bot },
   { label: "Projects", href: "/dashboard/projects", icon: Briefcase },
   { label: "Tasks", href: "/dashboard/tasks", icon: ListTodo },
   { label: "Drive", href: "/dashboard/drive", icon: HardDrive },
-  { label: "Marketing", href: "/dashboard/marketing", icon: Megaphone },
+  { label: "Email", href: "/dashboard/email", icon: Mail },
 ]
 
 const ADMIN_NAV: NavLink[] = [
   { label: "Home", href: "/dashboard", icon: LayoutDashboard },
+  { label: "Agent", href: "/dashboard/agent", icon: Bot },
   { label: "Projects", href: "/dashboard/projects", icon: Briefcase },
   { label: "Tasks", href: "/dashboard/tasks", icon: ListTodo },
   { label: "Portfolio", href: "/dashboard/portfolio", icon: FolderKanban },
   { label: "Drive", href: "/dashboard/drive", icon: HardDrive },
-  { label: "Marketing", href: "/dashboard/marketing", icon: Megaphone },
+  { label: "Email", href: "/dashboard/email", icon: Mail },
   { label: "Users", href: "/dashboard/users", icon: Users },
 ]
 
@@ -33,7 +35,7 @@ function UnifiedDashboardShell({ children, requireAdmin = false }: { children: R
 
   useEffect(() => {
     if (loading) return
-    if (!user) router.replace("/auth/login")
+    if (!user) router.replace("/login")
     else if (requireAdmin && !isAdmin) router.replace("/dashboard")
   }, [loading, user, isAdmin, requireAdmin, router])
 

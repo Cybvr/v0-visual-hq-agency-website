@@ -38,15 +38,8 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet"
+import { TaskEditorSheet } from "@/components/dashboard/task-editor-sheet"
 import { Badge, InlineDate, InlineProject, InlineSelect, InlineText } from "@/components/inline-table-cells"
-import { TaskForm } from "@/components/admin/task-form"
 import { taskPriorityMeta, taskStatusMeta, type Task, type TaskPriority, type TaskStatus } from "@/lib/tasks"
 import { type Project } from "@/lib/projects"
 import { cn } from "@/lib/utils"
@@ -455,33 +448,15 @@ export function TasksView({
         )}
       </div>
 
-      <Sheet open={formOpen} onOpenChange={(open) => !open && closeForm()}>
-        <SheetContent side="right" className="w-full gap-0 overflow-y-auto sm:max-w-lg">
-          <SheetHeader className="border-b">
-            <SheetTitle>{editingTask ? "Edit task" : "New task"}</SheetTitle>
-            <SheetDescription>
-              {editingTask
-                ? "Update the details of this task."
-                : "Add a task to your board. It will show up under the chosen status."}
-            </SheetDescription>
-          </SheetHeader>
-          <div className="p-4">
-            {formOpen && (
-              <TaskForm
-                key={editingId ?? "new"}
-                task={editingTask}
-                fixedClient={{ clientId, clientName }}
-                defaults={adding ?? undefined}
-                onSaved={() => {
-                  closeForm()
-                  onSaved()
-                }}
-                onCancel={closeForm}
-              />
-            )}
-          </div>
-        </SheetContent>
-      </Sheet>
+      <TaskEditorSheet
+        open={formOpen}
+        task={editingTask}
+        clientId={clientId}
+        clientName={clientName}
+        defaults={adding ?? undefined}
+        onClose={closeForm}
+        onSaved={onSaved}
+      />
     </section>
   )
 }

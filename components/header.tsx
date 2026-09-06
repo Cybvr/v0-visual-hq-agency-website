@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useEffect, useRef, useState, type CSSProperties } from "react"
-import { ArrowUpRight, ChevronDown, Menu, X } from "lucide-react"
+import { ArrowUpRight, ChevronDown, Menu, UserRound, X } from "lucide-react"
 import { BrandLockup } from "@/components/brand-lockup"
 import { Button } from "@/components/ui/button"
 import {
@@ -40,16 +40,19 @@ const primaryNavItems = [
 ]
 
 // Rendered after the Services dropdown so the order reads:
-// About, Portfolio, Services, News, Contact.
+// About, Portfolio, Services, Resources, Pricing.
 const trailingNavItems = [
-  { name: "News", href: "/blog" },
-  { name: "Contact", href: "/contact" },
+  { name: "Pricing", href: "/pricing" },
 ]
 
 const serviceNavItems = capabilities.map((service) => ({
   name: service.title,
   href: `/capabilities/${service.slug}`,
 }))
+
+const resourceNavItems = [
+  { name: "News", href: "/blog" },
+]
 
 type MenuRow =
   | { number: string; title: string; items: Array<{ name: string; href: string }>; href?: never }
@@ -60,27 +63,16 @@ const MENU_ROWS: MenuRow[] = [
   { number: "01", title: "Software", items: productNavItems },
   { number: "02", title: "Consulting", items: consultingNavItems },
   { number: "03", title: "Pricing", href: "/pricing" },
-  { number: "04", title: "Blog", href: "/blog" },
+  { number: "04", title: "Resources", items: resourceNavItems },
   { number: "05", title: "Careers", href: "https://pasive.co/jobs" },
-  { number: "06", title: "Sign In", href: "/auth/login" },
 ]
 
 const MONO_LABEL = "font-mono text-[0.6875rem] uppercase tracking-[0.24em]"
 
 export function Header() {
   const [open, setOpen] = useState(false)
-  const [scrolled, setScrolled] = useState(false)
   const headerRef = useRef<HTMLElement>(null)
   const pathname = usePathname()
-  const overlaysHero = pathname === "/" && !open && !scrolled
-
-  useEffect(() => {
-    const updateHeader = () => setScrolled(window.scrollY > 24)
-
-    updateHeader()
-    window.addEventListener("scroll", updateHeader, { passive: true })
-    return () => window.removeEventListener("scroll", updateHeader)
-  }, [])
 
   // Any navigation dismisses the menu.
   useEffect(() => {
@@ -136,15 +128,11 @@ export function Header() {
     // flex child instead of chasing the bar's height with a hard-coded offset.
     <header ref={headerRef} className={`fixed inset-x-0 top-0 z-50 flex flex-col ${open ? "bottom-0" : ""}`}>
       <div
-        className={`shrink-0 border-b transition-colors duration-300 ${
-          overlaysHero
-            ? "border-white/20 bg-transparent text-white"
-            : "border-border bg-background/90 text-foreground backdrop-blur-md"
-        }`}
+        className="shrink-0 border-b border-border bg-background/90 text-foreground backdrop-blur-md"
       >
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-8 md:px-20 md:py-5">
           <Link href="/" aria-label="VisualCNS home">
-            <BrandLockup logoSize={28} gapClassName="gap-1" invert={overlaysHero} />
+            <BrandLockup logoSize={28} gapClassName="gap-1" />
           </Link>
 
           <div className="flex items-center gap-4 md:gap-6">
@@ -192,6 +180,30 @@ export function Header() {
                 </DropdownMenuContent>
               </DropdownMenu>
 
+              <DropdownMenu modal={false}>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    type="button"
+                    aria-current={isCurrent("/blog") ? "page" : undefined}
+                    className={`inline-flex items-center gap-1 outline-none transition-colors hover:text-accent focus-visible:text-accent ${MONO_LABEL} ${
+                      isCurrent("/blog") ? "text-accent" : ""
+                    }`}
+                  >
+                    Resources
+                    <ChevronDown className="size-3.5" aria-hidden="true" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-52 p-2">
+                  {resourceNavItems.map((resource) => (
+                    <DropdownMenuItem key={resource.href} asChild>
+                      <Link href={resource.href} className={`w-full ${MONO_LABEL}`}>
+                        {resource.name}
+                      </Link>
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+
               {trailingNavItems.map((item) => (
                 <Link
                   key={item.href}
@@ -206,19 +218,27 @@ export function Header() {
               ))}
             </nav>
 
-            <button
-              type="button"
-              onClick={() => setOpen((value) => !value)}
-              aria-expanded={open}
-              aria-controls="site-menu"
-              aria-label={open ? "Close menu" : "Open more navigation"}
-              className={`group flex items-center gap-2 outline-none transition-colors hover:text-accent focus-visible:text-accent ${
-                overlaysHero ? "text-white drop-shadow-sm" : "text-foreground"
-              } ${MONO_LABEL}`}
-            >
-              {open ? "Close" : "More"}
-              {open ? <X className="size-4" /> : <Menu className="size-4" />}
-            </button>
+            <div className="flex items-center gap-2">
+              <Link
+                href="/login"
+                aria-label="Sign in"
+                className="inline-flex size-8 items-center justify-center text-foreground outline-none transition-colors hover:text-accent focus-visible:text-accent"
+              >
+                <UserRound className="size-4" aria-hidden="true" />
+              </Link>
+
+              <button
+                type="button"
+                onClick={() => setOpen((value) => !value)}
+                aria-expanded={open}
+                aria-controls="site-menu"
+                aria-label={open ? "Close menu" : "Open more navigation"}
+                className={`group flex items-center gap-2 text-foreground outline-none transition-colors hover:text-accent focus-visible:text-accent ${MONO_LABEL}`}
+              >
+                {open ? "Close" : "More"}
+                {open ? <X className="size-4" /> : <Menu className="size-4" />}
+              </button>
+            </div>
           </div>
         </div>
       </div>

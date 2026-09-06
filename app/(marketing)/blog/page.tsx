@@ -52,7 +52,7 @@ export default async function BlogPage({
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {visible.map((post) => (
             <Link key={post.slug} href={`/blog/${post.slug}`} className="block">
-              <Card className="h-full gap-0 overflow-hidden p-0 transition-colors hover:border-accent">
+              <Card className="h-full gap-0 overflow-hidden bg-transparent p-0 text-left transition-colors hover:border-accent">
                 {post.image ? (
                   <div className="relative aspect-[16/10] overflow-hidden bg-muted">
                     <Image
@@ -69,7 +69,7 @@ export default async function BlogPage({
                     <img src="/logoblue.svg" alt="" className="w-1/3 opacity-40" />
                   </div>
                 )}
-                <CardHeader className="py-6">
+                <CardHeader className="py-6 text-left">
                   <p className="text-xs uppercase tracking-[0.14em] text-accent">
                     {post.categories.join(" · ")}
                   </p>

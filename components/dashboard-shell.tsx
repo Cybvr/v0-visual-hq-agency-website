@@ -1,11 +1,13 @@
 "use client"
 
 import { useState, type FormEvent, type ReactNode } from "react"
+import Image from "next/image"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { Search, SlidersHorizontal } from "lucide-react"
+import { CircleHelp, Search, SlidersHorizontal } from "lucide-react"
 
 import { AppSidebar, type NavLink } from "@/components/app-sidebar"
+import { Input } from "@/components/ui/input"
 import { Separator } from "@/components/ui/separator"
 import {
   SidebarInset,
@@ -20,7 +22,7 @@ export type { NavLink }
 
 /**
  * Shared dashboard layout (admin + client), built on the shadcn sidebar-07
- * block: SidebarProvider > AppSidebar + SidebarInset with a header trigger.
+ * block: SidebarProvider > AppSidebar + SidebarInset with a mobile opener.
  */
 export function DashboardShell({
   subtitle,
@@ -51,18 +53,20 @@ export function DashboardShell({
     if (!query) return
     const destinations = adminView
       ? [
+          { terms: ["agent", "chat", "assistant"], href: "/dashboard/agent" },
           { terms: ["project"], href: "/dashboard/projects" },
           { terms: ["task"], href: "/dashboard/tasks" },
           { terms: ["drive", "file", "document"], href: "/dashboard/drive" },
           { terms: ["portfolio", "work"], href: "/dashboard/portfolio" },
-          { terms: ["marketing", "social"], href: "/dashboard/marketing" },
+          { terms: ["email", "mail", "message", "template", "sender"], href: "/dashboard/email" },
           { terms: ["user", "client", "settings"], href: "/dashboard/users" },
         ]
       : [
+          { terms: ["agent", "chat", "assistant"], href: "/dashboard/agent" },
           { terms: ["project"], href: "/dashboard/projects" },
           { terms: ["task"], href: "/dashboard/tasks" },
           { terms: ["drive", "file", "document"], href: "/dashboard/drive" },
-          { terms: ["marketing", "social"], href: "/dashboard/marketing" },
+          { terms: ["email", "mail", "message", "template", "sender"], href: "/dashboard/email" },
         ]
     const match = destinations.find(({ terms }) => terms.some((term) => term.includes(query) || query.includes(term)))
     router.push(match?.href ?? "/dashboard")
@@ -71,7 +75,7 @@ export function DashboardShell({
   return (
     // h-svh + overflow-hidden: the shell never grows taller than the viewport,
     // so the body never scrolls. Only SidebarInset (overflow-y-auto) scrolls.
-    <div className="flex h-svh flex-col overflow-hidden">
+    <div className="flex h-svh flex-col overflow-hidden font-sans [&_*]:font-sans">
       {banner && <div className="z-50 h-10 shrink-0">{banner}</div>}
       <SidebarProvider
         className={cn(
@@ -82,17 +86,45 @@ export function DashboardShell({
         <AppSidebar navLinks={navLinks} rootHref={rootHref} subtitle={subtitle} navExtra={navExtra} />
         {/* overflow-y-auto: this column is the scroll container, not the body */}
         <SidebarInset className="overflow-y-auto">
-          <header className="sticky top-0 z-40 flex h-20 shrink-0 items-center gap-3 border-b bg-[#f8fafd]/95 px-4 backdrop-blur-md dark:bg-background/95 sm:px-6">
-            <div className="flex shrink-0 items-center gap-2">
+          <header className="sticky top-0 z-40 flex h-20 shrink-0 items-center gap-3 bg-background px-4 sm:px-6">
+            <div className="flex shrink-0 items-center gap-2 md:hidden">
               <SidebarTrigger className="-ml-1" />
               <Separator orientation="vertical" className="data-[orientation=vertical]:h-4" />
-              <BrandLockup logoSize={20} gapClassName="gap-0.5" className="md:hidden" />
+              <BrandLockup logoSize={20} gapClassName="gap-0.5" />
             </div>
-            <form onSubmit={handleSearch} className="mx-auto hidden h-12 min-w-0 max-w-3xl flex-1 items-center rounded-[28px] bg-[#e9eef6] px-4 text-[#3c4043] transition-shadow focus-within:shadow-sm dark:bg-muted dark:text-foreground sm:flex">
-              <Search className="h-5 w-5 shrink-0" />
-              <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search dashboard" aria-label="Search dashboard" className="h-full min-w-0 flex-1 bg-transparent px-3 text-base outline-none placeholder:text-muted-foreground" />
-              <button type="submit" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition-colors hover:bg-black/5 dark:hover:bg-white/10" aria-label="Search filters"><SlidersHorizontal className="h-5 w-5" /></button>
+            <form onSubmit={handleSearch} className="relative mr-auto hidden w-full max-w-sm sm:block">
+              <Search className="pointer-events-none absolute left-3 top-1/2 z-10 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
+              <Input
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+                placeholder="Search dashboard"
+                aria-label="Search dashboard"
+                className="h-10 pl-9 pr-11"
+              />
+              <button type="submit" className="absolute right-1 top-1/2 flex size-8 -translate-y-1/2 items-center justify-center rounded-sm text-muted-foreground outline-none transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring" aria-label="Search dashboard">
+                <SlidersHorizontal className="size-4" aria-hidden="true" />
+              </button>
             </form>
+            <div className="ml-auto flex shrink-0 items-center gap-2">
+              <Link
+                href="/faq"
+                aria-label="Help"
+                className="inline-flex h-10 items-center gap-2 rounded-full px-3 text-sm font-medium text-muted-foreground outline-none transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                <CircleHelp className="size-4" aria-hidden="true" />
+                <span className="hidden md:inline">Help</span>
+              </Link>
+              <Link
+                href="/dashboard/agent"
+                aria-label="Open Agent"
+                className="rounded-full bg-[linear-gradient(90deg,#c32cff,#6ed8ff)] p-[2px] outline-none transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              >
+                <span className="flex h-9 items-center gap-2 rounded-full bg-[#110e2c] px-3 text-sm font-semibold text-white">
+                  <Image src="/visualhqlogo.svg" alt="" width={18} height={18} className="brightness-0 invert" />
+                  <span className="hidden sm:inline">Agent</span>
+                </span>
+              </Link>
+            </div>
           </header>
           {children}
         </SidebarInset>

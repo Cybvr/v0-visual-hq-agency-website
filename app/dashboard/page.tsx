@@ -1,15 +1,14 @@
 "use client"
 
 import { useCallback, useEffect, useRef, useState } from "react"
+import Image from "next/image"
 import { Loader2 } from "lucide-react"
 import { useAuth } from "@/components/auth-provider"
+import { HomeTaskList } from "@/components/dashboard/home-task-list"
 import { ProjectsView } from "@/components/dashboard/projects-view"
-import { TasksView } from "@/components/dashboard/tasks-view"
 import { getProjectsByClientId, type Project } from "@/lib/projects"
-import { getTasksByClientId, deleteTask, updateTask, seedDefaultTasks, tsToMillis, type Task } from "@/lib/tasks"
-import { getDocumentsForClient, type SharedDocument } from "@/lib/documents"
+import { getTasksByClientId, seedDefaultTasks, tsToMillis, type Task } from "@/lib/tasks"
 import { updateUser } from "@/lib/users"
-import { DocumentsView } from "@/components/dashboard/documents-view"
 
 export default function DashboardPage() {
   const { user, appUser } = useAuth()
@@ -20,10 +19,8 @@ export default function DashboardPage() {
 
   const [projects, setProjects] = useState<Project[]>([])
   const [tasks, setTasks] = useState<Task[]>([])
-  const [documents, setDocuments] = useState<SharedDocument[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [deleting, setDeleting] = useState<string | null>(null)
   // Guards against seeding twice (e.g. StrictMode's double-invoke in dev).
   const seedingRef = useRef(false)
 
@@ -34,13 +31,11 @@ export default function DashboardPage() {
     }
     setError(null)
     try {
-      const [p, t, d] = await Promise.all([
+      const [p, t] = await Promise.all([
         getProjectsByClientId(clientId),
         getTasksByClientId(clientId),
-        getDocumentsForClient(clientId, uid ?? ""),
       ])
       setProjects(p)
-      setDocuments(d)
 
       let list = t
       // First-time clients get a few starter tasks so the board isn't empty.
@@ -72,30 +67,6 @@ export default function DashboardPage() {
     fetchData()
   }, [fetchData])
 
-  async function handleDelete(id: string) {
-    setDeleting(id)
-    try {
-      await deleteTask(id)
-      setTasks((prev) => prev.filter((t) => t.id !== id))
-    } catch (err) {
-      console.error("Error deleting task:", err)
-    } finally {
-      setDeleting(null)
-    }
-  }
-
-  // Inline table edits: apply optimistically, then persist. On failure, refetch
-  // to snap back to the server's truth.
-  async function handlePatch(id: string, patch: Partial<Task>) {
-    setTasks((prev) => prev.map((t) => (t.id === id ? { ...t, ...patch } : t)))
-    try {
-      await updateTask(id, patch)
-    } catch (err) {
-      console.error("Error updating task:", err)
-      fetchData()
-    }
-  }
-
   if (!user) return null
 
   const firstName = appUser?.displayName?.split(" ")[0] ?? appUser?.company ?? user.displayName?.split(" ")[0] ?? "there"
@@ -103,9 +74,6 @@ export default function DashboardPage() {
   return (
     <main className="mx-auto w-full max-w-5xl px-4 py-10 sm:px-6">
       <h1 className="text-xl font-semibold">Welcome, {firstName}</h1>
-      <p className="mt-1 text-sm text-muted-foreground">
-        Where your work stands and the latest tasks - all in one place.
-      </p>
 
       {loading ? (
         <div className="flex items-center justify-center py-20">
@@ -115,18 +83,25 @@ export default function DashboardPage() {
         <p className="mt-10 text-sm text-destructive">{error}</p>
       ) : (
         <>
-          <DocumentsView documents={documents} />
           <ProjectsView projects={projects} />
-          <TasksView
-            tasks={tasks}
-            projects={projects}
-            clientId={clientId}
-            clientName={clientName}
-            deleting={deleting}
-            onDelete={handleDelete}
-            onPatch={handlePatch}
-            onSaved={fetchData}
-          />
+          <div className="mt-8 grid items-start gap-6 lg:grid-cols-2">
+            <HomeTaskList
+              tasks={tasks}
+              clientId={clientId}
+              clientName={clientName}
+              onSaved={fetchData}
+              className="mt-0"
+            />
+            <div className="overflow-hidden rounded-lg bg-card">
+              <Image
+                src="/images/visualcns-blue-campaign-ad-v4.png"
+                alt="VisualCNS campaign artwork: Do something awesome for your brand"
+                width={1536}
+                height={1057}
+                className="h-auto w-full"
+              />
+            </div>
+          </div>
         </>
       )}
     </main>

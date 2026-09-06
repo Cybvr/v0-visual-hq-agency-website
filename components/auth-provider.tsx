@@ -1,7 +1,16 @@
 "use client"
 
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react"
-import { onAuthStateChanged, signInWithPopup, signOut as firebaseSignOut, type User } from "firebase/auth"
+import {
+  createUserWithEmailAndPassword,
+  onAuthStateChanged,
+  sendPasswordResetEmail,
+  signInWithEmailAndPassword,
+  signInWithPopup,
+  signOut as firebaseSignOut,
+  updateProfile,
+  type User,
+} from "firebase/auth"
 import { auth, googleProvider } from "@/lib/firebase"
 import { getUser, upsertUserOnLogin, type AppUser, type UserRole } from "@/lib/users"
 
@@ -28,6 +37,9 @@ type AuthContextValue = {
   viewAsUser: (target: AppUser) => void
   /** Stop previewing and return to the admin's own account. */
   stopViewingAs: () => void
+  signUpWithEmail: (name: string, email: string, password: string) => Promise<void>
+  signInWithEmail: (email: string, password: string) => Promise<void>
+  sendPasswordReset: (email: string) => Promise<void>
   signInWithGoogle: () => Promise<void>
   signOut: () => Promise<void>
 }
@@ -85,6 +97,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await signInWithPopup(auth, googleProvider)
   }
 
+  async function signInWithEmail(email: string, password: string) {
+    await signInWithEmailAndPassword(auth, email, password)
+  }
+
+  async function signUpWithEmail(name: string, email: string, password: string) {
+    const credential = await createUserWithEmailAndPassword(auth, email, password)
+    const displayName = name.trim()
+
+    if (displayName) {
+      await updateProfile(credential.user, { displayName })
+    }
+
+    await upsertUserOnLogin({
+      uid: credential.user.uid,
+      email: credential.user.email,
+      displayName,
+      photoURL: credential.user.photoURL,
+    })
+  }
+
+  async function sendPasswordReset(email: string) {
+    await sendPasswordResetEmail(auth, email)
+  }
+
   async function signOut() {
     sessionStorage.removeItem(VIEW_AS_KEY)
     setImpersonated(null)
@@ -118,6 +154,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         impersonatedUser: isImpersonating ? impersonated : null,
         viewAsUser,
         stopViewingAs,
+        signUpWithEmail,
+        signInWithEmail,
+        sendPasswordReset,
         signInWithGoogle,
         signOut,
       }}

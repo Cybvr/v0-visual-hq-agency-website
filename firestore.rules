@@ -45,14 +45,19 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
-    // Users - a user can read/write their OWN doc; admins can manage all.
-    // Note: role escalation is possible here because a user can write their
-    // own doc (incl. the role field). Lock role changes to admins only by
-    // moving role management to a trusted server (Admin SDK) if that matters.
+    // Users - clients can manage their own profile, but cannot change their
+    // role or move themselves into another client's workspace.
     match /users/{userId} {
       allow read: if isAdmin() || (isSignedIn() && request.auth.uid == userId);
-      allow create: if isAdmin() || (isSignedIn() && request.auth.uid == userId);
-      allow update, delete: if isAdmin() || (isSignedIn() && request.auth.uid == userId);
+      allow create: if isAdmin() || (isSignedIn()
+        && request.auth.uid == userId
+        && request.resource.data.role == 'client'
+        && request.resource.data.clientId == userId);
+      allow update: if isAdmin() || (isSignedIn()
+        && request.auth.uid == userId
+        && request.resource.data.role == resource.data.role
+        && request.resource.data.clientId == resource.data.clientId);
+      allow delete: if isAdmin() || (isSignedIn() && request.auth.uid == userId);
     }
 
     // Reads the caller's users/{uid} doc to get their clientId.
@@ -60,10 +65,12 @@ service cloud.firestore {
       return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.clientId;
     }
 
-    // Projects - admins manage; a client can read their own projects.
+    // Projects - admins manage; clients can read and create projects only in
+    // their own workspace.
     match /projects/{projectId} {
       allow read: if isAdmin() || (isSignedIn() && resource.data.clientId == myClientId());
-      allow write: if isAdmin();
+      allow create: if isAdmin() || (isSignedIn() && request.resource.data.clientId == myClientId());
+      allow update, delete: if isAdmin();
     }
 
     // Tasks - admins manage all; a client has full CRUD on their OWN tasks

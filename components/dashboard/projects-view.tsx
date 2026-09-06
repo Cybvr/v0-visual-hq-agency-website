@@ -1,5 +1,8 @@
 "use client"
 
+import Link from "next/link"
+import { Plus } from "lucide-react"
+
 import { cn } from "@/lib/utils"
 import { projectStatusMeta, type Project } from "@/lib/projects"
 
@@ -21,7 +24,17 @@ export function ProjectsView({ projects }: { projects: Project[] }) {
 
       <div className="mt-4">
         {projects.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No active projects.</p>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+            <Link
+              href="/dashboard/projects?new=1"
+              className="group flex aspect-square flex-col items-center justify-center gap-3 rounded-[14px] border border-dashed border-border bg-card p-4 text-center outline-none transition-colors hover:border-foreground/30 hover:bg-muted/40 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            >
+              <span className="flex size-10 items-center justify-center rounded-full bg-foreground text-background transition-transform group-hover:scale-105">
+                <Plus className="size-5" aria-hidden="true" />
+              </span>
+              <span className="text-sm font-medium text-foreground">Create a new project</span>
+            </Link>
+          </div>
         ) : (
           <div className="flex flex-col gap-2">
             {projects.map((project) => {
