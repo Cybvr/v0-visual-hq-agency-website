@@ -11,14 +11,16 @@ export function clientName(client: AppUser): string {
   return client.company || client.displayName || client.email || "Unnamed company"
 }
 
-/** Category off the projects, industry off the organization, joined into one line. */
+/** Industry off the organization, category off the projects, joined into one line. */
 function buildCategoryLabel(projects: Project[], org: Organization | null): string {
   const category = [...new Set(projects.flatMap((project) => project.category ?? []))].filter(Boolean).join(" & ")
   return [org?.industry, category].filter(Boolean).join(" · ")
 }
 
-type CompanyContextValue = {
-  client: AppUser
+type CompanyState = {
+  loading: boolean
+  error: string | null
+  client: AppUser | null
   organization: Organization | null
   people: AppUser[]
   projects: Project[]
@@ -28,12 +30,12 @@ type CompanyContextValue = {
   reload: () => Promise<void>
 }
 
-const CompanyContext = createContext<CompanyContextValue | null>(null)
+const CompanyContext = createContext<CompanyState | null>(null)
 
 /**
- * Loads the company (its user record, organization doc, people, and projects)
- * once for the whole `[slug]` route tree, so the view page and the edit page
- * share the same fetch instead of each doing their own.
+ * Loads the company, its organization doc, people, and projects once for the
+ * whole `[slug]` route tree, so the view page and the edit page share one
+ * fetch instead of each doing their own.
  */
 export function CompanyProvider({ children }: { children: ReactNode }) {
   const params = useParams<{ slug: string }>()
@@ -77,20 +79,35 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
     void load()
   }, [load])
 
-  const value = useMemo<CompanyContextValue | null>(() => {
-    if (!client) return null
-    const workspaceId = client.clientId || client.uid
+  const value = useMemo<CompanyState>(() => {
+    const workspaceId = client ? client.clientId || client.uid : ""
     return {
+      loading,
+      error,
       client,
       organization,
       people,
       projects,
       workspaceId,
-      name: organization?.name || clientName(client),
+      name: client ? organization?.name || clientName(client) : "",
       categoryLabel: buildCategoryLabel(projects, organization),
       reload: load,
     }
-  }, [client, organization, people, projects, load])
+  }, [loading, error, client, organization, people, projects, load])
 
-  return { loading, error, value, children } as never // replaced below
+  return <CompanyContext.Provider value={value}>{children}</CompanyContext.Provider>
+}
+
+/** Raw state, loading/error included. Use this in the layout, which decides what to render while loading or on error. */
+export function useCompanyState(): CompanyState {
+  const context = useContext(CompanyContext)
+  if (!context) throw new Error("useCompanyState must be used inside a CompanyProvider")
+  return context
+}
+
+/** For the pages inside the layout, which only ever mount once the company has loaded. */
+export function useCompany(): Omit<CompanyState, "client" | "loading" | "error"> & { client: AppUser } {
+  const context = useCompanyState()
+  if (!context.client) throw new Error("useCompany was called before the company finished loading")
+  return { ...context, client: context.client }
 }
