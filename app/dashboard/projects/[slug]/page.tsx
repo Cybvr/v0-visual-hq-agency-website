@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
-import { ArrowLeft, Loader2 } from "lucide-react"
+import { ArrowLeft, ExternalLink, Loader2 } from "lucide-react"
 
 import { useAuth } from "@/components/auth-provider"
 import { CaseStudyForm } from "@/components/dashboard/case-study-form"
@@ -10,10 +10,11 @@ import { ProjectShareButton } from "@/components/dashboard/project-share-button"
 import { TasksView } from "@/components/dashboard/tasks-view"
 import { ProjectCover } from "@/components/project-card"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { getProjectBySlug, projectStatusMeta, type Project } from "@/lib/projects"
-import { deleteTask, formatTimestamp, getTasksByClientId, tsToMillis, updateTask, type Task } from "@/lib/tasks"
+import { deleteProjectWithTasks, getProjectBySlug, projectSlug, projectStatusMeta, type Project } from "@/lib/projects"
+import { deleteTask, getTasksByClientId, tsToMillis, updateTask, type Task } from "@/lib/tasks"
 import { cn } from "@/lib/utils"
 
 /** Goes back a step in history, falling back to the dashboard on a cold open. */
@@ -28,15 +29,6 @@ function BackLink() {
       <ArrowLeft className="size-4" aria-hidden="true" />
       Back
     </button>
-  )
-}
-
-function Fact({ label, value }: { label: string; value: string }) {
-  return (
-    <div>
-      <dt className="text-xs text-muted-foreground">{label}</dt>
-      <dd className="mt-1 text-sm font-medium">{value || "—"}</dd>
-    </div>
   )
 }
 
@@ -100,6 +92,12 @@ export default function ProjectDetailPage() {
     }
   }
 
+  async function handleDeleteProject() {
+    if (!project) return
+    await deleteProjectWithTasks(project.id)
+    router.push("/dashboard/projects")
+  }
+
   if (!user) return null
 
   if (loading) {
@@ -154,8 +152,14 @@ export default function ProjectDetailPage() {
               <ProjectCover project={project} />
             </div>
 
-            <div className="mt-3">
+            <div className="mt-3 flex items-center gap-2">
               <ProjectShareButton project={project} stepCount={tasks.length} onChanged={fetchData} />
+              <Button variant="outline" size="sm" className="shrink-0" asChild>
+                <a href={`/case-studies/${projectSlug(project)}`} target="_blank" rel="noopener noreferrer">
+                  <ExternalLink className="size-4" aria-hidden="true" />
+                  View
+                </a>
+              </Button>
             </div>
 
             <h1 className="mt-4 text-xl font-semibold">{project.title}</h1>
@@ -165,16 +169,11 @@ export default function ProjectDetailPage() {
               </Badge>
               <span className={cn("rounded-full px-2.5 py-1 text-xs font-medium", meta.className)}>{meta.label}</span>
             </div>
-
-            <div className="mt-6 space-y-4 border-t border-border pt-4">
-              <Fact label="Client" value={project.client} />
-              <Fact label="Last modified" value={formatTimestamp(project.updatedAt)} />
-            </div>
           </CardContent>
         </Card>
 
         {isAdmin ? (
-          <Tabs defaultValue="overview">
+          <Tabs defaultValue="overview" className="min-w-0">
             <TabsList>
               <TabsTrigger value="overview">Overview</TabsTrigger>
               <TabsTrigger value="tasks">Tasks</TabsTrigger>
@@ -188,6 +187,7 @@ export default function ProjectDetailPage() {
                   // the URL with it rather than leaving a stale address.
                   if (patch.slug && patch.slug !== slug) router.replace(`/dashboard/projects/${patch.slug}`)
                 }}
+                onDelete={handleDeleteProject}
               />
             </TabsContent>
             <TabsContent value="tasks" className="mt-4">
@@ -195,7 +195,7 @@ export default function ProjectDetailPage() {
             </TabsContent>
           </Tabs>
         ) : (
-          <div>{tasksPanel}</div>
+          <div className="min-w-0">{tasksPanel}</div>
         )}
       </div>
     </main>
