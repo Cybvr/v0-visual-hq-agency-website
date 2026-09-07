@@ -174,24 +174,24 @@ export default function ProjectDetailPage() {
         </Card>
 
         {isAdmin ? (
-          <Tabs defaultValue="tasks">
+          <Tabs defaultValue="overview">
             <TabsList>
+              <TabsTrigger value="overview">Overview</TabsTrigger>
               <TabsTrigger value="tasks">Tasks</TabsTrigger>
-              <TabsTrigger value="case-study">Case study</TabsTrigger>
             </TabsList>
-            <TabsContent value="tasks" className="mt-4">
-              {tasksPanel}
-            </TabsContent>
-            <TabsContent value="case-study" className="mt-4">
+            <TabsContent value="overview" className="mt-4">
               <CaseStudyForm
                 project={project}
                 onSaved={(patch) => {
                   setProject((current) => (current ? { ...current, ...patch } : current))
-                  // The page is addressed by slug, so a renamed case study
-                  // moves the URL with it rather than leaving a stale address.
+                  // The page is addressed by slug, so a renamed project moves
+                  // the URL with it rather than leaving a stale address.
                   if (patch.slug && patch.slug !== slug) router.replace(`/dashboard/projects/${patch.slug}`)
                 }}
               />
+            </TabsContent>
+            <TabsContent value="tasks" className="mt-4">
+              {tasksPanel}
             </TabsContent>
           </Tabs>
         ) : (
