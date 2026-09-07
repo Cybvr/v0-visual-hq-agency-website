@@ -124,7 +124,7 @@ export function DashboardShell({
               <Link
                 href="/faq"
                 aria-label="Help"
-                className="inline-flex size-10 items-center justify-center rounded-full text-muted-foreground outline-none transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
+                className="hidden size-10 items-center justify-center rounded-full text-muted-foreground outline-none transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring sm:inline-flex"
               >
                 <CircleHelp className="size-4" aria-hidden="true" />
               </Link>
@@ -138,7 +138,7 @@ export function DashboardShell({
               <Link
                 href="/dashboard/agent"
                 aria-label="Open Agent"
-                className="rounded-full bg-[linear-gradient(90deg,#c32cff,#6ed8ff)] p-[2px] outline-none transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                className="hidden rounded-full bg-[linear-gradient(90deg,#c32cff,#6ed8ff)] p-[2px] outline-none transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 sm:inline-block"
               >
                 <span className="flex h-9 items-center gap-2 rounded-full bg-[#110e2c] px-3 text-sm font-semibold text-white">
                   <Image src="/visualhqlogo.svg" alt="" width={18} height={18} className="brightness-0 invert" />

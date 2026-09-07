@@ -2,9 +2,19 @@
 
 import type React from "react"
 import { useEffect, useState } from "react"
-import { ExternalLink, Loader2 } from "lucide-react"
+import { Loader2, Trash2 } from "lucide-react"
 
 import { GalleryDropzone, ImageDropzone } from "@/components/image-dropzone"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -77,14 +87,18 @@ function formStateFrom(project: Project): FormState {
 export function CaseStudyForm({
   project,
   onSaved,
+  onDelete,
 }: {
   project: Project
   onSaved?: (patch: Partial<Project>) => void
+  onDelete?: () => Promise<void>
 }) {
   const [form, setForm] = useState<FormState>(() => formStateFrom(project))
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [saved, setSaved] = useState(false)
+  const [confirmDelete, setConfirmDelete] = useState(false)
+  const [deleting, setDeleting] = useState(false)
 
   useEffect(() => {
     setForm(formStateFrom(project))
@@ -140,64 +154,55 @@ export function CaseStudyForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="space-y-4">
-            <div className="flex flex-wrap items-center justify-between gap-4 rounded-lg border border-border p-4">
-              <p className="text-sm font-medium">Show in case studies</p>
+          <div className="divide-y divide-border overflow-hidden rounded-lg border border-border">
+            <div className="flex items-center justify-between gap-4 px-4 py-3">
+              <div className="min-w-0">
+                <p className="text-sm font-medium">Show in case studies</p>
+                <p className="text-xs text-muted-foreground">List this project on the public case studies page.</p>
+              </div>
               <Switch
                 checked={form.isCaseStudy}
                 onCheckedChange={(checked) => set("isCaseStudy", checked)}
                 aria-label="Show in case studies"
               />
             </div>
-
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="space-y-1.5">
-                <Label htmlFor="caseStudyStatus">Publication</Label>
-                <Select
-                  value={form.caseStudyStatus}
-                  onValueChange={(value) => set("caseStudyStatus", value as "draft" | "published")}
-                >
-                  <SelectTrigger id="caseStudyStatus" className="w-full">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="draft">Draft</SelectItem>
-                    <SelectItem value="published">Published</SelectItem>
-                  </SelectContent>
-                </Select>
+            <div className="flex items-center justify-between gap-4 px-4 py-3">
+              <div className="min-w-0">
+                <p className="text-sm font-medium">Featured</p>
+                <p className="text-xs text-muted-foreground">Pin it to the top of the grid.</p>
               </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="featured">Featured</Label>
-                <div className="flex h-9 items-center gap-2">
-                  <Switch
-                    id="featured"
-                    checked={form.featured}
-                    onCheckedChange={(checked) => set("featured", checked)}
-                  />
-                  <span className="text-sm text-muted-foreground">
-                    {form.featured ? "Featured" : "Not featured"}
-                  </span>
-                </div>
+              <Switch
+                checked={form.featured}
+                onCheckedChange={(checked) => set("featured", checked)}
+                aria-label="Featured"
+              />
+            </div>
+            <div className="flex items-center justify-between gap-4 px-4 py-3">
+              <div className="min-w-0">
+                <p className="text-sm font-medium">Publication</p>
+                <p className="text-xs text-muted-foreground">Drafts stay hidden until published.</p>
               </div>
+              <Select
+                value={form.caseStudyStatus}
+                onValueChange={(value) => set("caseStudyStatus", value as "draft" | "published")}
+              >
+                <SelectTrigger aria-label="Publication" className="w-36 shrink-0">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="draft">Draft</SelectItem>
+                  <SelectItem value="published">Published</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
 
           <Separator />
 
           <div className="space-y-4">
-            <h3 className="text-sm font-medium">Story</h3>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="space-y-1.5">
-                <Label htmlFor="title">Headline</Label>
-                <Input id="title" required value={form.title} onChange={(e) => set("title", e.target.value)} />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="caseStudySlug">Address</Label>
-                <div className="flex items-center gap-2">
-                  <span className="shrink-0 text-sm text-muted-foreground">/case-studies/</span>
-                  <Input id="caseStudySlug" value={form.slug} onChange={(e) => set("slug", e.target.value)} />
-                </div>
-              </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="title">Headline</Label>
+              <Input id="title" required value={form.title} onChange={(e) => set("title", e.target.value)} />
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="excerpt">Excerpt</Label>
@@ -217,7 +222,6 @@ export function CaseStudyForm({
           <Separator />
 
           <div className="space-y-4">
-            <h3 className="text-sm font-medium">Facts</h3>
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-1.5">
                 <Label htmlFor="category">Category</Label>
@@ -271,21 +275,56 @@ export function CaseStudyForm({
 
           {error && <p className="text-sm text-destructive">{error}</p>}
 
-          <div className="flex flex-wrap items-center justify-end gap-3">
-            {saved && <span className="text-xs text-muted-foreground">Saved</span>}
-            {form.slug && (
-              <Button variant="outline" asChild>
-                <a href={`/case-studies/${form.slug}`} target="_blank" rel="noopener noreferrer">
-                  Preview
-                  <ExternalLink className="ml-2 size-4" />
-                </a>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            {onDelete ? (
+              <Button
+                type="button"
+                variant="outline"
+                className="text-destructive hover:text-destructive"
+                onClick={() => setConfirmDelete(true)}
+                disabled={saving || deleting}
+              >
+                <Trash2 className="size-4" />
+                Delete
               </Button>
+            ) : (
+              <span />
             )}
-            <Button type="submit" disabled={saving}>
-              {saving && <Loader2 className="mr-2 size-4 animate-spin" />}
-              Save
-            </Button>
+            <div className="ml-auto flex items-center gap-3">
+              {saved && <span className="text-xs text-muted-foreground">Saved</span>}
+              <Button type="submit" disabled={saving || deleting}>
+                {saving && <Loader2 className="mr-2 size-4 animate-spin" />}
+                Save
+              </Button>
+            </div>
           </div>
+
+          {onDelete && (
+            <AlertDialog open={confirmDelete} onOpenChange={(open) => !open && !deleting && setConfirmDelete(false)}>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Delete this project?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This removes the project and its tasks. This cannot be undone.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel disabled={deleting}>Cancel</AlertDialogCancel>
+                  <AlertDialogAction
+                    disabled={deleting}
+                    onClick={(event) => {
+                      event.preventDefault()
+                      setDeleting(true)
+                      void onDelete().catch(() => setDeleting(false))
+                    }}
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  >
+                    {deleting ? "Deleting…" : "Delete"}
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          )}
     </form>
   )
 }
