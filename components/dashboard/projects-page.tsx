@@ -13,7 +13,6 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import {
   Table,
@@ -31,9 +30,8 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet"
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu"
-import { CheckCircle2, Database, Eye, LayoutGrid, List, Loader2, Plus, Trash2 } from "lucide-react"
+import { Eye, LayoutGrid, List, Loader2, Plus, Trash2 } from "lucide-react"
 import { getProjects, deleteProject, projectSlug, projectStatusMeta, type Project } from "@/lib/projects"
-import { migratePortfolioToProjects, type PortfolioMigrationResult } from "@/lib/migrate-portfolio"
 import { ClientProjectForm } from "@/components/dashboard/client-project-form"
 import { ProjectCard } from "@/components/project-card"
 import { FilterBar, useFilterBar, type SortOption } from "@/components/dashboard/filter-bar"
@@ -97,9 +95,6 @@ export default function ProjectsAdminPage() {
   const [deleting, setDeleting] = useState<string | null>(null)
   const [pendingDelete, setPendingDelete] = useState<Project | null>(null)
   const [creating, setCreating] = useState(false)
-  const [migrating, setMigrating] = useState(false)
-  const [migrationResult, setMigrationResult] = useState<PortfolioMigrationResult | null>(null)
-  const [migrationError, setMigrationError] = useState<string | null>(null)
   const initialClientId = searchParams.get("clientId") ?? ""
   const { results: visibleProjects, bar } = useFilterBar({
     items: projects,
@@ -155,27 +150,6 @@ export default function ProjectsAdminPage() {
     clearNewProjectQuery()
   }
 
-  async function handleMigration() {
-    if (migrating) return
-    setMigrating(true)
-    setMigrationResult(null)
-    setMigrationError(null)
-    try {
-      const result = await migratePortfolioToProjects()
-      await fetchProjects()
-      setMigrationResult(result)
-    } catch (migrationFailure) {
-      console.error("Error migrating case studies:", migrationFailure)
-      setMigrationError(
-        migrationFailure instanceof Error
-          ? migrationFailure.message
-          : "The migration failed. Nothing was removed; check your connection and try again.",
-      )
-    } finally {
-      setMigrating(false)
-    }
-  }
-
   return (
     <main className="mx-auto w-full max-w-6xl px-4 pt-6 pb-12 sm:px-6">
       <div className="mb-8 flex items-center justify-between gap-4">
@@ -183,55 +157,11 @@ export default function ProjectsAdminPage() {
           <h1 className="text-xl font-semibold">Projects</h1>
         </div>
         <div className="flex shrink-0 flex-wrap justify-end gap-2">
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button variant="outline" disabled={loading || migrating}>
-                {migrating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Database className="mr-2 h-4 w-4" />}
-                {migrating ? "Adding case studies…" : "Add case studies to Projects"}
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Add all case studies to Projects?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  Each existing case study will become a Project and will be marked as a case study during the move.
-                  Missing client workspaces will also be created. Running this again updates the same Projects instead
-                  of creating duplicates. Portfolio will stay untouched as a backup.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction onClick={() => void handleMigration()}>Add to Projects</AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
           <Button onClick={() => setCreating(true)}>
             <Plus className="mr-2 h-4 w-4" />
             Add Project
           </Button>
         </div>
-      </div>
-
-      <div aria-live="polite">
-        {migrationResult && (
-          <div className="mb-6 flex items-start gap-3 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-emerald-950 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-100">
-            <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0" />
-            <div className="min-w-0 text-sm">
-              <p className="font-medium">Case studies added to Projects</p>
-              <p className="mt-1 text-emerald-800 dark:text-emerald-200">
-                {migrationResult.caseStudies} processed; {migrationResult.projectsCreated} projects and{" "}
-                {migrationResult.usersCreated} client workspaces created, {migrationResult.projectsUpdated} existing
-                projects updated.
-              </p>
-            </div>
-          </div>
-        )}
-        {migrationError && (
-          <div className="mb-6 rounded-xl border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">
-            <p className="font-medium">Case studies could not be migrated</p>
-            <p className="mt-1">{migrationError}</p>
-          </div>
-        )}
       </div>
 
       {loading ? (
