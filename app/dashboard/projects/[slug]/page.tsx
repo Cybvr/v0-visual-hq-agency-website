@@ -2,20 +2,11 @@
 
 import { useCallback, useEffect, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
-import { ArrowLeft, ExternalLink, Loader2 } from "lucide-react"
+import { ArrowLeft, Loader2 } from "lucide-react"
 
 import { useAuth } from "@/components/auth-provider"
-import { CaseStudyForm } from "@/components/dashboard/case-study-form"
-import { ProjectShareButton } from "@/components/dashboard/project-share-button"
-import { TasksView } from "@/components/dashboard/tasks-view"
-import { ProjectCover } from "@/components/project-card"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { deleteProjectWithTasks, getProjectBySlug, projectSlug, projectStatusMeta, type Project } from "@/lib/projects"
-import { deleteTask, getTasksByClientId, tsToMillis, updateTask, type Task } from "@/lib/tasks"
-import { cn } from "@/lib/utils"
+import { ProjectDetail } from "@/components/dashboard/project-detail"
+import { getProjectBySlug, type Project } from "@/lib/projects"
 
 /** Goes back a step in history, falling back to the dashboard on a cold open. */
 function BackLink() {
@@ -41,26 +32,15 @@ export default function ProjectDetailPage() {
   const clientName = appUser?.company || appUser?.displayName || ""
 
   const [project, setProject] = useState<Project | null>(null)
-  const [tasks, setTasks] = useState<Task[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(false)
-  const [deleting, setDeleting] = useState<string | null>(null)
 
-  const fetchData = useCallback(async () => {
+  const fetchProject = useCallback(async () => {
     if (!slug) return
     setError(false)
     try {
       const found = await getProjectBySlug(slug)
       setProject(found)
-
-      if (found) {
-        // Tasks are fetched by client and narrowed here, reusing the same query
-        // the rest of the dashboard already runs.
-        const all = await getTasksByClientId(found.clientId)
-        const mine = all.filter((task) => task.projectId === found.id)
-        mine.sort((a, b) => tsToMillis(b.createdAt) - tsToMillis(a.createdAt))
-        setTasks(mine)
-      }
     } catch (err) {
       console.error("Error loading project:", err)
       setError(true)
@@ -70,33 +50,8 @@ export default function ProjectDetailPage() {
   }, [slug])
 
   useEffect(() => {
-    fetchData()
-  }, [fetchData])
-
-  async function handleDelete(id: string) {
-    setDeleting(id)
-    try {
-      await deleteTask(id)
-      setTasks((current) => current.filter((task) => task.id !== id))
-    } finally {
-      setDeleting(null)
-    }
-  }
-
-  async function handlePatch(id: string, patch: Partial<Task>) {
-    setTasks((current) => current.map((task) => (task.id === id ? { ...task, ...patch } : task)))
-    try {
-      await updateTask(id, patch)
-    } catch {
-      await fetchData()
-    }
-  }
-
-  async function handleDeleteProject() {
-    if (!project) return
-    await deleteProjectWithTasks(project.id)
-    router.push("/dashboard/projects")
-  }
+    fetchProject()
+  }, [fetchProject])
 
   if (!user) return null
 
@@ -126,78 +81,22 @@ export default function ProjectDetailPage() {
     )
   }
 
-  const meta = projectStatusMeta[project.status]
-
-  const tasksPanel = (
-    <TasksView
-      tasks={tasks}
-      projects={[project]}
-      clientId={project.clientId || clientId}
-      clientName={project.client || clientName}
-      deleting={deleting}
-      onDelete={handleDelete}
-      onPatch={handlePatch}
-      onSaved={fetchData}
-    />
-  )
-
   return (
     <main className="mx-auto w-full max-w-6xl px-4 pb-16 pt-6 sm:px-6">
-      <div className="grid gap-6 lg:grid-cols-[300px_1fr] lg:items-start">
-        <Card>
-          <CardContent>
-            <BackLink />
-
-            <div className="mt-4 aspect-[4/3] w-full overflow-hidden rounded-2xl">
-              <ProjectCover project={project} />
-            </div>
-
-            <div className="mt-3 flex items-center gap-2">
-              <ProjectShareButton project={project} stepCount={tasks.length} onChanged={fetchData} />
-              <Button variant="outline" size="sm" className="shrink-0" asChild>
-                <a href={`/case-studies/${projectSlug(project)}`} target="_blank" rel="noopener noreferrer">
-                  <ExternalLink className="size-4" aria-hidden="true" />
-                  View
-                </a>
-              </Button>
-            </div>
-
-            <h1 className="mt-4 text-xl font-semibold">{project.title}</h1>
-            <div className="mt-1.5 flex flex-wrap items-center gap-2">
-              <Badge variant="secondary" className="rounded-sm px-1.5 py-0">
-                {project.service}
-              </Badge>
-              <span className={cn("rounded-full px-2.5 py-1 text-xs font-medium", meta.className)}>{meta.label}</span>
-            </div>
-          </CardContent>
-        </Card>
-
-        {isAdmin ? (
-          <Tabs defaultValue="overview" className="min-w-0">
-            <TabsList>
-              <TabsTrigger value="overview">Overview</TabsTrigger>
-              <TabsTrigger value="tasks">Tasks</TabsTrigger>
-            </TabsList>
-            <TabsContent value="overview" className="mt-4">
-              <CaseStudyForm
-                project={project}
-                onSaved={(patch) => {
-                  setProject((current) => (current ? { ...current, ...patch } : current))
-                  // The page is addressed by slug, so a renamed project moves
-                  // the URL with it rather than leaving a stale address.
-                  if (patch.slug && patch.slug !== slug) router.replace(`/dashboard/projects/${patch.slug}`)
-                }}
-                onDelete={handleDeleteProject}
-              />
-            </TabsContent>
-            <TabsContent value="tasks" className="mt-4">
-              {tasksPanel}
-            </TabsContent>
-          </Tabs>
-        ) : (
-          <div className="min-w-0">{tasksPanel}</div>
-        )}
-      </div>
+      <ProjectDetail
+        project={project}
+        isAdmin={isAdmin}
+        clientId={clientId}
+        clientName={clientName}
+        onBack={() => (window.history.length > 1 ? router.back() : router.push("/dashboard"))}
+        onProjectPatched={(patch) => {
+          setProject((current) => (current ? { ...current, ...patch } : current))
+          // The page is addressed by slug, so a renamed project moves
+          // the URL with it rather than leaving a stale address.
+          if (patch.slug && patch.slug !== slug) router.replace(`/dashboard/projects/${patch.slug}`)
+        }}
+        onProjectDeleted={() => router.push("/dashboard/projects")}
+      />
     </main>
   )
 }

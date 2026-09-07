@@ -5,7 +5,6 @@ import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Card, CardContent } from "@/components/ui/card"
 import {
   Select,
   SelectContent,
@@ -13,9 +12,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { Textarea } from "@/components/ui/textarea"
 import { Loader2 } from "lucide-react"
 import { getOrganizations } from "@/lib/organizations"
-import { createProject, updateProject, projectStatusMeta, type Project, type ProjectStatus } from "@/lib/projects"
+import { createProject, updateProject, type Project, type ProjectStatus } from "@/lib/projects"
 import { getUsers } from "@/lib/users"
 
 type CompanyOption = { id: string; name: string }
@@ -24,6 +24,7 @@ type FormState = {
   clientId: string
   title: string
   service: string
+  description: string
   status: ProjectStatus
   progress: string
   dueDate: string
@@ -33,6 +34,7 @@ const EMPTY_FORM: FormState = {
   clientId: "",
   title: "",
   service: "",
+  description: "",
   status: "in-progress",
   progress: "0",
   dueDate: "",
@@ -47,6 +49,9 @@ interface ClientProjectFormProps {
 
 export function ClientProjectForm({ project, initialClientId, onSaved, onCancel }: ClientProjectFormProps) {
   const isEdit = Boolean(project)
+  // When the caller already knows the client (e.g. opened from that company's
+  // own page), there's nothing to pick — skip the field instead of asking.
+  const showCompanyField = isEdit || !initialClientId
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [form, setForm] = useState<FormState>(EMPTY_FORM)
@@ -79,6 +84,7 @@ export function ClientProjectForm({ project, initialClientId, onSaved, onCancel 
         clientId: project.clientId ?? "",
         title: project.title ?? "",
         service: project.service ?? "",
+        description: project.description ?? "",
         status: project.status ?? EMPTY_FORM.status,
         progress: String(project.progress ?? 0),
         dueDate: project.dueDate ?? "",
@@ -113,6 +119,7 @@ export function ClientProjectForm({ project, initialClientId, onSaved, onCancel 
       client: company?.name || project?.client || form.clientId,
       title: form.title.trim(),
       service: form.service.trim(),
+      description: form.description.trim(),
       status: form.status,
       progress: Math.min(100, Math.max(0, Number(form.progress) || 0)),
       dueDate: form.dueDate.trim(),
@@ -137,81 +144,57 @@ export function ClientProjectForm({ project, initialClientId, onSaved, onCancel 
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <Card>
-        <CardContent className="space-y-4 p-4">
-          <div className="space-y-1.5">
-            <Label htmlFor="clientId">Company</Label>
-            <Select value={form.clientId} onValueChange={(v) => set("clientId", v)}>
-              <SelectTrigger id="clientId" className="w-full">
-                <SelectValue placeholder={clientsLoading ? "Loading companies..." : "Select a company"} />
-              </SelectTrigger>
-              <SelectContent>
-                {companies.map((c) => (
-                  <SelectItem key={c.id} value={c.id}>
-                    {c.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {!clientsLoading && companies.length === 0 && (
-              <p className="text-xs text-muted-foreground">
-                No companies yet. Add one under Companies first.
-              </p>
-            )}
-          </div>
+      {showCompanyField && (
+        <div className="space-y-1.5">
+          <Label htmlFor="clientId">Company</Label>
+          <Select value={form.clientId} onValueChange={(v) => set("clientId", v)}>
+            <SelectTrigger id="clientId" className="w-full">
+              <SelectValue placeholder={clientsLoading ? "Loading companies..." : "Select a company"} />
+            </SelectTrigger>
+            <SelectContent>
+              {companies.map((c) => (
+                <SelectItem key={c.id} value={c.id}>
+                  {c.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {!clientsLoading && companies.length === 0 && (
+            <p className="text-xs text-muted-foreground">
+              No companies yet. Add one under Companies first.
+            </p>
+          )}
+        </div>
+      )}
 
-          <div className="grid gap-3 md:grid-cols-2">
-            <div className="space-y-1.5">
-              <Label htmlFor="title">Title</Label>
-              <Input id="title" value={form.title} onChange={(e) => set("title", e.target.value)} required />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="service">Service</Label>
-              <Input
-                id="service"
-                value={form.service}
-                onChange={(e) => set("service", e.target.value)}
-                placeholder="e.g. Branding, Marketing"
-              />
-            </div>
-          </div>
+      <div className="grid gap-3 md:grid-cols-2">
+        <div className="space-y-1.5">
+          <Label htmlFor="title">Title</Label>
+          <Input id="title" value={form.title} onChange={(e) => set("title", e.target.value)} required />
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="service">Service</Label>
+          <Input
+            id="service"
+            value={form.service}
+            onChange={(e) => set("service", e.target.value)}
+            placeholder="e.g. Branding, Marketing"
+          />
+        </div>
+      </div>
 
-          <div className="grid gap-3 md:grid-cols-3">
-            <div className="space-y-1.5">
-              <Label htmlFor="status">Status</Label>
-              <Select value={form.status} onValueChange={(v) => set("status", v)}>
-                <SelectTrigger id="status" className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {(Object.keys(projectStatusMeta) as ProjectStatus[]).map((s) => (
-                    <SelectItem key={s} value={s}>
-                      {projectStatusMeta[s].label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="progress">Progress (%)</Label>
-              <Input
-                id="progress"
-                type="number"
-                min={0}
-                max={100}
-                value={form.progress}
-                onChange={(e) => set("progress", e.target.value)}
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="dueDate">Due date</Label>
-              <Input id="dueDate" type="date" value={form.dueDate} onChange={(e) => set("dueDate", e.target.value)} />
-            </div>
-          </div>
+      <div className="space-y-1.5">
+        <Label htmlFor="description">Description</Label>
+        <Textarea
+          id="description"
+          rows={3}
+          value={form.description}
+          onChange={(e) => set("description", e.target.value)}
+          placeholder="What's this project about?"
+        />
+      </div>
 
-          {error && <p className="text-sm text-destructive">{error}</p>}
-        </CardContent>
-      </Card>
+      {error && <p className="text-sm text-destructive">{error}</p>}
 
       <div className="flex justify-end gap-3">
         <Button type="button" variant="outline" onClick={onCancel}>

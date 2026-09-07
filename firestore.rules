@@ -112,27 +112,37 @@ service cloud.firestore {
       allow delete: if isAdmin() || (isSignedIn() && resource.data.authorUid == request.auth.uid);
     }
 
-    // Finance records - admins manage all; clients can only read issued
-    // records in their own workspace. Drafts remain internal.
+    // Finance records - admins manage all. Issued invoices and contracts are
+    // listed on public company pages; drafts remain internal. Estimates retain
+    // their explicit per-record share toggle.
     match /invoices/{invoiceId} {
-      allow read: if isAdmin() || (isSignedIn()
-        && resource.data.clientId == myClientId()
-        && resource.data.status != 'draft');
+      allow read: if isAdmin()
+        || (isSignedIn() && resource.data.clientId == myClientId() && resource.data.status != 'draft')
+        || resource.data.status != 'draft';
       allow write: if isAdmin();
     }
 
     match /contracts/{contractId} {
-      allow read: if isAdmin() || (isSignedIn()
-        && resource.data.clientId == myClientId()
-        && resource.data.status != 'draft');
+      allow read: if isAdmin()
+        || (isSignedIn() && resource.data.clientId == myClientId() && resource.data.status != 'draft')
+        || resource.data.status != 'draft';
+      allow write: if isAdmin();
+    }
+
+    match /estimates/{estimateId} {
+      allow read: if isAdmin()
+        || (isSignedIn() && resource.data.clientId == myClientId() && resource.data.status != 'draft')
+        || resource.data.shareEnabled == true;
       allow write: if isAdmin();
     }
 
     // Organizations - the company a client user belongs to (see lib/organizations.ts).
-    // Doc id is the same clientId used everywhere else. Admins manage all;
-    // a client can read their own organization's doc.
+    // Doc id is the same clientId used everywhere else. Public read: this also
+    // backs each company's public page at visualcns.com/{organization.slug} -
+    // only name/logo/industry/location/website live here, nothing sensitive.
+    // Writes remain admin-only.
     match /organizations/{organizationId} {
-      allow read: if isAdmin() || (isSignedIn() && organizationId == myClientId());
+      allow read: if true;
       allow write: if isAdmin();
     }
 

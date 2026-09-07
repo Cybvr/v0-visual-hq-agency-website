@@ -40,6 +40,7 @@ import {
 } from "@/components/ui/table"
 import { getProjects, type Project } from "@/lib/projects"
 import { getUsers, type AppUser } from "@/lib/users"
+import { ShareLinkField } from "@/components/dashboard/share-link-field"
 import { cn } from "@/lib/utils"
 
 const CURRENCIES = [
@@ -147,6 +148,8 @@ export function InvoiceBuilder({ invoice }: { invoice?: Invoice | null }) {
   const [notes, setNotes] = useState(invoice?.notes ?? "")
   const [paymentInstructions, setPaymentInstructions] = useState(invoice?.paymentInstructions ?? "")
 
+  const [shareEnabled, setShareEnabled] = useState(invoice?.shareEnabled ?? false)
+
   const [clients, setClients] = useState<AppUser[]>([])
   const [projects, setProjects] = useState<Project[]>([])
   const [optionsLoading, setOptionsLoading] = useState(true)
@@ -160,7 +163,17 @@ export function InvoiceBuilder({ invoice }: { invoice?: Invoice | null }) {
     Promise.all([getUsers(), getProjects()])
       .then(([userList, projectList]) => {
         if (!active) return
-        setClients(userList.filter((user) => user.clientId))
+        // Several people can share a workspace, so this is narrowed to one
+        // entry per clientId - otherwise the same company lists twice (and
+        // the duplicate clientId shows up as a duplicate React key).
+        const seenWorkspaces = new Set<string>()
+        setClients(
+          userList.filter((user) => {
+            if (!user.clientId || seenWorkspaces.has(user.clientId)) return false
+            seenWorkspaces.add(user.clientId)
+            return true
+          }),
+        )
         setProjects(projectList)
       })
       .catch(() => {
@@ -306,6 +319,7 @@ export function InvoiceBuilder({ invoice }: { invoice?: Invoice | null }) {
         notes: notes.trim(),
         paymentInstructions: paymentInstructions.trim() || PAYMENT_DETAILS[currency] || "",
         url: url.trim(),
+        shareEnabled,
       }
 
       if (invoice) await updateInvoice(invoice.id, payload)
@@ -344,6 +358,12 @@ export function InvoiceBuilder({ invoice }: { invoice?: Invoice | null }) {
           </Button>
         </div>
       </div>
+
+      <ShareLinkField
+        enabled={shareEnabled}
+        onEnabledChange={setShareEnabled}
+        path={invoice ? `/share/invoices/${invoice.id}` : undefined}
+      />
 
       <div className="space-y-8 rounded-[14px] border border-border bg-card p-5 sm:p-6">
 

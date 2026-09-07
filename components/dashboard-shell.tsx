@@ -3,7 +3,7 @@
 import { useState, type FormEvent, type ReactNode } from "react"
 import Image from "next/image"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import { Bell, CircleHelp, Crown, Search, SlidersHorizontal } from "lucide-react"
 
 import { AppSidebar, type NavLink } from "@/components/app-sidebar"
@@ -43,9 +43,13 @@ export function DashboardShell({
 }) {
   const [search, setSearch] = useState("")
   const router = useRouter()
+  const pathname = usePathname()
   const { isAdmin, isImpersonating } = useAuth()
   // While an admin is "viewing as" a client, the shell behaves as the client's.
   const adminView = isAdmin && !isImpersonating
+  // The company detail page carries its own banner, so the sticky dashboard
+  // header would just duplicate it.
+  const hideHeader = /^\/dashboard\/companies\/[^/]+/.test(pathname ?? "")
 
   function handleSearch(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -61,6 +65,7 @@ export function DashboardShell({
           { terms: ["seo", "ranking", "keyword"], href: "/dashboard/seo" },
           { terms: ["invoice", "billing", "payment", "finance"], href: "/dashboard/invoices" },
           { terms: ["contract", "agreement", "signature"], href: "/dashboard/contracts" },
+          { terms: ["estimate", "quote", "proposal"], href: "/dashboard/estimates" },
           { terms: ["client", "company", "workspace"], href: "/dashboard/companies" },
           { terms: ["user", "account", "settings"], href: "/dashboard/users" },
         ]
@@ -73,6 +78,7 @@ export function DashboardShell({
           { terms: ["seo", "ranking", "keyword"], href: "/dashboard/seo" },
           { terms: ["invoice", "billing", "payment", "finance"], href: "/dashboard/invoices" },
           { terms: ["contract", "agreement", "signature"], href: "/dashboard/contracts" },
+          { terms: ["estimate", "quote", "proposal"], href: "/dashboard/estimates" },
         ]
     const match = destinations.find(({ terms }) => terms.some((term) => term.includes(query) || query.includes(term)))
     router.push(match?.href ?? "/dashboard")
@@ -92,6 +98,7 @@ export function DashboardShell({
         <AppSidebar navLinks={navLinks} rootHref={rootHref} subtitle={subtitle} navExtra={navExtra} />
         {/* overflow-y-auto: this column is the scroll container, not the body */}
         <SidebarInset className="overflow-y-auto">
+          {!hideHeader && (
           <header className="sticky top-0 z-40 flex h-14 shrink-0 items-center gap-3 bg-background px-4 sm:h-20 sm:px-6">
             <div className="flex shrink-0 items-center gap-2 md:hidden">
               <SidebarTrigger className="-ml-1" />
@@ -147,6 +154,7 @@ export function DashboardShell({
               </Link>
             </div>
           </header>
+          )}
           {children}
         </SidebarInset>
       </SidebarProvider>

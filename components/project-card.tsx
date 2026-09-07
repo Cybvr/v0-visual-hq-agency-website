@@ -78,8 +78,11 @@ export function ProjectCard({
   menu?: ReactNode
   menuLabel?: string
 }) {
-  const bodyClass =
-    "flex w-full flex-col rounded-[14px] border border-border/60 bg-card p-2 text-left shadow-sm outline-none transition-colors hover:border-foreground/30 hover:bg-muted/40 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+  const bodyClass = `flex w-full flex-col rounded-[14px] border border-border/60 bg-card p-2 text-left shadow-sm ${
+    href || onClick
+      ? "outline-none transition-colors hover:border-foreground/30 hover:bg-muted/40 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+      : ""
+  }`
 
   const body = (
     <>
@@ -100,10 +103,12 @@ export function ProjectCard({
         <Link href={href} className={bodyClass}>
           {body}
         </Link>
-      ) : (
+      ) : onClick ? (
         <button type="button" onClick={onClick} className={bodyClass}>
           {body}
         </button>
+      ) : (
+        <div className={bodyClass}>{body}</div>
       )}
 
       {menu && (

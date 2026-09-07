@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useRouter, useSearchParams } from "next/navigation"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import {
@@ -22,17 +22,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet"
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu"
 import { Briefcase, Eye, LayoutGrid, List, Loader2, Plus, Trash2 } from "lucide-react"
 import { getProjects, deleteProject, projectSlug, projectStatusMeta, type Project } from "@/lib/projects"
-import { ClientProjectForm } from "@/components/dashboard/client-project-form"
+import { NewProjectDialog } from "@/components/dashboard/new-project-dialog"
 import { ProjectCard } from "@/components/project-card"
 import { EmptyState, EmptySearchState } from "@/components/dashboard/empty-state"
 import { FilterBar, useFilterBar, type SortOption } from "@/components/dashboard/filter-bar"
@@ -88,7 +81,6 @@ function ViewToggle({ view, onChange }: { view: "card" | "list"; onChange: (view
 
 export default function ProjectsAdminPage() {
   const router = useRouter()
-  const searchParams = useSearchParams()
   const [projects, setProjects] = useState<Project[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -96,24 +88,12 @@ export default function ProjectsAdminPage() {
   const [deleting, setDeleting] = useState<string | null>(null)
   const [pendingDelete, setPendingDelete] = useState<Project | null>(null)
   const [creating, setCreating] = useState(false)
-  const initialClientId = searchParams.get("clientId") ?? ""
   const { results: visibleProjects, bar } = useFilterBar({
     items: projects,
     search: searchProject,
     sorts: PROJECT_SORTS,
     defaultSort: "title",
   })
-
-  useEffect(() => {
-    if (searchParams.get("new") === "1") {
-      setCreating(true)
-    }
-  }, [searchParams])
-
-  function clearNewProjectQuery() {
-    if (!searchParams.get("new") && !searchParams.get("clientId")) return
-    router.replace("/dashboard/projects")
-  }
 
   async function fetchProjects() {
     setError(null)
@@ -143,12 +123,6 @@ export default function ProjectsAdminPage() {
     } finally {
       setDeleting(null)
     }
-  }
-
-  async function handleSaved() {
-    await fetchProjects()
-    setCreating(false)
-    clearNewProjectQuery()
   }
 
   return (
@@ -330,36 +304,7 @@ export default function ProjectsAdminPage() {
         </AlertDialogContent>
       </AlertDialog>
 
-      <Sheet
-        open={creating}
-        onOpenChange={(open) => {
-          if (!open) {
-            setCreating(false)
-            clearNewProjectQuery()
-          }
-        }}
-      >
-        <SheetContent side="right" className="w-full gap-0 overflow-y-auto sm:max-w-lg">
-          <SheetHeader className="border-b">
-            <SheetTitle>New project</SheetTitle>
-            <SheetDescription>Create a project for a client.</SheetDescription>
-          </SheetHeader>
-          <div className="p-4">
-            {creating && (
-              <ClientProjectForm
-                key="new"
-                project={null}
-                initialClientId={initialClientId}
-                onSaved={handleSaved}
-                onCancel={() => {
-                  setCreating(false)
-                  clearNewProjectQuery()
-                }}
-              />
-            )}
-          </div>
-        </SheetContent>
-      </Sheet>
+      <NewProjectDialog open={creating} onOpenChange={setCreating} />
     </main>
   )
 }

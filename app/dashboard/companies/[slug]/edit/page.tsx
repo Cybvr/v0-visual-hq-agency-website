@@ -28,7 +28,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { INDUSTRIES } from "@/lib/industries"
-import { updateOrganization } from "@/lib/organizations"
+import { updateOrganization, uniqueOrganizationSlug } from "@/lib/organizations"
 import { deleteUser, updateUser, userRef } from "@/lib/users"
 
 export default function CompanyEditPage() {
@@ -40,6 +40,8 @@ export default function CompanyEditPage() {
     logoUrl: organization?.logoUrl || client.photoURL || "",
     industry: organization?.industry ?? "",
     location: organization?.location ?? "",
+    website: organization?.website ?? "",
+    slug: organization?.slug ?? "",
   })
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
@@ -56,16 +58,24 @@ export default function CompanyEditPage() {
     setSaving(true)
     setSaveError(null)
     try {
+      const name = form.name.trim() || "Unnamed company"
+      // Whatever the admin typed wins; falls back to the name if left blank.
+      // uniqueOrganizationSlug also cleans it up and dodges reserved words
+      // and other companies' slugs, so this covers both first-time backfill
+      // and a deliberate rename.
+      const slug = await uniqueOrganizationSlug(form.slug.trim() || name, workspaceId)
       await Promise.all([
         updateOrganization(workspaceId, {
-          name: form.name.trim() || "Unnamed company",
+          name,
           logoUrl: form.logoUrl.trim(),
           industry: form.industry.trim(),
           location: form.location.trim(),
+          website: form.website.trim(),
+          slug,
         }),
         // Kept in step so the fallback name (used before an org doc existed)
         // doesn't go stale.
-        updateUser(client.uid, { company: form.name.trim() }),
+        updateUser(client.uid, { company: name }),
       ])
       await reload()
       router.push(`/dashboard/companies/${userRef(client)}`)
@@ -102,6 +112,22 @@ export default function CompanyEditPage() {
             <Input id="name" value={form.name} onChange={(event) => set("name", event.target.value)} required />
           </div>
           <div className="space-y-1.5">
+            <Label htmlFor="slug">Public URL</Label>
+            <div className="flex items-center gap-1.5">
+              <span className="shrink-0 text-sm text-muted-foreground">visualcns.com/</span>
+              <Input
+                id="slug"
+                value={form.slug}
+                onChange={(event) => set("slug", event.target.value)}
+                placeholder={organization?.name ? undefined : "company-name"}
+                className="font-mono"
+              />
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Leave blank to generate one from the name. Changing it moves the public page to the new address.
+            </p>
+          </div>
+          <div className="space-y-1.5">
             <Label htmlFor="industry">Industry</Label>
             <Select value={form.industry} onValueChange={(value) => set("industry", value)}>
               <SelectTrigger id="industry" className="w-full">
@@ -123,6 +149,15 @@ export default function CompanyEditPage() {
               value={form.location}
               onChange={(event) => set("location", event.target.value)}
               placeholder="Lagos, Nigeria"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="website">Website</Label>
+            <Input
+              id="website"
+              value={form.website}
+              onChange={(event) => set("website", event.target.value)}
+              placeholder="https://example.com"
             />
           </div>
         </div>

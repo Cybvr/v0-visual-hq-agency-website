@@ -73,3 +73,21 @@ export async function getCaseStudyProjectBySlug(slug: string): Promise<CaseStudy
   const projects = await getCaseStudyProjects()
   return projects.find((project) => project.slug === slug || project.id === slug) ?? null
 }
+
+/** Published case studies for one client - what a company's public page shows under Projects. */
+export async function getCaseStudyProjectsByClientId(clientId: string): Promise<CaseStudyProject[]> {
+  if (!clientId) return []
+  const snapshot = await getDocs(query(
+    collection(db, "projects"),
+    where("isCaseStudy", "==", true),
+    where("caseStudyStatus", "==", "published"),
+    where("clientId", "==", clientId),
+  ))
+
+  return snapshot.docs
+    .map((snapshotDoc) => toCaseStudy({
+      ...(snapshotDoc.data() as Omit<Project, "id">),
+      id: snapshotDoc.id,
+    }))
+    .sort((first, second) => first.order - second.order)
+}

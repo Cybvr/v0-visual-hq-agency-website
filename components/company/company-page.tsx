@@ -1,0 +1,474 @@
+"use client"
+
+import { useState } from "react"
+import Link from "next/link"
+import { Pencil, Plus, Share2, User as UserIcon } from "lucide-react"
+import { toast } from "sonner"
+
+import { CompanyBanner } from "@/components/company/company-banner"
+import { CompanyDocuments } from "@/components/company/company-documents"
+import { CompanyMedia } from "@/components/company/company-media"
+import { CompanyOverviewGrid } from "@/components/company/company-overview-grid"
+import { SectionNav } from "@/components/company/section-nav"
+import { NewPersonDialog } from "@/components/dashboard/new-person-dialog"
+import { NewProjectDialog } from "@/components/dashboard/new-project-dialog"
+import { ProjectDetail } from "@/components/dashboard/project-detail"
+import { UserEditorSheet } from "@/components/dashboard/user-editor-sheet"
+import { ProjectCard } from "@/components/project-card"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
+import { Button } from "@/components/ui/button"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { DropdownMenuItem } from "@/components/ui/dropdown-menu"
+import { Input } from "@/components/ui/input"
+import type { Contract, Estimate, Invoice } from "@/lib/billing"
+import { projectStatusMeta, type Project } from "@/lib/projects"
+import { deleteUser, type AppUser } from "@/lib/users"
+import { cn } from "@/lib/utils"
+
+const SECTIONS = [
+  { key: "overview", label: "Overview" },
+  { key: "team", label: "Team" },
+  { key: "projects", label: "Projects" },
+  { key: "media", label: "Media" },
+  { key: "documents", label: "Documents" },
+] as const
+
+type SectionKey = (typeof SECTIONS)[number]["key"]
+
+export interface CompanyPagePerson {
+  id: string
+  name: string
+  subtitle?: string
+  role?: string
+  photoUrl?: string
+  adminUser?: AppUser
+}
+
+export interface CompanyPageCompany {
+  id: string
+  name: string
+  logoUrl?: string
+  categoryLabel: string
+  industry?: string
+  location?: string
+  website?: string
+}
+
+export interface CompanyPageAdmin {
+  editHref: string
+  sharePath: string
+  publicPath?: string
+  onViewWorkspace: (person: AppUser) => void
+  reload: () => Promise<void>
+}
+
+function personProject(person: CompanyPagePerson, company: CompanyPageCompany): Project {
+  return {
+    id: person.id,
+    clientId: company.id,
+    client: company.name,
+    title: person.name,
+    service: person.subtitle || "Team member",
+    status: "in-progress",
+    progress: 0,
+    dueDate: "",
+    thumbnailUrl: person.photoUrl,
+  }
+}
+
+/**
+ * The complete company experience used by both dashboard and public routes.
+ * Supplying `admin` reveals private actions; omitting it keeps this same block
+ * read-only and never requires private data.
+ */
+export function CompanyPage({
+  company,
+  people,
+  projects,
+  invoices,
+  contracts,
+  estimates,
+  admin,
+  emptyProjectsLabel = "No projects yet.",
+}: {
+  company: CompanyPageCompany
+  people: CompanyPagePerson[]
+  projects: Project[]
+  invoices: Invoice[]
+  contracts: Contract[]
+  estimates: Estimate[]
+  admin?: CompanyPageAdmin
+  emptyProjectsLabel?: string
+}) {
+  const [section, setSection] = useState<SectionKey>("overview")
+  const [selectedProject, setSelectedProject] = useState<Project | null>(null)
+  const [addingPerson, setAddingPerson] = useState(false)
+  const [editingPerson, setEditingPerson] = useState<AppUser | null>(null)
+  const [pendingRemove, setPendingRemove] = useState<AppUser | null>(null)
+  const [removing, setRemoving] = useState(false)
+  const [creatingProject, setCreatingProject] = useState(false)
+  const [shareOpen, setShareOpen] = useState(false)
+
+  const coverProject: Project = {
+    id: company.id,
+    clientId: company.id,
+    client: company.name,
+    title: company.name,
+    service: "",
+    status: "in-progress",
+    progress: 0,
+    dueDate: "",
+    thumbnailUrl: company.logoUrl,
+  }
+
+  const absoluteUrl = (path: string) =>
+    typeof window !== "undefined" ? `${window.location.origin}${path}` : path
+
+  async function handleRemovePerson() {
+    if (!admin || !pendingRemove || removing) return
+    setRemoving(true)
+    try {
+      await deleteUser(pendingRemove.uid)
+      await admin.reload()
+      setPendingRemove(null)
+    } catch (removeError) {
+      console.error("Error removing person:", removeError)
+    } finally {
+      setRemoving(false)
+    }
+  }
+
+  return (
+    <main className="mx-auto min-h-screen w-full max-w-6xl px-4 pb-16 pt-6 sm:px-6">
+      <CompanyBanner
+        name={company.name}
+        categoryLabel={company.categoryLabel}
+        coverProject={coverProject}
+        actions={
+          admin ? (
+            <>
+              <Button asChild className="rounded-full">
+                <Link href={admin.editHref}>
+                  <Pencil className="size-4" aria-hidden="true" />
+                  Edit
+                </Link>
+              </Button>
+              <Button variant="secondary" className="rounded-full" onClick={() => setShareOpen(true)}>
+                <Share2 className="size-4" aria-hidden="true" />
+                Share
+              </Button>
+            </>
+          ) : undefined
+        }
+      />
+
+      <div className="mt-6">
+        <SectionNav
+          sections={SECTIONS}
+          active={section}
+          onChange={(key) => {
+            setSection(key)
+            if (key !== "projects") setSelectedProject(null)
+          }}
+        />
+
+        {section === "overview" && (
+          <div className="mt-4">
+            <CompanyOverviewGrid
+              industry={company.industry}
+              location={company.location}
+              website={company.website}
+              teamCount={people.length}
+            />
+          </div>
+        )}
+
+        {section === "team" && (
+          <div className="mt-4">
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex items-baseline gap-2">
+                <h2 className="text-base font-semibold">Team</h2>
+                <span className="text-sm text-muted-foreground">{people.length}</span>
+              </div>
+              {admin && (
+                <Button onClick={() => setAddingPerson(true)}>
+                  <Plus className="size-4" aria-hidden="true" />
+                  Add person
+                </Button>
+              )}
+            </div>
+
+            {people.length === 0 ? (
+              <div className="mt-4 flex flex-col items-center rounded-lg border border-dashed border-border py-10 text-center">
+                <span className="flex size-11 items-center justify-center rounded-full bg-muted">
+                  <UserIcon className="size-5 text-muted-foreground" aria-hidden="true" />
+                </span>
+                <h3 className="mt-4 font-medium">No team members yet</h3>
+                {admin && (
+                  <>
+                    <p className="mt-1 max-w-sm text-sm text-muted-foreground">
+                      Add the first person to give them access to this workspace.
+                    </p>
+                    <Button className="mt-5" onClick={() => setAddingPerson(true)}>
+                      <Plus className="mr-2 size-4" aria-hidden="true" />
+                      Add person
+                    </Button>
+                  </>
+                )}
+              </div>
+            ) : (
+              <div className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-3">
+                {people.map((person) => (
+                  <ProjectCard
+                    key={person.id}
+                    project={personProject(person, company)}
+                    onClick={admin && person.adminUser ? () => setEditingPerson(person.adminUser ?? null) : undefined}
+                    footer={
+                      person.role ? (
+                        <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium capitalize text-muted-foreground">
+                          {person.role}
+                        </span>
+                      ) : undefined
+                    }
+                    menuLabel={`Options for ${person.name}`}
+                    menu={
+                      admin && person.adminUser ? (
+                        <>
+                          <DropdownMenuItem onSelect={() => setEditingPerson(person.adminUser ?? null)}>Edit</DropdownMenuItem>
+                          <DropdownMenuItem onSelect={() => person.adminUser && admin.onViewWorkspace(person.adminUser)}>
+                            View workspace
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            variant="destructive"
+                            onSelect={() => setPendingRemove(person.adminUser ?? null)}
+                          >
+                            Remove person
+                          </DropdownMenuItem>
+                        </>
+                      ) : undefined
+                    }
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {section === "projects" && (
+          <div className="mt-4">
+            {selectedProject ? (
+              <ProjectDetail
+                project={selectedProject}
+                isAdmin={Boolean(admin)}
+                publicView={!admin}
+                clientId={company.id}
+                clientName={company.name}
+                backLabel="Back to Projects"
+                onBack={() => setSelectedProject(null)}
+                onProjectPatched={
+                  admin
+                    ? (patch) => {
+                        setSelectedProject((current) => (current ? { ...current, ...patch } : current))
+                        void admin.reload()
+                      }
+                    : undefined
+                }
+                onProjectDeleted={
+                  admin
+                    ? async () => {
+                        setSelectedProject(null)
+                        await admin.reload()
+                      }
+                    : undefined
+                }
+              />
+            ) : (
+              <>
+                <div className="flex items-center justify-between gap-4">
+                  <div className="flex items-baseline gap-2">
+                    <h2 className="text-base font-semibold">Projects</h2>
+                    <span className="text-sm text-muted-foreground">{projects.length}</span>
+                  </div>
+                  {admin && (
+                    <Button onClick={() => setCreatingProject(true)}>
+                      <Plus className="size-4" aria-hidden="true" />
+                      New project
+                    </Button>
+                  )}
+                </div>
+
+                {!admin && projects.length === 0 ? (
+                  <p className="py-10 text-center text-sm text-muted-foreground">{emptyProjectsLabel}</p>
+                ) : (
+                  <div className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-3">
+                    {projects.map((project) => {
+                      const meta = projectStatusMeta[project.status] ?? projectStatusMeta["in-progress"]
+                      return (
+                        <ProjectCard
+                          key={project.id}
+                          project={project}
+                          onClick={() => setSelectedProject(project)}
+                          footer={
+                            admin ? (
+                              <div className="flex flex-wrap items-center gap-1.5">
+                                <span className={cn("rounded-full px-2 py-0.5 text-[11px] font-medium", meta.className)}>
+                                  {meta.label}
+                                </span>
+                                {project.isCaseStudy && (
+                                  <span className="rounded-full bg-violet-100 px-2 py-0.5 text-[11px] font-medium text-violet-700 dark:bg-violet-950 dark:text-violet-200">
+                                    Case study
+                                  </span>
+                                )}
+                              </div>
+                            ) : undefined
+                          }
+                        />
+                      )
+                    })}
+
+                    {admin && (
+                      <button
+                        type="button"
+                        onClick={() => setCreatingProject(true)}
+                        className="group flex min-h-[180px] flex-col items-center justify-center gap-3 rounded-[14px] border border-dashed border-border bg-card p-4 text-center outline-none transition-colors hover:border-foreground/30 hover:bg-muted/40 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                      >
+                        <span className="flex size-9 items-center justify-center rounded-full bg-foreground text-background transition-transform group-hover:scale-105">
+                          <Plus className="size-4" aria-hidden="true" />
+                        </span>
+                        <span className="text-sm font-medium text-foreground">Add project</span>
+                      </button>
+                    )}
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        )}
+
+        {section === "media" && <CompanyMedia logoUrl={company.logoUrl} projects={projects} />}
+
+        {section === "documents" && (
+          <CompanyDocuments invoices={invoices} contracts={contracts} estimates={estimates} admin={Boolean(admin)} />
+        )}
+      </div>
+
+      {admin && (
+        <>
+          <NewPersonDialog
+            open={addingPerson}
+            onOpenChange={setAddingPerson}
+            fixedRole="client"
+            subjectNoun="company"
+            joinWorkspaceId={company.id}
+            joinWorkspaceName={company.name}
+            onSaved={async () => {
+              setAddingPerson(false)
+              await admin.reload()
+            }}
+          />
+
+          <UserEditorSheet
+            open={Boolean(editingPerson)}
+            user={editingPerson}
+            subjectNoun="user"
+            onClose={() => setEditingPerson(null)}
+            onSaved={async () => {
+              setEditingPerson(null)
+              await admin.reload()
+            }}
+          />
+
+          <AlertDialog
+            open={Boolean(pendingRemove)}
+            onOpenChange={(open) => !open && !removing && setPendingRemove(null)}
+          >
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Remove person?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This removes {pendingRemove?.displayName || pendingRemove?.email || "this person"}&apos;s login.
+                  Projects, tasks, and documents stay with the company. This cannot be undone.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel disabled={removing}>Cancel</AlertDialogCancel>
+                <AlertDialogAction
+                  disabled={removing}
+                  onClick={(event) => {
+                    event.preventDefault()
+                    void handleRemovePerson()
+                  }}
+                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                >
+                  {removing ? "Removing…" : "Remove person"}
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+
+          <NewProjectDialog
+            open={creatingProject}
+            onOpenChange={setCreatingProject}
+            initialClientId={company.id}
+            onCreated={async (project) => {
+              await admin.reload()
+              setSection("projects")
+              setSelectedProject(project)
+            }}
+          />
+
+          <Dialog open={shareOpen} onOpenChange={setShareOpen}>
+            <DialogContent className="max-w-md">
+              <DialogHeader>
+                <DialogTitle>Share company workspace</DialogTitle>
+                <DialogDescription>Share direct access to {company.name}&apos;s dashboard.</DialogDescription>
+              </DialogHeader>
+              <ShareLink value={absoluteUrl(admin.sharePath)} label="Workspace link" />
+              {admin.publicPath && (
+                <>
+                  <p className="text-xs text-muted-foreground">Public page — anyone with the link can view it.</p>
+                  <ShareLink value={absoluteUrl(admin.publicPath)} label="Public link" />
+                </>
+              )}
+            </DialogContent>
+          </Dialog>
+        </>
+      )}
+    </main>
+  )
+}
+
+function ShareLink({ value, label }: { value: string; label: string }) {
+  return (
+    <div className="flex items-center gap-2 pt-2">
+      <Input
+        readOnly
+        value={value}
+        aria-label={label}
+        className="font-mono text-xs"
+        onClick={(event) => event.currentTarget.select()}
+      />
+      <Button
+        type="button"
+        variant="secondary"
+        size="sm"
+        className="shrink-0"
+        onClick={() => {
+          void navigator.clipboard.writeText(value)
+          toast.success("Link copied to clipboard")
+        }}
+      >
+        Copy link
+      </Button>
+    </div>
+  )
+}

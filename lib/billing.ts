@@ -14,6 +14,7 @@ import { db } from "./firebase"
 
 export type InvoiceStatus = "draft" | "sent" | "paid" | "overdue" | "void"
 export type ContractStatus = "draft" | "sent" | "signed" | "expired"
+export type EstimateStatus = "draft" | "sent" | "accepted" | "declined" | "expired"
 
 export interface InvoiceLineItem {
   id: string
@@ -36,6 +37,7 @@ export interface InvoiceParty {
   email?: string
   address?: string
   taxNumber?: string
+  website?: string
 }
 
 export interface Invoice {
@@ -73,6 +75,8 @@ export interface Invoice {
   paymentInstructions?: string
   /** Where the client downloads or pays it */
   url?: string
+  /** Readable without an account at /share/invoices/{id} once turned on. */
+  shareEnabled?: boolean
   createdAt?: Timestamp
   updatedAt?: Timestamp
 }
@@ -92,6 +96,50 @@ export interface Contract {
   startsOn?: string
   endsOn?: string
   url?: string
+  /** Readable without an account at /share/contracts/{id} once turned on. */
+  shareEnabled?: boolean
+  createdAt?: Timestamp
+  updatedAt?: Timestamp
+}
+
+export interface EstimateLineItem {
+  id: string
+  description: string
+  details?: string
+  billing?: string
+  /** Optional additions are displayed separately and excluded from the base total. */
+  optional?: boolean
+  /** Minor units, so 125000 is 1,250.00 */
+  amount: number
+}
+
+export interface Estimate {
+  id: string
+  clientId: string
+  client: string
+  /** Estimate number shown to the client, generated as EST-0001 upward. */
+  estimateNumber: string
+  title: string
+  projectId?: string
+  project?: string
+  status: EstimateStatus
+  preparedFor?: InvoiceParty
+  /** Scope of work as rich text. */
+  scope?: string
+  lineItems: EstimateLineItem[]
+  /** Required line items only, in minor units. */
+  amount: number
+  currency: string
+  issuedOn: string
+  /** The offer stands until this date; past it, treat as expired. */
+  validUntil?: string
+  terms?: string
+  paymentDetails?: string
+  acceptance?: string
+  /** Estimate disclaimer shown below acceptance. */
+  notes?: string
+  /** Readable without an account at /share/estimates/{id} once turned on. */
+  shareEnabled?: boolean
   createdAt?: Timestamp
   updatedAt?: Timestamp
 }
@@ -111,6 +159,14 @@ export const contractStatusMeta: Record<ContractStatus, { label: string; classNa
   expired: { label: "Expired", className: "bg-muted text-muted-foreground" },
 }
 
+export const estimateStatusMeta: Record<EstimateStatus, { label: string; className: string }> = {
+  draft: { label: "Draft", className: "bg-muted text-muted-foreground" },
+  sent: { label: "Awaiting response", className: "bg-amber-100 text-amber-700" },
+  accepted: { label: "Accepted", className: "bg-emerald-100 text-emerald-700" },
+  declined: { label: "Declined", className: "bg-red-100 text-red-700" },
+  expired: { label: "Expired", className: "bg-muted text-muted-foreground" },
+}
+
 export function formatMoney(amount: number, currency: string): string {
   try {
     return new Intl.NumberFormat("en", {
@@ -125,9 +181,10 @@ export function formatMoney(amount: number, currency: string): string {
 
 /** Who the invoice is from. Printed at the top of every invoice. */
 export const INVOICE_ISSUER: InvoiceParty = {
-  name: "VisualHQ",
-  email: "hello@visualhq.co",
+  name: "Visualcns",
+  email: "hello@visualcns.com",
   address: "Lagos, Nigeria",
+  website: "visualcns.com",
 }
 
 /** Bank details shown for whichever currency the invoice is raised in. */
@@ -198,13 +255,14 @@ export function formatDate(value?: string): string {
 
 const INVOICES = "invoices"
 const CONTRACTS = "contracts"
+const ESTIMATES = "estimates"
 
 function byNewest<T extends { createdAt?: Timestamp }>(rows: T[]): T[] {
   return rows.sort((a, b) => (b.createdAt?.toMillis() ?? 0) - (a.createdAt?.toMillis() ?? 0))
 }
 
 /** Drafts stay internal, so a client only ever sees what has actually been issued. */
-function isVisibleToClient(status: InvoiceStatus | ContractStatus): boolean {
+function isVisibleToClient(status: InvoiceStatus | ContractStatus | EstimateStatus): boolean {
   return status !== "draft"
 }
 
@@ -220,13 +278,13 @@ export async function getInvoices(): Promise<Invoice[]> {
   return byNewest(snapshot.docs.map((d) => toInvoice(d.id, d.data() as object)))
 }
 
-export async function getInvoicesByClientId(clientId: string): Promise<Invoice[]> {
+export async function getInvoicesByClientId(clientId: string, includeDrafts = false): Promise<Invoice[]> {
   if (!clientId) return []
-  const snapshot = await getDocs(
-    query(collection(db, INVOICES), where("clientId", "==", clientId), where("status", "!=", "draft")),
-  )
+  const snapshot = await getDocs(includeDrafts
+    ? query(collection(db, INVOICES), where("clientId", "==", clientId))
+    : query(collection(db, INVOICES), where("clientId", "==", clientId), where("status", "!=", "draft")))
   const rows = snapshot.docs.map((d) => toInvoice(d.id, d.data() as object))
-  return byNewest(rows.filter((row) => isVisibleToClient(row.status)))
+  return byNewest(includeDrafts ? rows : rows.filter((row) => isVisibleToClient(row.status)))
 }
 
 /**
@@ -275,13 +333,13 @@ export async function getContracts(): Promise<Contract[]> {
   return byNewest(snapshot.docs.map((d) => ({ ...(d.data() as object), id: d.id })) as Contract[])
 }
 
-export async function getContractsByClientId(clientId: string): Promise<Contract[]> {
+export async function getContractsByClientId(clientId: string, includeDrafts = false): Promise<Contract[]> {
   if (!clientId) return []
-  const snapshot = await getDocs(
-    query(collection(db, CONTRACTS), where("clientId", "==", clientId), where("status", "!=", "draft")),
-  )
+  const snapshot = await getDocs(includeDrafts
+    ? query(collection(db, CONTRACTS), where("clientId", "==", clientId))
+    : query(collection(db, CONTRACTS), where("clientId", "==", clientId), where("status", "!=", "draft")))
   const rows = snapshot.docs.map((d) => ({ ...(d.data() as object), id: d.id })) as Contract[]
-  return byNewest(rows.filter((row) => isVisibleToClient(row.status)))
+  return byNewest(includeDrafts ? rows : rows.filter((row) => isVisibleToClient(row.status)))
 }
 
 export async function getContract(id: string): Promise<Contract | null> {
@@ -305,4 +363,70 @@ export async function updateContract(id: string, data: Partial<Omit<Contract, "i
 
 export async function deleteContract(id: string): Promise<void> {
   await deleteDoc(doc(db, CONTRACTS, id))
+}
+
+export async function getEstimates(): Promise<Estimate[]> {
+  const snapshot = await getDocs(collection(db, ESTIMATES))
+  return byNewest(snapshot.docs.map((d) => ({ ...(d.data() as object), id: d.id })) as Estimate[])
+}
+
+export async function getEstimatesByClientId(clientId: string, includeDrafts = false): Promise<Estimate[]> {
+  if (!clientId) return []
+  const snapshot = await getDocs(includeDrafts
+    ? query(collection(db, ESTIMATES), where("clientId", "==", clientId))
+    : query(collection(db, ESTIMATES), where("clientId", "==", clientId), where("status", "!=", "draft")))
+  const rows = snapshot.docs.map((d) => ({ ...(d.data() as object), id: d.id })) as Estimate[]
+  return byNewest(includeDrafts ? rows : rows.filter((row) => isVisibleToClient(row.status)))
+}
+
+/**
+ * Unlike invoices/contracts, an estimate's public-read rule only allows an
+ * unauthenticated reader through when shareEnabled is set (not just
+ * non-draft) - so this is what the company's public page queries instead of
+ * getEstimatesByClientId, matching that rule shape exactly.
+ */
+export async function getSharedEstimatesByClientId(clientId: string): Promise<Estimate[]> {
+  if (!clientId) return []
+  const snapshot = await getDocs(
+    query(collection(db, ESTIMATES), where("clientId", "==", clientId), where("shareEnabled", "==", true)),
+  )
+  return byNewest(snapshot.docs.map((d) => ({ ...(d.data() as object), id: d.id })) as Estimate[])
+}
+
+/** The next estimate number in the EST-0001 sequence. */
+export async function nextEstimateNumber(): Promise<string> {
+  try {
+    const existing = await getEstimates()
+    const highest = existing.reduce((max, estimate) => {
+      const match = /^EST-(\d+)$/i.exec((estimate.estimateNumber ?? "").trim())
+      if (!match) return max
+      return Math.max(max, Number.parseInt(match[1], 10))
+    }, 0)
+    return `EST-${String(highest + 1).padStart(4, "0")}`
+  } catch {
+    return "EST-0001"
+  }
+}
+
+export async function getEstimate(id: string): Promise<Estimate | null> {
+  const snapshot = await getDoc(doc(db, ESTIMATES, id))
+  if (!snapshot.exists()) return null
+  return { ...(snapshot.data() as object), id: snapshot.id } as Estimate
+}
+
+export async function createEstimate(data: Omit<Estimate, "id" | "createdAt" | "updatedAt">): Promise<string> {
+  const ref = await addDoc(collection(db, ESTIMATES), {
+    ...data,
+    createdAt: Timestamp.now(),
+    updatedAt: Timestamp.now(),
+  })
+  return ref.id
+}
+
+export async function updateEstimate(id: string, data: Partial<Omit<Estimate, "id" | "createdAt">>): Promise<void> {
+  await updateDoc(doc(db, ESTIMATES, id), { ...data, updatedAt: Timestamp.now() })
+}
+
+export async function deleteEstimate(id: string): Promise<void> {
+  await deleteDoc(doc(db, ESTIMATES, id))
 }

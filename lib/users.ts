@@ -54,6 +54,7 @@ const RESERVED_SLUGS = new Set([
   "templates",
   "invoices",
   "contracts",
+  "estimates",
   "marketing",
   "manage",
   "settings",

@@ -3,7 +3,15 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react"
 import { useParams } from "next/navigation"
 
-import { getOrganization, type Organization } from "@/lib/organizations"
+import {
+  getContractsByClientId,
+  getEstimatesByClientId,
+  getInvoicesByClientId,
+  type Contract,
+  type Estimate,
+  type Invoice,
+} from "@/lib/billing"
+import { getOrganization, updateOrganization, type Organization, type PublicTeamMember } from "@/lib/organizations"
 import { getProjectsByClientId, type Project } from "@/lib/projects"
 import { getUserByRef, getUsersByClientId, type AppUser } from "@/lib/users"
 
@@ -14,6 +22,20 @@ export function clientName(client: AppUser): string {
 /** A person with neither a name nor an email is just the placeholder account a new company starts with. */
 function hasProfile(person: AppUser): boolean {
   return Boolean(person.displayName?.trim() || person.email?.trim())
+}
+
+/** Only what the public page's Team section may show - never the email. */
+function toPublicTeam(people: AppUser[]): PublicTeamMember[] {
+  return people.map((person) => ({
+    uid: person.uid,
+    name: person.displayName || "Team member",
+    role: person.role || "",
+    photoUrl: person.photoURL || "",
+  }))
+}
+
+function samePublicTeam(a: PublicTeamMember[] | undefined, b: PublicTeamMember[]): boolean {
+  return JSON.stringify(a ?? []) === JSON.stringify(b)
 }
 
 /** Industry off the organization, category off the projects, joined into one line. */
@@ -29,6 +51,9 @@ type CompanyState = {
   organization: Organization | null
   people: AppUser[]
   projects: Project[]
+  invoices: Invoice[]
+  contracts: Contract[]
+  estimates: Estimate[]
   workspaceId: string
   name: string
   categoryLabel: string
@@ -50,6 +75,9 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
   const [organization, setOrganization] = useState<Organization | null>(null)
   const [people, setPeople] = useState<AppUser[]>([])
   const [projects, setProjects] = useState<Project[]>([])
+  const [invoices, setInvoices] = useState<Invoice[]>([])
+  const [contracts, setContracts] = useState<Contract[]>([])
+  const [estimates, setEstimates] = useState<Estimate[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -63,15 +91,29 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
         return
       }
       const workspace = found.clientId || found.uid
-      const [foundOrg, foundPeople, foundProjects] = await Promise.all([
+      const [foundOrg, foundPeople, foundProjects, foundInvoices, foundContracts, foundEstimates] = await Promise.all([
         getOrganization(workspace),
         getUsersByClientId(workspace),
         getProjectsByClientId(workspace),
+        getInvoicesByClientId(workspace, true),
+        getContractsByClientId(workspace, true),
+        getEstimatesByClientId(workspace, true),
       ])
       setClient(found)
       setOrganization(foundOrg)
-      setPeople(foundPeople.filter(hasProfile))
+      const profiled = foundPeople.filter(hasProfile)
+      setPeople(profiled)
       setProjects(foundProjects)
+      setInvoices(foundInvoices)
+      setContracts(foundContracts)
+      setEstimates(foundEstimates)
+
+      // Keep the public page's Team section in step with the real roster.
+      // Only an admin can write here, so this quietly no-ops for a client.
+      const publicTeam = toPublicTeam(profiled)
+      if (!samePublicTeam(foundOrg?.publicTeam, publicTeam)) {
+        updateOrganization(workspace, { publicTeam }).catch(() => {})
+      }
     } catch (loadError) {
       console.error("Error loading company:", loadError)
       setError(loadError instanceof Error ? loadError.message : "This company could not be loaded.")
@@ -93,12 +135,15 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
       organization,
       people,
       projects,
+      invoices,
+      contracts,
+      estimates,
       workspaceId,
       name: client ? organization?.name || clientName(client) : "",
       categoryLabel: buildCategoryLabel(projects, organization),
       reload: load,
     }
-  }, [loading, error, client, organization, people, projects, load])
+  }, [loading, error, client, organization, people, projects, invoices, contracts, estimates, load])
 
   return <CompanyContext.Provider value={value}>{children}</CompanyContext.Provider>
 }

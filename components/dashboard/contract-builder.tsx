@@ -26,6 +26,7 @@ import {
 } from "@/lib/billing"
 import { getProjects, type Project } from "@/lib/projects"
 import { getUsers, type AppUser } from "@/lib/users"
+import { ShareLinkField } from "@/components/dashboard/share-link-field"
 import { cn } from "@/lib/utils"
 
 export function ContractBuilder({ contract }: { contract?: Contract | null }) {
@@ -47,6 +48,8 @@ export function ContractBuilder({ contract }: { contract?: Contract | null }) {
   const [body, setBody] = useState(contract?.body ?? "")
   const [url, setUrl] = useState(contract?.url ?? "")
 
+  const [shareEnabled, setShareEnabled] = useState(contract?.shareEnabled ?? false)
+
   const [clients, setClients] = useState<AppUser[]>([])
   const [projects, setProjects] = useState<Project[]>([])
   const [optionsLoading, setOptionsLoading] = useState(true)
@@ -58,7 +61,17 @@ export function ContractBuilder({ contract }: { contract?: Contract | null }) {
     Promise.all([getUsers(), getProjects()])
       .then(([userList, projectList]) => {
         if (!active) return
-        setClients(userList.filter((user) => user.clientId))
+        // Several people can share a workspace, so this is narrowed to one
+        // entry per clientId - otherwise the same company lists twice (and
+        // the duplicate clientId shows up as a duplicate React key).
+        const seenWorkspaces = new Set<string>()
+        setClients(
+          userList.filter((user) => {
+            if (!user.clientId || seenWorkspaces.has(user.clientId)) return false
+            seenWorkspaces.add(user.clientId)
+            return true
+          }),
+        )
         setProjects(projectList)
       })
       .catch(() => {
@@ -117,6 +130,7 @@ export function ContractBuilder({ contract }: { contract?: Contract | null }) {
         endsOn,
         // A signature date only means anything once it has actually been signed.
         signedOn: status === "signed" ? signedOn : "",
+        shareEnabled,
       }
 
       if (contract) await updateContract(contract.id, payload)
@@ -155,6 +169,12 @@ export function ContractBuilder({ contract }: { contract?: Contract | null }) {
           </Button>
         </div>
       </div>
+
+      <ShareLinkField
+        enabled={shareEnabled}
+        onEnabledChange={setShareEnabled}
+        path={contract ? `/share/contracts/${contract.id}` : undefined}
+      />
 
       <div className="space-y-8 rounded-[14px] border border-border bg-card p-5 sm:p-6">
         <section className="grid gap-x-8 gap-y-5 sm:grid-cols-2">
