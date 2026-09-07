@@ -1,9 +1,10 @@
 import type React from "react"
-import type { Metadata } from "next"
+import type { Metadata, Viewport } from "next"
 
 import { Analytics } from "@vercel/analytics/next"
 import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
+import { ServiceWorkerRegister } from "@/components/service-worker-register"
 import { Toaster } from "sonner"
 
 import { EB_Garamond, Geist_Mono, Inter, Outfit, Poppins } from "next/font/google"
@@ -39,11 +40,22 @@ export const metadata: Metadata = {
     type: "website",
   },
   generator: "v0.app",
+  applicationName: "VisualCNS",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "VisualCNS",
+  },
   // --- FAVICON USING EXTERNAL URL ---
   icons: {
     icon: FIREBASE_FAVICON_URL,
+    apple: "/apple-icon.png",
   },
   // ----------------------------------
+}
+
+export const viewport: Viewport = {
+  themeColor: "#110e2c",
 }
 
 export default function RootLayout({
@@ -67,6 +79,7 @@ export default function RootLayout({
           {children}
           <Toaster richColors position="top-right" />
         </ThemeProvider>
+        <ServiceWorkerRegister />
         <Analytics />
       </body>
     </html>
