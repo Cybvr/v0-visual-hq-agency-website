@@ -4,7 +4,7 @@ import { useState, type FormEvent, type ReactNode } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { Bell, CircleHelp, Search, SlidersHorizontal } from "lucide-react"
+import { Bell, CircleHelp, Crown, Search, SlidersHorizontal } from "lucide-react"
 
 import { AppSidebar, type NavLink } from "@/components/app-sidebar"
 import { Input } from "@/components/ui/input"
@@ -114,9 +114,12 @@ export function DashboardShell({
             <div className="ml-auto flex shrink-0 items-center gap-2">
               <Link
                 href="/pricing"
-                className="inline-flex h-10 items-center rounded-full border border-border px-3.5 text-sm font-medium text-foreground outline-none transition-colors hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring"
+                aria-label="Upgrade"
+                title="Upgrade"
+                className="inline-flex size-10 items-center justify-center gap-1.5 rounded-full border border-border text-sm font-medium text-foreground outline-none transition-colors hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring sm:w-auto sm:px-3.5"
               >
-                Upgrade
+                <Crown className="size-4 sm:hidden" aria-hidden="true" />
+                <span className="hidden sm:inline">Upgrade</span>
               </Link>
               <Link
                 href="/faq"

@@ -6,7 +6,6 @@ import { ExternalLink, Loader2 } from "lucide-react"
 
 import { GalleryDropzone, ImageDropzone } from "@/components/image-dropzone"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import {
@@ -37,7 +36,6 @@ type FormState = {
   isCaseStudy: boolean
   caseStudyStatus: "draft" | "published"
   featured: boolean
-  order: string
   title: string
   slug: string
   client: string
@@ -62,7 +60,6 @@ function formStateFrom(project: Project): FormState {
     isCaseStudy: project.isCaseStudy ?? false,
     caseStudyStatus: project.caseStudyStatus === "published" ? "published" : "draft",
     featured: project.featured ?? false,
-    order: String(project.order ?? 0),
     title: project.title ?? "",
     slug: projectSlug(project),
     client: project.client ?? "",
@@ -119,12 +116,10 @@ export function CaseStudyForm({
     setSaving(true)
     setError(null)
     try {
-      const orderValue = Number.parseInt(form.order, 10)
       const patch: Partial<Project> = {
         isCaseStudy: form.isCaseStudy,
         caseStudyStatus: form.caseStudyStatus,
         featured: form.featured,
-        order: Number.isFinite(orderValue) ? orderValue : 0,
         title: form.title.trim(),
         slug: slugify(form.slug) || slugify(form.title),
         client: form.client.trim(),
@@ -159,12 +154,7 @@ export function CaseStudyForm({
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Case study</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-4">
             <div className="flex flex-wrap items-center justify-between gap-4 rounded-lg border border-border p-4">
               <p className="text-sm font-medium">Show in case studies</p>
@@ -175,7 +165,7 @@ export function CaseStudyForm({
               />
             </div>
 
-            <div className="grid gap-4 sm:grid-cols-3">
+            <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-1.5">
                 <Label htmlFor="caseStudyStatus">Publication</Label>
                 <Select
@@ -190,10 +180,6 @@ export function CaseStudyForm({
                     <SelectItem value="published">Published</SelectItem>
                   </SelectContent>
                 </Select>
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="order">Order</Label>
-                <Input id="order" type="number" value={form.order} onChange={(e) => set("order", e.target.value)} />
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="featured">Featured</Label>
@@ -248,10 +234,6 @@ export function CaseStudyForm({
           <div className="space-y-4">
             <h3 className="text-sm font-medium">Facts</h3>
             <div className="grid gap-4 sm:grid-cols-2">
-              <div className="space-y-1.5">
-                <Label htmlFor="caseStudyClient">Client</Label>
-                <Input id="caseStudyClient" value={form.client} onChange={(e) => set("client", e.target.value)} />
-              </div>
               <div className="space-y-1.5">
                 <Label htmlFor="category">Category</Label>
                 <Input
@@ -340,11 +322,9 @@ export function CaseStudyForm({
             )}
             <Button type="submit" disabled={saving}>
               {saving && <Loader2 className="mr-2 size-4 animate-spin" />}
-              Save case study
+              Save
             </Button>
           </div>
-        </form>
-      </CardContent>
-    </Card>
+    </form>
   )
 }
