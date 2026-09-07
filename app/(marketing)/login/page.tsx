@@ -16,7 +16,7 @@ type AuthAction = "email" | "google" | "reset" | null
 export default function LoginPage() {
   const router = useRouter()
   const emailInputRef = useRef<HTMLInputElement>(null)
-  const { user, appUser, loading, signInWithEmail, sendPasswordReset, signInWithGoogle } = useAuth()
+  const { user, loading, signInWithEmail, sendPasswordReset, signInWithGoogle } = useAuth()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [action, setAction] = useState<AuthAction>(null)
@@ -24,8 +24,8 @@ export default function LoginPage() {
   const [notice, setNotice] = useState<string | null>(null)
 
   useEffect(() => {
-    if (!loading && user) router.replace(appUser?.slug ? `/dashboard/${appUser.slug}` : "/dashboard")
-  }, [loading, user, appUser?.slug, router])
+    if (!loading && user) router.replace("/dashboard")
+  }, [loading, user, router])
 
   async function handleEmailSignIn(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()

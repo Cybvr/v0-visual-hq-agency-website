@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import Link from "next/link"
-import { useParams } from "next/navigation"
+import { useParams, useRouter } from "next/navigation"
 import { Loader2 } from "lucide-react"
 
 import { useAuth } from "@/components/auth-provider"
@@ -12,11 +12,13 @@ export default function UserDashboardPage() {
   const params = useParams<{ slug: string }>()
   const slug = params?.slug ?? ""
   const { user, appUser, isAdmin, loading } = useAuth()
+  const router = useRouter()
 
   const [owner, setOwner] = useState<AppUser | null>(null)
   const [checking, setChecking] = useState(true)
 
   const isOwnSlug = appUser?.slug === slug
+  const canOpen = isOwnSlug || (isAdmin && owner !== null)
 
   useEffect(() => {
     let active = true
@@ -40,6 +42,10 @@ export default function UserDashboardPage() {
       active = false
     }
   }, [slug, isOwnSlug])
+
+  useEffect(() => {
+    if (!loading && !checking && canOpen) router.replace("/dashboard")
+  }, [canOpen, checking, loading, router])
 
   if (!user) return null
 
@@ -67,5 +73,11 @@ export default function UserDashboardPage() {
     )
   }
 
-  return null
+  return (
+    <main className="mx-auto w-full max-w-5xl px-4 py-10 sm:px-6">
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    </main>
+  )
 }
