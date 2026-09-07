@@ -31,6 +31,7 @@ export default function CompanyEditPage() {
     name: organization?.name || client.company || "",
     logoUrl: organization?.logoUrl || client.photoURL || "",
     industry: organization?.industry ?? "",
+    location: organization?.location ?? "",
   })
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
@@ -52,6 +53,7 @@ export default function CompanyEditPage() {
           name: form.name.trim() || "Unnamed company",
           logoUrl: form.logoUrl.trim(),
           industry: form.industry.trim(),
+          location: form.location.trim(),
         }),
         // Kept in step so the fallback name (used before an org doc existed)
         // doesn't go stale.
@@ -98,6 +100,15 @@ export default function CompanyEditPage() {
               value={form.industry}
               onChange={(event) => set("industry", event.target.value)}
               placeholder="Agriculture, Fintech…"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="location">Location</Label>
+            <Input
+              id="location"
+              value={form.location}
+              onChange={(event) => set("location", event.target.value)}
+              placeholder="Lagos, Nigeria"
             />
           </div>
         </div>
