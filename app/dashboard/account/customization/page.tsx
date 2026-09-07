@@ -27,7 +27,7 @@ export default function CustomizationPage() {
   if (!user) return null
 
   return (
-    <main className="mx-auto w-full max-w-3xl px-4 py-9 sm:px-6">
+    <main className="mx-auto w-full max-w-3xl px-4 pb-12 pt-6 sm:px-6">
       <h1 className="text-2xl font-semibold tracking-[-0.02em]">Customization</h1>
       <p className="mt-1.5 text-sm leading-6 text-muted-foreground">
         How the dashboard looks on this device.

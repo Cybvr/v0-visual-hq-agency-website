@@ -52,8 +52,8 @@ export function HomeBanner({ firstName, onTrial }: { firstName: string; onTrial:
       </div>
 
       {onTrial && (
-        <div className="shrink-0 text-right">
-          <p className="flex items-center justify-end gap-1.5 text-xs font-medium text-destructive">
+        <div className="w-full text-left sm:w-auto sm:shrink-0 sm:text-right">
+          <p className="flex items-center gap-1.5 text-xs font-medium text-destructive sm:justify-end">
             <Clock className="size-3.5" aria-hidden="true" />
             Trial expired
           </p>

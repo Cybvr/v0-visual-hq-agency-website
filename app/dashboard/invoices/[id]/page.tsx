@@ -62,7 +62,7 @@ export default function InvoiceDetailPage() {
 
   if (failed || !invoice) {
     return (
-      <main className="mx-auto w-full max-w-5xl px-4 py-10 sm:px-6">
+      <main className="mx-auto w-full max-w-5xl px-4 pb-12 pt-6 sm:px-6">
         <Link href="/dashboard/invoices" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"><ArrowLeft className="size-4" />Back to invoices</Link>
         <p className="mt-12 text-sm text-muted-foreground">This invoice couldn’t be found or you don’t have access to it.</p>
       </main>
@@ -73,7 +73,7 @@ export default function InvoiceDetailPage() {
   const balance = Math.max(0, invoice.amount - (invoice.amountPaid ?? 0))
 
   return (
-    <main className="mx-auto w-full max-w-5xl px-4 py-8 sm:px-6 sm:py-10">
+    <main className="mx-auto w-full max-w-5xl px-4 pb-12 pt-6 sm:px-6">
       <div className="mb-6 flex items-center justify-between gap-4 print:hidden">
         <Link href="/dashboard/invoices" className="inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"><ArrowLeft className="size-4" />Back to invoices</Link>
         <DocumentActions url={invoice.url} />
