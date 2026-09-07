@@ -74,7 +74,7 @@ export function DashboardHome() {
   const firstName = appUser?.displayName?.split(" ")[0] ?? appUser?.company ?? user.displayName?.split(" ")[0] ?? "there"
 
   return (
-    <main className="mx-auto w-full max-w-5xl px-4 py-10 sm:px-6">
+    <main className="mx-auto w-full max-w-5xl px-4 pb-12 pt-6 sm:px-6">
       <HomeBanner firstName={firstName} onTrial={appUser?.plan === undefined || appUser?.plan === "trial"} />
 
       {loading ? (

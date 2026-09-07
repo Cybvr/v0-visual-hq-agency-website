@@ -46,7 +46,7 @@ export default function UserDashboardPage() {
 
   if (loading || checking) {
     return (
-      <main className="mx-auto w-full max-w-5xl px-4 py-10 sm:px-6">
+      <main className="mx-auto w-full max-w-5xl px-4 pb-12 pt-6 sm:px-6">
         <div className="flex items-center justify-center py-20">
           <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
         </div>
@@ -56,7 +56,7 @@ export default function UserDashboardPage() {
 
   if (!isOwnSlug && !(isAdmin && owner)) {
     return (
-      <main className="mx-auto w-full max-w-5xl px-4 py-10 sm:px-6">
+      <main className="mx-auto w-full max-w-5xl px-4 pb-12 pt-6 sm:px-6">
         <h1 className="text-xl font-semibold">Not your dashboard</h1>
         <p className="mt-2 text-sm text-muted-foreground">
           That address belongs to someone else, or it doesn&apos;t exist.

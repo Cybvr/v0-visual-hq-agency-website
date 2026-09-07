@@ -25,7 +25,7 @@ export default function NewContractPage() {
   }
 
   return (
-    <main className="mx-auto w-full max-w-5xl px-4 py-9 sm:px-6">
+    <main className="mx-auto w-full max-w-5xl px-4 pb-12 pt-6 sm:px-6">
       <ContractBuilder />
     </main>
   )

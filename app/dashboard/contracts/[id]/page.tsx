@@ -47,7 +47,7 @@ export default function ContractDetailPage() {
 
   if (failed || !contract) {
     return (
-      <main className="mx-auto w-full max-w-4xl px-4 py-10 sm:px-6">
+      <main className="mx-auto w-full max-w-4xl px-4 pb-12 pt-6 sm:px-6">
         <Link href="/dashboard/contracts" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"><ArrowLeft className="size-4" />Back to contracts</Link>
         <p className="mt-12 text-sm text-muted-foreground">This contract couldn’t be found or you don’t have access to it.</p>
       </main>
@@ -57,7 +57,7 @@ export default function ContractDetailPage() {
   const meta = contractStatusMeta[contract.status] ?? contractStatusMeta.draft
 
   return (
-    <main className="mx-auto w-full max-w-4xl px-4 py-8 sm:px-6 sm:py-10">
+    <main className="mx-auto w-full max-w-4xl px-4 pb-12 pt-6 sm:px-6">
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3 print:hidden">
         <Link href="/dashboard/contracts" className="inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"><ArrowLeft className="size-4" />Back to contracts</Link>
         <DocumentActions url={contract.url} />

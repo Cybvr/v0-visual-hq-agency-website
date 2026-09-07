@@ -39,7 +39,7 @@ function CompanyLayoutBody({ children }: { children: ReactNode }) {
 
   if (loading) {
     return (
-      <main className="mx-auto w-full max-w-6xl px-4 py-10 sm:px-6">
+      <main className="mx-auto w-full max-w-6xl px-4 pb-12 pt-6 sm:px-6">
         <div className="flex items-center justify-center py-20">
           <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
         </div>
@@ -49,7 +49,7 @@ function CompanyLayoutBody({ children }: { children: ReactNode }) {
 
   if (error || !client) {
     return (
-      <main className="mx-auto w-full max-w-6xl px-4 py-10 sm:px-6">
+      <main className="mx-auto w-full max-w-6xl px-4 pb-12 pt-6 sm:px-6">
         <Link
           href="/dashboard/companies"
           className="inline-flex items-center gap-1.5 text-sm text-muted-foreground outline-none transition-colors hover:text-foreground"
