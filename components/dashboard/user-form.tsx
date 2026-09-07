@@ -126,53 +126,54 @@ export function UserForm({ user, fixedRole, subjectNoun = "user", workspaceId, w
 
   return (
     <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
-      <div className="flex-1 space-y-5 overflow-y-auto px-4 pb-4">
-        {/* Avatar beside the name / email fields */}
-        <div className="flex items-start gap-4">
-          <div className="flex shrink-0 flex-col items-center gap-1.5">
-            <button
-              type="button"
-              onClick={() => setEditingPhoto((v) => !v)}
-              className="group relative h-16 w-16 overflow-hidden rounded-full border border-border bg-muted"
-              aria-label="Change picture"
-            >
-              {form.photoURL ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={form.photoURL} alt="" className="h-full w-full object-cover" referrerPolicy="no-referrer" />
-              ) : (
-                <span className="flex h-full w-full items-center justify-center">
-                  <UserIcon className="h-6 w-6 text-muted-foreground" />
-                </span>
-              )}
-              <span className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-opacity group-hover:opacity-100">
-                <Camera className="h-5 w-5 text-white" />
+      <div className="flex-1 space-y-6 overflow-y-auto px-4 py-4">
+        <div className="flex flex-col items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setEditingPhoto((v) => !v)}
+            className="group relative size-20 overflow-hidden rounded-full border border-border bg-muted outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            aria-label="Change picture"
+          >
+            {form.photoURL ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={form.photoURL} alt="" className="h-full w-full object-cover" referrerPolicy="no-referrer" />
+            ) : (
+              <span className="flex h-full w-full items-center justify-center">
+                <UserIcon className="h-8 w-8 text-muted-foreground" />
               </span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setEditingPhoto((v) => !v)}
-              className="text-xs text-muted-foreground hover:text-foreground"
-            >
-              Change picture
-            </button>
-          </div>
+            )}
+            <span className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-opacity group-hover:opacity-100">
+              <Camera className="h-5 w-5 text-white" />
+            </span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setEditingPhoto((v) => !v)}
+            className="text-sm font-medium text-primary hover:underline"
+          >
+            Change picture
+          </button>
+        </div>
 
-          <div className="flex-1 space-y-3">
-            <div className="space-y-1.5">
-              <Label htmlFor="displayName">Name</Label>
-              <Input id="displayName" value={form.displayName} onChange={(e) => set("displayName", e.target.value)} />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                value={form.email}
-                onChange={(e) => set("email", e.target.value)}
-                required
-              />
-            </div>
-          </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="displayName">Name</Label>
+          <Input
+            id="displayName"
+            value={form.displayName}
+            onChange={(e) => set("displayName", e.target.value)}
+            placeholder="Jane Doe"
+          />
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="email">Email</Label>
+          <Input
+            id="email"
+            type="email"
+            value={form.email}
+            onChange={(e) => set("email", e.target.value)}
+            placeholder="jane@company.com"
+            required
+          />
         </div>
 
         {editingPhoto && (
@@ -188,11 +189,12 @@ export function UserForm({ user, fixedRole, subjectNoun = "user", workspaceId, w
         )}
 
         {joiningExisting ? (
-          <p className="rounded-md bg-muted px-3 py-2 text-sm text-muted-foreground">
-            Joining {workspaceName || "this company"}&apos;s workspace.
+          <p className="text-sm text-muted-foreground">
+            Joining <span className="font-medium text-foreground">{workspaceName || "this company"}</span>&apos;s
+            workspace.
           </p>
         ) : (
-          <div className={fixedRole ? "space-y-1.5" : "grid gap-3 sm:grid-cols-2"}>
+          <div className="space-y-4">
             {!fixedRole && (
               <div className="space-y-1.5">
                 <Label htmlFor="role">Role</Label>

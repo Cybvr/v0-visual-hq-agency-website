@@ -2,9 +2,10 @@
 
 import Link from "next/link"
 import { useCallback, useEffect, useMemo, useState } from "react"
-import { Download, Eye, Loader2, Pencil, Plus, Trash2 } from "lucide-react"
+import { Download, Eye, FileSignature, Loader2, Pencil, Plus, Trash2 } from "lucide-react"
 
 import { useAuth } from "@/components/auth-provider"
+import { EmptyState, EmptySearchState } from "@/components/dashboard/empty-state"
 import { UserEditorSheet } from "@/components/dashboard/user-editor-sheet"
 import {
   AlertDialog,
@@ -145,17 +146,24 @@ export default function ContractsPage() {
       ) : error ? (
         <p className="mt-10 text-sm text-destructive">Couldn&apos;t load contracts right now.</p>
       ) : contracts.length === 0 ? (
-        <div className="mt-8 rounded-[14px] border border-dashed border-border bg-card px-5 py-12 text-center">
-          <p className="text-sm text-muted-foreground">No contracts yet.</p>
-          {adminView && (
-            <Button asChild variant="outline" className="mt-4">
-              <Link href="/dashboard/contracts/new">
-                <Plus className="mr-2 size-4" aria-hidden="true" />
-                New contract
-              </Link>
-            </Button>
-          )}
-        </div>
+        <EmptyState
+          className="mt-8"
+          icon={FileSignature}
+          title="No contracts yet"
+          description={
+            adminView ? "Send a contract to start work with a client." : "Contracts sent to you will show up here."
+          }
+          action={
+            adminView ? (
+              <Button asChild variant="outline">
+                <Link href="/dashboard/contracts/new">
+                  <Plus className="mr-2 size-4" aria-hidden="true" />
+                  New contract
+                </Link>
+              </Button>
+            ) : undefined
+          }
+        />
       ) : (
         <>
           {awaiting > 0 && (
@@ -167,9 +175,7 @@ export default function ContractsPage() {
           <div className="mt-6">
             <FilterBar {...bar} placeholder="Search contracts" />
             {visibleContracts.length === 0 ? (
-              <div className="rounded-[14px] border border-dashed border-border bg-card px-5 py-12 text-center">
-                <p className="text-sm text-muted-foreground">No contracts match your search.</p>
-              </div>
+              <EmptySearchState label="No contracts match your search." />
             ) : (
               <Table>
                 <TableHeader>

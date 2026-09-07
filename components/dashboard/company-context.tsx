@@ -11,6 +11,11 @@ export function clientName(client: AppUser): string {
   return client.company || client.displayName || client.email || "Unnamed company"
 }
 
+/** A person with neither a name nor an email is just the placeholder account a new company starts with. */
+function hasProfile(person: AppUser): boolean {
+  return Boolean(person.displayName?.trim() || person.email?.trim())
+}
+
 /** Industry off the organization, category off the projects, joined into one line. */
 function buildCategoryLabel(projects: Project[], org: Organization | null): string {
   const category = [...new Set(projects.flatMap((project) => project.category ?? []))].filter(Boolean).join(" & ")
@@ -65,7 +70,7 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
       ])
       setClient(found)
       setOrganization(foundOrg)
-      setPeople(foundPeople)
+      setPeople(foundPeople.filter(hasProfile))
       setProjects(foundProjects)
     } catch (loadError) {
       console.error("Error loading company:", loadError)

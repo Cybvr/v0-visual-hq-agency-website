@@ -3,7 +3,7 @@
 import { useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { Pencil, Plus, User as UserIcon } from "lucide-react"
+import { Eye, Pencil, Plus, Trash2, User as UserIcon } from "lucide-react"
 
 import { useAuth } from "@/components/auth-provider"
 import { useCompany } from "@/components/dashboard/company-context"
@@ -20,7 +20,6 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { projectSlug, projectStatusMeta, type Project } from "@/lib/projects"
 import { deleteUser, type AppUser } from "@/lib/users"
@@ -76,48 +75,75 @@ export default function CompanyPage() {
             </Button>
           </div>
 
-          <ul className="mt-4 divide-y divide-border rounded-lg border border-border">
-            {people.map((person) => (
-              <li key={person.uid} className="flex items-center gap-3 px-4 py-3">
-                <span className="flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-full border border-border bg-muted">
-                  {person.photoURL ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={person.photoURL} alt="" className="size-full object-cover" referrerPolicy="no-referrer" />
-                  ) : (
-                    <UserIcon className="size-4 text-muted-foreground" />
-                  )}
-                </span>
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium">{personName(person)}</p>
-                  <p className="truncate text-xs text-muted-foreground">{person.email || "No email address"}</p>
-                </div>
-                <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium capitalize text-muted-foreground">
-                  {person.role || "client"}
-                </span>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="size-8 shrink-0" aria-label={`Options for ${personName(person)}`}>
+          {people.length === 0 ? (
+            <div className="mt-4 flex flex-col items-center rounded-lg border border-dashed border-border py-10 text-center">
+              <span className="flex size-11 items-center justify-center rounded-full bg-muted">
+                <UserIcon className="size-5 text-muted-foreground" />
+              </span>
+              <h3 className="mt-4 font-medium">No people yet</h3>
+              <p className="mt-1 max-w-sm text-sm text-muted-foreground">
+                Add the first person to give them access to this workspace.
+              </p>
+              <Button className="mt-5" onClick={() => setAddingPerson(true)}>
+                <Plus className="mr-2 size-4" />
+                Add person
+              </Button>
+            </div>
+          ) : (
+            <ul className="mt-4 divide-y divide-border rounded-lg border border-border">
+              {people.map((person) => (
+                <li key={person.uid} className="flex items-center gap-3 px-4 py-3">
+                  <span className="flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-full border border-border bg-muted">
+                    {person.photoURL ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={person.photoURL} alt="" className="size-full object-cover" referrerPolicy="no-referrer" />
+                    ) : (
+                      <UserIcon className="size-4 text-muted-foreground" />
+                    )}
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium">{personName(person)}</p>
+                    <p className="truncate text-xs text-muted-foreground">{person.email || "No email address"}</p>
+                  </div>
+                  <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium capitalize text-muted-foreground">
+                    {person.role || "client"}
+                  </span>
+                  <div className="flex shrink-0 items-center gap-1">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="size-8"
+                      aria-label={`Edit ${personName(person)}`}
+                      onClick={() => setEditingPerson(person)}
+                    >
                       <Pencil className="size-3.5" />
                     </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem onSelect={() => setEditingPerson(person)}>Edit person</DropdownMenuItem>
-                    <DropdownMenuItem
-                      onSelect={() => {
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="size-8"
+                      aria-label={`View ${personName(person)}'s workspace`}
+                      onClick={() => {
                         viewAsUser(person)
                         router.push("/dashboard")
                       }}
                     >
-                      View workspace
-                    </DropdownMenuItem>
-                    <DropdownMenuItem variant="destructive" onSelect={() => setPendingRemove(person)}>
-                      Remove person
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </li>
-            ))}
-          </ul>
+                      <Eye className="size-3.5" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="size-8 text-destructive hover:text-destructive"
+                      aria-label={`Remove ${personName(person)}`}
+                      onClick={() => setPendingRemove(person)}
+                    >
+                      <Trash2 className="size-3.5" />
+                    </Button>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
         </TabsContent>
 
         <TabsContent value="projects" className="mt-4">

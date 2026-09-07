@@ -29,7 +29,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet"
-import { Pencil, Plus, Trash2, Loader2 } from "lucide-react"
+import { ListTodo, Pencil, Plus, Trash2, Loader2 } from "lucide-react"
 import {
   getTasks,
   deleteTask,
@@ -45,6 +45,7 @@ import {
 import { getProjects, type Project } from "@/lib/projects"
 import { Badge, InlineDate, InlineProject, InlineSelect, InlineText } from "@/components/inline-table-cells"
 import { TaskForm } from "@/components/dashboard/task-form"
+import { EmptyState, EmptySearchState } from "@/components/dashboard/empty-state"
 import { FilterBar, useFilterBar, type SortOption } from "@/components/dashboard/filter-bar"
 
 const STATUS_OPTIONS: TaskStatus[] = ["todo", "in-progress", "review", "done"]
@@ -166,24 +167,22 @@ export default function TasksAdminPage() {
           <CardContent className="py-10 text-center text-sm text-destructive">{error}</CardContent>
         </Card>
       ) : tasks.length === 0 ? (
-        <Card>
-          <CardContent className="py-16 text-center">
-            <p className="mb-4 text-muted-foreground">No tasks yet.</p>
+        <EmptyState
+          icon={ListTodo}
+          title="No tasks yet"
+          description="Add the first task to start tracking work."
+          action={
             <Button onClick={() => setSelectedId("new")}>
               <Plus className="mr-2 h-4 w-4" />
               Add the first task
             </Button>
-          </CardContent>
-        </Card>
+          }
+        />
       ) : (
         <>
           <FilterBar {...bar} placeholder="Search tasks" />
           {visibleTasks.length === 0 ? (
-            <Card>
-              <CardContent className="py-16 text-center text-sm text-muted-foreground">
-                No tasks match your search.
-              </CardContent>
-            </Card>
+            <EmptySearchState label="No tasks match your search." />
           ) : (
             <div className="rounded-lg border border-border">
               <Table>

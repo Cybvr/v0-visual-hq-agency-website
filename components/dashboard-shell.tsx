@@ -92,7 +92,7 @@ export function DashboardShell({
         <AppSidebar navLinks={navLinks} rootHref={rootHref} subtitle={subtitle} navExtra={navExtra} />
         {/* overflow-y-auto: this column is the scroll container, not the body */}
         <SidebarInset className="overflow-y-auto">
-          <header className="sticky top-0 z-40 flex h-20 shrink-0 items-center gap-3 bg-background px-4 sm:px-6">
+          <header className="sticky top-0 z-40 flex h-14 shrink-0 items-center gap-3 bg-background px-4 sm:h-20 sm:px-6">
             <div className="flex shrink-0 items-center gap-2 md:hidden">
               <SidebarTrigger className="-ml-1" />
               <Separator orientation="vertical" className="data-[orientation=vertical]:h-4" />

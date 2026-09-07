@@ -2,8 +2,9 @@
 
 import { useRef, useState } from "react"
 import Link from "next/link"
-import { Loader2, Plus } from "lucide-react"
+import { Briefcase, Loader2, Plus } from "lucide-react"
 
+import { EmptyState } from "@/components/dashboard/empty-state"
 import { ProjectCard } from "@/components/project-card"
 import { Button } from "@/components/ui/button"
 import {
@@ -96,7 +97,7 @@ export function ProjectsView({ projects, onChanged }: { projects: Project[]; onC
   }
 
   return (
-    <section id="projects" className="mt-10 scroll-mt-20">
+    <section id="projects" className="mt-6 scroll-mt-20 sm:mt-10">
       <div className="flex items-center gap-2">
         <h2 className="text-sm font-semibold uppercase tracking-widest text-muted-foreground">Projects</h2>
         <span className="text-sm font-medium text-muted-foreground">{projects.length}</span>
@@ -108,7 +109,23 @@ export function ProjectsView({ projects, onChanged }: { projects: Project[]; onC
         </p>
       )}
 
-      <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+      {projects.length === 0 ? (
+        <EmptyState
+          className="mt-4"
+          icon={Briefcase}
+          title="No projects yet"
+          description="Projects created for you will show up here."
+          action={
+            <Button asChild variant="outline">
+              <Link href="/dashboard/projects?new=1">
+                <Plus className="mr-2 size-4" aria-hidden="true" />
+                Create a new project
+              </Link>
+            </Button>
+          }
+        />
+      ) : (
+      <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3 lg:grid-cols-4">
         {projects.map((project) => {
           const meta = projectStatusMeta[project.status]
           return (
@@ -179,6 +196,7 @@ export function ProjectsView({ projects, onChanged }: { projects: Project[]; onC
           <span className="text-sm font-medium text-foreground">Create a new project</span>
         </Link>
       </div>
+      )}
 
       <Sheet open={Boolean(previewing)} onOpenChange={(open) => !open && closeTaskPreview()}>
         <SheetContent side="right" className="w-full gap-0 overflow-y-auto p-0 sm:max-w-md">

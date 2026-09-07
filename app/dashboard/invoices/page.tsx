@@ -2,9 +2,10 @@
 
 import Link from "next/link"
 import { useCallback, useEffect, useMemo, useState } from "react"
-import { Eye, Loader2, Pencil, Plus, Trash2 } from "lucide-react"
+import { Eye, Loader2, Pencil, Plus, Receipt, Trash2 } from "lucide-react"
 
 import { useAuth } from "@/components/auth-provider"
+import { EmptyState, EmptySearchState } from "@/components/dashboard/empty-state"
 import { UserEditorSheet } from "@/components/dashboard/user-editor-sheet"
 import {
   AlertDialog,
@@ -140,17 +141,24 @@ export default function InvoicesPage() {
       ) : error ? (
         <p className="mt-10 text-sm text-destructive">Couldn&apos;t load invoices right now.</p>
       ) : invoices.length === 0 ? (
-        <div className="mt-8 rounded-[14px] border border-dashed border-border bg-card px-5 py-12 text-center">
-          <p className="text-sm text-muted-foreground">No invoices yet.</p>
-          {adminView && (
-            <Button asChild variant="outline" className="mt-4">
-              <Link href="/dashboard/invoices/new">
-                <Plus className="mr-2 size-4" aria-hidden="true" />
-                New invoice
-              </Link>
-            </Button>
-          )}
-        </div>
+        <EmptyState
+          className="mt-8"
+          icon={Receipt}
+          title="No invoices yet"
+          description={
+            adminView ? "Issue an invoice to start billing a client." : "Invoices issued to you will show up here."
+          }
+          action={
+            adminView ? (
+              <Button asChild variant="outline">
+                <Link href="/dashboard/invoices/new">
+                  <Plus className="mr-2 size-4" aria-hidden="true" />
+                  New invoice
+                </Link>
+              </Button>
+            ) : undefined
+          }
+        />
       ) : (
         <>
           {outstanding > 0 && (
@@ -163,9 +171,7 @@ export default function InvoicesPage() {
           <div className="mt-6">
             <FilterBar {...bar} placeholder="Search invoices" />
             {visibleInvoices.length === 0 ? (
-              <div className="rounded-[14px] border border-dashed border-border bg-card px-5 py-12 text-center">
-                <p className="text-sm text-muted-foreground">No invoices match your search.</p>
-              </div>
+              <EmptySearchState label="No invoices match your search." />
             ) : (
               <Table>
                 <TableHeader>

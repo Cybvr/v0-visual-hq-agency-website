@@ -14,8 +14,11 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Loader2 } from "lucide-react"
+import { getOrganizations } from "@/lib/organizations"
 import { createProject, updateProject, projectStatusMeta, type Project, type ProjectStatus } from "@/lib/projects"
-import { getUsers, type AppUser } from "@/lib/users"
+import { getUsers } from "@/lib/users"
+
+type CompanyOption = { id: string; name: string }
 
 type FormState = {
   clientId: string
@@ -47,13 +50,26 @@ export function ClientProjectForm({ project, initialClientId, onSaved, onCancel 
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [form, setForm] = useState<FormState>(EMPTY_FORM)
-  const [clients, setClients] = useState<AppUser[]>([])
+  const [companies, setCompanies] = useState<CompanyOption[]>([])
   const [clientsLoading, setClientsLoading] = useState(true)
 
   useEffect(() => {
-    getUsers()
-      .then((users) => setClients(users.filter((u) => u.role === "client" && u.clientId)))
-      .catch((err) => console.error("Error loading clients:", err))
+    Promise.all([getUsers(), getOrganizations()])
+      .then(([users, organizations]) => {
+        const orgNames = new Map(organizations.map((org) => [org.id, org.name]))
+        // Several people can share a workspace, so this is deduped to one row
+        // per clientId, preferring the organization's own name.
+        const byWorkspace = new Map<string, string>()
+        for (const user of users) {
+          if (user.role !== "client" || !user.clientId) continue
+          if (byWorkspace.has(user.clientId)) continue
+          byWorkspace.set(user.clientId, orgNames.get(user.clientId) || user.company || user.displayName || user.email)
+        }
+        setCompanies(
+          Array.from(byWorkspace, ([id, name]) => ({ id, name })).sort((a, b) => a.name.localeCompare(b.name)),
+        )
+      })
+      .catch((err) => console.error("Error loading companies:", err))
       .finally(() => setClientsLoading(false))
   }, [])
 
@@ -91,10 +107,10 @@ export function ClientProjectForm({ project, initialClientId, onSaved, onCancel 
       return
     }
 
-    const clientUser = clients.find((c) => c.clientId === form.clientId)
+    const company = companies.find((c) => c.id === form.clientId)
     const payload = {
       clientId: form.clientId,
-      client: clientUser?.company || clientUser?.displayName || project?.client || form.clientId,
+      client: company?.name || project?.client || form.clientId,
       title: form.title.trim(),
       service: form.service.trim(),
       status: form.status,
@@ -124,22 +140,22 @@ export function ClientProjectForm({ project, initialClientId, onSaved, onCancel 
       <Card>
         <CardContent className="space-y-4 p-4">
           <div className="space-y-1.5">
-            <Label htmlFor="clientId">Client</Label>
+            <Label htmlFor="clientId">Company</Label>
             <Select value={form.clientId} onValueChange={(v) => set("clientId", v)}>
               <SelectTrigger id="clientId" className="w-full">
-                <SelectValue placeholder={clientsLoading ? "Loading clients..." : "Select a client"} />
+                <SelectValue placeholder={clientsLoading ? "Loading companies..." : "Select a company"} />
               </SelectTrigger>
               <SelectContent>
-                {clients.map((c) => (
-                  <SelectItem key={c.uid} value={c.clientId as string}>
-                    {c.company || c.displayName || c.email}
+                {companies.map((c) => (
+                  <SelectItem key={c.id} value={c.id}>
+                    {c.name}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
-            {!clientsLoading && clients.length === 0 && (
+            {!clientsLoading && companies.length === 0 && (
               <p className="text-xs text-muted-foreground">
-                No client users with a clientId yet. Add one under Users first.
+                No companies yet. Add one under Companies first.
               </p>
             )}
           </div>

@@ -77,7 +77,9 @@ export default function RootLayout({
       <body className="font-sans antialiased">
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false} disableTransitionOnChange>
           {children}
-          <Toaster richColors position="top-right" />
+          {/* Sonner defaults to an absurd z-index (999999999) that floats above every
+              sheet and dialog (z-50). Capped below them so an open modal always wins. */}
+          <Toaster richColors position="top-right" style={{ zIndex: 45 }} />
         </ThemeProvider>
         <ServiceWorkerRegister />
         <Analytics />

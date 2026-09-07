@@ -20,6 +20,14 @@ import {
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { INDUSTRIES } from "@/lib/industries"
 import { updateOrganization } from "@/lib/organizations"
 import { deleteUser, updateUser, userRef } from "@/lib/users"
 
@@ -95,12 +103,18 @@ export default function CompanyEditPage() {
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="industry">Industry</Label>
-            <Input
-              id="industry"
-              value={form.industry}
-              onChange={(event) => set("industry", event.target.value)}
-              placeholder="Agriculture, Fintech…"
-            />
+            <Select value={form.industry} onValueChange={(value) => set("industry", value)}>
+              <SelectTrigger id="industry" className="w-full">
+                <SelectValue placeholder="Select an industry" />
+              </SelectTrigger>
+              <SelectContent>
+                {INDUSTRIES.map((industry) => (
+                  <SelectItem key={industry} value={industry}>
+                    {industry}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="location">Location</Label>

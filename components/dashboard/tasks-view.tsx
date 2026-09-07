@@ -14,7 +14,7 @@ import {
   type DragEndEvent,
 } from "@dnd-kit/core"
 import { CSS } from "@dnd-kit/utilities"
-import { CheckCircle2, Columns3, List, Loader2, Pencil, Plus, Trash2 } from "lucide-react"
+import { CheckCircle2, Columns3, List, ListTodo, Loader2, Pencil, Plus, Trash2 } from "lucide-react"
 
 // ... keep existing imports ...
 import { Button } from "@/components/ui/button"
@@ -371,8 +371,12 @@ export function TasksView({
               <TableBody>
                 {tasks.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center text-sm text-muted-foreground">
-                      No tasks yet.
+                    <TableCell colSpan={6} className="py-10 text-center">
+                      <ListTodo className="mx-auto mb-2 size-6 text-muted-foreground/60" aria-hidden="true" />
+                      <p className="font-bold">No tasks yet</p>
+                      <p className="mt-1 text-xs font-normal text-muted-foreground">
+                        Add a task to start tracking work.
+                      </p>
                     </TableCell>
                   </TableRow>
                 ) : (

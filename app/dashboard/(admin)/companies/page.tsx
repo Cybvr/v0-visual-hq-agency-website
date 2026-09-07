@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation"
 import { Building2, Database, Loader2, Plus } from "lucide-react"
 
 import { useAuth } from "@/components/auth-provider"
-import { UserEditorSheet } from "@/components/dashboard/user-editor-sheet"
+import { CompanyCreateSheet } from "@/components/dashboard/company-create-sheet"
 import { ProjectCard } from "@/components/project-card"
 import {
   AlertDialog,
@@ -392,16 +392,12 @@ export default function CompaniesPage() {
       </AlertDialog>
 
       {/* Creating stays a sheet; the new company's own page opens once it saves. */}
-      <UserEditorSheet
+      <CompanyCreateSheet
         open={creating}
-        user={null}
-        isNew
-        fixedRole="client"
-        subjectNoun="company"
         onClose={() => setCreating(false)}
-        onSaved={(uid) => {
+        onSaved={(workspaceId) => {
           setCreating(false)
-          router.push(`/dashboard/companies/${uid}`)
+          router.push(`/dashboard/companies/${workspaceId}`)
         }}
       />
     </main>

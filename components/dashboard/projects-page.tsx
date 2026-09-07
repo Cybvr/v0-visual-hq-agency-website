@@ -30,10 +30,11 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet"
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu"
-import { Eye, LayoutGrid, List, Loader2, Plus, Trash2 } from "lucide-react"
+import { Briefcase, Eye, LayoutGrid, List, Loader2, Plus, Trash2 } from "lucide-react"
 import { getProjects, deleteProject, projectSlug, projectStatusMeta, type Project } from "@/lib/projects"
 import { ClientProjectForm } from "@/components/dashboard/client-project-form"
 import { ProjectCard } from "@/components/project-card"
+import { EmptyState, EmptySearchState } from "@/components/dashboard/empty-state"
 import { FilterBar, useFilterBar, type SortOption } from "@/components/dashboard/filter-bar"
 import { cn } from "@/lib/utils"
 
@@ -173,15 +174,17 @@ export default function ProjectsAdminPage() {
           <CardContent className="py-10 text-center text-sm text-destructive">{error}</CardContent>
         </Card>
       ) : projects.length === 0 ? (
-        <Card>
-          <CardContent className="py-16 text-center">
-            <p className="mb-4 text-muted-foreground">No projects yet.</p>
+        <EmptyState
+          icon={Briefcase}
+          title="No projects yet"
+          description="Create the first project to start tracking work for a client."
+          action={
             <Button onClick={() => setCreating(true)}>
               <Plus className="mr-2 h-4 w-4" />
               Add the first project
             </Button>
-          </CardContent>
-        </Card>
+          }
+        />
       ) : (
         <>
           <div className="mb-6 flex flex-wrap items-center gap-3">
@@ -192,11 +195,7 @@ export default function ProjectsAdminPage() {
           </div>
 
           {visibleProjects.length === 0 ? (
-            <Card>
-              <CardContent className="py-16 text-center text-sm text-muted-foreground">
-                No projects match your search.
-              </CardContent>
-            </Card>
+            <EmptySearchState label="No projects match your search." />
           ) : view === "card" ? (
             <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
               {visibleProjects.map((p) => {

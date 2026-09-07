@@ -6,7 +6,6 @@ import { useParams } from "next/navigation"
 import { Loader2 } from "lucide-react"
 
 import { useAuth } from "@/components/auth-provider"
-import { DashboardHome } from "@/components/dashboard/dashboard-home"
 import { getUserBySlug, type AppUser } from "@/lib/users"
 
 export default function UserDashboardPage() {
@@ -57,16 +56,16 @@ export default function UserDashboardPage() {
   if (!isOwnSlug && !(isAdmin && owner)) {
     return (
       <main className="mx-auto w-full max-w-5xl px-4 py-10 sm:px-6">
-        <h1 className="text-xl font-semibold">Not your dashboard</h1>
+        <h1 className="text-xl font-semibold">Page not found</h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          That address belongs to someone else, or it doesn&apos;t exist.
+          This page doesn&apos;t exist, or has been removed.
         </p>
         <Link href="/dashboard" className="mt-6 inline-block text-sm font-medium underline underline-offset-4">
-          Go to your dashboard
+          Back home
         </Link>
       </main>
     )
   }
 
-  return <DashboardHome />
+  return null
 }

@@ -8,22 +8,17 @@ import { ClientProjectCreateSheet } from "@/components/dashboard/client-project-
 import { ProjectsView } from "@/components/dashboard/projects-view"
 import { TemplatesView } from "@/components/dashboard/templates-view"
 import { TasksView } from "@/components/dashboard/tasks-view"
-import { DocumentsView } from "@/components/dashboard/documents-view"
 import { getProjectsByClientId, type Project } from "@/lib/projects"
 import { deleteTask, getTasksByClientId, updateTask, type Task } from "@/lib/tasks"
-import { contractsAsDocuments, getDocumentsForClient, type SharedDocument } from "@/lib/documents"
-import { getContractsByClientId } from "@/lib/billing"
 
-export function ClientSectionPage({ section }: { section: "projects" | "tasks" | "drive" }) {
+export function ClientSectionPage({ section }: { section: "projects" | "tasks" }) {
   const { appUser } = useAuth()
   const router = useRouter()
   const searchParams = useSearchParams()
   const clientId = appUser?.clientId ?? ""
   const clientName = appUser?.company || appUser?.displayName || ""
-  const uid = appUser?.uid ?? ""
   const [projects, setProjects] = useState<Project[]>([])
   const [tasks, setTasks] = useState<Task[]>([])
-  const [documents, setDocuments] = useState<SharedDocument[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(false)
   const [deleting, setDeleting] = useState<string | null>(null)
@@ -32,21 +27,19 @@ export function ClientSectionPage({ section }: { section: "projects" | "tasks" |
     if (!clientId) { setLoading(false); return }
     setError(false)
     try {
-      const [projectList, taskList, documentList] = await Promise.all([
+      const [projectList, taskList] = await Promise.all([
         getProjectsByClientId(clientId),
         getTasksByClientId(clientId),
-        getDocumentsForClient(clientId, uid),
       ])
       setProjects(projectList)
       setTasks(taskList)
-      setDocuments(documentList)
     } catch (error) {
       console.error(`Error loading ${section}:`, error)
       setError(true)
     } finally {
       setLoading(false)
     }
-  }, [clientId, section, uid])
+  }, [clientId, section])
 
   useEffect(() => { fetchData() }, [fetchData])
 
@@ -79,8 +72,7 @@ export function ClientSectionPage({ section }: { section: "projects" | "tasks" |
               <TemplatesView clientId={clientId} clientName={clientName} onCreated={fetchData} />
             </>
           )
-          : section === "tasks" ? <TasksView tasks={tasks} projects={projects} clientId={clientId} clientName={clientName} deleting={deleting} onDelete={handleDelete} onPatch={handlePatch} onSaved={fetchData} />
-          : <DocumentsView documents={documents} />}
+          : <TasksView tasks={tasks} projects={projects} clientId={clientId} clientName={clientName} deleting={deleting} onDelete={handleDelete} onPatch={handlePatch} onSaved={fetchData} />}
       </main>
       {section === "projects" && (
         <ClientProjectCreateSheet
