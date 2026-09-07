@@ -117,6 +117,7 @@ function CompanyLayoutBody({ children }: { children: ReactNode }) {
 
             <div className="mt-6 space-y-4 border-t border-border pt-4">
               <Fact label="Industry" value={organization?.industry ?? ""} emptyLabel="Not set" />
+              <Fact label="Location" value={organization?.location ?? ""} emptyLabel="Not set" />
               <Fact label="People" value={`${people.length} ${people.length === 1 ? "person" : "people"}`} />
             </div>
           </CardContent>

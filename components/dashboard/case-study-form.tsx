@@ -42,11 +42,6 @@ type FormState = {
   excerpt: string
   description: string
   category: string
-  industry: string
-  location: string
-  founders: string
-  clientValuation: string
-  earnings: string
   projectUrl: string
   imageUrl: string
   logoUrl: string
@@ -66,11 +61,6 @@ function formStateFrom(project: Project): FormState {
     excerpt: project.excerpt ?? "",
     description: project.description ?? "",
     category: listToText(project.category),
-    industry: project.industry ?? "",
-    location: project.location ?? "",
-    founders: project.founders ?? "",
-    clientValuation: project.clientValuation ?? "",
-    earnings: project.earnings ?? "",
     projectUrl: project.projectUrl ?? "",
     imageUrl: project.imageUrl || project.thumbnailUrl || "",
     logoUrl: project.logoUrl ?? "",
@@ -126,11 +116,6 @@ export function CaseStudyForm({
         excerpt: form.excerpt.trim(),
         description: form.description.trim(),
         category: textToList(form.category),
-        industry: form.industry.trim(),
-        location: form.location.trim(),
-        founders: form.founders.trim(),
-        clientValuation: form.clientValuation.trim(),
-        earnings: form.earnings.trim(),
         projectUrl: form.projectUrl.trim(),
         imageUrl: form.imageUrl.trim(),
         logoUrl: form.logoUrl.trim(),
@@ -242,30 +227,6 @@ export function CaseStudyForm({
                   onChange={(e) => set("category", e.target.value)}
                   placeholder="Brand, Product"
                 />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="industry">Industry</Label>
-                <Input id="industry" value={form.industry} onChange={(e) => set("industry", e.target.value)} />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="location">Location</Label>
-                <Input id="location" value={form.location} onChange={(e) => set("location", e.target.value)} />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="founders">Founders</Label>
-                <Input id="founders" value={form.founders} onChange={(e) => set("founders", e.target.value)} />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="clientValuation">Valuation</Label>
-                <Input
-                  id="clientValuation"
-                  value={form.clientValuation}
-                  onChange={(e) => set("clientValuation", e.target.value)}
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="earnings">Earnings</Label>
-                <Input id="earnings" value={form.earnings} onChange={(e) => set("earnings", e.target.value)} />
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="projectUrl">Live site</Label>

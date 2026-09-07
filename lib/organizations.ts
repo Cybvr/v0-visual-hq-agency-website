@@ -12,6 +12,7 @@ export interface Organization {
   name: string
   logoUrl?: string
   industry?: string
+  location?: string
   createdAt?: Timestamp
   updatedAt?: Timestamp
 }
