@@ -8,7 +8,10 @@ import { useAuth } from "@/components/auth-provider"
 import { CaseStudyForm } from "@/components/dashboard/case-study-form"
 import { ProjectShareButton } from "@/components/dashboard/project-share-button"
 import { TasksView } from "@/components/dashboard/tasks-view"
+import { ProjectCover } from "@/components/project-card"
 import { Badge } from "@/components/ui/badge"
+import { Card, CardContent } from "@/components/ui/card"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { getProjectBySlug, projectStatusMeta, type Project } from "@/lib/projects"
 import { deleteTask, formatTimestamp, getTasksByClientId, tsToMillis, updateTask, type Task } from "@/lib/tasks"
 import { cn } from "@/lib/utils"
@@ -25,6 +28,15 @@ function BackLink() {
       <ArrowLeft className="size-4" aria-hidden="true" />
       Back
     </button>
+  )
+}
+
+function Fact({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <dt className="text-xs text-muted-foreground">{label}</dt>
+      <dd className="mt-1 text-sm font-medium">{value || "—"}</dd>
+    </div>
   )
 }
 
@@ -92,7 +104,7 @@ export default function ProjectDetailPage() {
 
   if (loading) {
     return (
-      <main className="mx-auto w-full max-w-5xl px-4 py-10 sm:px-6">
+      <main className="mx-auto w-full max-w-6xl px-4 py-10 sm:px-6">
         <div className="flex items-center justify-center py-20">
           <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
         </div>
@@ -105,7 +117,7 @@ export default function ProjectDetailPage() {
 
   if (error || !project || forbidden) {
     return (
-      <main className="mx-auto w-full max-w-5xl px-4 py-10 sm:px-6">
+      <main className="mx-auto w-full max-w-6xl px-4 py-10 sm:px-6">
         <BackLink />
         <p className="mt-8 text-sm text-muted-foreground">
           {error
@@ -118,65 +130,74 @@ export default function ProjectDetailPage() {
 
   const meta = projectStatusMeta[project.status]
 
+  const tasksPanel = (
+    <TasksView
+      tasks={tasks}
+      projects={[project]}
+      clientId={project.clientId || clientId}
+      clientName={project.client || clientName}
+      deleting={deleting}
+      onDelete={handleDelete}
+      onPatch={handlePatch}
+      onSaved={fetchData}
+    />
+  )
+
   return (
-    <main className="mx-auto w-full max-w-5xl px-4 py-10 sm:px-6">
-      <section className="overflow-hidden rounded-lg bg-card">
-        <div className="flex flex-wrap items-start justify-between gap-4 p-5">
-          <div className="flex min-w-0 items-start gap-3">
-            <div className="pt-1">
-              <BackLink />
+    <main className="mx-auto w-full max-w-6xl px-4 pb-16 pt-6 sm:px-6">
+      <div className="grid gap-6 lg:grid-cols-[300px_1fr] lg:items-start">
+        <Card>
+          <CardContent>
+            <BackLink />
+
+            <div className="mt-4 aspect-[4/3] w-full overflow-hidden rounded-2xl">
+              <ProjectCover project={project} />
             </div>
-            <span className="mt-1.5 h-4 w-px shrink-0 bg-border" aria-hidden="true" />
-            <div className="min-w-0">
-              <h1 className="truncate text-xl font-semibold">{project.title}</h1>
-              <Badge variant="secondary" className="mt-1.5 rounded-sm px-1.5 py-0">
+
+            <div className="mt-3">
+              <ProjectShareButton project={project} stepCount={tasks.length} onChanged={fetchData} />
+            </div>
+
+            <h1 className="mt-4 text-xl font-semibold">{project.title}</h1>
+            <div className="mt-1.5 flex flex-wrap items-center gap-2">
+              <Badge variant="secondary" className="rounded-sm px-1.5 py-0">
                 {project.service}
               </Badge>
+              <span className={cn("rounded-full px-2.5 py-1 text-xs font-medium", meta.className)}>{meta.label}</span>
             </div>
-          </div>
-          <div className="flex shrink-0 items-center gap-3">
-            <span className={cn("rounded-full px-2.5 py-1 text-xs font-medium", meta.className)}>{meta.label}</span>
-            <ProjectShareButton project={project} stepCount={tasks.length} onChanged={fetchData} />
-          </div>
-        </div>
-        <dl className="grid gap-4 border-t border-border/70 px-5 py-4 text-sm sm:grid-cols-2">
-          <div>
-            <dt className="text-xs text-muted-foreground">Client</dt>
-            <dd className="mt-1 font-medium">{project.client || "—"}</dd>
-          </div>
-          <div>
-            <dt className="text-xs text-muted-foreground">Last modified</dt>
-            <dd className="mt-1 font-medium">{formatTimestamp(project.updatedAt)}</dd>
-          </div>
-        </dl>
-      </section>
 
-      <div className="mt-8">
-        <TasksView
-          tasks={tasks}
-          projects={[project]}
-          clientId={project.clientId || clientId}
-          clientName={project.client || clientName}
-          deleting={deleting}
-          onDelete={handleDelete}
-          onPatch={handlePatch}
-          onSaved={fetchData}
-        />
+            <div className="mt-6 space-y-4 border-t border-border pt-4">
+              <Fact label="Client" value={project.client} />
+              <Fact label="Last modified" value={formatTimestamp(project.updatedAt)} />
+            </div>
+          </CardContent>
+        </Card>
+
+        {isAdmin ? (
+          <Tabs defaultValue="tasks">
+            <TabsList>
+              <TabsTrigger value="tasks">Tasks</TabsTrigger>
+              <TabsTrigger value="case-study">Case study</TabsTrigger>
+            </TabsList>
+            <TabsContent value="tasks" className="mt-4">
+              {tasksPanel}
+            </TabsContent>
+            <TabsContent value="case-study" className="mt-4">
+              <CaseStudyForm
+                project={project}
+                onSaved={(patch) => {
+                  setProject((current) => (current ? { ...current, ...patch } : current))
+                  // The page is addressed by slug, so a renamed case study
+                  // moves the URL with it rather than leaving a stale address.
+                  if (patch.slug && patch.slug !== slug) router.replace(`/dashboard/projects/${patch.slug}`)
+                }}
+              />
+            </TabsContent>
+          </Tabs>
+        ) : (
+          <div>{tasksPanel}</div>
+        )}
       </div>
-
-      {isAdmin && (
-        <div className="mt-8">
-          <CaseStudyForm
-            project={project}
-            onSaved={(patch) => {
-              setProject((current) => (current ? { ...current, ...patch } : current))
-              // The page is addressed by slug, so a renamed case study moves
-              // the URL with it rather than leaving a stale address behind.
-              if (patch.slug && patch.slug !== slug) router.replace(`/dashboard/projects/${patch.slug}`)
-            }}
-          />
-        </div>
-      )}
     </main>
   )
 }
