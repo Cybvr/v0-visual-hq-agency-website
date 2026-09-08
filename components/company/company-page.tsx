@@ -1,15 +1,19 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
-import { Pencil, Plus, Share2, User as UserIcon } from "lucide-react"
+import { usePathname, useRouter, useSearchParams } from "next/navigation"
+import { ArrowLeft, Pencil, Plus, Share2, User as UserIcon } from "lucide-react"
 import { toast } from "sonner"
 
 import { CompanyBanner } from "@/components/company/company-banner"
-import { CompanyDocuments } from "@/components/company/company-documents"
+import { CompanyDocuments, type CompanyDocumentKind } from "@/components/company/company-documents"
 import { CompanyMedia } from "@/components/company/company-media"
 import { CompanyOverviewGrid } from "@/components/company/company-overview-grid"
 import { SectionNav } from "@/components/company/section-nav"
+import { ContractDocument } from "@/components/dashboard/contract-document"
+import { EstimateDocument } from "@/components/dashboard/estimate-document"
+import { InvoiceDocument } from "@/components/dashboard/invoice-document"
 import { NewPersonDialog } from "@/components/dashboard/new-person-dialog"
 import { NewProjectDialog } from "@/components/dashboard/new-project-dialog"
 import { ProjectDetail } from "@/components/dashboard/project-detail"
@@ -30,6 +34,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
 import type { Contract, Estimate, Invoice } from "@/lib/billing"
+import { getBusinessProfile, type BusinessProfile } from "@/lib/business-profile"
 import { projectStatusMeta, type Project } from "@/lib/projects"
 import { deleteUser, type AppUser } from "@/lib/users"
 import { cn } from "@/lib/utils"
@@ -109,7 +114,21 @@ export function CompanyPage({
   admin?: CompanyPageAdmin
   emptyProjectsLabel?: string
 }) {
-  const [section, setSection] = useState<SectionKey>("overview")
+  const router = useRouter()
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
+
+  const tabParam = searchParams.get("tab")
+  const section: SectionKey = SECTIONS.some((s) => s.key === tabParam) ? (tabParam as SectionKey) : "overview"
+
+  const [docKind, docId] = (searchParams.get("doc") ?? "").split(":")
+  const selectedDocument = useMemo(() => {
+    if (docKind === "invoice") return invoices.find((i) => i.id === docId) ? { kind: "invoice" as const, id: docId } : null
+    if (docKind === "contract") return contracts.find((c) => c.id === docId) ? { kind: "contract" as const, id: docId } : null
+    if (docKind === "estimate") return estimates.find((e) => e.id === docId) ? { kind: "estimate" as const, id: docId } : null
+    return null
+  }, [docKind, docId, invoices, contracts, estimates])
+
   const [selectedProject, setSelectedProject] = useState<Project | null>(null)
   const [addingPerson, setAddingPerson] = useState(false)
   const [editingPerson, setEditingPerson] = useState<AppUser | null>(null)
@@ -117,6 +136,38 @@ export function CompanyPage({
   const [removing, setRemoving] = useState(false)
   const [creatingProject, setCreatingProject] = useState(false)
   const [shareOpen, setShareOpen] = useState(false)
+  const [issuer, setIssuer] = useState<BusinessProfile | null>(null)
+
+  useEffect(() => {
+    getBusinessProfile()
+      .then(setIssuer)
+      .catch(() => {
+        // Document header just stays without issuer details.
+      })
+  }, [])
+
+  function updateParams(next: Record<string, string | null>) {
+    const params = new URLSearchParams(searchParams.toString())
+    for (const [key, value] of Object.entries(next)) {
+      if (value === null) params.delete(key)
+      else params.set(key, value)
+    }
+    const query = params.toString()
+    router.push(query ? `${pathname}?${query}` : pathname, { scroll: false })
+  }
+
+  function handleSectionChange(key: SectionKey) {
+    updateParams({ tab: key === "overview" ? null : key, doc: null })
+    if (key !== "projects") setSelectedProject(null)
+  }
+
+  function handleSelectDocument(kind: CompanyDocumentKind, id: string) {
+    updateParams({ tab: "documents", doc: `${kind}:${id}` })
+  }
+
+  function handleCloseDocument() {
+    updateParams({ doc: null })
+  }
 
   const coverProject: Project = {
     id: company.id,
@@ -172,14 +223,7 @@ export function CompanyPage({
       />
 
       <div className="mt-6">
-        <SectionNav
-          sections={SECTIONS}
-          active={section}
-          onChange={(key) => {
-            setSection(key)
-            if (key !== "projects") setSelectedProject(null)
-          }}
-        />
+        <SectionNav sections={SECTIONS} active={section} onChange={handleSectionChange} />
 
         {section === "overview" && (
           <div className="mt-4">
@@ -189,6 +233,14 @@ export function CompanyPage({
               website={company.website}
               teamCount={people.length}
             />
+            <div className="mt-8">
+              <CompanyDocuments
+                invoices={invoices}
+                contracts={contracts}
+                estimates={estimates}
+                onSelect={handleSelectDocument}
+              />
+            </div>
           </div>
         )}
 
@@ -357,7 +409,42 @@ export function CompanyPage({
         {section === "media" && <CompanyMedia logoUrl={company.logoUrl} projects={projects} />}
 
         {section === "documents" && (
-          <CompanyDocuments invoices={invoices} contracts={contracts} estimates={estimates} admin={Boolean(admin)} />
+          <div className="mt-4">
+            {selectedDocument ? (
+              <div>
+                <button
+                  type="button"
+                  onClick={handleCloseDocument}
+                  className="mb-4 inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
+                >
+                  <ArrowLeft className="size-4" aria-hidden="true" />
+                  Back to Documents
+                </button>
+                {selectedDocument.kind === "invoice" && (
+                  <InvoiceDocument
+                    invoice={invoices.find((i) => i.id === selectedDocument.id) as Invoice}
+                    issuer={issuer ?? undefined}
+                  />
+                )}
+                {selectedDocument.kind === "contract" && (
+                  <ContractDocument contract={contracts.find((c) => c.id === selectedDocument.id) as Contract} />
+                )}
+                {selectedDocument.kind === "estimate" && (
+                  <EstimateDocument
+                    estimate={estimates.find((e) => e.id === selectedDocument.id) as Estimate}
+                    issuer={issuer ?? undefined}
+                  />
+                )}
+              </div>
+            ) : (
+              <CompanyDocuments
+                invoices={invoices}
+                contracts={contracts}
+                estimates={estimates}
+                onSelect={handleSelectDocument}
+              />
+            )}
+          </div>
         )}
       </div>
 
@@ -421,7 +508,7 @@ export function CompanyPage({
             initialClientId={company.id}
             onCreated={async (project) => {
               await admin.reload()
-              setSection("projects")
+              updateParams({ tab: "projects", doc: null })
               setSelectedProject(project)
             }}
           />

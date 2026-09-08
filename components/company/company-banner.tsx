@@ -18,7 +18,7 @@ export function CompanyBanner({
   actions,
 }: {
   name: string
-  categoryLabel: string
+  categoryLabel?: string
   coverProject: Project
   actions?: ReactNode
 }) {
@@ -30,9 +30,11 @@ export function CompanyBanner({
         </div>
         <div>
           <h1 className="text-2xl font-bold text-white sm:text-3xl">{name}</h1>
-          <span className="mt-3 inline-block rounded-full bg-white/10 px-4 py-1.5 text-sm font-medium text-white/90">
-            {categoryLabel || "No category yet"}
-          </span>
+          {categoryLabel && (
+            <span className="mt-3 inline-block rounded-full bg-white/10 px-4 py-1.5 text-sm font-medium text-white/90">
+              {categoryLabel}
+            </span>
+          )}
         </div>
       </div>
 

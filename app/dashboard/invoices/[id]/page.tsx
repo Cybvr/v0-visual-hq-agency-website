@@ -8,12 +8,14 @@ import { ArrowLeft, Loader2 } from "lucide-react"
 import { useAuth } from "@/components/auth-provider"
 import { DocumentActions } from "@/components/dashboard/document-actions"
 import { InvoiceDocument } from "@/components/dashboard/invoice-document"
+import { getBusinessProfile, type BusinessProfile } from "@/lib/business-profile"
 import { getInvoice, type Invoice } from "@/lib/billing"
 
 export default function InvoiceDetailPage() {
   const { id } = useParams<{ id: string }>()
   const { user, appUser, isAdmin, isImpersonating } = useAuth()
   const [invoice, setInvoice] = useState<Invoice | null>(null)
+  const [issuer, setIssuer] = useState<BusinessProfile | null>(null)
   const [loading, setLoading] = useState(true)
   const [failed, setFailed] = useState(false)
 
@@ -21,9 +23,10 @@ export default function InvoiceDetailPage() {
     if (!id || !user || !appUser) return
     let active = true
     setLoading(true)
-    getInvoice(id)
-      .then((record) => {
+    Promise.all([getInvoice(id), getBusinessProfile()])
+      .then(([record, profile]) => {
         if (!active) return
+        setIssuer(profile)
         if (!record) {
           setInvoice(null)
           return
@@ -61,7 +64,7 @@ export default function InvoiceDetailPage() {
         <DocumentActions url={invoice.url} />
       </div>
 
-      <InvoiceDocument invoice={invoice} />
+      <InvoiceDocument invoice={invoice} issuer={issuer ?? undefined} />
     </main>
   )
 }

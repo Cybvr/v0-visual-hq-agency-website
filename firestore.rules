@@ -146,6 +146,15 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    // Settings - single-doc site config (see lib/business-profile.ts: the
+    // "Prepared by" issuer info printed on invoices/estimates/contracts).
+    // Public read: it's shown on unauthenticated /share/{invoices,estimates,
+    // contracts} pages. Writes remain admin-only.
+    match /settings/{settingId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
     // Approvals - client deliverable sign-off (see lib/approvals.ts).
     // Signed-in users can read/write; admins included. Tighten to per-client
     // once approvals carry a clientId you can match against the user doc.

@@ -11,12 +11,13 @@ import {
   formatDate,
   formatMoney,
   invoiceStatusMeta,
+  type InvoiceParty,
   type Invoice,
 } from "@/lib/billing"
 import { cn } from "@/lib/utils"
 
 /** The printable invoice itself, shared by the signed-in detail page and the public share page. */
-export function InvoiceDocument({ invoice }: { invoice: Invoice }) {
+export function InvoiceDocument({ invoice, issuer = INVOICE_ISSUER }: { invoice: Invoice; issuer?: InvoiceParty }) {
   const meta = invoiceStatusMeta[invoice.status] ?? invoiceStatusMeta.draft
   const balance = Math.max(0, invoice.amount - (invoice.amountPaid ?? 0))
 
@@ -24,9 +25,9 @@ export function InvoiceDocument({ invoice }: { invoice: Invoice }) {
     <article className="overflow-hidden rounded-[16px] border border-border bg-card print:border-0">
       <header className="flex flex-col gap-8 border-b border-border px-6 py-8 sm:flex-row sm:items-start sm:justify-between sm:px-10">
         <div>
-          <p className="text-lg font-semibold">{INVOICE_ISSUER.name}</p>
-          <p className="mt-1 whitespace-pre-line text-sm leading-6 text-muted-foreground">{INVOICE_ISSUER.address}</p>
-          {INVOICE_ISSUER.email && <p className="text-sm text-muted-foreground">{INVOICE_ISSUER.email}</p>}
+          <p className="text-lg font-semibold">{issuer.name}</p>
+          <p className="mt-1 whitespace-pre-line text-sm leading-6 text-muted-foreground">{issuer.address}</p>
+          {issuer.email && <p className="text-sm text-muted-foreground">{issuer.email}</p>}
         </div>
         <div className="sm:text-right">
           <p className="text-sm text-muted-foreground">Invoice</p>

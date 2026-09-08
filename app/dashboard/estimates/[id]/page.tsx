@@ -9,6 +9,7 @@ import { useAuth } from "@/components/auth-provider"
 import { DocumentActions } from "@/components/dashboard/document-actions"
 import { EstimateDocument } from "@/components/dashboard/estimate-document"
 import { Button } from "@/components/ui/button"
+import { getBusinessProfile, type BusinessProfile } from "@/lib/business-profile"
 import { getEstimate, type Estimate } from "@/lib/billing"
 
 export default function EstimateDetailPage() {
@@ -16,17 +17,19 @@ export default function EstimateDetailPage() {
   const { user, appUser, isAdmin, isImpersonating } = useAuth()
   const adminView = isAdmin && !isImpersonating
   const [estimate, setEstimate] = useState<Estimate | null>(null)
+  const [issuer, setIssuer] = useState<BusinessProfile | null>(null)
   const [loading, setLoading] = useState(true)
   const [failed, setFailed] = useState(false)
 
   useEffect(() => {
     if (!id || !user || !appUser) return
     let active = true
-    getEstimate(id)
-      .then((record) => {
+    Promise.all([getEstimate(id), getBusinessProfile()])
+      .then(([record, profile]) => {
         if (!active) return
         const visible = record && (adminView || (record.clientId === appUser.clientId && record.status !== "draft"))
         setEstimate(visible ? record : null)
+        setIssuer(profile)
       })
       .catch((error) => {
         console.error("Error loading estimate:", error)
@@ -49,7 +52,7 @@ export default function EstimateDetailPage() {
           <DocumentActions />
         </div>
       </div>
-      <EstimateDocument estimate={estimate} />
+      <EstimateDocument estimate={estimate} issuer={issuer ?? undefined} />
     </main>
   )
 }

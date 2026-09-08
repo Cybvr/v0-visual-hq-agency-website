@@ -4,7 +4,7 @@ import { useEffect, type ReactNode } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { Bot, Briefcase, Building2, Eye, FileSignature, FileText, HardDrive, LayoutDashboard, ListTodo, Loader2, LogOut, Mail, Megaphone, Receipt, TrendingUp, Users, Wallet } from "lucide-react"
+import { Bot, Briefcase, Building2, Eye, FileSignature, FileText, HardDrive, LayoutDashboard, ListTodo, Loader2, LogOut, Mail, Megaphone, Receipt, Settings, TrendingUp, Users, Wallet } from "lucide-react"
 import { AuthProvider, useAuth } from "@/components/auth-provider"
 import { Button } from "@/components/ui/button"
 import { DashboardShell, type NavLink } from "@/components/dashboard-shell"
@@ -75,6 +75,7 @@ const ADMIN_NAV: NavLink[] = [
       { label: "Invoices", href: "/dashboard/invoices", icon: Receipt },
       { label: "Contracts", href: "/dashboard/contracts", icon: FileSignature },
       { label: "Estimates", href: "/dashboard/estimates", icon: FileText },
+      { label: "Business profile", href: "/dashboard/settings/business", icon: Settings },
     ],
   },
 ]

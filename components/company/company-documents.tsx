@@ -1,4 +1,3 @@
-import Link from "next/link"
 import { ClipboardList, FileSignature, FileText, Receipt } from "lucide-react"
 
 import {
@@ -12,16 +11,18 @@ import {
 } from "@/lib/billing"
 import { cn } from "@/lib/utils"
 
+export type CompanyDocumentKind = "invoice" | "contract" | "estimate"
+
 export function CompanyDocuments({
   invoices,
   contracts,
   estimates,
-  admin = false,
+  onSelect,
 }: {
   invoices: Invoice[]
   contracts: Contract[]
   estimates: Estimate[]
-  admin?: boolean
+  onSelect: (kind: CompanyDocumentKind, id: string) => void
 }) {
   const count = invoices.length + contracts.length + estimates.length
 
@@ -45,10 +46,11 @@ export function CompanyDocuments({
           {invoices.map((invoice) => {
             const status = invoiceStatusMeta[invoice.status]
             return (
-              <Link
+              <button
                 key={`invoice-${invoice.id}`}
-                href={admin ? `/dashboard/invoices/${invoice.id}` : `/share/invoices/${invoice.id}`}
-                className="flex items-start gap-4 rounded-[14px] border border-border/60 bg-card p-4 outline-none transition-colors hover:border-foreground/30 hover:bg-muted/40 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                type="button"
+                onClick={() => onSelect("invoice", invoice.id)}
+                className="flex items-start gap-4 rounded-[14px] border border-border/60 bg-card p-4 text-left outline-none transition-colors hover:border-foreground/30 hover:bg-muted/40 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
               >
                 <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-muted">
                   <Receipt className="size-4" aria-hidden="true" />
@@ -67,17 +69,18 @@ export function CompanyDocuments({
                   </div>
                   <p className="mt-3 text-sm font-semibold">{formatMoney(invoice.amount, invoice.currency)}</p>
                 </div>
-              </Link>
+              </button>
             )
           })}
 
           {contracts.map((contract) => {
             const status = contractStatusMeta[contract.status]
             return (
-              <Link
+              <button
                 key={`contract-${contract.id}`}
-                href={admin ? `/dashboard/contracts/${contract.id}` : `/share/contracts/${contract.id}`}
-                className="flex items-start gap-4 rounded-[14px] border border-border/60 bg-card p-4 outline-none transition-colors hover:border-foreground/30 hover:bg-muted/40 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                type="button"
+                onClick={() => onSelect("contract", contract.id)}
+                className="flex items-start gap-4 rounded-[14px] border border-border/60 bg-card p-4 text-left outline-none transition-colors hover:border-foreground/30 hover:bg-muted/40 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
               >
                 <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-muted">
                   <FileSignature className="size-4" aria-hidden="true" />
@@ -95,17 +98,18 @@ export function CompanyDocuments({
                     </span>
                   </div>
                 </div>
-              </Link>
+              </button>
             )
           })}
 
           {estimates.map((estimate) => {
             const status = estimateStatusMeta[estimate.status]
             return (
-              <Link
+              <button
                 key={`estimate-${estimate.id}`}
-                href={admin ? `/dashboard/estimates/${estimate.id}` : `/share/estimates/${estimate.id}`}
-                className="flex items-start gap-4 rounded-[14px] border border-border/60 bg-card p-4 outline-none transition-colors hover:border-foreground/30 hover:bg-muted/40 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                type="button"
+                onClick={() => onSelect("estimate", estimate.id)}
+                className="flex items-start gap-4 rounded-[14px] border border-border/60 bg-card p-4 text-left outline-none transition-colors hover:border-foreground/30 hover:bg-muted/40 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
               >
                 <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-muted">
                   <ClipboardList className="size-4" aria-hidden="true" />
@@ -124,7 +128,7 @@ export function CompanyDocuments({
                   </div>
                   <p className="mt-3 text-sm font-semibold">{formatMoney(estimate.amount, estimate.currency)}</p>
                 </div>
-              </Link>
+              </button>
             )
           })}
         </div>

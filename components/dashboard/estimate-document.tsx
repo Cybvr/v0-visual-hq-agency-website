@@ -1,7 +1,9 @@
 import Image from "next/image"
 
-import { INVOICE_ISSUER, estimateStatusMeta, formatDate, formatMoney, type Estimate } from "@/lib/billing"
+import { INVOICE_ISSUER, estimateStatusMeta, formatDate, formatMoney, type Estimate, type InvoiceParty } from "@/lib/billing"
 import { cn } from "@/lib/utils"
+
+type DocumentIssuer = InvoiceParty & { logoUrl?: string }
 
 function TextLines({ value }: { value?: string }) {
   const lines = value?.split("\n").map((line) => line.trim()).filter(Boolean) ?? []
@@ -19,7 +21,13 @@ function TextLines({ value }: { value?: string }) {
 }
 
 /** The printable estimate shared by the signed-in detail page and its public link. */
-export function EstimateDocument({ estimate }: { estimate: Estimate }) {
+export function EstimateDocument({
+  estimate,
+  issuer = INVOICE_ISSUER,
+}: {
+  estimate: Estimate
+  issuer?: DocumentIssuer
+}) {
   const meta = estimateStatusMeta[estimate.status] ?? estimateStatusMeta.draft
   const optionalTotal = estimate.lineItems.reduce((sum, item) => sum + (item.optional ? item.amount : 0), 0)
 
@@ -28,12 +36,17 @@ export function EstimateDocument({ estimate }: { estimate: Estimate }) {
       <header className="grid gap-10 border-b border-neutral-200 px-6 py-9 sm:grid-cols-[1fr_auto] sm:px-10 sm:py-11">
         <div>
           <div className="flex items-center gap-3">
-            <Image src="/visualhqlogo.svg" alt="Visualcns" width={30} height={30} />
-            <p className="text-xl font-semibold tracking-[-0.02em]">{INVOICE_ISSUER.name}</p>
+            {issuer.logoUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={issuer.logoUrl} alt="" width={30} height={30} className="size-[30px] rounded object-cover" />
+            ) : (
+              <Image src="/visualhqlogo.svg" alt="" width={30} height={30} />
+            )}
+            <p className="text-xl font-semibold tracking-[-0.02em]">{issuer.name}</p>
           </div>
-          <p className="mt-3 whitespace-pre-line text-sm leading-6 text-neutral-500">{INVOICE_ISSUER.address}</p>
-          {INVOICE_ISSUER.email && <p className="text-sm text-neutral-500">{INVOICE_ISSUER.email}</p>}
-          {INVOICE_ISSUER.website && <p className="text-sm text-neutral-500">{INVOICE_ISSUER.website}</p>}
+          <p className="mt-3 whitespace-pre-line text-sm leading-6 text-neutral-500">{issuer.address}</p>
+          {issuer.email && <p className="text-sm text-neutral-500">{issuer.email}</p>}
+          {issuer.website && <p className="text-sm text-neutral-500">{issuer.website}</p>}
         </div>
         <div className="sm:text-right">
           <p className="text-sm font-semibold uppercase tracking-[0.12em] text-neutral-950">Estimate</p>
@@ -56,10 +69,10 @@ export function EstimateDocument({ estimate }: { estimate: Estimate }) {
         </div>
         <div>
           <h2 className="text-xs font-semibold uppercase tracking-[0.1em] text-blue-700">Prepared by</h2>
-          <p className="mt-2 font-semibold">{INVOICE_ISSUER.name}</p>
-          <p className="mt-1 whitespace-pre-line text-sm leading-6 text-neutral-500">{INVOICE_ISSUER.address}</p>
-          {INVOICE_ISSUER.email && <p className="text-sm text-neutral-500">{INVOICE_ISSUER.email}</p>}
-          {INVOICE_ISSUER.website && <p className="text-sm text-neutral-500">{INVOICE_ISSUER.website}</p>}
+          <p className="mt-2 font-semibold">{issuer.name}</p>
+          <p className="mt-1 whitespace-pre-line text-sm leading-6 text-neutral-500">{issuer.address}</p>
+          {issuer.email && <p className="text-sm text-neutral-500">{issuer.email}</p>}
+          {issuer.website && <p className="text-sm text-neutral-500">{issuer.website}</p>}
         </div>
       </section>
 
@@ -126,15 +139,15 @@ export function EstimateDocument({ estimate }: { estimate: Estimate }) {
         {estimate.acceptance && <p className="mt-4 max-w-[75ch] whitespace-pre-line text-sm leading-6 text-neutral-700">{estimate.acceptance}</p>}
         <div className="mt-8 grid gap-8 text-sm text-neutral-500 sm:grid-cols-2">
           <div className="border-t border-neutral-300 pt-3">Accepted for {estimate.preparedFor?.name || estimate.client} · Name &amp; date</div>
-          <div className="border-t border-neutral-300 pt-3">{INVOICE_ISSUER.name} · Authorised signature</div>
+          <div className="border-t border-neutral-300 pt-3">{issuer.name} · Authorised signature</div>
         </div>
         {estimate.notes && <p className="mt-8 max-w-[75ch] text-xs italic leading-5 text-neutral-500">{estimate.notes}</p>}
       </section>
 
       <footer className="border-t border-neutral-200 px-6 py-6 text-sm leading-6 text-neutral-600 sm:px-10">
-        <p>{INVOICE_ISSUER.address}</p>
-        {INVOICE_ISSUER.email && <p>{INVOICE_ISSUER.email}</p>}
-        {INVOICE_ISSUER.website && <p>{INVOICE_ISSUER.website}</p>}
+        <p>{issuer.address}</p>
+        {issuer.email && <p>{issuer.email}</p>}
+        {issuer.website && <p>{issuer.website}</p>}
       </footer>
     </article>
   )
