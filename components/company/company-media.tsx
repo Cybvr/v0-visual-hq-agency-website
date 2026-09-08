@@ -1,7 +1,7 @@
 "use client"
 
-import { useState } from "react"
-import { ExternalLink, Images, Plus } from "lucide-react"
+import { useEffect, useState } from "react"
+import { Images, Plus, X } from "lucide-react"
 
 import { GalleryDropzone } from "@/components/image-dropzone"
 import { Button } from "@/components/ui/button"
@@ -46,6 +46,7 @@ export function CompanyMedia({
 }) {
   const isAdmin = Boolean(onUploadedChange)
   const [addOpen, setAddOpen] = useState(false)
+  const [lightbox, setLightbox] = useState<MediaItem | null>(null)
   const uploadedItems: MediaItem[] = uploaded
     .filter(Boolean)
     .map((url) => ({ url, label: "Uploaded media", project: "Company" }))
@@ -56,13 +57,19 @@ export function CompanyMedia({
     ...new Map([...uploadedItems, ...derivedMedia(logoUrl, projects)].map((item) => [item.url, item])).values(),
   ]
 
+  useEffect(() => {
+    if (!lightbox) return
+    function onKey(event: KeyboardEvent) {
+      if (event.key === "Escape") setLightbox(null)
+    }
+    window.addEventListener("keydown", onKey)
+    return () => window.removeEventListener("keydown", onKey)
+  }, [lightbox])
+
   return (
     <section className="mt-4" aria-labelledby="company-media-heading">
       <div className="flex items-center justify-between gap-4">
-        <div className="flex items-baseline gap-2">
-          <h2 id="company-media-heading" className="text-base font-semibold">Media</h2>
-          <span className="text-sm text-muted-foreground">{gallery.length}</span>
-        </div>
+        <h2 id="company-media-heading" className="text-base font-semibold">Media</h2>
         {isAdmin && (
           <Button onClick={() => setAddOpen(true)}>
             <Plus className="size-4" aria-hidden="true" />
@@ -91,37 +98,51 @@ export function CompanyMedia({
           <p className="mt-1 text-sm text-muted-foreground">Project covers and gallery images will appear here.</p>
         </div>
       ) : (
-        <div className="mt-4">
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-            {gallery.map((item) => (
-              <a
-                key={item.url}
-                href={item.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group overflow-hidden rounded-[14px] border border-border/60 bg-card p-2 outline-none transition-colors hover:border-foreground/30 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                aria-label={`Open ${item.label} from ${item.project}`}
-              >
-                <div className="aspect-square overflow-hidden rounded-[10px] bg-muted">
-                  {/* Media URLs may come from any configured storage host. */}
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={item.url}
-                    alt={`${item.label} from ${item.project}`}
-                    loading="lazy"
-                    className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
-                  />
-                </div>
-                <div className="flex items-start justify-between gap-2 px-1.5 pb-1 pt-2.5">
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-medium">{item.project}</p>
-                    <p className="truncate text-xs text-muted-foreground">{item.label}</p>
-                  </div>
-                  <ExternalLink className="mt-0.5 size-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />
-                </div>
-              </a>
-            ))}
-          </div>
+        <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+          {gallery.map((item) => (
+            <button
+              key={item.url}
+              type="button"
+              onClick={() => setLightbox(item)}
+              className="aspect-square overflow-hidden rounded-[10px] bg-muted outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              aria-label={`View ${item.label} from ${item.project}`}
+            >
+              {/* Media URLs may come from any configured storage host. */}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={item.url}
+                alt={`${item.label} from ${item.project}`}
+                loading="lazy"
+                className="h-full w-full object-cover transition-transform duration-300 hover:scale-[1.02]"
+              />
+            </button>
+          ))}
+        </div>
+      )}
+
+      {lightbox && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label={`${lightbox.label} from ${lightbox.project}`}
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
+          onClick={() => setLightbox(null)}
+        >
+          <button
+            type="button"
+            onClick={() => setLightbox(null)}
+            aria-label="Close"
+            className="absolute right-4 top-4 flex size-9 items-center justify-center rounded-full bg-white/10 text-white outline-none transition-colors hover:bg-white/20 focus-visible:ring-2 focus-visible:ring-white"
+          >
+            <X className="size-5" aria-hidden="true" />
+          </button>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={lightbox.url}
+            alt={`${lightbox.label} from ${lightbox.project}`}
+            className="max-h-full max-w-full rounded-lg object-contain"
+            onClick={(event) => event.stopPropagation()}
+          />
         </div>
       )}
     </section>
