@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import { useAuth } from "@/components/auth-provider"
 import { CompanyPage } from "@/components/company/company-page"
 import { useCompany } from "@/components/dashboard/company-context"
+import { updateOrganization } from "@/lib/organizations"
 
 export default function DashboardCompanyPage() {
   const router = useRouter()
@@ -34,6 +35,7 @@ export default function DashboardCompanyPage() {
         industry: organization?.industry,
         location: organization?.location,
         website: organization?.website,
+        media: organization?.media,
       }}
       people={people.map((person) => ({
         id: person.uid,
@@ -56,6 +58,10 @@ export default function DashboardCompanyPage() {
               onViewWorkspace: (person) => {
                 viewAsUser(person)
                 router.push("/dashboard")
+              },
+              onMediaChange: async (media) => {
+                await updateOrganization(workspaceId, { media })
+                await reload()
               },
               reload,
             }

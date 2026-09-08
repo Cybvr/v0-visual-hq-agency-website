@@ -101,6 +101,7 @@ export default function PublicCompanyPage() {
         industry: organization.industry,
         location: organization.location,
         website: organization.website,
+        media: organization.media,
       }}
       people={team.map((person) => ({
         id: person.uid,
