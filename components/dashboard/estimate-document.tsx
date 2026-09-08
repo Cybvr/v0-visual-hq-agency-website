@@ -33,7 +33,7 @@ export function EstimateDocument({
 
   return (
     <article className="mx-auto overflow-hidden rounded-[16px] border border-neutral-200 bg-white text-neutral-950 shadow-sm print:rounded-none print:border-0 print:shadow-none">
-      <header className="grid gap-10 border-b border-neutral-200 px-6 py-9 sm:grid-cols-[1fr_auto] sm:px-10 sm:py-11">
+      <header className="flex flex-col gap-10 border-b border-neutral-200 px-6 py-9 sm:flex-row sm:items-start sm:justify-between sm:px-10 sm:py-11">
         <div>
           <div className="flex items-center gap-3">
             {issuer.logoUrl ? (
@@ -48,7 +48,7 @@ export function EstimateDocument({
           {issuer.email && <p className="text-sm text-neutral-500">{issuer.email}</p>}
           {issuer.website && <p className="text-sm text-neutral-500">{issuer.website}</p>}
         </div>
-        <div className="sm:text-right">
+        <div className="shrink-0 sm:text-right">
           <p className="text-sm font-semibold uppercase tracking-[0.12em] text-neutral-950">Estimate</p>
           <dl className="mt-3 space-y-1 text-sm">
             <div className="flex gap-3 sm:justify-end"><dt className="text-neutral-500">Estimate no.</dt><dd className="font-medium">{estimate.estimateNumber}</dd></div>

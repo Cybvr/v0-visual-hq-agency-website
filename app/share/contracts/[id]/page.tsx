@@ -81,7 +81,7 @@ export default function SharedContractPage() {
     <main className="min-h-screen bg-muted/30 px-4 py-10 sm:py-16">
       <div className="mx-auto max-w-4xl">
         <div className="mb-6 flex justify-end print:hidden">
-          <DocumentActions url={contract.url} />
+          <DocumentActions url={contract.url} title={`${companyName} Contract`} />
         </div>
         <div className="mb-6 print:hidden">
           <CompanyBanner name={companyName} categoryLabel={organization?.industry ?? ""} coverProject={coverProject} />

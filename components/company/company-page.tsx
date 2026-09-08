@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
-import { ArrowLeft, Pencil, Plus, Share2, User as UserIcon } from "lucide-react"
+import { ArrowLeft, Eye, Pencil, Plus, Share2, User as UserIcon } from "lucide-react"
 import { toast } from "sonner"
 
 import { CompanyBanner } from "@/components/company/company-banner"
@@ -12,6 +12,7 @@ import { CompanyMedia } from "@/components/company/company-media"
 import { CompanyOverviewGrid } from "@/components/company/company-overview-grid"
 import { SectionNav } from "@/components/company/section-nav"
 import { ContractDocument } from "@/components/dashboard/contract-document"
+import { DocumentActions } from "@/components/dashboard/document-actions"
 import { EstimateDocument } from "@/components/dashboard/estimate-document"
 import { InvoiceDocument } from "@/components/dashboard/invoice-document"
 import { NewPersonDialog } from "@/components/dashboard/new-person-dialog"
@@ -162,6 +163,10 @@ export function CompanyPage({
   }
 
   function handleSelectDocument(kind: CompanyDocumentKind, id: string) {
+    if (admin) {
+      router.push(`/dashboard/${kind}s/${id}/edit`)
+      return
+    }
     updateParams({ tab: "documents", doc: `${kind}:${id}` })
   }
 
@@ -200,30 +205,47 @@ export function CompanyPage({
 
   return (
     <main className="mx-auto min-h-screen w-full max-w-6xl px-4 pb-16 pt-6 sm:px-6">
-      <CompanyBanner
-        name={company.name}
-        categoryLabel={company.categoryLabel}
-        coverProject={coverProject}
-        actions={
-          admin ? (
-            <>
-              <Button asChild className="rounded-full">
-                <Link href={admin.editHref}>
-                  <Pencil className="size-4" aria-hidden="true" />
-                  Edit
-                </Link>
-              </Button>
-              <Button variant="secondary" className="rounded-full" onClick={() => setShareOpen(true)}>
-                <Share2 className="size-4" aria-hidden="true" />
-                Share
-              </Button>
-            </>
-          ) : undefined
-        }
-      />
+      <div className="print:hidden">
+        <CompanyBanner
+          name={company.name}
+          categoryLabel={company.categoryLabel}
+          coverProject={coverProject}
+          actions={
+            admin ? (
+              <>
+                <Button asChild className="rounded-full">
+                  <Link href={admin.editHref}>
+                    <Pencil className="size-4" aria-hidden="true" />
+                    Edit
+                  </Link>
+                </Button>
+                <Button variant="secondary" className="rounded-full" onClick={() => setShareOpen(true)}>
+                  <Share2 className="size-4" aria-hidden="true" />
+                  Share
+                </Button>
+                {admin.publicPath && (
+                  <Button asChild variant="secondary" size="icon" className="rounded-full">
+                    <Link
+                      href={admin.publicPath}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label={`View ${company.name}'s public page`}
+                      title="View public page"
+                    >
+                      <Eye className="size-4" aria-hidden="true" />
+                    </Link>
+                  </Button>
+                )}
+              </>
+            ) : undefined
+          }
+        />
+      </div>
 
       <div className="mt-6">
-        <SectionNav sections={SECTIONS} active={section} onChange={handleSectionChange} />
+        <div className="print:hidden">
+          <SectionNav sections={SECTIONS} active={section} onChange={handleSectionChange} />
+        </div>
 
         {section === "overview" && (
           <div className="mt-4">
@@ -412,14 +434,21 @@ export function CompanyPage({
           <div className="mt-4">
             {selectedDocument ? (
               <div>
-                <button
-                  type="button"
-                  onClick={handleCloseDocument}
-                  className="mb-4 inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
-                >
-                  <ArrowLeft className="size-4" aria-hidden="true" />
-                  Back to Documents
-                </button>
+                <div className="mb-4 flex flex-wrap items-center justify-between gap-3 print:hidden">
+                  <button
+                    type="button"
+                    onClick={handleCloseDocument}
+                    className="inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
+                  >
+                    <ArrowLeft className="size-4" aria-hidden="true" />
+                    Back to Documents
+                  </button>
+                  {!admin && (
+                    <DocumentActions
+                      title={`${company.name} ${selectedDocument.kind === "invoice" ? "Invoice" : selectedDocument.kind === "contract" ? "Contract" : "Estimate"}`}
+                    />
+                  )}
+                </div>
                 {selectedDocument.kind === "invoice" && (
                   <InvoiceDocument
                     invoice={invoices.find((i) => i.id === selectedDocument.id) as Invoice}

@@ -49,7 +49,7 @@ export default function BusinessSettingsPage() {
     setSaving(true)
     try {
       const payload: Partial<BusinessProfile> = {
-        name: form.name.trim() || "Visualcns",
+        name: form.name.trim() || "VisualCNS",
         address: form.address.trim(),
         email: form.email.trim(),
         website: form.website.trim(),

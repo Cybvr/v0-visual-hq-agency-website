@@ -83,14 +83,14 @@ export default function SharedInvoicePage() {
     <main className="min-h-screen bg-muted/30 px-4 py-10 sm:py-16">
       <div className="mx-auto max-w-5xl">
         <div className="mb-6 flex justify-end print:hidden">
-          <DocumentActions url={invoice.url} />
+          <DocumentActions url={invoice.url} title={`${companyName} Invoice ${invoice.invoiceNumber}`} />
         </div>
         <div className="mb-6 print:hidden">
           <CompanyBanner name={companyName} categoryLabel={organization?.industry ?? ""} coverProject={coverProject} />
         </div>
         <InvoiceDocument invoice={invoice} issuer={issuer ?? undefined} />
         <p className="mt-6 text-center text-xs text-muted-foreground print:hidden">
-          Shared by {issuer?.name ?? "Visualcns"} · {issuer?.website ?? "visualcns.com"}
+          Shared by {issuer?.name ?? "VisualCNS"} · {issuer?.website ?? "visualcns.com"}
         </p>
       </div>
     </main>

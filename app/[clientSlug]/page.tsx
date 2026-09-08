@@ -86,7 +86,7 @@ export default function PublicCompanyPage() {
   const team = organization.publicTeam ?? []
   const categoryLabel = [
     organization.industry,
-    projects.length ? `${projects.length} case ${projects.length === 1 ? "study" : "studies"}` : "",
+    projects.length ? `${projects.length} ${projects.length === 1 ? "Project" : "Projects"}` : "",
   ]
     .filter(Boolean)
     .join(" · ")
