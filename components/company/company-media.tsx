@@ -1,8 +1,11 @@
 "use client"
 
-import { ExternalLink, Images } from "lucide-react"
+import { useState } from "react"
+import { ExternalLink, Images, Plus } from "lucide-react"
 
 import { GalleryDropzone } from "@/components/image-dropzone"
+import { Button } from "@/components/ui/button"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import type { Project } from "@/lib/projects"
 
 interface MediaItem {
@@ -42,48 +45,53 @@ export function CompanyMedia({
   onUploadedChange?: (urls: string[]) => void
 }) {
   const isAdmin = Boolean(onUploadedChange)
+  const [addOpen, setAddOpen] = useState(false)
   const uploadedItems: MediaItem[] = uploaded
     .filter(Boolean)
     .map((url) => ({ url, label: "Uploaded media", project: "Company" }))
 
-  // Admins manage uploaded media through the dropzone above, so the read-only
-  // grid shows project imagery only. Everyone else sees uploads and project
-  // imagery together, deduped by URL.
-  const readOnly = isAdmin
-    ? derivedMedia(logoUrl, projects)
-    : [...uploadedItems, ...derivedMedia(logoUrl, projects)]
-  const gallery = [...new Map(readOnly.map((item) => [item.url, item])).values()]
+  // The uploaded media always shows in the grid; admins manage it through the
+  // modal opened by the Add media button.
+  const gallery = [
+    ...new Map([...uploadedItems, ...derivedMedia(logoUrl, projects)].map((item) => [item.url, item])).values(),
+  ]
 
   return (
     <section className="mt-4" aria-labelledby="company-media-heading">
-      <div className="flex items-baseline gap-2">
-        <h2 id="company-media-heading" className="text-base font-semibold">Media</h2>
-        <span className="text-sm text-muted-foreground">{isAdmin ? uploaded.filter(Boolean).length + gallery.length : gallery.length}</span>
+      <div className="flex items-center justify-between gap-4">
+        <div className="flex items-baseline gap-2">
+          <h2 id="company-media-heading" className="text-base font-semibold">Media</h2>
+          <span className="text-sm text-muted-foreground">{gallery.length}</span>
+        </div>
+        {isAdmin && (
+          <Button onClick={() => setAddOpen(true)}>
+            <Plus className="size-4" aria-hidden="true" />
+            Add media
+          </Button>
+        )}
       </div>
 
       {isAdmin && (
-        <div className="mt-4 space-y-2">
-          <p className="text-sm font-medium">Add media</p>
-          <GalleryDropzone value={uploaded.filter(Boolean)} onChange={(urls) => onUploadedChange?.(urls)} />
-          <p className="text-xs text-muted-foreground">
-            Uploaded media appears on this company&apos;s page. Project covers and gallery images are shown below.
-          </p>
-        </div>
+        <Dialog open={addOpen} onOpenChange={setAddOpen}>
+          <DialogContent className="max-w-lg">
+            <DialogHeader>
+              <DialogTitle>Add media</DialogTitle>
+            </DialogHeader>
+            <GalleryDropzone value={uploaded.filter(Boolean)} onChange={(urls) => onUploadedChange?.(urls)} />
+          </DialogContent>
+        </Dialog>
       )}
 
       {gallery.length === 0 ? (
-        !isAdmin && (
-          <div className="mt-4 flex flex-col items-center rounded-lg border border-dashed border-border py-10 text-center">
-            <span className="flex size-11 items-center justify-center rounded-full bg-muted">
-              <Images className="size-5 text-muted-foreground" aria-hidden="true" />
-            </span>
-            <h3 className="mt-4 font-medium">No media yet</h3>
-            <p className="mt-1 text-sm text-muted-foreground">Project covers and gallery images will appear here.</p>
-          </div>
-        )
+        <div className="mt-4 flex flex-col items-center rounded-lg border border-dashed border-border py-10 text-center">
+          <span className="flex size-11 items-center justify-center rounded-full bg-muted">
+            <Images className="size-5 text-muted-foreground" aria-hidden="true" />
+          </span>
+          <h3 className="mt-4 font-medium">No media yet</h3>
+          <p className="mt-1 text-sm text-muted-foreground">Project covers and gallery images will appear here.</p>
+        </div>
       ) : (
         <div className="mt-4">
-          {isAdmin && <p className="mb-2 text-sm font-medium">From projects</p>}
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
             {gallery.map((item) => (
               <a
