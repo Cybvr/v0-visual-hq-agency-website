@@ -15,6 +15,8 @@ export interface Organization {
   industry?: string
   location?: string
   website?: string
+  /** Media an admin uploaded to the company page, shown alongside project imagery. */
+  media?: string[]
   /** The public page's URL segment, e.g. visualcns.com/pan-atlantic-university */
   slug?: string
   /**

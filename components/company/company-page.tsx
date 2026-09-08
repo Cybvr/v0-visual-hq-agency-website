@@ -67,6 +67,7 @@ export interface CompanyPageCompany {
   industry?: string
   location?: string
   website?: string
+  media?: string[]
 }
 
 export interface CompanyPageAdmin {
@@ -74,6 +75,7 @@ export interface CompanyPageAdmin {
   sharePath: string
   publicPath?: string
   onViewWorkspace: (person: AppUser) => void
+  onMediaChange?: (urls: string[]) => Promise<void>
   reload: () => Promise<void>
 }
 
@@ -428,7 +430,16 @@ export function CompanyPage({
           </div>
         )}
 
-        {section === "media" && <CompanyMedia logoUrl={company.logoUrl} projects={projects} />}
+        {section === "media" && (
+          <CompanyMedia
+            logoUrl={company.logoUrl}
+            projects={projects}
+            uploaded={company.media ?? []}
+            onUploadedChange={
+              admin?.onMediaChange ? (urls) => void admin.onMediaChange?.(urls) : undefined
+            }
+          />
+        )}
 
         {section === "documents" && (
           <div className="mt-4">

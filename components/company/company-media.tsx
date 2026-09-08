@@ -1,5 +1,8 @@
+"use client"
+
 import { ExternalLink, Images } from "lucide-react"
 
+import { GalleryDropzone } from "@/components/image-dropzone"
 import type { Project } from "@/lib/projects"
 
 interface MediaItem {
@@ -8,7 +11,7 @@ interface MediaItem {
   project: string
 }
 
-function companyMedia(logoUrl: string | undefined, projects: Project[]): MediaItem[] {
+function derivedMedia(logoUrl: string | undefined, projects: Project[]): MediaItem[] {
   const items: MediaItem[] = []
 
   if (logoUrl) items.push({ url: logoUrl, label: "Company logo", project: "Company" })
@@ -22,57 +25,95 @@ function companyMedia(logoUrl: string | undefined, projects: Project[]): MediaIt
     }
   }
 
-  return [...new Map(items.map((item) => [item.url, item])).values()]
+  return items
 }
 
-export function CompanyMedia({ logoUrl, projects }: { logoUrl?: string; projects: Project[] }) {
-  const media = companyMedia(logoUrl, projects)
+export function CompanyMedia({
+  logoUrl,
+  projects,
+  uploaded = [],
+  onUploadedChange,
+}: {
+  logoUrl?: string
+  projects: Project[]
+  /** Media an admin added directly to the company (persisted on the organization). */
+  uploaded?: string[]
+  /** Present only for admins; wiring it in turns the section into an editor. */
+  onUploadedChange?: (urls: string[]) => void
+}) {
+  const isAdmin = Boolean(onUploadedChange)
+  const uploadedItems: MediaItem[] = uploaded
+    .filter(Boolean)
+    .map((url) => ({ url, label: "Uploaded media", project: "Company" }))
+
+  // Admins manage uploaded media through the dropzone above, so the read-only
+  // grid shows project imagery only. Everyone else sees uploads and project
+  // imagery together, deduped by URL.
+  const readOnly = isAdmin
+    ? derivedMedia(logoUrl, projects)
+    : [...uploadedItems, ...derivedMedia(logoUrl, projects)]
+  const gallery = [...new Map(readOnly.map((item) => [item.url, item])).values()]
 
   return (
     <section className="mt-4" aria-labelledby="company-media-heading">
       <div className="flex items-baseline gap-2">
         <h2 id="company-media-heading" className="text-base font-semibold">Media</h2>
-        <span className="text-sm text-muted-foreground">{media.length}</span>
+        <span className="text-sm text-muted-foreground">{isAdmin ? uploaded.filter(Boolean).length + gallery.length : gallery.length}</span>
       </div>
 
-      {media.length === 0 ? (
-        <div className="mt-4 flex flex-col items-center rounded-lg border border-dashed border-border py-10 text-center">
-          <span className="flex size-11 items-center justify-center rounded-full bg-muted">
-            <Images className="size-5 text-muted-foreground" aria-hidden="true" />
-          </span>
-          <h3 className="mt-4 font-medium">No media yet</h3>
-          <p className="mt-1 text-sm text-muted-foreground">Project covers and gallery images will appear here.</p>
+      {isAdmin && (
+        <div className="mt-4 space-y-2">
+          <p className="text-sm font-medium">Add media</p>
+          <GalleryDropzone value={uploaded.filter(Boolean)} onChange={(urls) => onUploadedChange?.(urls)} />
+          <p className="text-xs text-muted-foreground">
+            Uploaded media appears on this company&apos;s page. Project covers and gallery images are shown below.
+          </p>
         </div>
+      )}
+
+      {gallery.length === 0 ? (
+        !isAdmin && (
+          <div className="mt-4 flex flex-col items-center rounded-lg border border-dashed border-border py-10 text-center">
+            <span className="flex size-11 items-center justify-center rounded-full bg-muted">
+              <Images className="size-5 text-muted-foreground" aria-hidden="true" />
+            </span>
+            <h3 className="mt-4 font-medium">No media yet</h3>
+            <p className="mt-1 text-sm text-muted-foreground">Project covers and gallery images will appear here.</p>
+          </div>
+        )
       ) : (
-        <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-          {media.map((item) => (
-            <a
-              key={item.url}
-              href={item.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="group overflow-hidden rounded-[14px] border border-border/60 bg-card p-2 outline-none transition-colors hover:border-foreground/30 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-              aria-label={`Open ${item.label} from ${item.project}`}
-            >
-              <div className="aspect-square overflow-hidden rounded-[10px] bg-muted">
-                {/* Media URLs may come from any configured storage host. */}
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={item.url}
-                  alt={`${item.label} from ${item.project}`}
-                  loading="lazy"
-                  className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
-                />
-              </div>
-              <div className="flex items-start justify-between gap-2 px-1.5 pb-1 pt-2.5">
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-medium">{item.project}</p>
-                  <p className="truncate text-xs text-muted-foreground">{item.label}</p>
+        <div className="mt-4">
+          {isAdmin && <p className="mb-2 text-sm font-medium">From projects</p>}
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+            {gallery.map((item) => (
+              <a
+                key={item.url}
+                href={item.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group overflow-hidden rounded-[14px] border border-border/60 bg-card p-2 outline-none transition-colors hover:border-foreground/30 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                aria-label={`Open ${item.label} from ${item.project}`}
+              >
+                <div className="aspect-square overflow-hidden rounded-[10px] bg-muted">
+                  {/* Media URLs may come from any configured storage host. */}
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={item.url}
+                    alt={`${item.label} from ${item.project}`}
+                    loading="lazy"
+                    className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
+                  />
                 </div>
-                <ExternalLink className="mt-0.5 size-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />
-              </div>
-            </a>
-          ))}
+                <div className="flex items-start justify-between gap-2 px-1.5 pb-1 pt-2.5">
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium">{item.project}</p>
+                    <p className="truncate text-xs text-muted-foreground">{item.label}</p>
+                  </div>
+                  <ExternalLink className="mt-0.5 size-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />
+                </div>
+              </a>
+            ))}
+          </div>
         </div>
       )}
     </section>
