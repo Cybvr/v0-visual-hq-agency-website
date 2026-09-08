@@ -6,8 +6,11 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { Bot, Briefcase, Building2, Eye, FileSignature, FileText, HardDrive, LayoutDashboard, ListTodo, Loader2, LogOut, Mail, Megaphone, Receipt, Settings, TrendingUp, Users, Wallet } from "lucide-react"
 import { AuthProvider, useAuth } from "@/components/auth-provider"
+import { AgentDock } from "@/components/agent/agent-dock"
+import { AgentProvider, useAgent } from "@/components/agent/agent-context"
 import { Button } from "@/components/ui/button"
 import { DashboardShell, type NavLink } from "@/components/dashboard-shell"
+import { cn } from "@/lib/utils"
 
 const CLIENT_NAV: NavLink[] = [
   { label: "Home", href: "/dashboard", icon: LayoutDashboard },
@@ -110,23 +113,67 @@ function UnifiedDashboardShell({ children, requireAdmin = false }: { children: R
   }
 
   return (
-    <DashboardShell
-      title="VisualCNS"
-      subtitle={appUser?.company || undefined}
-      navLinks={isAdmin && !isImpersonating ? ADMIN_NAV : CLIENT_NAV}
-      rootHref="/dashboard"
-      banner={isImpersonating ? (
-        <div className="flex h-10 items-center justify-between gap-3 border-b border-amber-200 bg-amber-50 px-4 text-sm text-amber-900 dark:border-amber-500/30 dark:bg-amber-950 dark:text-amber-200 sm:px-6">
-          <span className="flex min-w-0 items-center gap-2">
-            <Eye className="h-4 w-4 shrink-0" />
-            <span className="truncate">Viewing as <strong>{impersonatedUser?.displayName || impersonatedUser?.email}</strong></span>
+    <AgentProvider>
+      <DashboardWithAgent
+        subtitle={appUser?.company || undefined}
+        navLinks={isAdmin && !isImpersonating ? ADMIN_NAV : CLIENT_NAV}
+        banner={isImpersonating ? (
+          <div className="flex h-10 items-center justify-between gap-3 border-b border-amber-200 bg-amber-50 px-4 text-sm text-amber-900 dark:border-amber-500/30 dark:bg-amber-950 dark:text-amber-200 sm:px-6">
+            <span className="flex min-w-0 items-center gap-2">
+              <Eye className="h-4 w-4 shrink-0" />
+              <span className="truncate">Viewing as <strong>{impersonatedUser?.displayName || impersonatedUser?.email}</strong></span>
+            </span>
+            <Button size="sm" variant="outline" className="h-7 shrink-0 border-amber-300 bg-white text-amber-900 dark:border-amber-500/40 dark:bg-transparent dark:text-amber-200" onClick={() => { stopViewingAs(); router.push("/dashboard/users") }}>Exit view</Button>
+          </div>
+        ) : undefined}
+      >
+        {children}
+      </DashboardWithAgent>
+    </AgentProvider>
+  )
+}
+
+/**
+ * Wraps the shell so the docked agent can push the content left on desktop
+ * (a full-screen sheet handles mobile) and offers a launcher when it's closed.
+ */
+function DashboardWithAgent({
+  subtitle,
+  navLinks,
+  banner,
+  children,
+}: {
+  subtitle?: string
+  navLinks: NavLink[]
+  banner?: ReactNode
+  children: ReactNode
+}) {
+  const { open, setOpen } = useAgent()
+
+  return (
+    <>
+      <div className={cn("h-svh transition-[padding] duration-300", open && "lg:pr-[26rem]")}>
+        <DashboardShell title="VisualCNS" subtitle={subtitle} navLinks={navLinks} rootHref="/dashboard" banner={banner}>
+          {children}
+        </DashboardShell>
+      </div>
+
+      <AgentDock />
+
+      {!open && (
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          aria-label="Open Agent"
+          className="fixed bottom-5 right-5 z-40 flex items-center gap-2 rounded-full bg-[linear-gradient(90deg,#c32cff,#6ed8ff)] p-[2px] shadow-lg outline-none transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+        >
+          <span className="flex h-11 items-center gap-2 rounded-full bg-[#110e2c] px-4 text-sm font-semibold text-white">
+            <Image src="/visualhqlogo.svg" alt="" width={20} height={20} className="brightness-0 invert" />
+            Agent
           </span>
-          <Button size="sm" variant="outline" className="h-7 shrink-0 border-amber-300 bg-white text-amber-900 dark:border-amber-500/40 dark:bg-transparent dark:text-amber-200" onClick={() => { stopViewingAs(); router.push("/dashboard/users") }}>Exit view</Button>
-        </div>
-      ) : undefined}
-    >
-      {children}
-    </DashboardShell>
+        </button>
+      )}
+    </>
   )
 }
 
