@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { getBusinessProfile, updateBusinessProfile, type BusinessProfile } from "@/lib/business-profile"
 
-const EMPTY_FORM = { name: "", address: "", email: "", website: "", taxNumber: "", logoUrl: "" }
+const EMPTY_FORM = { name: "", address: "", email: "", phone: "", website: "", taxNumber: "", logoUrl: "" }
 
 export default function BusinessSettingsPage() {
   const [form, setForm] = useState(EMPTY_FORM)
@@ -27,6 +27,7 @@ export default function BusinessSettingsPage() {
         name: profile.name ?? "",
         address: profile.address ?? "",
         email: profile.email ?? "",
+        phone: profile.phone ?? "",
         website: profile.website ?? "",
         taxNumber: profile.taxNumber ?? "",
         logoUrl: profile.logoUrl ?? "",
@@ -52,6 +53,7 @@ export default function BusinessSettingsPage() {
         name: form.name.trim() || "VisualCNS",
         address: form.address.trim(),
         email: form.email.trim(),
+        phone: form.phone.trim(),
         website: form.website.trim(),
         taxNumber: form.taxNumber.trim(),
         logoUrl: form.logoUrl.trim(),
@@ -79,7 +81,10 @@ export default function BusinessSettingsPage() {
     <main className="mx-auto w-full max-w-2xl px-4 pb-16 pt-6 sm:px-6">
       <h1 className="text-xl font-semibold">Business profile</h1>
       <p className="mt-1 text-sm text-muted-foreground">
-        The "Prepared by" details printed at the top of every invoice, estimate, and contract.
+        Your organization details, used on public company pages and every invoice, estimate, and contract.
+      </p>
+      <p className="mt-2 text-xs text-muted-foreground">
+        Business identity and contact fields are public. Do not enter a private personal address or phone number.
       </p>
 
       <form onSubmit={handleSubmit} className="mt-8 space-y-5">
@@ -113,6 +118,19 @@ export default function BusinessSettingsPage() {
             />
           </div>
           <div className="space-y-1.5">
+            <Label htmlFor="phone">Phone</Label>
+            <Input
+              id="phone"
+              type="tel"
+              autoComplete="tel"
+              value={form.phone}
+              onChange={(event) => set("phone", event.target.value)}
+              placeholder="+234 800 000 0000"
+            />
+          </div>
+        </div>
+
+        <div className="space-y-1.5">
             <Label htmlFor="website">Website</Label>
             <Input
               id="website"
@@ -120,7 +138,6 @@ export default function BusinessSettingsPage() {
               onChange={(event) => set("website", event.target.value)}
               placeholder="visualcns.com"
             />
-          </div>
         </div>
 
         <div className="space-y-1.5">

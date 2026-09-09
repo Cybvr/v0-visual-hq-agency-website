@@ -12,6 +12,7 @@ import {
   type User,
 } from "firebase/auth"
 import { auth, googleProvider } from "@/lib/firebase"
+import { ensureAdminBusinessOrganization } from "@/lib/business-profile"
 import { getUser, upsertUserOnLogin, type AppUser, type UserRole } from "@/lib/users"
 
 /** sessionStorage key holding the uid an admin is currently "viewing as". */
@@ -65,6 +66,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             displayName: u.displayName,
             photoURL: u.photoURL,
           })
+          if (doc?.role === "admin") {
+            try {
+              await ensureAdminBusinessOrganization({
+                id: doc.clientId || doc.uid,
+                name: doc.company || doc.displayName || undefined,
+                email: doc.email || undefined,
+                logoUrl: doc.photoURL || undefined,
+              })
+            } catch (organizationError) {
+              console.error("Error provisioning admin organization:", organizationError)
+            }
+          }
           setRealAppUser(doc)
 
           // Restore a "view as" selection made before navigating here. Only

@@ -5,6 +5,7 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { ArrowLeft, Loader2, Plus, Trash2 } from "lucide-react"
 
+import { DangerZone } from "@/components/dashboard/danger-zone"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -21,6 +22,7 @@ import {
   PAYMENT_TERM_OPTIONS,
   computeTotals,
   createInvoice,
+  deleteInvoice,
   dueDateFrom,
   formatMoney,
   invoiceStatusMeta,
@@ -331,6 +333,12 @@ export function InvoiceBuilder({ invoice }: { invoice?: Invoice | null }) {
       setError("Couldn't save this invoice. Try again.")
       setSaving(false)
     }
+  }
+
+  async function handleDelete() {
+    if (!invoice) return
+    await deleteInvoice(invoice.id)
+    router.push("/dashboard/invoices")
   }
 
   return (
@@ -755,6 +763,15 @@ export function InvoiceBuilder({ invoice }: { invoice?: Invoice | null }) {
 
         {error && <p className="text-sm text-destructive">{error}</p>}
       </div>
+
+      {isEdit && invoice && (
+        <DangerZone
+          label="invoice"
+          confirmTitle="Delete this invoice?"
+          confirmDescription={`${invoice.invoiceNumber} will be removed for good. This cannot be undone.`}
+          onDelete={handleDelete}
+        />
+      )}
     </form>
   )
 }

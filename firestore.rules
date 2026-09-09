@@ -134,25 +134,34 @@ service cloud.firestore {
         || (isSignedIn() && resource.data.clientId == myClientId() && resource.data.status != 'draft')
         || resource.data.shareEnabled == true;
       allow write: if isAdmin();
+      // A shared link acts as the acceptance capability. Public visitors may
+      // only move an issued estimate from sent to accepted; every commercial
+      // field remains immutable.
+      allow update: if resource.data.shareEnabled == true
+        && resource.data.status == 'sent'
+        && request.resource.data.status == 'accepted'
+        && request.resource.data.acceptedAt == request.time
+        && request.resource.data.updatedAt == request.time
+        && request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['status', 'acceptedAt', 'updatedAt']);
     }
 
-    // Organizations - the company a client user belongs to (see lib/organizations.ts).
-    // Doc id is the same clientId used everywhere else. Public read: this also
-    // backs each company's public page at visualcns.com/{organization.slug} -
-    // only name/logo/industry/location/website live here, nothing sensitive.
-    // Writes remain admin-only.
+    // Organizations - the company a user belongs to (see lib/organizations.ts).
+    // Doc id is the same clientId used everywhere else. Public fields include
+    // business identity and contact details: name, logo, industry, location,
+    // website, email, phone, address, and tax/registration number. These back
+    // public company pages and issued documents; no private person data lives
+    // here. Writes remain admin-only.
     match /organizations/{organizationId} {
       allow read: if true;
       allow write: if isAdmin();
     }
 
-    // Settings - single-doc site config (see lib/business-profile.ts: the
-    // "Prepared by" issuer info printed on invoices/estimates/contracts).
-    // Public read: it's shown on unauthenticated /share/{invoices,estimates,
-    // contracts} pages. Writes remain admin-only.
+    // Settings is retained only so an admin can perform the one-time migration
+    // from settings/business into the owner organization. It is no longer a
+    // public source of business details.
     match /settings/{settingId} {
-      allow read: if true;
-      allow write: if isAdmin();
+      allow read, write: if isAdmin();
     }
 
     // Approvals - client deliverable sign-off (see lib/approvals.ts).

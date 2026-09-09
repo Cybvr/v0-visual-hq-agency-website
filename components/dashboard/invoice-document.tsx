@@ -28,6 +28,7 @@ export function InvoiceDocument({ invoice, issuer = INVOICE_ISSUER }: { invoice:
           <p className="text-lg font-semibold">{issuer.name}</p>
           <p className="mt-1 whitespace-pre-line text-sm leading-6 text-muted-foreground">{issuer.address}</p>
           {issuer.email && <p className="text-sm text-muted-foreground">{issuer.email}</p>}
+          {issuer.phone && <p className="text-sm text-muted-foreground">{issuer.phone}</p>}
         </div>
         <div className="sm:text-right">
           <p className="text-sm text-muted-foreground">Invoice</p>

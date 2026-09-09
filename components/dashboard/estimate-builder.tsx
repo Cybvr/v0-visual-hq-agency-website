@@ -22,6 +22,7 @@ import {
 import { CSS } from "@dnd-kit/utilities"
 import { ArrowLeft, GripVertical, Loader2, Plus, Trash2 } from "lucide-react"
 
+import { DangerZone } from "@/components/dashboard/danger-zone"
 import { RichTextEditor } from "@/components/dashboard/rich-text-editor"
 import { ShareLinkField } from "@/components/dashboard/share-link-field"
 import { Button } from "@/components/ui/button"
@@ -38,6 +39,7 @@ import { Switch } from "@/components/ui/switch"
 import { Textarea } from "@/components/ui/textarea"
 import {
   createEstimate,
+  deleteEstimate,
   estimateStatusMeta,
   formatMoney,
   nextEstimateNumber,
@@ -56,7 +58,6 @@ const CURRENCIES = [
 ] as const
 
 const DEFAULT_TERMS = "Work begins after acceptance.\nA deposit may be required before work starts.\nPrices exclude taxes and third-party fees unless stated otherwise."
-const DEFAULT_ACCEPTANCE = "To proceed, approve this estimate or reply to confirm the items you would like included. An invoice and project kickoff details will follow acceptance."
 const DEFAULT_DISCLAIMER = "This estimate covers the services described above and is not an invoice. Pricing may be adjusted if the scope changes or new information materially affects delivery."
 
 type EditableLine = {
@@ -135,7 +136,7 @@ function SortableEstimateLine({
       >
         <GripVertical className="size-4" aria-hidden="true" />
       </button>
-      <div className="grid gap-3 pr-10 lg:grid-cols-[1.2fr_1.5fr_0.7fr_0.7fr_auto] lg:items-end lg:pr-10">
+      <div className="grid gap-3 pr-10 lg:grid-cols-[1.2fr_1.5fr_0.7fr_0.7fr_auto] lg:items-start lg:pr-10">
         {children}
       </div>
     </div>
@@ -163,7 +164,6 @@ export function EstimateBuilder({ estimate }: { estimate?: Estimate | null }) {
   )
   const [terms, setTerms] = useState(estimate?.terms ?? DEFAULT_TERMS)
   const [paymentDetails, setPaymentDetails] = useState(estimate?.paymentDetails ?? "")
-  const [acceptance, setAcceptance] = useState(estimate?.acceptance ?? DEFAULT_ACCEPTANCE)
   const [notes, setNotes] = useState(estimate?.notes ?? DEFAULT_DISCLAIMER)
   const [shareEnabled, setShareEnabled] = useState(estimate?.shareEnabled ?? false)
 
@@ -290,7 +290,6 @@ export function EstimateBuilder({ estimate }: { estimate?: Estimate | null }) {
         validUntil,
         terms: terms.trim(),
         paymentDetails: paymentDetails.trim(),
-        acceptance: acceptance.trim(),
         notes: notes.trim(),
         shareEnabled,
       }
@@ -303,6 +302,12 @@ export function EstimateBuilder({ estimate }: { estimate?: Estimate | null }) {
       setError("Couldn’t save this estimate. Try again.")
       setSaving(false)
     }
+  }
+
+  async function handleDelete() {
+    if (!estimate) return
+    await deleteEstimate(estimate.id)
+    router.push("/dashboard/estimates")
   }
 
   return (
@@ -454,7 +459,7 @@ export function EstimateBuilder({ estimate }: { estimate?: Estimate | null }) {
                         onChange={(event) => updateLine(line.id, { details: event.target.value })}
                         placeholder="Audit and resolve delivery issues"
                         rows={3}
-                        className="mt-1 min-h-20 resize-y"
+                        className="mt-1 min-h-20 max-h-40 resize-y overflow-y-auto"
                       />
                     </div>
                     <div>
@@ -465,14 +470,17 @@ export function EstimateBuilder({ estimate }: { estimate?: Estimate | null }) {
                       <Label htmlFor={`amount-${line.id}`}>Amount</Label>
                       <Input id={`amount-${line.id}`} value={line.amount} onChange={(event) => updateLine(line.id, { amount: event.target.value })} inputMode="decimal" placeholder="0.00" className="mt-1" />
                     </div>
-                    <div className="flex h-10 items-center gap-3">
-                      <div className="flex items-center gap-2">
-                        <Switch id={`optional-${line.id}`} checked={line.optional} onCheckedChange={(checked) => updateLine(line.id, { optional: checked })} />
-                        <Label htmlFor={`optional-${line.id}`} className="text-xs">Optional</Label>
+                    <div>
+                      <Label className="invisible select-none">Optional</Label>
+                      <div className="mt-1 flex h-10 items-center gap-3">
+                        <div className="flex items-center gap-2">
+                          <Switch id={`optional-${line.id}`} checked={line.optional} onCheckedChange={(checked) => updateLine(line.id, { optional: checked })} />
+                          <Label htmlFor={`optional-${line.id}`} className="text-xs">Optional</Label>
+                        </div>
+                        <button type="button" onClick={() => setLines((current) => current.filter((entry) => entry.id !== line.id))} disabled={lines.length === 1} aria-label={`Remove item ${index + 1}`} className="inline-flex size-8 items-center justify-center rounded-md text-muted-foreground outline-none transition-colors hover:bg-muted hover:text-destructive focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-40">
+                          <Trash2 className="size-4" aria-hidden="true" />
+                        </button>
                       </div>
-                      <button type="button" onClick={() => setLines((current) => current.filter((entry) => entry.id !== line.id))} disabled={lines.length === 1} aria-label={`Remove item ${index + 1}`} className="inline-flex size-8 items-center justify-center rounded-md text-muted-foreground outline-none transition-colors hover:bg-muted hover:text-destructive focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-40">
-                        <Trash2 className="size-4" aria-hidden="true" />
-                      </button>
                     </div>
                   </SortableEstimateLine>
                 ))}
@@ -495,10 +503,6 @@ export function EstimateBuilder({ estimate }: { estimate?: Estimate | null }) {
             <Textarea id="estimate-payment" value={paymentDetails} onChange={(event) => setPaymentDetails(event.target.value)} rows={7} placeholder="Account name, bank, account number, currency…" className="mt-1" />
           </div>
           <div>
-            <Label htmlFor="estimate-acceptance">Acceptance</Label>
-            <Textarea id="estimate-acceptance" value={acceptance} onChange={(event) => setAcceptance(event.target.value)} rows={5} className="mt-1" />
-          </div>
-          <div>
             <Label htmlFor="estimate-notes">Estimate disclaimer</Label>
             <Textarea id="estimate-notes" value={notes} onChange={(event) => setNotes(event.target.value)} rows={5} className="mt-1" />
           </div>
@@ -506,6 +510,15 @@ export function EstimateBuilder({ estimate }: { estimate?: Estimate | null }) {
 
         {error && <p className="text-sm text-destructive">{error}</p>}
       </div>
+
+      {isEdit && estimate && (
+        <DangerZone
+          label="estimate"
+          confirmTitle="Delete this estimate?"
+          confirmDescription={`${estimate.estimateNumber} will be removed for good. This cannot be undone.`}
+          onDelete={handleDelete}
+        />
+      )}
     </form>
   )
 }

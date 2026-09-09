@@ -1,10 +1,13 @@
 "use client"
 
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { useCallback, useEffect, useMemo, useState } from "react"
-import { Download, Eye, FileSignature, Loader2, Pencil, Plus, Trash2 } from "lucide-react"
+import { Copy, Download, Eye, FileSignature, Loader2, Pencil, Plus, Trash2 } from "lucide-react"
+import { toast } from "sonner"
 
 import { useAuth } from "@/components/auth-provider"
+import { DuplicateDocumentDialog, type DuplicateSelection } from "@/components/dashboard/duplicate-document-dialog"
 import { EmptyState, EmptySearchState } from "@/components/dashboard/empty-state"
 import { UserEditorSheet } from "@/components/dashboard/user-editor-sheet"
 import {
@@ -28,6 +31,7 @@ import {
 } from "@/components/ui/table"
 import {
   contractStatusMeta,
+  createContract,
   deleteContract,
   formatDate,
   getContracts,
@@ -64,6 +68,7 @@ function searchContract(c: Contract) {
 }
 
 export default function ContractsPage() {
+  const router = useRouter()
   const { user, appUser, isAdmin, isImpersonating } = useAuth()
   const clientId = appUser?.clientId ?? ""
   const adminView = isAdmin && !isImpersonating
@@ -74,6 +79,8 @@ export default function ContractsPage() {
   const [confirmDelete, setConfirmDelete] = useState<Contract | null>(null)
   const [clientSheet, setClientSheet] = useState<string | null>(null)
   const [deleting, setDeleting] = useState(false)
+  const [duplicateTarget, setDuplicateTarget] = useState<Contract | null>(null)
+  const [duplicating, setDuplicating] = useState(false)
 
   const fetchData = useCallback(async () => {
     setError(false)
@@ -90,6 +97,32 @@ export default function ContractsPage() {
   useEffect(() => {
     fetchData()
   }, [fetchData])
+
+  async function confirmDuplicateContract(selection: DuplicateSelection) {
+    if (!duplicateTarget || duplicating) return
+    setDuplicating(true)
+    try {
+      const { id: _id, createdAt: _createdAt, updatedAt: _updatedAt, ...rest } = duplicateTarget
+      const newId = await createContract({
+        ...rest,
+        title: `${duplicateTarget.title} (Copy)`,
+        status: "draft",
+        signedOn: "",
+        shareEnabled: false,
+        clientId: selection.clientId,
+        client: selection.client || duplicateTarget.client,
+        projectId: selection.projectId,
+        project: selection.project,
+      })
+      setDuplicateTarget(null)
+      router.push(`/dashboard/contracts/${newId}/edit`)
+    } catch (duplicateError) {
+      console.error("Error duplicating contract:", duplicateError)
+      toast.error("Couldn't duplicate this contract.")
+    } finally {
+      setDuplicating(false)
+    }
+  }
 
   async function removeContract() {
     if (!confirmDelete) return
@@ -132,8 +165,8 @@ export default function ContractsPage() {
         {adminView && (
           <Button asChild>
             <Link href="/dashboard/contracts/new">
-              <Plus className="mr-2 size-4" aria-hidden="true" />
-              New contract
+              <Plus className="size-4" aria-hidden="true" />
+              New
             </Link>
           </Button>
         )}
@@ -157,8 +190,8 @@ export default function ContractsPage() {
             adminView ? (
               <Button asChild variant="outline">
                 <Link href="/dashboard/contracts/new">
-                  <Plus className="mr-2 size-4" aria-hidden="true" />
-                  New contract
+                  <Plus className="size-4" aria-hidden="true" />
+                  New
                 </Link>
               </Button>
             ) : undefined
@@ -280,6 +313,14 @@ export default function ContractsPage() {
                                 </Link>
                                 <button
                                   type="button"
+                                  onClick={() => setDuplicateTarget(contract)}
+                                  aria-label={`Duplicate contract ${contract.title}`}
+                                  className="inline-flex size-8 items-center justify-center rounded-md text-muted-foreground outline-none transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
+                                >
+                                  <Copy className="size-4" aria-hidden="true" />
+                                </button>
+                                <button
+                                  type="button"
                                   onClick={() => setConfirmDelete(contract)}
                                   aria-label={`Delete contract ${contract.title}`}
                                   className="inline-flex size-8 items-center justify-center rounded-md text-muted-foreground outline-none transition-colors hover:bg-muted hover:text-destructive focus-visible:ring-2 focus-visible:ring-ring"
@@ -326,6 +367,17 @@ export default function ContractsPage() {
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>
+
+          <DuplicateDocumentDialog
+            open={duplicateTarget !== null}
+            onOpenChange={(open) => !open && setDuplicateTarget(null)}
+            title={`Duplicate ${duplicateTarget?.title ?? "contract"}`}
+            description="Choose which client and project the copy belongs to."
+            defaultClientId={duplicateTarget?.clientId ?? ""}
+            defaultProjectId={duplicateTarget?.projectId}
+            submitting={duplicating}
+            onConfirm={confirmDuplicateContract}
+          />
         </>
       )}
 

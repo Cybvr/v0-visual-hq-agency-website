@@ -1,4 +1,5 @@
 import Image from "next/image"
+import type { ReactNode } from "react"
 
 import { INVOICE_ISSUER, estimateStatusMeta, formatDate, formatMoney, type Estimate, type InvoiceParty } from "@/lib/billing"
 import { cn } from "@/lib/utils"
@@ -24,9 +25,11 @@ function TextLines({ value }: { value?: string }) {
 export function EstimateDocument({
   estimate,
   issuer = INVOICE_ISSUER,
+  acceptanceAction,
 }: {
   estimate: Estimate
   issuer?: DocumentIssuer
+  acceptanceAction?: ReactNode
 }) {
   const meta = estimateStatusMeta[estimate.status] ?? estimateStatusMeta.draft
   const optionalTotal = estimate.lineItems.reduce((sum, item) => sum + (item.optional ? item.amount : 0), 0)
@@ -46,6 +49,7 @@ export function EstimateDocument({
           </div>
           <p className="mt-3 whitespace-pre-line text-sm leading-6 text-neutral-500">{issuer.address}</p>
           {issuer.email && <p className="text-sm text-neutral-500">{issuer.email}</p>}
+          {issuer.phone && <p className="text-sm text-neutral-500">{issuer.phone}</p>}
           {issuer.website && <p className="text-sm text-neutral-500">{issuer.website}</p>}
         </div>
         <div className="shrink-0 sm:text-right">
@@ -72,6 +76,7 @@ export function EstimateDocument({
           <p className="mt-2 font-semibold">{issuer.name}</p>
           <p className="mt-1 whitespace-pre-line text-sm leading-6 text-neutral-500">{issuer.address}</p>
           {issuer.email && <p className="text-sm text-neutral-500">{issuer.email}</p>}
+          {issuer.phone && <p className="text-sm text-neutral-500">{issuer.phone}</p>}
           {issuer.website && <p className="text-sm text-neutral-500">{issuer.website}</p>}
         </div>
       </section>
@@ -133,20 +138,22 @@ export function EstimateDocument({
         </div>
       </section>
 
-      <section className="px-6 py-9 sm:px-10">
-        <h2 className="text-2xl font-semibold tracking-[-0.025em]">Acceptance</h2>
-        <div className="mt-4 h-0.5 bg-blue-700" />
-        {estimate.acceptance && <p className="mt-4 max-w-[75ch] whitespace-pre-line text-sm leading-6 text-neutral-700">{estimate.acceptance}</p>}
-        <div className="mt-8 grid gap-8 text-sm text-neutral-500 sm:grid-cols-2">
-          <div className="border-t border-neutral-300 pt-3">Accepted for {estimate.preparedFor?.name || estimate.client} · Name &amp; date</div>
-          <div className="border-t border-neutral-300 pt-3">{issuer.name} · Authorised signature</div>
-        </div>
-        {estimate.notes && <p className="mt-8 max-w-[75ch] text-xs italic leading-5 text-neutral-500">{estimate.notes}</p>}
-      </section>
+      {acceptanceAction && (
+        <section className="flex justify-end border-t border-neutral-200 px-6 py-6 sm:px-10 print:hidden">
+          {acceptanceAction}
+        </section>
+      )}
+
+      {estimate.notes && (
+        <section className="px-6 py-6 sm:px-10">
+          <p className="max-w-[75ch] text-xs italic leading-5 text-neutral-500">{estimate.notes}</p>
+        </section>
+      )}
 
       <footer className="border-t border-neutral-200 px-6 py-6 text-sm leading-6 text-neutral-600 sm:px-10">
         <p>{issuer.address}</p>
         {issuer.email && <p>{issuer.email}</p>}
+        {issuer.phone && <p>{issuer.phone}</p>}
         {issuer.website && <p>{issuer.website}</p>}
       </footer>
     </article>

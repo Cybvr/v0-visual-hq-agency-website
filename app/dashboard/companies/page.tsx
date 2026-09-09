@@ -23,7 +23,7 @@ import { DropdownMenuItem } from "@/components/ui/dropdown-menu"
 import { Skeleton } from "@/components/ui/skeleton"
 import { FilterBar, useFilterBar, type SortOption } from "@/components/dashboard/filter-bar"
 import { getOrganizations, type Organization } from "@/lib/organizations"
-import { tsToMillis } from "@/lib/tasks"
+import { formatTimestamp, tsToMillis } from "@/lib/tasks"
 import { getProjects, type Project } from "@/lib/projects"
 import { deleteUser, getUsers, userRef, type AppUser } from "@/lib/users"
 
@@ -67,11 +67,6 @@ function buildMeta(projects: Project[], organizations: Map<string, Organization>
   }
 
   return meta
-}
-
-function projectCountLabel(count: number): string {
-  if (count === 0) return "No projects"
-  return `${count} ${count === 1 ? "project" : "projects"}`
 }
 
 export default function CompaniesPage() {
@@ -246,7 +241,7 @@ export default function CompaniesPage() {
             <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
               {visibleClients.map((client) => {
                 const name = clientName(client)
-                const { label, projectCount } = metaFor(client)
+                const { label } = metaFor(client)
                 const cardProject: Project = {
                   id: client.uid,
                   clientId: workspaceId(client),
@@ -267,7 +262,7 @@ export default function CompaniesPage() {
                       subtitle={label || "No category yet"}
                       footer={
                         <span className="block truncate text-[11px] text-muted-foreground">
-                          {projectCountLabel(projectCount)}
+                          Added {formatTimestamp(client.createdAt)}
                         </span>
                       }
                       menuLabel={`Options for ${name}`}

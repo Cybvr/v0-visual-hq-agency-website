@@ -5,6 +5,7 @@ import { useParams } from "next/navigation"
 import { Loader2 } from "lucide-react"
 
 import { DocumentActions } from "@/components/dashboard/document-actions"
+import { EstimateAcceptButton } from "@/components/dashboard/estimate-accept-button"
 import { EstimateDocument } from "@/components/dashboard/estimate-document"
 import { getEstimate, type Estimate } from "@/lib/billing"
 import { getBusinessProfile, type BusinessProfile } from "@/lib/business-profile"
@@ -66,7 +67,17 @@ export default function SharedEstimatePage() {
         <div className="mb-6 flex justify-end print:hidden">
           <DocumentActions title={`${estimate.client} Estimate ${estimate.estimateNumber}`} />
         </div>
-        <EstimateDocument estimate={estimate} issuer={issuer ?? undefined} />
+        <EstimateDocument
+          estimate={estimate}
+          issuer={issuer ?? undefined}
+          acceptanceAction={(estimate.status === "sent" || estimate.status === "accepted") ? (
+            <EstimateAcceptButton
+              estimateId={estimate.id}
+              status={estimate.status}
+              onAccepted={() => setEstimate((current) => current ? { ...current, status: "accepted" } : current)}
+            />
+          ) : undefined}
+        />
         <p className="mt-6 text-center text-xs text-muted-foreground print:hidden">
           Shared by {issuer?.name ?? "VisualCNS"} · {issuer?.website ?? "visualcns.com"}
         </p>

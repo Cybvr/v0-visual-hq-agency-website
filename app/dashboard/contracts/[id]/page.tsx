@@ -8,12 +8,14 @@ import { ArrowLeft, Loader2 } from "lucide-react"
 import { useAuth } from "@/components/auth-provider"
 import { ContractDocument } from "@/components/dashboard/contract-document"
 import { DocumentActions } from "@/components/dashboard/document-actions"
+import { getBusinessProfile, type BusinessProfile } from "@/lib/business-profile"
 import { getContract, type Contract } from "@/lib/billing"
 
 export default function ContractDetailPage() {
   const { id } = useParams<{ id: string }>()
   const { user, appUser, isAdmin, isImpersonating } = useAuth()
   const [contract, setContract] = useState<Contract | null>(null)
+  const [issuer, setIssuer] = useState<BusinessProfile | null>(null)
   const [loading, setLoading] = useState(true)
   const [failed, setFailed] = useState(false)
 
@@ -21,9 +23,10 @@ export default function ContractDetailPage() {
     if (!id || !user || !appUser) return
     let active = true
     setLoading(true)
-    getContract(id)
-      .then((record) => {
+    Promise.all([getContract(id), getBusinessProfile()])
+      .then(([record, profile]) => {
         if (!active) return
+        setIssuer(profile)
         if (!record) {
           setContract(null)
           return
@@ -61,7 +64,7 @@ export default function ContractDetailPage() {
         <DocumentActions url={contract.url} />
       </div>
 
-      <ContractDocument contract={contract} />
+      <ContractDocument contract={contract} issuer={issuer ?? undefined} />
     </main>
   )
 }

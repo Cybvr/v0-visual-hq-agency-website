@@ -1,18 +1,22 @@
 "use client"
 
 import { useRef, useState } from "react"
-import { Upload, X, Loader2 } from "lucide-react"
+import { Loader2, Play, Upload, X } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { mediaKindForFile, mediaKindForUrl } from "@/lib/media"
 
 const CLOUD_NAME = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME!
 const UPLOAD_PRESET = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET!
 
 async function uploadToCloudinary(file: File): Promise<string> {
+  const kind = mediaKindForFile(file)
+  if (!kind) throw new Error("Choose an image or video file.")
+
   const formData = new FormData()
   formData.append("file", file)
   formData.append("upload_preset", UPLOAD_PRESET)
 
-  const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, {
+  const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/${kind}/upload`, {
     method: "POST",
     body: formData,
   })
@@ -111,30 +115,41 @@ export function ImageDropzone({ value, onChange, label }: ImageDropzoneProps) {
 interface GalleryDropzoneProps {
   value: string[]
   onChange: (urls: string[]) => void
+  acceptVideos?: boolean
 }
 
-export function GalleryDropzone({ value, onChange }: GalleryDropzoneProps) {
+export function GalleryDropzone({ value, onChange, acceptVideos = false }: GalleryDropzoneProps) {
   const [uploading, setUploading] = useState(false)
   const [dragging, setDragging] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
   async function handleFiles(files: FileList) {
+    setError(null)
+    const accepted = Array.from(files).filter((file) => {
+      const kind = mediaKindForFile(file)
+      return kind === "image" || (acceptVideos && kind === "video")
+    })
+
+    if (accepted.length === 0) {
+      setError(acceptVideos ? "Choose image or video files." : "Choose image files.")
+      return
+    }
+
     setUploading(true)
     try {
-      const uploads = await Promise.all(
-        Array.from(files)
-          .filter((f) => f.type.startsWith("image/"))
-          .map(uploadToCloudinary)
-      )
-      onChange([...value, ...uploads])
-    } catch (e) {
-      console.error("Upload error:", e)
+      const results = await Promise.allSettled(accepted.map(uploadToCloudinary))
+      const uploads = results.flatMap((result) => (result.status === "fulfilled" ? [result.value] : []))
+      if (uploads.length > 0) onChange([...value, ...uploads])
+      if (uploads.length < accepted.length) {
+        setError(`${accepted.length - uploads.length} ${accepted.length - uploads.length === 1 ? "file" : "files"} could not be uploaded. Try again.`)
+      }
     } finally {
       setUploading(false)
     }
   }
 
-  function removeImage(index: number) {
+  function removeMedia(index: number) {
     onChange(value.filter((_, i) => i !== index))
   }
 
@@ -144,11 +159,22 @@ export function GalleryDropzone({ value, onChange }: GalleryDropzoneProps) {
         <div className="grid grid-cols-3 gap-2">
           {value.map((url, i) => (
             <div key={i} className="relative group aspect-square">
-              <img src={url} alt="" className="w-full h-full object-cover rounded" />
+              {mediaKindForUrl(url) === "video" ? (
+                <>
+                  <video src={url} muted playsInline preload="metadata" className="h-full w-full rounded object-cover" />
+                  <span className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/15 text-white">
+                    <Play className="size-5 fill-current" aria-hidden="true" />
+                  </span>
+                </>
+              ) : (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={url} alt="" className="w-full h-full object-cover rounded" />
+              )}
               <button
                 type="button"
-                onClick={() => removeImage(i)}
-                className="absolute -top-2 -right-2 w-6 h-6 bg-destructive text-destructive-foreground rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow"
+                onClick={() => removeMedia(i)}
+                aria-label={`Remove ${mediaKindForUrl(url)}`}
+                className="absolute -top-2 -right-2 w-6 h-6 bg-destructive text-destructive-foreground rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity shadow"
               >
                 <X className="w-3 h-3" />
               </button>
@@ -179,7 +205,7 @@ export function GalleryDropzone({ value, onChange }: GalleryDropzoneProps) {
           ) : (
             <>
               <Upload className="w-6 h-6" />
-              <p className="text-sm">Drop images here or click to browse</p>
+              <p className="text-sm">Drop {acceptVideos ? "images or videos" : "images"} here or click to browse</p>
               <p className="text-xs">You can select multiple files</p>
             </>
           )}
@@ -187,7 +213,7 @@ export function GalleryDropzone({ value, onChange }: GalleryDropzoneProps) {
         <input
           ref={inputRef}
           type="file"
-          accept="image/*"
+          accept={acceptVideos ? "image/*,video/*" : "image/*"}
           multiple
           className="hidden"
           onChange={(e) => {
@@ -196,6 +222,7 @@ export function GalleryDropzone({ value, onChange }: GalleryDropzoneProps) {
           }}
         />
       </div>
+      {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
     </div>
   )
 }

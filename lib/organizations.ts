@@ -11,12 +11,18 @@ export interface Organization {
   /** Firestore document id === the clientId used across projects/invoices/tasks. */
   id: string
   name: string
+  /** Marks the agency's own organization, used as the issuer on financial documents. */
+  isOwner?: boolean
   logoUrl?: string
   industry?: string
   location?: string
   website?: string
-  /** Media an admin uploaded to the company page, shown alongside project imagery. */
+  /** Images and videos an admin uploaded to the company page. */
   media?: string[]
+  email?: string
+  phone?: string
+  address?: string
+  taxNumber?: string
   /** The public page's URL segment, e.g. visualcns.com/pan-atlantic-university */
   slug?: string
   /**
@@ -83,6 +89,14 @@ export async function getOrganization(id: string): Promise<Organization | null> 
 export async function getOrganizations(): Promise<Organization[]> {
   const snapshot = await getDocs(collection(db, COLLECTION_NAME))
   return snapshot.docs.map((d) => ({ ...(d.data() as object), id: d.id })) as Organization[]
+}
+
+/** The agency organization used as the canonical public business profile. */
+export async function getOwnerOrganization(): Promise<Organization | null> {
+  const snapshot = await getDocs(query(collection(db, COLLECTION_NAME), where("isOwner", "==", true)))
+  if (snapshot.empty) return null
+  const first = snapshot.docs[0]
+  return { ...(first.data() as object), id: first.id } as Organization
 }
 
 export async function getOrganizationBySlug(slug: string): Promise<Organization | null> {

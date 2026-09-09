@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation"
 import { ArrowLeft, Loader2 } from "lucide-react"
 import { toast } from "sonner"
 
+import { DangerZone } from "@/components/dashboard/danger-zone"
 import { RichTextEditor } from "@/components/dashboard/rich-text-editor"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -20,6 +21,7 @@ import {
 import {
   contractStatusMeta,
   createContract,
+  deleteContract,
   updateContract,
   type Contract,
   type ContractStatus,
@@ -142,6 +144,12 @@ export function ContractBuilder({ contract }: { contract?: Contract | null }) {
       setError("Couldn't save this contract. Try again.")
       setSaving(false)
     }
+  }
+
+  async function handleDelete() {
+    if (!contract) return
+    await deleteContract(contract.id)
+    router.push("/dashboard/contracts")
   }
 
   return (
@@ -320,6 +328,15 @@ export function ContractBuilder({ contract }: { contract?: Contract | null }) {
 
         {error && <p className="text-sm text-destructive">{error}</p>}
       </div>
+
+      {isEdit && contract && (
+        <DangerZone
+          label="contract"
+          confirmTitle="Delete this contract?"
+          confirmDescription={`${contract.title} will be removed for good. This cannot be undone.`}
+          onDelete={handleDelete}
+        />
+      )}
     </form>
   )
 }

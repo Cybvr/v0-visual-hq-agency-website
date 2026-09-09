@@ -1,10 +1,13 @@
 "use client"
 
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { useCallback, useEffect, useMemo, useState } from "react"
-import { Eye, FileText, Loader2, Pencil, Plus, Trash2 } from "lucide-react"
+import { Copy, Eye, FileText, Loader2, Pencil, Plus, Trash2 } from "lucide-react"
+import { toast } from "sonner"
 
 import { useAuth } from "@/components/auth-provider"
+import { DuplicateDocumentDialog, type DuplicateSelection } from "@/components/dashboard/duplicate-document-dialog"
 import { EmptySearchState, EmptyState } from "@/components/dashboard/empty-state"
 import { FilterBar, useFilterBar, type SortOption } from "@/components/dashboard/filter-bar"
 import { UserEditorSheet } from "@/components/dashboard/user-editor-sheet"
@@ -21,12 +24,14 @@ import {
 import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import {
+  createEstimate,
   deleteEstimate,
   estimateStatusMeta,
   formatDate,
   formatMoney,
   getEstimates,
   getEstimatesByClientId,
+  nextEstimateNumber,
   type Estimate,
 } from "@/lib/billing"
 import { tsToMillis } from "@/lib/tasks"
@@ -46,6 +51,7 @@ function searchEstimate(estimate: Estimate) {
 }
 
 export default function EstimatesPage() {
+  const router = useRouter()
   const { user, appUser, isAdmin, isImpersonating } = useAuth()
   const clientId = appUser?.clientId ?? ""
   const adminView = isAdmin && !isImpersonating
@@ -55,6 +61,8 @@ export default function EstimatesPage() {
   const [confirmDelete, setConfirmDelete] = useState<Estimate | null>(null)
   const [clientSheet, setClientSheet] = useState<string | null>(null)
   const [deleting, setDeleting] = useState(false)
+  const [duplicateTarget, setDuplicateTarget] = useState<Estimate | null>(null)
+  const [duplicating, setDuplicating] = useState(false)
 
   const fetchData = useCallback(async () => {
     setError(false)
@@ -71,6 +79,32 @@ export default function EstimatesPage() {
   useEffect(() => {
     void fetchData()
   }, [fetchData])
+
+  async function confirmDuplicateEstimate(selection: DuplicateSelection) {
+    if (!duplicateTarget || duplicating) return
+    setDuplicating(true)
+    try {
+      const estimateNumber = await nextEstimateNumber()
+      const { id: _id, createdAt: _createdAt, updatedAt: _updatedAt, ...rest } = duplicateTarget
+      const newId = await createEstimate({
+        ...rest,
+        estimateNumber,
+        status: "draft",
+        shareEnabled: false,
+        clientId: selection.clientId,
+        client: selection.client || duplicateTarget.client,
+        projectId: selection.projectId,
+        project: selection.project,
+      })
+      setDuplicateTarget(null)
+      router.push(`/dashboard/estimates/${newId}/edit`)
+    } catch (duplicateError) {
+      console.error("Error duplicating estimate:", duplicateError)
+      toast.error("Couldn't duplicate this estimate.")
+    } finally {
+      setDuplicating(false)
+    }
+  }
 
   async function removeEstimate() {
     if (!confirmDelete) return
@@ -108,7 +142,7 @@ export default function EstimatesPage() {
           <h1 className="text-2xl font-semibold tracking-[-0.02em]">Estimates</h1>
           <p className="mt-1 text-sm text-muted-foreground">Price and scope work before it becomes an invoice.</p>
         </div>
-        {adminView && <Button asChild><Link href="/dashboard/estimates/new"><Plus className="size-4" aria-hidden="true" />New estimate</Link></Button>}
+        {adminView && <Button asChild><Link href="/dashboard/estimates/new"><Plus className="size-4" aria-hidden="true" />New</Link></Button>}
       </div>
 
       {loading ? (
@@ -121,7 +155,7 @@ export default function EstimatesPage() {
           icon={FileText}
           title="No estimates yet"
           description={adminView ? "Create an estimate to price and scope client work." : "Estimates sent to you will show up here."}
-          action={adminView ? <Button asChild variant="outline"><Link href="/dashboard/estimates/new"><Plus className="size-4" aria-hidden="true" />New estimate</Link></Button> : undefined}
+          action={adminView ? <Button asChild variant="outline"><Link href="/dashboard/estimates/new"><Plus className="size-4" aria-hidden="true" />New</Link></Button> : undefined}
         />
       ) : (
         <>
@@ -157,6 +191,7 @@ export default function EstimatesPage() {
                             <Link href={`/dashboard/estimates/${estimate.id}`} aria-label={`View estimate ${estimate.estimateNumber}`} className="inline-flex size-8 items-center justify-center rounded-md text-muted-foreground outline-none transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"><Eye className="size-4" aria-hidden="true" /></Link>
                             {adminView && <>
                               <Link href={`/dashboard/estimates/${estimate.id}/edit`} aria-label={`Edit estimate ${estimate.estimateNumber}`} className="inline-flex size-8 items-center justify-center rounded-md text-muted-foreground outline-none transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"><Pencil className="size-4" aria-hidden="true" /></Link>
+                              <button type="button" onClick={() => setDuplicateTarget(estimate)} aria-label={`Duplicate estimate ${estimate.estimateNumber}`} className="inline-flex size-8 items-center justify-center rounded-md text-muted-foreground outline-none transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"><Copy className="size-4" aria-hidden="true" /></button>
                               <button type="button" onClick={() => setConfirmDelete(estimate)} aria-label={`Delete estimate ${estimate.estimateNumber}`} className="inline-flex size-8 items-center justify-center rounded-md text-muted-foreground outline-none transition-colors hover:bg-muted hover:text-destructive focus-visible:ring-2 focus-visible:ring-ring"><Trash2 className="size-4" aria-hidden="true" /></button>
                             </>}
                           </div>
@@ -177,6 +212,19 @@ export default function EstimatesPage() {
           <AlertDialogFooter><AlertDialogCancel disabled={deleting}>Cancel</AlertDialogCancel><AlertDialogAction onClick={(event) => { event.preventDefault(); void removeEstimate() }} disabled={deleting}>{deleting && <Loader2 className="size-4 animate-spin" aria-hidden="true" />}Delete</AlertDialogAction></AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>}
+
+      {adminView && (
+        <DuplicateDocumentDialog
+          open={duplicateTarget !== null}
+          onOpenChange={(open) => !open && setDuplicateTarget(null)}
+          title={`Duplicate ${duplicateTarget?.estimateNumber ?? "estimate"}`}
+          description="Choose which client and project the copy belongs to."
+          defaultClientId={duplicateTarget?.clientId ?? ""}
+          defaultProjectId={duplicateTarget?.projectId}
+          submitting={duplicating}
+          onConfirm={confirmDuplicateEstimate}
+        />
+      )}
 
       {adminView && <UserEditorSheet open={clientSheet !== null} clientId={clientSheet ?? ""} onClose={() => setClientSheet(null)} onSaved={() => setClientSheet(null)} />}
     </main>

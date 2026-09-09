@@ -7,6 +7,7 @@ import { Loader2 } from "lucide-react"
 import { CompanyBanner } from "@/components/company/company-banner"
 import { ContractDocument } from "@/components/dashboard/contract-document"
 import { DocumentActions } from "@/components/dashboard/document-actions"
+import { getBusinessProfile, type BusinessProfile } from "@/lib/business-profile"
 import { getContract, type Contract } from "@/lib/billing"
 import { getOrganization, type Organization } from "@/lib/organizations"
 import type { Project } from "@/lib/projects"
@@ -16,6 +17,7 @@ export default function SharedContractPage() {
   const { id } = useParams<{ id: string }>()
   const [contract, setContract] = useState<Contract | null>(null)
   const [organization, setOrganization] = useState<Organization | null>(null)
+  const [issuer, setIssuer] = useState<BusinessProfile | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -30,10 +32,14 @@ export default function SharedContractPage() {
         // The org header is nice-to-have on top of the contract itself, so a
         // failure here never blocks the document from showing.
         if (!visible) return
-        try {
-          const org = await getOrganization(visible.clientId)
-          if (active) setOrganization(org)
-        } catch {
+        const [orgResult, profileResult] = await Promise.allSettled([
+          getOrganization(visible.clientId),
+          getBusinessProfile(),
+        ])
+        if (!active) return
+        if (orgResult.status === "fulfilled") setOrganization(orgResult.value)
+        if (profileResult.status === "fulfilled") setIssuer(profileResult.value)
+        if (orgResult.status === "rejected" && profileResult.status === "rejected") {
           // Header just stays without a logo/industry.
         }
       })
@@ -86,7 +92,7 @@ export default function SharedContractPage() {
         <div className="mb-6 print:hidden">
           <CompanyBanner name={companyName} categoryLabel={organization?.industry ?? ""} coverProject={coverProject} />
         </div>
-        <ContractDocument contract={contract} />
+        <ContractDocument contract={contract} issuer={issuer ?? undefined} />
         <p className="mt-6 text-center text-xs text-muted-foreground print:hidden">Shared by VisualHQ</p>
       </div>
     </main>

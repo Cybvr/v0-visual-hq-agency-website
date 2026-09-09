@@ -1,30 +1,32 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Images, Plus, X } from "lucide-react"
+import { Images, Play, Plus, X } from "lucide-react"
 
 import { GalleryDropzone } from "@/components/image-dropzone"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { mediaKindForUrl, type MediaKind } from "@/lib/media"
 import type { Project } from "@/lib/projects"
 
 interface MediaItem {
   url: string
   label: string
   project: string
+  kind: MediaKind
 }
 
 function derivedMedia(logoUrl: string | undefined, projects: Project[]): MediaItem[] {
   const items: MediaItem[] = []
 
-  if (logoUrl) items.push({ url: logoUrl, label: "Company logo", project: "Company" })
+  if (logoUrl) items.push({ url: logoUrl, label: "Company logo", project: "Company", kind: mediaKindForUrl(logoUrl) })
 
   for (const project of projects) {
     const cover = project.imageUrl || project.thumbnailUrl
-    if (cover) items.push({ url: cover, label: "Project cover", project: project.title })
-    if (project.logoUrl) items.push({ url: project.logoUrl, label: "Project logo", project: project.title })
+    if (cover) items.push({ url: cover, label: "Project cover", project: project.title, kind: mediaKindForUrl(cover) })
+    if (project.logoUrl) items.push({ url: project.logoUrl, label: "Project logo", project: project.title, kind: mediaKindForUrl(project.logoUrl) })
     for (const [index, url] of (project.gallery ?? []).entries()) {
-      if (url) items.push({ url, label: `Gallery image ${index + 1}`, project: project.title })
+      if (url) items.push({ url, label: `Gallery media ${index + 1}`, project: project.title, kind: mediaKindForUrl(url) })
     }
   }
 
@@ -49,7 +51,7 @@ export function CompanyMedia({
   const [lightbox, setLightbox] = useState<MediaItem | null>(null)
   const uploadedItems: MediaItem[] = uploaded
     .filter(Boolean)
-    .map((url) => ({ url, label: "Uploaded media", project: "Company" }))
+    .map((url) => ({ url, label: "Uploaded media", project: "Company", kind: mediaKindForUrl(url) }))
 
   // The uploaded media always shows in the grid; admins manage it through the
   // modal opened by the Add media button.
@@ -84,7 +86,11 @@ export function CompanyMedia({
             <DialogHeader>
               <DialogTitle>Add media</DialogTitle>
             </DialogHeader>
-            <GalleryDropzone value={uploaded.filter(Boolean)} onChange={(urls) => onUploadedChange?.(urls)} />
+            <GalleryDropzone
+              value={uploaded.filter(Boolean)}
+              acceptVideos
+              onChange={(urls) => onUploadedChange?.(urls)}
+            />
           </DialogContent>
         </Dialog>
       )}
@@ -95,7 +101,7 @@ export function CompanyMedia({
             <Images className="size-5 text-muted-foreground" aria-hidden="true" />
           </span>
           <h3 className="mt-4 font-medium">No media yet</h3>
-          <p className="mt-1 text-sm text-muted-foreground">Project covers and gallery images will appear here.</p>
+          <p className="mt-1 text-sm text-muted-foreground">Project covers, images, and videos will appear here.</p>
         </div>
       ) : (
         <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
@@ -104,17 +110,33 @@ export function CompanyMedia({
               key={item.url}
               type="button"
               onClick={() => setLightbox(item)}
-              className="aspect-square overflow-hidden rounded-[10px] bg-muted outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              className="relative aspect-square overflow-hidden rounded-[10px] bg-muted outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
               aria-label={`View ${item.label} from ${item.project}`}
             >
-              {/* Media URLs may come from any configured storage host. */}
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={item.url}
-                alt={`${item.label} from ${item.project}`}
-                loading="lazy"
-                className="h-full w-full object-cover transition-transform duration-300 hover:scale-[1.02]"
-              />
+              {item.kind === "video" ? (
+                <>
+                  <video
+                    src={item.url}
+                    muted
+                    playsInline
+                    preload="metadata"
+                    aria-hidden="true"
+                    className="h-full w-full object-cover transition-transform duration-300 hover:scale-[1.02]"
+                  />
+                  <span className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/15 text-white">
+                    <Play className="size-7 fill-current" aria-hidden="true" />
+                  </span>
+                </>
+              ) : (
+                // Media URLs may come from any configured storage host.
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={item.url}
+                  alt={`${item.label} from ${item.project}`}
+                  loading="lazy"
+                  className="h-full w-full object-cover transition-transform duration-300 hover:scale-[1.02]"
+                />
+              )}
             </button>
           ))}
         </div>
@@ -136,13 +158,24 @@ export function CompanyMedia({
           >
             <X className="size-5" aria-hidden="true" />
           </button>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={lightbox.url}
-            alt={`${lightbox.label} from ${lightbox.project}`}
-            className="max-h-full max-w-full rounded-lg object-contain"
-            onClick={(event) => event.stopPropagation()}
-          />
+          {lightbox.kind === "video" ? (
+            <video
+              src={lightbox.url}
+              controls
+              playsInline
+              preload="metadata"
+              className="max-h-full max-w-full rounded-lg object-contain"
+              onClick={(event) => event.stopPropagation()}
+            />
+          ) : (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={lightbox.url}
+              alt={`${lightbox.label} from ${lightbox.project}`}
+              className="max-h-full max-w-full rounded-lg object-contain"
+              onClick={(event) => event.stopPropagation()}
+            />
+          )}
         </div>
       )}
     </section>

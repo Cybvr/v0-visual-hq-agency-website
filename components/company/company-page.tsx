@@ -467,7 +467,10 @@ export function CompanyPage({
                   />
                 )}
                 {selectedDocument.kind === "contract" && (
-                  <ContractDocument contract={contracts.find((c) => c.id === selectedDocument.id) as Contract} />
+                  <ContractDocument
+                    contract={contracts.find((c) => c.id === selectedDocument.id) as Contract}
+                    issuer={issuer ?? undefined}
+                  />
                 )}
                 {selectedDocument.kind === "estimate" && (
                   <EstimateDocument

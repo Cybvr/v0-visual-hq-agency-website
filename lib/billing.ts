@@ -7,6 +7,7 @@ import {
   deleteDoc,
   doc,
   query,
+  serverTimestamp,
   where,
   Timestamp,
 } from "firebase/firestore"
@@ -35,6 +36,7 @@ export interface InvoiceDiscount {
 export interface InvoiceParty {
   name: string
   email?: string
+  phone?: string
   address?: string
   taxNumber?: string
   website?: string
@@ -136,6 +138,8 @@ export interface Estimate {
   terms?: string
   paymentDetails?: string
   acceptance?: string
+  /** Set automatically when a client accepts a shared estimate. */
+  acceptedAt?: Timestamp
   /** Estimate disclaimer shown below acceptance. */
   notes?: string
   /** Readable without an account at /share/estimates/{id} once turned on. */
@@ -425,6 +429,15 @@ export async function createEstimate(data: Omit<Estimate, "id" | "createdAt" | "
 
 export async function updateEstimate(id: string, data: Partial<Omit<Estimate, "id" | "createdAt">>): Promise<void> {
   await updateDoc(doc(db, ESTIMATES, id), { ...data, updatedAt: Timestamp.now() })
+}
+
+/** Accept a shared estimate without collecting a redundant signature form. */
+export async function acceptEstimate(id: string): Promise<void> {
+  await updateDoc(doc(db, ESTIMATES, id), {
+    status: "accepted",
+    acceptedAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+  })
 }
 
 export async function deleteEstimate(id: string): Promise<void> {

@@ -1,10 +1,13 @@
 "use client"
 
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { useCallback, useEffect, useMemo, useState } from "react"
-import { Eye, Loader2, Pencil, Plus, Receipt, Trash2 } from "lucide-react"
+import { Copy, Eye, Loader2, Pencil, Plus, Receipt, Trash2 } from "lucide-react"
+import { toast } from "sonner"
 
 import { useAuth } from "@/components/auth-provider"
+import { DuplicateDocumentDialog, type DuplicateSelection } from "@/components/dashboard/duplicate-document-dialog"
 import { EmptyState, EmptySearchState } from "@/components/dashboard/empty-state"
 import { UserEditorSheet } from "@/components/dashboard/user-editor-sheet"
 import {
@@ -27,12 +30,14 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import {
+  createInvoice,
   deleteInvoice,
   formatDate,
   formatMoney,
   getInvoices,
   getInvoicesByClientId,
   invoiceStatusMeta,
+  nextInvoiceNumber,
   type Invoice,
 } from "@/lib/billing"
 import { FilterBar, useFilterBar, type SortOption } from "@/components/dashboard/filter-bar"
@@ -58,6 +63,7 @@ function searchInvoice(i: Invoice) {
 }
 
 export default function InvoicesPage() {
+  const router = useRouter()
   const { user, appUser, isAdmin, isImpersonating } = useAuth()
   const clientId = appUser?.clientId ?? ""
   const adminView = isAdmin && !isImpersonating
@@ -68,6 +74,8 @@ export default function InvoicesPage() {
   const [confirmDelete, setConfirmDelete] = useState<Invoice | null>(null)
   const [clientSheet, setClientSheet] = useState<string | null>(null)
   const [deleting, setDeleting] = useState(false)
+  const [duplicateTarget, setDuplicateTarget] = useState<Invoice | null>(null)
+  const [duplicating, setDuplicating] = useState(false)
 
   const fetchData = useCallback(async () => {
     setError(false)
@@ -84,6 +92,32 @@ export default function InvoicesPage() {
   useEffect(() => {
     fetchData()
   }, [fetchData])
+
+  async function confirmDuplicateInvoice(selection: DuplicateSelection) {
+    if (!duplicateTarget || duplicating) return
+    setDuplicating(true)
+    try {
+      const invoiceNumber = await nextInvoiceNumber()
+      const { id: _id, createdAt: _createdAt, updatedAt: _updatedAt, ...rest } = duplicateTarget
+      const newId = await createInvoice({
+        ...rest,
+        invoiceNumber,
+        status: "draft",
+        shareEnabled: false,
+        clientId: selection.clientId,
+        client: selection.client || duplicateTarget.client,
+        projectId: selection.projectId,
+        project: selection.project,
+      })
+      setDuplicateTarget(null)
+      router.push(`/dashboard/invoices/${newId}/edit`)
+    } catch (err) {
+      console.error("Error duplicating invoice:", err)
+      toast.error("Couldn't duplicate this invoice.")
+    } finally {
+      setDuplicating(false)
+    }
+  }
 
   async function removeInvoice() {
     if (!confirmDelete) return
@@ -262,6 +296,14 @@ export default function InvoicesPage() {
                                 </Link>
                                 <button
                                   type="button"
+                                  onClick={() => setDuplicateTarget(invoice)}
+                                  aria-label={`Duplicate invoice ${invoice.invoiceNumber}`}
+                                  className="inline-flex size-8 items-center justify-center rounded-md text-muted-foreground outline-none transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
+                                >
+                                  <Copy className="size-4" aria-hidden="true" />
+                                </button>
+                                <button
+                                  type="button"
                                   onClick={() => setConfirmDelete(invoice)}
                                   aria-label={`Delete invoice ${invoice.invoiceNumber}`}
                                   className="inline-flex size-8 items-center justify-center rounded-md text-muted-foreground outline-none transition-colors hover:bg-muted hover:text-destructive focus-visible:ring-2 focus-visible:ring-ring"
@@ -308,6 +350,17 @@ export default function InvoicesPage() {
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>
+
+          <DuplicateDocumentDialog
+            open={duplicateTarget !== null}
+            onOpenChange={(open) => !open && setDuplicateTarget(null)}
+            title={`Duplicate ${duplicateTarget?.invoiceNumber ?? "invoice"}`}
+            description="Choose which client and project the copy belongs to."
+            defaultClientId={duplicateTarget?.clientId ?? ""}
+            defaultProjectId={duplicateTarget?.projectId}
+            submitting={duplicating}
+            onConfirm={confirmDuplicateInvoice}
+          />
         </>
       )}
 
