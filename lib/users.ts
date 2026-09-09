@@ -178,8 +178,8 @@ export async function upsertUserOnLogin(profile: {
 
   const base: Record<string, unknown> = {
     email: profile.email ?? "",
-    displayName: profile.displayName ?? "",
-    photoURL: profile.photoURL ?? "",
+    displayName: profile.displayName || existing.data()?.displayName || "",
+    photoURL: profile.photoURL || existing.data()?.photoURL || "",
     updatedAt: Timestamp.now(),
   }
   if (!existing.exists()) {
@@ -200,7 +200,8 @@ export async function upsertUserOnLogin(profile: {
   // predate slugs are backfilled on their next login.
   if (!existing.exists() || !existing.data()?.slug) {
     const preferred = profile.displayName || (profile.email ?? "").split("@")[0] || "user"
-    base.slug = await uniqueUserSlug(preferred, profile.uid)
+    // Self provisioning cannot query other users under the access rules.
+    base.slug = `${preferred.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || "user"}-${profile.uid}`
   }
 
   await setDoc(ref, base, { merge: true })

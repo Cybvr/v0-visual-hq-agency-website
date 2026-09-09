@@ -11,6 +11,7 @@ import {
   Timestamp,
 } from "firebase/firestore"
 import { db } from "./firebase"
+import { syncPortalTask, deleteAgencyRecord } from "./portal-data"
 
 export type TaskStatus = "todo" | "in-progress" | "review" | "done"
 export type TaskPriority = "low" | "medium" | "high"
@@ -154,14 +155,11 @@ export async function createTask(data: Omit<Task, "id" | "createdAt" | "updatedA
 }
 
 export async function updateTask(id: string, data: Partial<Omit<Task, "id" | "createdAt">>): Promise<void> {
-  await updateDoc(doc(db, COLLECTION_NAME, id), {
-    ...data,
-    updatedAt: Timestamp.now(),
-  })
+  await syncPortalTask(id, data)
 }
 
 export async function deleteTask(id: string): Promise<void> {
-  await deleteDoc(doc(db, COLLECTION_NAME, id))
+  await deleteAgencyRecord("tasks", id)
 }
 
 // Starter tasks seeded for a brand-new client so their board isn't empty and

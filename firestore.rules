@@ -1,176 +1,110 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-
-    // --- Helpers -----------------------------------------------------------
-    function isSignedIn() {
-      return request.auth != null;
-    }
-
-    // Reads the caller's own users/{uid} doc to check their role.
+    function signedIn() { return request.auth != null; }
     function isAdmin() {
-      return isSignedIn()
-        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
-        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+      return signedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+    function clientId() { return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.clientId; }
+    function owns(data) { return signedIn() && data.clientId == clientId(); }
+    function visibleProject(projectId) {
+      return signedIn() && get(/databases/$(database)/documents/portalProjects/$(projectId)).data.clientId == clientId();
+    }
+    function visibleTask(taskId) {
+      let task = get(/databases/$(database)/documents/portalTasks/$(taskId)).data;
+      return owns(task) && visibleProject(task.projectId);
+    }
+    function assignedTask(taskId) {
+      let task = get(/databases/$(database)/documents/portalTasks/$(taskId)).data;
+      return visibleTask(taskId) && task.assigneeUid == request.auth.uid;
+    }
+    function completionOnly() {
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'updatedAt'])
+        && request.resource.data.status in ['todo', 'done']
+        && request.resource.data.updatedAt == request.time;
     }
 
-    // -----------------------------------------------------------------------
-    // NOTE: The previous open catch-all
-    //   match /{collection}/{document=**} { allow read, write: if request.auth != null; }
-    // let ANY signed-in user read/write EVERY collection. That broke client
-    // isolation (a client could read other clients' data), so it is removed.
-    // Access is now granted per-collection below. Anything without a matching
-    // rule is denied by default.
-    // -----------------------------------------------------------------------
+    match /portfolio/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /jpportfolio/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /organizations/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /settings/{id} { allow read, write: if isAdmin(); }
 
-    // Portfolio - public site content. Public read; writes admin-only.
-    match /portfolio/{portfolioId} {
-      allow read: if true;
-      allow write: if isAdmin();
-    }
-
-    // JPPortfolio - public read; writes admin-only.
-    match /jpportfolio/{projectId} {
-      allow read: if true;
-      allow write: if isAdmin();
-    }
-
-    // Documents - admins manage; clients read documents shared with them,
-    // their client workspace, or their explicit user id.
-    match /documents/{documentId} {
-      allow read: if isAdmin() || (isSignedIn() && (
-        resource.data.clientId == myClientId()
-        || request.auth.uid in resource.data.get('sharedWithUserIds', [])
-      ));
-      allow write: if isAdmin();
-    }
-
-    // Users - clients can manage their own profile, but cannot change their
-    // role or move themselves into another client's workspace.
-    match /users/{userId} {
-      allow read: if isAdmin() || (isSignedIn() && request.auth.uid == userId);
-      allow create: if isAdmin() || (isSignedIn()
-        && request.auth.uid == userId
-        && request.resource.data.role == 'client'
-        && request.resource.data.clientId == userId);
-      allow update: if isAdmin() || (isSignedIn()
-        && request.auth.uid == userId
+    match /users/{uid} {
+      allow read: if isAdmin() || (signedIn() && request.auth.uid == uid);
+      allow create: if isAdmin() || (signedIn() && request.auth.uid == uid
+        && request.resource.data.role == 'client' && request.resource.data.clientId == uid);
+      allow update: if isAdmin() || (signedIn() && request.auth.uid == uid
         && request.resource.data.role == resource.data.role
-        && request.resource.data.clientId == resource.data.clientId);
-      allow delete: if isAdmin() || (isSignedIn() && request.auth.uid == userId);
+        && request.resource.data.clientId == resource.data.get('clientId', uid));
+      allow delete: if isAdmin();
     }
 
-    // Reads the caller's users/{uid} doc to get their clientId.
-    function myClientId() {
-      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.clientId;
+    // Agency source documents stay private, apart from existing marketing publications.
+    match /projects/{id} {
+      allow read: if isAdmin() || resource.data.get('isPublic', false) == true
+        || (resource.data.get('isCaseStudy', false) == true && resource.data.get('caseStudyStatus', '') == 'published');
+      allow write: if isAdmin();
+    }
+    match /tasks/{id} {
+      allow read: if isAdmin() || resource.data.get('isPublic', false) == true;
+      allow create, delete: if isAdmin();
+      allow update: if isAdmin() || (owns(resource.data) && assignedTask(id) && completionOnly()
+        && getAfter(/databases/$(database)/documents/portalTasks/$(id)).data.status == request.resource.data.status);
     }
 
-    // Projects - admins manage; clients can read and create projects only in
-    // their own workspace. A project with isPublic true is a template. A
-    // published isCaseStudy project is readable on the public marketing site.
-    // Clients can update their own projects, which is how they publish one,
-    // but they cannot hand it to another workspace.
-    match /projects/{projectId} {
-      allow read: if isAdmin()
-        || (isSignedIn() && resource.data.clientId == myClientId())
-        || resource.data.isPublic == true
-        || (resource.data.isCaseStudy == true && resource.data.caseStudyStatus == 'published');
-      allow create: if isAdmin() || (isSignedIn() && request.resource.data.clientId == myClientId());
-      allow update: if isAdmin()
-        || (isSignedIn()
-            && resource.data.clientId == myClientId()
-            && request.resource.data.clientId == resource.data.clientId);
-      allow delete: if isAdmin() || (isSignedIn() && resource.data.clientId == myClientId());
+    // Deliberately published, allowlisted client views; no internal note fields.
+    match /portalProjects/{id} {
+      allow read: if isAdmin() || owns(resource.data);
+      allow write: if isAdmin();
+    }
+    match /portalTasks/{id} {
+      allow read: if isAdmin() || (owns(resource.data) && visibleProject(resource.data.projectId));
+      allow create, delete: if isAdmin();
+      allow update: if isAdmin() || (owns(resource.data) && visibleProject(resource.data.projectId)
+        && resource.data.assigneeUid == request.auth.uid && completionOnly()
+        && getAfter(/databases/$(database)/documents/tasks/$(id)).data.status == request.resource.data.status);
     }
 
-    // Tasks - admins manage all; a client has full CRUD on their OWN tasks
-    // (clientId must match, and an update can't move a task to another client).
-    // Tasks carrying isPublic true are the steps of a published template and
-    // are readable by anyone, so the templates page can list the workflow.
-    match /tasks/{taskId} {
-      allow read: if isAdmin()
-        || (isSignedIn() && resource.data.clientId == myClientId())
-        || resource.data.isPublic == true;
-      allow create: if isAdmin() || (isSignedIn() && request.resource.data.clientId == myClientId());
-      allow update: if isAdmin()
-        || (isSignedIn()
-            && resource.data.clientId == myClientId()
-            && request.resource.data.clientId == resource.data.clientId);
-      allow delete: if isAdmin() || (isSignedIn() && resource.data.clientId == myClientId());
+    // Existing task discussions are agency notes. Portal feedback has its own collection.
+    match /comments/{id} { allow read, write: if isAdmin(); }
+    match /portalComments/{id} {
+      allow read: if isAdmin() || (owns(resource.data) && visibleTask(resource.data.taskId));
+      allow create: if isAdmin() || (owns(request.resource.data) && visibleTask(request.resource.data.taskId)
+        && request.resource.data.authorUid == request.auth.uid
+        && request.resource.data.keys().hasOnly(['clientId', 'taskId', 'authorUid', 'authorName', 'body', 'createdAt'])
+        && request.resource.data.body is string && request.resource.data.body.size() > 0 && request.resource.data.body.size() <= 4000
+        && request.resource.data.authorName is string && request.resource.data.authorName.size() <= 200
+        && request.resource.data.createdAt == request.time);
+      allow update, delete: if isAdmin();
     }
 
-    // Comments - the thread on a task. Anyone signed in who can reach the task's
-    // workspace can read and post; a comment carries its author, and only that
-    // author or an admin can remove it. Comments are never public, so a template's
-    // thread stays with the workspace that wrote it.
-    match /comments/{commentId} {
-      allow read: if isAdmin() || (isSignedIn() && resource.data.clientId == myClientId());
-      allow create: if isSignedIn() && request.resource.data.authorUid == request.auth.uid;
-      allow update: if isAdmin() || (isSignedIn()
-        && resource.data.authorUid == request.auth.uid
-        && request.resource.data.authorUid == resource.data.authorUid);
-      allow delete: if isAdmin() || (isSignedIn() && resource.data.authorUid == request.auth.uid);
-    }
-
-    // Finance records - admins manage all. Issued invoices and contracts are
-    // listed on public company pages; drafts remain internal. Estimates retain
-    // their explicit per-record share toggle.
-    match /invoices/{invoiceId} {
-      allow read: if isAdmin()
-        || (isSignedIn() && resource.data.clientId == myClientId() && resource.data.status != 'draft')
-        || resource.data.status != 'draft';
+    match /documents/{id} {
+      allow read: if isAdmin() || owns(resource.data)
+        || (signedIn() && request.auth.uid in resource.data.get('sharedWithUserIds', []));
       allow write: if isAdmin();
     }
 
-    match /contracts/{contractId} {
-      allow read: if isAdmin()
-        || (isSignedIn() && resource.data.clientId == myClientId() && resource.data.status != 'draft')
-        || resource.data.status != 'draft';
+    // Keep legacy single-document links. Anonymous collection browsing is closed.
+    match /invoices/{id} {
+      allow get: if isAdmin() || resource.data.status != 'draft';
+      allow list: if isAdmin() || (owns(resource.data) && resource.data.status != 'draft');
       allow write: if isAdmin();
     }
-
-    match /estimates/{estimateId} {
-      allow read: if isAdmin()
-        || (isSignedIn() && resource.data.clientId == myClientId() && resource.data.status != 'draft')
-        || resource.data.shareEnabled == true;
-      allow write: if isAdmin();
-      // A shared link acts as the acceptance capability. Public visitors may
-      // only move an issued estimate from sent to accepted; every commercial
-      // field remains immutable.
-      allow update: if resource.data.shareEnabled == true
-        && resource.data.status == 'sent'
-        && request.resource.data.status == 'accepted'
-        && request.resource.data.acceptedAt == request.time
-        && request.resource.data.updatedAt == request.time
-        && request.resource.data.diff(resource.data).affectedKeys()
-          .hasOnly(['status', 'acceptedAt', 'updatedAt']);
-    }
-
-    // Organizations - the company a user belongs to (see lib/organizations.ts).
-    // Doc id is the same clientId used everywhere else. Public fields include
-    // business identity and contact details: name, logo, industry, location,
-    // website, email, phone, address, and tax/registration number. These back
-    // public company pages and issued documents; no private person data lives
-    // here. Writes remain admin-only.
-    match /organizations/{organizationId} {
-      allow read: if true;
+    match /contracts/{id} {
+      allow get: if isAdmin() || resource.data.status != 'draft';
+      allow list: if isAdmin() || (owns(resource.data) && resource.data.status != 'draft');
       allow write: if isAdmin();
     }
-
-    // Settings is retained only so an admin can perform the one-time migration
-    // from settings/business into the owner organization. It is no longer a
-    // public source of business details.
-    match /settings/{settingId} {
-      allow read, write: if isAdmin();
+    match /estimates/{id} {
+      allow get: if isAdmin() || (resource.data.status != 'draft' && (owns(resource.data) || resource.data.get('shareEnabled', false) == true));
+      allow list: if isAdmin() || (owns(resource.data) && resource.data.status != 'draft');
+      allow create, delete: if isAdmin();
+      allow update: if isAdmin() || ((owns(resource.data) || resource.data.get('shareEnabled', false) == true)
+        && resource.data.status == 'sent' && request.resource.data.status == 'accepted'
+        && request.resource.data.acceptedAt == request.time && request.resource.data.updatedAt == request.time
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'acceptedAt', 'updatedAt']));
     }
-
-    // Approvals - client deliverable sign-off (see lib/approvals.ts).
-    // Signed-in users can read/write; admins included. Tighten to per-client
-    // once approvals carry a clientId you can match against the user doc.
-    match /approvals/{approvalId} {
-      allow read, write: if isSignedIn();
-    }
-
-    // Everything else: denied by default.
+    // No client approval UI currently uses this legacy collection.
+    match /approvals/{id} { allow read, write: if isAdmin(); }
   }
 }

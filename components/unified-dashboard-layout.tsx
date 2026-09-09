@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, type ReactNode } from "react"
+import { Suspense, useEffect, type ReactNode } from "react"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { Bot, Briefcase, Building2, Eye, FileSignature, FileText, HardDrive, LayoutDashboard, ListTodo, Loader2, LogOut, Mail, Megaphone, Receipt, Settings, TrendingUp, Users, Wallet } from "lucide-react"
@@ -9,6 +9,7 @@ import { AgentDock } from "@/components/agent/agent-dock"
 import { AgentProvider } from "@/components/agent/agent-context"
 import { Button } from "@/components/ui/button"
 import { DashboardShell, type NavLink } from "@/components/dashboard-shell"
+import { LegacyClientRedirect } from "@/components/portal/legacy-client-redirect"
 
 const DASHBOARD_NAV: NavLink[] = [
   { label: "Home", href: "/dashboard", icon: LayoutDashboard },
@@ -54,7 +55,7 @@ function UnifiedDashboardShell({ children, requireAdmin = false }: { children: R
 
   useEffect(() => {
     if (loading) return
-    if (!user) router.replace("/login")
+    if (!user) router.replace(`/login?next=${encodeURIComponent(window.location.pathname + window.location.search)}`)
     else if (requireAdmin && !isAdmin) router.replace("/dashboard")
   }, [loading, user, isAdmin, requireAdmin, router])
 
@@ -64,7 +65,9 @@ function UnifiedDashboardShell({ children, requireAdmin = false }: { children: R
 
   if (requireAdmin && !isAdmin) return null
 
-  if (role !== "client" && !isAdmin) {
+  if (role === "client" || isImpersonating) return <Suspense><LegacyClientRedirect /></Suspense>
+
+  if (!isAdmin) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-background px-4 text-center">
         <Image src="/visualhqlogo.svg" alt="VisualHQ" width={36} height={36} />

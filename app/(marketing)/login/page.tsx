@@ -10,13 +10,14 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useAuth } from "@/components/auth-provider"
 import { authErrorMessage, GoogleIcon } from "@/components/auth-ui"
+import { safeReturnTo } from "@/lib/portal-model"
 
 type AuthAction = "email" | "google" | "reset" | null
 
 export default function LoginPage() {
   const router = useRouter()
   const emailInputRef = useRef<HTMLInputElement>(null)
-  const { user, loading, signInWithEmail, sendPasswordReset, signInWithGoogle } = useAuth()
+  const { user, role, loading, signInWithEmail, sendPasswordReset, signInWithGoogle } = useAuth()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [action, setAction] = useState<AuthAction>(null)
@@ -24,8 +25,11 @@ export default function LoginPage() {
   const [notice, setNotice] = useState<string | null>(null)
 
   useEffect(() => {
-    if (!loading && user) router.replace("/dashboard")
-  }, [loading, user, router])
+    if (!loading && user) {
+      const requested = safeReturnTo(new URLSearchParams(window.location.search).get("next"))
+      router.replace(requested || (role === "admin" ? "/dashboard" : "/portal"))
+    }
+  }, [loading, user, role, router])
 
   async function handleEmailSignIn(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()

@@ -23,7 +23,6 @@ export default function DashboardCompanyPage() {
     estimates,
     reload,
   } = useCompany()
-  const clientSlug = client.slug || workspaceId
 
   return (
     <CompanyPage
@@ -35,6 +34,12 @@ export default function DashboardCompanyPage() {
         industry: organization?.industry,
         location: organization?.location,
         website: organization?.website,
+        description: organization?.description,
+        companySize: organization?.companySize,
+        source: organization?.source,
+        linkedIn: organization?.linkedIn,
+        tags: organization?.tags,
+        primaryContactId: organization?.primaryContactId,
         media: organization?.media,
       }}
       people={people.map((person) => ({
@@ -52,15 +57,17 @@ export default function DashboardCompanyPage() {
       admin={
         isAdmin
           ? {
-              editHref: `/dashboard/companies/${clientSlug}/edit`,
-              sharePath: `/dashboard/${clientSlug}`,
-              publicPath: organization?.slug ? `/${organization.slug}` : undefined,
+              sharePath: `/portal/${encodeURIComponent(organization?.slug || workspaceId)}`,
               onViewWorkspace: (person) => {
                 viewAsUser(person)
-                router.push("/dashboard")
+                router.push(`/portal/${encodeURIComponent(organization?.slug || workspaceId)}`)
               },
               onMediaChange: async (media) => {
                 await updateOrganization(workspaceId, { media })
+                await reload()
+              },
+              onUpdateCompany: async (patch) => {
+                await updateOrganization(workspaceId, patch)
                 await reload()
               },
               reload,

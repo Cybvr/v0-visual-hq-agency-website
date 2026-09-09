@@ -1,5 +1,8 @@
 node_modules
 .next
+.next-portal-test
+*-debug.log
+scripts/*.local.mjs
 .env*
 *.local
 dist

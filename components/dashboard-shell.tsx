@@ -43,9 +43,6 @@ export function DashboardShell({
 }) {
   const pathname = usePathname()
   const { open: agentOpen, setOpen: setAgentOpen } = useAgent()
-  // The company detail page carries its own banner, so the sticky dashboard
-  // header would just duplicate it.
-  const hideHeader = /^\/dashboard\/companies\/[^/]+/.test(pathname ?? "")
 
   return (
     // h-svh + overflow-hidden: the shell never grows taller than the viewport,
@@ -61,7 +58,6 @@ export function DashboardShell({
         <AppSidebar navLinks={navLinks} rootHref={rootHref} subtitle={subtitle} navExtra={navExtra} />
         {/* overflow-y-auto: this column is the scroll container, not the body */}
         <SidebarInset className="overflow-y-auto">
-          {!hideHeader && (
           <header className="sticky top-0 z-40 flex h-14 shrink-0 items-center gap-2 bg-background px-4 text-[13px] font-medium text-muted-foreground max-md:text-sm">
             <div className="flex shrink-0 items-center gap-2 md:hidden">
               <SidebarTrigger className="-ml-1" />
@@ -97,7 +93,6 @@ export function DashboardShell({
               </button>
             </div>
           </header>
-          )}
           {children}
         </SidebarInset>
       </SidebarProvider>

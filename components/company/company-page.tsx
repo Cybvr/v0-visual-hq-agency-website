@@ -1,15 +1,13 @@
 "use client"
 
 import { useEffect, useMemo, useState } from "react"
-import Link from "next/link"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
-import { ArrowLeft, Eye, Pencil, Plus, Share2, User as UserIcon } from "lucide-react"
+import { ArrowLeft, Plus, User as UserIcon } from "lucide-react"
 import { toast } from "sonner"
 
-import { CompanyBanner } from "@/components/company/company-banner"
 import { CompanyDocuments, type CompanyDocumentKind } from "@/components/company/company-documents"
 import { CompanyMedia } from "@/components/company/company-media"
-import { CompanyOverviewGrid } from "@/components/company/company-overview-grid"
+import { CompanySidebar, type CompanyDetailsPatch } from "@/components/company/company-sidebar"
 import { SectionNav } from "@/components/company/section-nav"
 import { ContractDocument } from "@/components/dashboard/contract-document"
 import { DocumentActions } from "@/components/dashboard/document-actions"
@@ -39,10 +37,11 @@ import { getBusinessProfile, type BusinessProfile } from "@/lib/business-profile
 import { projectStatusMeta, type Project } from "@/lib/projects"
 import { deleteUser, type AppUser } from "@/lib/users"
 import { cn } from "@/lib/utils"
+import { PortalPublishing } from "@/components/portal/portal-publishing"
 
 const SECTIONS = [
   { key: "overview", label: "Overview" },
-  { key: "team", label: "Team" },
+  { key: "team", label: "Contacts" },
   { key: "projects", label: "Projects" },
   { key: "media", label: "Media" },
   { key: "documents", label: "Documents" },
@@ -67,15 +66,20 @@ export interface CompanyPageCompany {
   industry?: string
   location?: string
   website?: string
+  description?: string
+  companySize?: string
+  source?: string
+  linkedIn?: string
+  tags?: string[]
+  primaryContactId?: string
   media?: string[]
 }
 
 export interface CompanyPageAdmin {
-  editHref: string
   sharePath: string
-  publicPath?: string
   onViewWorkspace: (person: AppUser) => void
   onMediaChange?: (urls: string[]) => Promise<void>
+  onUpdateCompany: (patch: CompanyDetailsPatch) => Promise<void>
   reload: () => Promise<void>
 }
 
@@ -176,18 +180,6 @@ export function CompanyPage({
     updateParams({ doc: null })
   }
 
-  const coverProject: Project = {
-    id: company.id,
-    clientId: company.id,
-    client: company.name,
-    title: company.name,
-    service: "",
-    status: "in-progress",
-    progress: 0,
-    dueDate: "",
-    thumbnailUrl: company.logoUrl,
-  }
-
   const absoluteUrl = (path: string) =>
     typeof window !== "undefined" ? `${window.location.origin}${path}` : path
 
@@ -206,289 +198,301 @@ export function CompanyPage({
   }
 
   return (
-    <main className="mx-auto min-h-screen w-full max-w-6xl px-4 pb-16 pt-6 sm:px-6">
-      <div className="print:hidden">
-        <CompanyBanner
-          name={company.name}
-          categoryLabel={company.categoryLabel}
-          coverProject={coverProject}
-          actions={
-            admin ? (
-              <>
-                <Button asChild className="rounded-full">
-                  <Link href={admin.editHref}>
-                    <Pencil className="size-4" aria-hidden="true" />
-                    Edit
-                  </Link>
-                </Button>
-                <Button variant="secondary" className="rounded-full" onClick={() => setShareOpen(true)}>
-                  <Share2 className="size-4" aria-hidden="true" />
-                  Share
-                </Button>
-                {admin.publicPath && (
-                  <Button asChild variant="secondary" size="icon" className="rounded-full">
-                    <Link
-                      href={admin.publicPath}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      aria-label={`View ${company.name}'s public page`}
-                      title="View public page"
-                    >
-                      <Eye className="size-4" aria-hidden="true" />
-                    </Link>
-                  </Button>
-                )}
-              </>
-            ) : undefined
+    <main className="mx-auto min-h-screen w-full max-w-7xl px-4 pb-16 pt-6 sm:px-6">
+      <div className="grid gap-6 lg:grid-cols-[300px_1fr]">
+        <CompanySidebar
+          company={{
+            id: company.id,
+            name: company.name,
+            logoUrl: company.logoUrl,
+            industry: company.industry,
+            location: company.location,
+            website: company.website,
+            description: company.description,
+            companySize: company.companySize,
+            source: company.source,
+            linkedIn: company.linkedIn,
+            tags: company.tags,
+            primaryContactId: company.primaryContactId,
+          }}
+          people={people}
+          admin={
+            admin
+              ? {
+                  onSave: admin.onUpdateCompany,
+                  onAddPerson: () => setAddingPerson(true),
+                  onNewProject: () => setCreatingProject(true),
+                  onShare: () => setShareOpen(true),
+                  extraAction: (
+                    <PortalPublishing companyId={company.id} portalHref={admin.sharePath} projects={projects} people={people} />
+                  ),
+                }
+              : undefined
           }
         />
-      </div>
 
-      <div className="mt-6">
-        <div className="print:hidden">
-          <SectionNav sections={SECTIONS} active={section} onChange={handleSectionChange} />
-        </div>
-
-        {section === "overview" && (
-          <div className="mt-4">
-            <CompanyOverviewGrid
-              industry={company.industry}
-              location={company.location}
-              website={company.website}
-              teamCount={people.length}
-            />
-            <div className="mt-8">
-              <CompanyDocuments
-                invoices={invoices}
-                contracts={contracts}
-                estimates={estimates}
-                onSelect={handleSelectDocument}
-              />
-            </div>
+        <div className="min-w-0">
+          <div className="print:hidden">
+            <SectionNav sections={SECTIONS} active={section} onChange={handleSectionChange} />
           </div>
-        )}
 
-        {section === "team" && (
-          <div className="mt-4">
-            <div className="flex items-center justify-between gap-4">
-              <div className="flex items-baseline gap-2">
-                <h2 className="text-base font-semibold">Team</h2>
-                <span className="text-sm text-muted-foreground">{people.length}</span>
-              </div>
-              {admin && (
-                <Button onClick={() => setAddingPerson(true)}>
-                  <Plus className="size-4" aria-hidden="true" />
-                  Add person
-                </Button>
-              )}
-            </div>
-
-            {people.length === 0 ? (
-              <div className="mt-4 flex flex-col items-center rounded-lg border border-dashed border-border py-10 text-center">
-                <span className="flex size-11 items-center justify-center rounded-full bg-muted">
-                  <UserIcon className="size-5 text-muted-foreground" aria-hidden="true" />
-                </span>
-                <h3 className="mt-4 font-medium">No team members yet</h3>
+          {section === "overview" && (
+            <div className="mt-4 rounded-2xl border border-border/60 bg-card p-5">
+              <div className="flex items-center justify-between gap-4">
+                <h2 className="text-base font-semibold">Recent Projects</h2>
                 {admin && (
-                  <>
-                    <p className="mt-1 max-w-sm text-sm text-muted-foreground">
-                      Add the first person to give them access to this workspace.
-                    </p>
-                    <Button className="mt-5" onClick={() => setAddingPerson(true)}>
-                      <Plus className="mr-2 size-4" aria-hidden="true" />
-                      Add person
-                    </Button>
-                  </>
-                )}
-              </div>
-            ) : (
-              <div className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-3">
-                {people.map((person) => (
-                  <ProjectCard
-                    key={person.id}
-                    project={personProject(person, company)}
-                    onClick={admin && person.adminUser ? () => setEditingPerson(person.adminUser ?? null) : undefined}
-                    footer={
-                      person.role ? (
-                        <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium capitalize text-muted-foreground">
-                          {person.role}
-                        </span>
-                      ) : undefined
-                    }
-                    menuLabel={`Options for ${person.name}`}
-                    menu={
-                      admin && person.adminUser ? (
-                        <>
-                          <DropdownMenuItem onSelect={() => setEditingPerson(person.adminUser ?? null)}>Edit</DropdownMenuItem>
-                          <DropdownMenuItem onSelect={() => person.adminUser && admin.onViewWorkspace(person.adminUser)}>
-                            View workspace
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            variant="destructive"
-                            onSelect={() => setPendingRemove(person.adminUser ?? null)}
-                          >
-                            Remove person
-                          </DropdownMenuItem>
-                        </>
-                      ) : undefined
-                    }
-                  />
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-
-        {section === "projects" && (
-          <div className="mt-4">
-            {selectedProject ? (
-              <ProjectDetail
-                project={selectedProject}
-                isAdmin={Boolean(admin)}
-                publicView={!admin}
-                clientId={company.id}
-                clientName={company.name}
-                backLabel="Back to Projects"
-                onBack={() => setSelectedProject(null)}
-                onProjectPatched={
-                  admin
-                    ? (patch) => {
-                        setSelectedProject((current) => (current ? { ...current, ...patch } : current))
-                        void admin.reload()
-                      }
-                    : undefined
-                }
-                onProjectDeleted={
-                  admin
-                    ? async () => {
-                        setSelectedProject(null)
-                        await admin.reload()
-                      }
-                    : undefined
-                }
-              />
-            ) : (
-              <>
-                <div className="flex items-center justify-between gap-4">
-                  <div className="flex items-baseline gap-2">
-                    <h2 className="text-base font-semibold">Projects</h2>
-                    <span className="text-sm text-muted-foreground">{projects.length}</span>
-                  </div>
-                  {admin && (
-                    <Button onClick={() => setCreatingProject(true)}>
-                      <Plus className="size-4" aria-hidden="true" />
-                      New project
-                    </Button>
-                  )}
-                </div>
-
-                {!admin && projects.length === 0 ? (
-                  <p className="py-10 text-center text-sm text-muted-foreground">{emptyProjectsLabel}</p>
-                ) : (
-                  <div className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-3">
-                    {projects.map((project) => {
-                      const meta = projectStatusMeta[project.status] ?? projectStatusMeta["in-progress"]
-                      return (
-                        <ProjectCard
-                          key={project.id}
-                          project={project}
-                          onClick={() => setSelectedProject(project)}
-                          footer={
-                            admin ? (
-                              <div className="flex flex-wrap items-center gap-1.5">
-                                <span className={cn("rounded-full px-2 py-0.5 text-[11px] font-medium", meta.className)}>
-                                  {meta.label}
-                                </span>
-                                {project.isCaseStudy && (
-                                  <span className="rounded-full bg-violet-100 px-2 py-0.5 text-[11px] font-medium text-violet-700 dark:bg-violet-950 dark:text-violet-200">
-                                    Case study
-                                  </span>
-                                )}
-                              </div>
-                            ) : undefined
-                          }
-                        />
-                      )
-                    })}
-
-                    {admin && (
-                      <button
-                        type="button"
-                        onClick={() => setCreatingProject(true)}
-                        className="group flex min-h-[180px] flex-col items-center justify-center gap-3 rounded-[14px] border border-dashed border-border bg-card p-4 text-center outline-none transition-colors hover:border-foreground/30 hover:bg-muted/40 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                      >
-                        <span className="flex size-9 items-center justify-center rounded-full bg-foreground text-background transition-transform group-hover:scale-105">
-                          <Plus className="size-4" aria-hidden="true" />
-                        </span>
-                        <span className="text-sm font-medium text-foreground">Add project</span>
-                      </button>
-                    )}
-                  </div>
-                )}
-              </>
-            )}
-          </div>
-        )}
-
-        {section === "media" && (
-          <CompanyMedia
-            logoUrl={company.logoUrl}
-            projects={projects}
-            uploaded={company.media ?? []}
-            onUploadedChange={
-              admin?.onMediaChange ? (urls) => void admin.onMediaChange?.(urls) : undefined
-            }
-          />
-        )}
-
-        {section === "documents" && (
-          <div className="mt-4">
-            {selectedDocument ? (
-              <div>
-                <div className="mb-4 flex flex-wrap items-center justify-between gap-3 print:hidden">
                   <button
                     type="button"
-                    onClick={handleCloseDocument}
-                    className="inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
+                    onClick={() => setCreatingProject(true)}
+                    aria-label="New project"
+                    className="flex size-8 items-center justify-center rounded-full bg-muted text-foreground outline-none transition-colors hover:bg-muted/70 focus-visible:ring-2 focus-visible:ring-ring"
                   >
-                    <ArrowLeft className="size-4" aria-hidden="true" />
-                    Back to Documents
+                    <Plus className="size-4" aria-hidden="true" />
                   </button>
-                  {!admin && (
-                    <DocumentActions
-                      title={`${company.name} ${selectedDocument.kind === "invoice" ? "Invoice" : selectedDocument.kind === "contract" ? "Contract" : "Estimate"}`}
+                )}
+              </div>
+
+              {projects.length === 0 ? (
+                <p className="py-10 text-center text-sm text-muted-foreground">No projects started yet.</p>
+              ) : (
+                <div className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-3">
+                  {projects.slice(0, 6).map((project) => (
+                    <ProjectCard
+                      key={project.id}
+                      project={project}
+                      onClick={() => {
+                        handleSectionChange("projects")
+                        setSelectedProject(project)
+                      }}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {section === "team" && (
+            <div className="mt-4">
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex items-baseline gap-2">
+                  <h2 className="text-base font-semibold">Contacts</h2>
+                  <span className="text-sm text-muted-foreground">{people.length}</span>
+                </div>
+                {admin && (
+                  <Button onClick={() => setAddingPerson(true)}>
+                    <Plus className="size-4" aria-hidden="true" />
+                    Add person
+                  </Button>
+                )}
+              </div>
+
+              {people.length === 0 ? (
+                <div className="mt-4 flex flex-col items-center rounded-lg border border-dashed border-border py-10 text-center">
+                  <span className="flex size-11 items-center justify-center rounded-full bg-muted">
+                    <UserIcon className="size-5 text-muted-foreground" aria-hidden="true" />
+                  </span>
+                  <h3 className="mt-4 font-medium">No contacts yet</h3>
+                  {admin && (
+                    <>
+                      <p className="mt-1 max-w-sm text-sm text-muted-foreground">
+                        Add the first person to give them access to this workspace.
+                      </p>
+                      <Button className="mt-5" onClick={() => setAddingPerson(true)}>
+                        <Plus className="mr-2 size-4" aria-hidden="true" />
+                        Add person
+                      </Button>
+                    </>
+                  )}
+                </div>
+              ) : (
+                <div className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-3">
+                  {people.map((person) => (
+                    <ProjectCard
+                      key={person.id}
+                      project={personProject(person, company)}
+                      onClick={admin && person.adminUser ? () => setEditingPerson(person.adminUser ?? null) : undefined}
+                      footer={
+                        person.role ? (
+                          <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium capitalize text-muted-foreground">
+                            {person.role}
+                          </span>
+                        ) : undefined
+                      }
+                      menuLabel={`Options for ${person.name}`}
+                      menu={
+                        admin && person.adminUser ? (
+                          <>
+                            <DropdownMenuItem onSelect={() => setEditingPerson(person.adminUser ?? null)}>Edit</DropdownMenuItem>
+                            <DropdownMenuItem onSelect={() => person.adminUser && admin.onViewWorkspace(person.adminUser)}>
+                              View workspace
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              variant="destructive"
+                              onSelect={() => setPendingRemove(person.adminUser ?? null)}
+                            >
+                              Remove person
+                            </DropdownMenuItem>
+                          </>
+                        ) : undefined
+                      }
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {section === "projects" && (
+            <div className="mt-4">
+              {selectedProject ? (
+                <ProjectDetail
+                  project={selectedProject}
+                  isAdmin={Boolean(admin)}
+                  publicView={!admin}
+                  clientId={company.id}
+                  clientName={company.name}
+                  backLabel="Back to Projects"
+                  onBack={() => setSelectedProject(null)}
+                  onProjectPatched={
+                    admin
+                      ? (patch) => {
+                          setSelectedProject((current) => (current ? { ...current, ...patch } : current))
+                          void admin.reload()
+                        }
+                      : undefined
+                  }
+                  onProjectDeleted={
+                    admin
+                      ? async () => {
+                          setSelectedProject(null)
+                          await admin.reload()
+                        }
+                      : undefined
+                  }
+                />
+              ) : (
+                <>
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="flex items-baseline gap-2">
+                      <h2 className="text-base font-semibold">Projects</h2>
+                      <span className="text-sm text-muted-foreground">{projects.length}</span>
+                    </div>
+                    {admin && (
+                      <Button onClick={() => setCreatingProject(true)}>
+                        <Plus className="size-4" aria-hidden="true" />
+                        New project
+                      </Button>
+                    )}
+                  </div>
+
+                  {!admin && projects.length === 0 ? (
+                    <p className="py-10 text-center text-sm text-muted-foreground">{emptyProjectsLabel}</p>
+                  ) : (
+                    <div className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-3">
+                      {projects.map((project) => {
+                        const meta = projectStatusMeta[project.status] ?? projectStatusMeta["in-progress"]
+                        return (
+                          <ProjectCard
+                            key={project.id}
+                            project={project}
+                            onClick={() => setSelectedProject(project)}
+                            footer={
+                              admin ? (
+                                <div className="flex flex-wrap items-center gap-1.5">
+                                  <span className={cn("rounded-full px-2 py-0.5 text-[11px] font-medium", meta.className)}>
+                                    {meta.label}
+                                  </span>
+                                  {project.isCaseStudy && (
+                                    <span className="rounded-full bg-violet-100 px-2 py-0.5 text-[11px] font-medium text-violet-700 dark:bg-violet-950 dark:text-violet-200">
+                                      Case study
+                                    </span>
+                                  )}
+                                </div>
+                              ) : undefined
+                            }
+                          />
+                        )
+                      })}
+
+                      {admin && (
+                        <button
+                          type="button"
+                          onClick={() => setCreatingProject(true)}
+                          className="group flex min-h-[180px] flex-col items-center justify-center gap-3 rounded-[14px] border border-dashed border-border bg-card p-4 text-center outline-none transition-colors hover:border-foreground/30 hover:bg-muted/40 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                        >
+                          <span className="flex size-9 items-center justify-center rounded-full bg-foreground text-background transition-transform group-hover:scale-105">
+                            <Plus className="size-4" aria-hidden="true" />
+                          </span>
+                          <span className="text-sm font-medium text-foreground">Add project</span>
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          )}
+
+          {section === "media" && (
+            <CompanyMedia
+              logoUrl={company.logoUrl}
+              projects={projects}
+              uploaded={company.media ?? []}
+              onUploadedChange={
+                admin?.onMediaChange ? (urls) => void admin.onMediaChange?.(urls) : undefined
+              }
+            />
+          )}
+
+          {section === "documents" && (
+            <div className="mt-4">
+              {selectedDocument ? (
+                <div>
+                  <div className="mb-4 flex flex-wrap items-center justify-between gap-3 print:hidden">
+                    <button
+                      type="button"
+                      onClick={handleCloseDocument}
+                      className="inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
+                    >
+                      <ArrowLeft className="size-4" aria-hidden="true" />
+                      Back to Documents
+                    </button>
+                    {!admin && (
+                      <DocumentActions
+                        title={`${company.name} ${selectedDocument.kind === "invoice" ? "Invoice" : selectedDocument.kind === "contract" ? "Contract" : "Estimate"}`}
+                      />
+                    )}
+                  </div>
+                  {selectedDocument.kind === "invoice" && (
+                    <InvoiceDocument
+                      invoice={invoices.find((i) => i.id === selectedDocument.id) as Invoice}
+                      issuer={issuer ?? undefined}
+                    />
+                  )}
+                  {selectedDocument.kind === "contract" && (
+                    <ContractDocument
+                      contract={contracts.find((c) => c.id === selectedDocument.id) as Contract}
+                      issuer={issuer ?? undefined}
+                    />
+                  )}
+                  {selectedDocument.kind === "estimate" && (
+                    <EstimateDocument
+                      estimate={estimates.find((e) => e.id === selectedDocument.id) as Estimate}
+                      issuer={issuer ?? undefined}
                     />
                   )}
                 </div>
-                {selectedDocument.kind === "invoice" && (
-                  <InvoiceDocument
-                    invoice={invoices.find((i) => i.id === selectedDocument.id) as Invoice}
-                    issuer={issuer ?? undefined}
-                  />
-                )}
-                {selectedDocument.kind === "contract" && (
-                  <ContractDocument
-                    contract={contracts.find((c) => c.id === selectedDocument.id) as Contract}
-                    issuer={issuer ?? undefined}
-                  />
-                )}
-                {selectedDocument.kind === "estimate" && (
-                  <EstimateDocument
-                    estimate={estimates.find((e) => e.id === selectedDocument.id) as Estimate}
-                    issuer={issuer ?? undefined}
-                  />
-                )}
-              </div>
-            ) : (
-              <CompanyDocuments
-                invoices={invoices}
-                contracts={contracts}
-                estimates={estimates}
-                onSelect={handleSelectDocument}
-              />
-            )}
-          </div>
-        )}
+              ) : (
+                <CompanyDocuments
+                  invoices={invoices}
+                  contracts={contracts}
+                  estimates={estimates}
+                  onSelect={handleSelectDocument}
+                />
+              )}
+            </div>
+          )}
+        </div>
       </div>
 
       {admin && (
@@ -559,16 +563,11 @@ export function CompanyPage({
           <Dialog open={shareOpen} onOpenChange={setShareOpen}>
             <DialogContent className="max-w-md">
               <DialogHeader>
-                <DialogTitle>Share company workspace</DialogTitle>
-                <DialogDescription>Share direct access to {company.name}&apos;s dashboard.</DialogDescription>
+                <DialogTitle>Share client portal</DialogTitle>
+                <DialogDescription>Clients sign in with their invited account to access {company.name}&apos;s workspace.</DialogDescription>
               </DialogHeader>
               <ShareLink value={absoluteUrl(admin.sharePath)} label="Workspace link" />
-              {admin.publicPath && (
-                <>
-                  <p className="text-xs text-muted-foreground">Public page — anyone with the link can view it.</p>
-                  <ShareLink value={absoluteUrl(admin.publicPath)} label="Public link" />
-                </>
-              )}
+              <p className="text-xs text-muted-foreground">Previously shared company links continue to open this portal.</p>
             </DialogContent>
           </Dialog>
         </>

@@ -1,6 +1,6 @@
 import { initializeApp, getApps } from "firebase/app"
-import { getFirestore } from "firebase/firestore"
-import { getAuth, GoogleAuthProvider } from "firebase/auth"
+import { getFirestore, connectFirestoreEmulator } from "firebase/firestore"
+import { getAuth, GoogleAuthProvider, connectAuthEmulator } from "firebase/auth"
 import { getStorage } from "firebase/storage"
 
 const firebaseConfig = {
@@ -13,10 +13,18 @@ const firebaseConfig = {
 }
 
 // Initialize Firebase (singleton pattern)
-const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0]
+const firstInitialization = getApps().length === 0
+const app = firstInitialization ? initializeApp(firebaseConfig) : getApps()[0]
 const db = getFirestore(app)
 const auth = getAuth(app)
 const storage = getStorage(app)
 const googleProvider = new GoogleAuthProvider()
+
+// Explicit demo-only opt-in for local integration tests; never targets live data.
+if (firstInitialization && process.env.NEXT_PUBLIC_FIREBASE_EMULATORS === "true") {
+  if (!firebaseConfig.projectId?.startsWith("demo-")) throw new Error("Emulators require a demo- Firebase project")
+  connectFirestoreEmulator(db, "127.0.0.1", 8088)
+  connectAuthEmulator(auth, "http://127.0.0.1:9098", { disableWarnings: true })
+}
 
 export { db, auth, storage, googleProvider }

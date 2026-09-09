@@ -19,6 +19,8 @@ export interface SharedDocument {
   url: string
   description?: string
   clientId: string
+  /** Optional project scope; unset documents appear at company level only. */
+  projectId?: string
   sharedWith?: string
   sharedWithUserIds?: string[]
   createdAt?: Timestamp
@@ -98,4 +100,8 @@ export function contractsAsDocuments(contracts: Contract[]): SharedDocument[] {
     type: "doc" as const,
     createdAt: contract.createdAt,
   }))
+}
+
+export async function setDocumentProject(id: string, projectId: string): Promise<void> {
+  await updateDoc(doc(db, COLLECTION_NAME, id), { projectId })
 }

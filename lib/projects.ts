@@ -11,6 +11,7 @@ import {
   Timestamp,
 } from "firebase/firestore"
 import { db } from "./firebase"
+import { syncPortalProject, deleteAgencyRecord } from "./portal-data"
 import {
   createTask,
   deleteTask,
@@ -171,14 +172,11 @@ export async function createProject(data: Omit<Project, "id" | "createdAt" | "up
 }
 
 export async function updateProject(id: string, data: Partial<Omit<Project, "id" | "createdAt">>): Promise<void> {
-  await updateDoc(doc(db, COLLECTION_NAME, id), {
-    ...data,
-    updatedAt: Timestamp.now(),
-  })
+  await syncPortalProject(id, data)
 }
 
 export async function deleteProject(id: string): Promise<void> {
-  await deleteDoc(doc(db, COLLECTION_NAME, id))
+  await deleteAgencyRecord("projects", id)
 }
 
 /**

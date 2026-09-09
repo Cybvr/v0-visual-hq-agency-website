@@ -17,6 +17,17 @@ export interface Organization {
   industry?: string
   location?: string
   website?: string
+  /** Freeform tags shown on the company sidebar, e.g. "Enterprise", "At risk". */
+  tags?: string[]
+  /** What the company does, shown in the sidebar's Details panel. */
+  description?: string
+  /** e.g. "11-50" - see COMPANY_SIZES. */
+  companySize?: string
+  /** Where this company came from, e.g. "Referral", "Cold outreach". */
+  source?: string
+  linkedIn?: string
+  /** uid of the person shown as this company's Primary Contact. Falls back to the first person when unset. */
+  primaryContactId?: string
   /** Images and videos an admin uploaded to the company page. */
   media?: string[]
   email?: string
@@ -42,6 +53,9 @@ export interface PublicTeamMember {
   role?: string
   photoUrl?: string
 }
+
+/** Employee-count ranges offered for the Company Size field. */
+export const COMPANY_SIZES = ["1-10", "11-50", "51-200", "201-500", "501-1,000", "1,001-5,000", "5,000+"] as const
 
 const COLLECTION_NAME = "organizations"
 
@@ -75,6 +89,7 @@ const RESERVED_SLUGS = new Set([
   "auth",
   "api",
   "dashboard",
+  "portal",
   "offline",
   "manifest",
 ])

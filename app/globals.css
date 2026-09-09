@@ -135,6 +135,10 @@
     font-family: var(--font-eb-garamond), ui-serif, Georgia, serif;
     font-weight: 400 !important;
   }
+  .portal-surface h1, .portal-surface h2, .portal-surface h3 {
+    font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+    font-weight: 600 !important;
+  }
 }
 
 @layer utilities {

@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Images, Play, Plus, X } from "lucide-react"
+import { ChevronLeft, ChevronRight, Images, Play, Plus, X } from "lucide-react"
 
 import { GalleryDropzone } from "@/components/image-dropzone"
 import { Button } from "@/components/ui/button"
@@ -48,7 +48,7 @@ export function CompanyMedia({
 }) {
   const isAdmin = Boolean(onUploadedChange)
   const [addOpen, setAddOpen] = useState(false)
-  const [lightbox, setLightbox] = useState<MediaItem | null>(null)
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null)
   const uploadedItems: MediaItem[] = uploaded
     .filter(Boolean)
     .map((url) => ({ url, label: "Uploaded media", project: "Company", kind: mediaKindForUrl(url) }))
@@ -59,14 +59,21 @@ export function CompanyMedia({
     ...new Map([...uploadedItems, ...derivedMedia(logoUrl, projects)].map((item) => [item.url, item])).values(),
   ]
 
+  const lightbox = lightboxIndex === null ? null : gallery[lightboxIndex] ?? null
+  const showArrows = gallery.length > 1
+  const step = (delta: number) =>
+    setLightboxIndex((current) => (current === null ? current : (current + delta + gallery.length) % gallery.length))
+
   useEffect(() => {
-    if (!lightbox) return
+    if (lightbox === null) return
     function onKey(event: KeyboardEvent) {
-      if (event.key === "Escape") setLightbox(null)
+      if (event.key === "Escape") setLightboxIndex(null)
+      else if (event.key === "ArrowRight") step(1)
+      else if (event.key === "ArrowLeft") step(-1)
     }
     window.addEventListener("keydown", onKey)
     return () => window.removeEventListener("keydown", onKey)
-  }, [lightbox])
+  }, [lightbox, gallery.length])
 
   return (
     <section className="mt-4" aria-labelledby="company-media-heading">
@@ -105,11 +112,11 @@ export function CompanyMedia({
         </div>
       ) : (
         <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-          {gallery.map((item) => (
+          {gallery.map((item, index) => (
             <button
               key={item.url}
               type="button"
-              onClick={() => setLightbox(item)}
+              onClick={() => setLightboxIndex(index)}
               className="relative aspect-square overflow-hidden rounded-[10px] bg-muted outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
               aria-label={`View ${item.label} from ${item.project}`}
             >
@@ -148,16 +155,42 @@ export function CompanyMedia({
           aria-modal="true"
           aria-label={`${lightbox.label} from ${lightbox.project}`}
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
-          onClick={() => setLightbox(null)}
+          onClick={() => setLightboxIndex(null)}
         >
           <button
             type="button"
-            onClick={() => setLightbox(null)}
+            onClick={() => setLightboxIndex(null)}
             aria-label="Close"
             className="absolute right-4 top-4 flex size-9 items-center justify-center rounded-full bg-white/10 text-white outline-none transition-colors hover:bg-white/20 focus-visible:ring-2 focus-visible:ring-white"
           >
             <X className="size-5" aria-hidden="true" />
           </button>
+          {showArrows && (
+            <>
+              <button
+                type="button"
+                onClick={(event) => {
+                  event.stopPropagation()
+                  step(-1)
+                }}
+                aria-label="Previous"
+                className="absolute left-4 top-1/2 flex size-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/10 text-white outline-none transition-colors hover:bg-white/20 focus-visible:ring-2 focus-visible:ring-white"
+              >
+                <ChevronLeft className="size-6" aria-hidden="true" />
+              </button>
+              <button
+                type="button"
+                onClick={(event) => {
+                  event.stopPropagation()
+                  step(1)
+                }}
+                aria-label="Next"
+                className="absolute right-4 top-1/2 flex size-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/10 text-white outline-none transition-colors hover:bg-white/20 focus-visible:ring-2 focus-visible:ring-white"
+              >
+                <ChevronRight className="size-6" aria-hidden="true" />
+              </button>
+            </>
+          )}
           {lightbox.kind === "video" ? (
             <video
               src={lightbox.url}

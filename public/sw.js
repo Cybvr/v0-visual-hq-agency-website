@@ -1,6 +1,6 @@
 // VisualCNS service worker. Bump CACHE when the offline shell changes so old
 // caches are cleared on the next activation.
-const CACHE = "visualcns-v1"
+const CACHE = "visualcns-v2"
 const OFFLINE_URL = "/offline"
 const PRECACHE = [OFFLINE_URL, "/icon.svg", "/apple-icon.png"]
 
@@ -20,6 +20,8 @@ self.addEventListener("activate", (event) => {
 })
 
 self.addEventListener("fetch", (event) => {
+  // Development chunk URLs are reused by HMR; caching them serves stale UI.
+  if (["localhost", "127.0.0.1", "[::1]"].includes(self.location.hostname)) return
   const { request } = event
   if (request.method !== "GET") return
 
