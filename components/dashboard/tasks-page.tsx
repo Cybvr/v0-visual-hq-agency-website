@@ -149,14 +149,14 @@ export default function TasksAdminPage() {
     typeof selectedId === "string" && selectedId !== "new" ? tasks.find((t) => t.id === selectedId) ?? null : null
 
   return (
-    <main className="mx-auto w-full max-w-6xl px-4 pt-6 pb-12 sm:px-6">
-      <div className="mb-8 flex items-center justify-between gap-4">
-        <h1 className="text-xl font-semibold">Tasks</h1>
-        <Button className="shrink-0" onClick={() => setSelectedId("new")}>
-          <Plus className="mr-2 h-4 w-4" />
-          Add Task
-        </Button>
-      </div>
+    <main className="mx-auto w-full max-w-6xl px-4 pt-4 pb-12 sm:px-6">
+      <FilterBar
+        {...bar}
+        placeholder="Search tasks"
+        actions={
+          <Button onClick={() => setSelectedId("new")}><Plus className="h-4 w-4" />Add Task</Button>
+        }
+      />
 
       {loading ? (
         <div className="flex items-center justify-center py-20">
@@ -180,7 +180,6 @@ export default function TasksAdminPage() {
         />
       ) : (
         <>
-          <FilterBar {...bar} placeholder="Search tasks" />
           {visibleTasks.length === 0 ? (
             <EmptySearchState label="No tasks match your search." />
           ) : (

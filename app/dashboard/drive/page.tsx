@@ -322,7 +322,7 @@ export default function DrivePage() {
   })
 
   return (
-    <main className="relative mx-auto w-full max-w-6xl px-4 pt-6 pb-12 sm:px-6">
+    <main className="relative mx-auto w-full max-w-6xl px-4 pt-4 pb-12 sm:px-6">
       {dragging && (
         <div className="pointer-events-none fixed inset-0 z-50 flex items-center justify-center bg-background/85 backdrop-blur-sm">
           <div className="flex flex-col items-center gap-3 rounded-2xl border-2 border-dashed border-primary bg-card px-16 py-12 shadow-xl">
@@ -343,15 +343,13 @@ export default function DrivePage() {
         />
       )}
 
-      <div className="mb-6 flex items-center justify-between gap-4">
-        <h1 className="text-xl font-semibold">Drive</h1>
-        {adminView && (
-          <Button className="shrink-0" onClick={() => fileInputRef.current?.click()}>
-            <Plus className="h-4 w-4" />
-            Add
-          </Button>
-        )}
-      </div>
+      <FilterBar
+        {...bar}
+        placeholder="Search files"
+        actions={
+          adminView && <Button onClick={() => fileInputRef.current?.click()}><Plus className="h-4 w-4" />Add</Button>
+        }
+      />
 
       {selectedDocument && (
         <div className="mb-8 flex min-h-16 items-center gap-2 rounded-[32px] bg-[#edf2f8] px-4 text-[#3c4043] dark:bg-muted dark:text-foreground">
@@ -393,7 +391,6 @@ export default function DrivePage() {
         )
       ) : (
         <section>
-          <FilterBar {...bar} placeholder="Search files" />
           {visibleDocuments.length === 0 && uploading.length === 0 && (
             <EmptySearchState className="py-16" label="No files match your search." />
           )}

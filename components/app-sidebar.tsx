@@ -7,6 +7,7 @@ import { ChevronRight } from "lucide-react"
 import type { ComponentType, ReactNode } from "react"
 
 import { BrandLockup } from "@/components/brand-lockup"
+import { SidebarSearch } from "@/components/dashboard/sidebar-search"
 import { NavUser } from "@/components/nav-user"
 import { cn } from "@/lib/utils"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
@@ -30,9 +31,9 @@ import {
 // On mobile the sidebar is a slide-over sheet, so nav rows need finger-sized
 // hit areas. max-md: keeps the desktop rail untouched.
 const mobileNavButton =
-  "max-md:h-12 max-md:gap-3 max-md:px-3 max-md:text-base [&>svg]:max-md:size-5"
+  "text-[13px] font-medium max-md:h-12 max-md:gap-3 max-md:px-3 max-md:text-sm [&>svg]:max-md:size-5"
 const mobileNavSubButton =
-  "max-md:h-11 max-md:gap-3 max-md:px-3 max-md:text-base [&>svg]:max-md:size-5"
+  "text-[13px] font-medium max-md:h-11 max-md:gap-3 max-md:px-3 max-md:text-sm [&>svg]:max-md:size-5"
 
 export type NavLink = {
   label: string
@@ -76,7 +77,7 @@ export function AppSidebar({
       )}
       {...props}
     >
-      <div className="m-2 flex min-h-0 flex-1 flex-col overflow-hidden rounded-[16px] border border-border/60 bg-card group-data-[collapsible=icon]:m-1 group-data-[collapsible=icon]:rounded-[12px]">
+      <div className="m-2 flex min-h-0 flex-1 flex-col overflow-hidden rounded-[16px] border border-border/60 bg-card text-[13px] font-medium text-muted-foreground [&_*]:text-muted-foreground! group-data-[collapsible=icon]:m-1 group-data-[collapsible=icon]:rounded-[12px]">
         <SidebarHeader className="group-data-[collapsible=icon]:p-1">
           <div className="flex h-12 items-center gap-2 group-data-[collapsible=icon]:justify-center">
             <SidebarMenu className="min-w-0 flex-1 group-data-[collapsible=icon]:hidden">
@@ -91,6 +92,7 @@ export function AppSidebar({
             </SidebarMenu>
             <SidebarTrigger className="size-8 shrink-0" />
           </div>
+          <SidebarSearch />
         </SidebarHeader>
         <SidebarContent>
           <SidebarGroup className="group-data-[collapsible=icon]:p-1">

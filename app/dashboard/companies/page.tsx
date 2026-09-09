@@ -188,14 +188,14 @@ export default function CompaniesPage() {
   }
 
   return (
-    <main className="mx-auto w-full max-w-6xl px-4 pb-12 pt-6 sm:px-6">
-      <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
-        <h1 className="text-xl font-semibold">Companies</h1>
-        <Button className="shrink-0" onClick={() => setCreating(true)}>
-          <Plus className="mr-2 h-4 w-4" />
-          Add Company
-        </Button>
-      </div>
+    <main className="mx-auto w-full max-w-6xl px-4 pb-12 pt-4 sm:px-6">
+      <FilterBar
+        {...bar}
+        placeholder="Search companies"
+        actions={
+          <Button onClick={() => setCreating(true)}><Plus className="h-4 w-4" />Add Company</Button>
+        }
+      />
 
       {error && (
         <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">
@@ -230,7 +230,6 @@ export default function CompaniesPage() {
         </Card>
       ) : (
         <>
-          <FilterBar {...bar} placeholder="Search companies" />
           {visibleClients.length === 0 ? (
             <Card>
               <CardContent className="py-16 text-center text-sm text-muted-foreground">

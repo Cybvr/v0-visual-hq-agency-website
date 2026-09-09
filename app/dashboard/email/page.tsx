@@ -270,9 +270,6 @@ export default function EmailPage() {
     <main className="min-h-full bg-background px-4 py-7 sm:px-6 sm:py-9">
       <div className="mx-auto w-full max-w-5xl">
         <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
-          <div>
-            <h1 className="text-2xl font-semibold tracking-[-0.02em]">Email</h1>
-          </div>
           {showOpsDetail && (
             <div className="flex items-center gap-2 text-sm">
               <span

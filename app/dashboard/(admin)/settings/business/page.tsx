@@ -79,7 +79,6 @@ export default function BusinessSettingsPage() {
 
   return (
     <main className="mx-auto w-full max-w-2xl px-4 pb-16 pt-6 sm:px-6">
-      <h1 className="text-xl font-semibold">Business profile</h1>
       <p className="mt-1 text-sm text-muted-foreground">
         Your organization details, used on public company pages and every invoice, estimate, and contract.
       </p>

@@ -48,7 +48,7 @@ export function NavUser() {
                 {photoURL && <AvatarImage src={photoURL} alt={name} referrerPolicy="no-referrer" />}
                 <AvatarFallback className="rounded-lg">{initials}</AvatarFallback>
               </Avatar>
-              <div className="grid flex-1 text-left text-sm leading-tight">
+              <div className="grid flex-1 text-left text-[13px] font-medium leading-tight text-muted-foreground">
                 <span className="truncate font-medium">{name}</span>
                 <span className="truncate text-xs">{email}</span>
               </div>

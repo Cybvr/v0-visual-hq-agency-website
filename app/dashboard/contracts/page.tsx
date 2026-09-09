@@ -156,21 +156,14 @@ export default function ContractsPage() {
   const awaiting = contracts.filter((contract) => contract.status === "sent").length
 
   return (
-    <main className="mx-auto w-full max-w-5xl px-4 py-9 sm:px-6">
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-[-0.02em]">Contracts</h1>
-        </div>
-
-        {adminView && (
-          <Button asChild>
-            <Link href="/dashboard/contracts/new">
-              <Plus className="size-4" aria-hidden="true" />
-              New
-            </Link>
-          </Button>
-        )}
-      </div>
+    <main className="mx-auto w-full max-w-5xl px-4 pt-4 pb-12 sm:px-6">
+      <FilterBar
+        {...bar}
+        placeholder="Search contracts"
+        actions={
+          adminView && <Button asChild><Link href="/dashboard/contracts/new"><Plus className="size-4" aria-hidden="true" />New</Link></Button>
+        }
+      />
 
       {loading ? (
         <div className="flex items-center justify-center py-20">
@@ -206,7 +199,6 @@ export default function ContractsPage() {
           )}
 
           <div className="mt-6">
-            <FilterBar {...bar} placeholder="Search contracts" />
             {visibleContracts.length === 0 ? (
               <EmptySearchState label="No contracts match your search." />
             ) : (

@@ -1,21 +1,20 @@
 "use client"
 
-import { useState, type FormEvent, type ReactNode } from "react"
+import { type ReactNode } from "react"
 import Image from "next/image"
 import Link from "next/link"
-import { usePathname, useRouter } from "next/navigation"
-import { Bell, CircleHelp, Crown, Search, SlidersHorizontal } from "lucide-react"
+import { usePathname } from "next/navigation"
+import { Bell, CircleHelp, Crown } from "lucide-react"
 
 import { AppSidebar, type NavLink } from "@/components/app-sidebar"
-import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
+import { dashboardPageTitle } from "@/components/dashboard/dashboard-document-title"
 import { Separator } from "@/components/ui/separator"
 import {
   SidebarInset,
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar"
-import { BrandLockup } from "@/components/brand-lockup"
-import { useAuth } from "@/components/auth-provider"
 import { cn } from "@/lib/utils"
 
 export type { NavLink }
@@ -41,48 +40,10 @@ export function DashboardShell({
   banner?: ReactNode
   children: ReactNode
 }) {
-  const [search, setSearch] = useState("")
-  const router = useRouter()
   const pathname = usePathname()
-  const { isAdmin, isImpersonating } = useAuth()
-  // While an admin is "viewing as" a client, the shell behaves as the client's.
-  const adminView = isAdmin && !isImpersonating
   // The company detail page carries its own banner, so the sticky dashboard
   // header would just duplicate it.
   const hideHeader = /^\/dashboard\/companies\/[^/]+/.test(pathname ?? "")
-
-  function handleSearch(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    const query = search.trim().toLowerCase()
-    if (!query) return
-    const destinations = adminView
-      ? [
-          { terms: ["agent", "chat", "assistant"], href: "/dashboard/agent" },
-          { terms: ["project"], href: "/dashboard/projects" },
-          { terms: ["task"], href: "/dashboard/tasks" },
-          { terms: ["drive", "file", "document"], href: "/dashboard/drive" },
-          { terms: ["email", "mail", "message", "template", "sender"], href: "/dashboard/email" },
-          { terms: ["seo", "ranking", "keyword"], href: "/dashboard/seo" },
-          { terms: ["invoice", "billing", "payment", "finance"], href: "/dashboard/invoices" },
-          { terms: ["contract", "agreement", "signature"], href: "/dashboard/contracts" },
-          { terms: ["estimate", "quote", "proposal"], href: "/dashboard/estimates" },
-          { terms: ["client", "company", "workspace"], href: "/dashboard/companies" },
-          { terms: ["user", "account", "settings"], href: "/dashboard/users" },
-        ]
-      : [
-          { terms: ["agent", "chat", "assistant"], href: "/dashboard/agent" },
-          { terms: ["project"], href: "/dashboard/projects" },
-          { terms: ["task"], href: "/dashboard/tasks" },
-          { terms: ["drive", "file", "document"], href: "/dashboard/drive" },
-          { terms: ["email", "mail", "message", "template", "sender"], href: "/dashboard/email" },
-          { terms: ["seo", "ranking", "keyword"], href: "/dashboard/seo" },
-          { terms: ["invoice", "billing", "payment", "finance"], href: "/dashboard/invoices" },
-          { terms: ["contract", "agreement", "signature"], href: "/dashboard/contracts" },
-          { terms: ["estimate", "quote", "proposal"], href: "/dashboard/estimates" },
-        ]
-    const match = destinations.find(({ terms }) => terms.some((term) => term.includes(query) || query.includes(term)))
-    router.push(match?.href ?? "/dashboard")
-  }
 
   return (
     // h-svh + overflow-hidden: the shell never grows taller than the viewport,
@@ -99,49 +60,27 @@ export function DashboardShell({
         {/* overflow-y-auto: this column is the scroll container, not the body */}
         <SidebarInset className="overflow-y-auto">
           {!hideHeader && (
-          <header className="sticky top-0 z-40 flex h-14 shrink-0 items-center gap-3 bg-background px-4 sm:h-20 sm:px-6">
+          <header className="sticky top-0 z-40 flex h-14 shrink-0 items-center gap-2 bg-background px-4 text-[13px] font-medium text-muted-foreground max-md:text-sm">
             <div className="flex shrink-0 items-center gap-2 md:hidden">
               <SidebarTrigger className="-ml-1" />
               <Separator orientation="vertical" className="data-[orientation=vertical]:h-4" />
-              <BrandLockup logoSize={20} gapClassName="gap-0.5" />
             </div>
-            <form onSubmit={handleSearch} className="relative mr-auto hidden w-full max-w-[260px] sm:block">
-              <Search className="pointer-events-none absolute left-3 top-1/2 z-10 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
-              <Input
-                value={search}
-                onChange={(event) => setSearch(event.target.value)}
-                placeholder="Search dashboard"
-                aria-label="Search dashboard"
-                className="h-10 pl-9 pr-11"
-              />
-              <button type="submit" className="absolute right-1 top-1/2 flex size-8 -translate-y-1/2 items-center justify-center rounded-sm text-muted-foreground outline-none transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring" aria-label="Search dashboard">
-                <SlidersHorizontal className="size-4" aria-hidden="true" />
-              </button>
-            </form>
+            <h1 className="min-w-0 truncate text-[13px] font-medium text-muted-foreground max-md:text-sm">{dashboardPageTitle(pathname ?? "/dashboard")}</h1>
             <div className="ml-auto flex shrink-0 items-center gap-2">
-              <Link
-                href="/pricing"
-                aria-label="Upgrade"
-                title="Upgrade"
-                className="inline-flex size-10 items-center justify-center gap-1.5 rounded-full border border-border text-sm font-medium text-foreground outline-none transition-colors hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring sm:w-auto sm:px-3.5"
-              >
-                <Crown className="size-4 sm:hidden" aria-hidden="true" />
-                <span className="hidden sm:inline">Upgrade</span>
-              </Link>
-              <Link
-                href="/faq"
-                aria-label="Help"
-                className="hidden size-10 items-center justify-center rounded-full text-muted-foreground outline-none transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring sm:inline-flex"
-              >
-                <CircleHelp className="size-4" aria-hidden="true" />
-              </Link>
-              <button
-                type="button"
-                aria-label="Notifications"
-                className="inline-flex size-10 items-center justify-center rounded-full text-muted-foreground outline-none transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
-              >
+              <Button asChild variant="outline" className="text-[13px] font-medium text-muted-foreground max-md:text-sm">
+                <Link href="/pricing" aria-label="Upgrade" title="Upgrade">
+                  <Crown className="size-4 sm:hidden" aria-hidden="true" />
+                  <span className="hidden sm:inline">Upgrade</span>
+                </Link>
+              </Button>
+              <Button asChild variant="ghost" size="icon" className="hidden sm:inline-flex">
+                <Link href="/faq" aria-label="Help">
+                  <CircleHelp className="size-4" aria-hidden="true" />
+                </Link>
+              </Button>
+              <Button type="button" variant="ghost" size="icon" aria-label="Notifications">
                 <Bell className="size-4" aria-hidden="true" />
-              </button>
+              </Button>
               <Link
                 href="/dashboard/agent"
                 aria-label="Open Agent"

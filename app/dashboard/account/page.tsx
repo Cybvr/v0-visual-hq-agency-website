@@ -19,7 +19,6 @@ export default function AccountPage() {
 
   return (
     <main className="mx-auto w-full max-w-3xl px-4 py-9 sm:px-6">
-      <h1 className="text-2xl font-semibold tracking-[-0.02em]">Account</h1>
       <p className="mt-1.5 text-sm leading-6 text-muted-foreground">
         Your sign-in details and the workspace this account belongs to.
       </p>

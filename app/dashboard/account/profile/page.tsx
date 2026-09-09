@@ -75,7 +75,6 @@ export default function ProfilePage() {
 
   return (
     <main className="mx-auto w-full max-w-3xl px-4 py-9 sm:px-6">
-      <h1 className="text-2xl font-semibold tracking-[-0.02em]">Profile</h1>
       <p className="mt-1.5 text-sm leading-6 text-muted-foreground">
         How your name and picture appear across the dashboard.
       </p>

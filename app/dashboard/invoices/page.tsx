@@ -152,21 +152,14 @@ export default function InvoicesPage() {
   const currency = invoices[0]?.currency || "USD"
 
   return (
-    <main className="mx-auto w-full max-w-5xl px-4 py-9 sm:px-6">
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-[-0.02em]">Invoices</h1>
-        </div>
-
-        {adminView && (
-          <Button asChild>
-            <Link href="/dashboard/invoices/new">
-              <Plus className="mr-2 size-4" aria-hidden="true" />
-              New invoice
-            </Link>
-          </Button>
-        )}
-      </div>
+    <main className="mx-auto w-full max-w-5xl px-4 pt-4 pb-12 sm:px-6">
+      <FilterBar
+        {...bar}
+        placeholder="Search invoices"
+        actions={
+          adminView && <Button asChild><Link href="/dashboard/invoices/new"><Plus className="size-4" aria-hidden="true" />New invoice</Link></Button>
+        }
+      />
 
       {loading ? (
         <div className="flex items-center justify-center py-20">
@@ -203,7 +196,6 @@ export default function InvoicesPage() {
           )}
 
           <div className="mt-6">
-            <FilterBar {...bar} placeholder="Search invoices" />
             {visibleInvoices.length === 0 ? (
               <EmptySearchState label="No invoices match your search." />
             ) : (

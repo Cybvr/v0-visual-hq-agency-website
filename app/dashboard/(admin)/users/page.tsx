@@ -109,16 +109,14 @@ export default function UsersAdminPage() {
     typeof selectedId === "string" && selectedId !== "new" ? users.find((u) => u.uid === selectedId) ?? null : null
 
   return (
-    <main className="mx-auto w-full max-w-6xl px-4 pt-6 pb-12 sm:px-6">
-      <div className="mb-8 flex items-center justify-between gap-4">
-        <div>
-          <h1 className="text-xl font-semibold">Users</h1>
-        </div>
-        <Button className="shrink-0" onClick={() => setSelectedId("new")}>
-          <Plus className="mr-2 h-4 w-4" />
-          Add User
-        </Button>
-      </div>
+    <main className="mx-auto w-full max-w-6xl px-4 pt-4 pb-12 sm:px-6">
+      <FilterBar
+        {...bar}
+        placeholder="Search users"
+        actions={
+          <Button onClick={() => setSelectedId("new")}><Plus className="h-4 w-4" />Add User</Button>
+        }
+      />
 
       {loading ? (
         <div className="flex items-center justify-center py-20">
@@ -140,7 +138,6 @@ export default function UsersAdminPage() {
         </Card>
       ) : (
         <>
-          <FilterBar {...bar} placeholder="Search users" />
           {visibleUsers.length === 0 ? (
             <Card>
               <CardContent className="py-16 text-center text-sm text-muted-foreground">

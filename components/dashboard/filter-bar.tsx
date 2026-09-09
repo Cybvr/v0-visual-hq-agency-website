@@ -56,6 +56,10 @@ export type FilterBarProps = {
   placeholder?: string
   /** Extra controls (status pickers and the like) shown beside the sort control, and inside the sheet on mobile. */
   children?: ReactNode
+  /** Primary page actions, aligned to the right of the filters. */
+  actions?: ReactNode
+  /** Always-visible list controls, such as the view toggle. */
+  controls?: ReactNode
   className?: string
 }
 
@@ -128,6 +132,8 @@ export function FilterBar({
   sorts,
   placeholder = "Search",
   children,
+  actions,
+  controls,
   className,
 }: FilterBarProps) {
   const [sheetOpen, setSheetOpen] = useState(false)
@@ -138,7 +144,8 @@ export function FilterBar({
   const hasControls = sorts.length > 0 || Boolean(children)
 
   return (
-    <div className={cn("mb-6 flex items-center gap-2", className)}>
+    <div className={cn("mb-6 flex flex-wrap items-center gap-3", className)}>
+      <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
       <div className="relative min-w-0 flex-1 sm:max-w-xs">
         <Search className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <Input
@@ -163,7 +170,7 @@ export function FilterBar({
 
       {hasControls && (
         <>
-          <div className="hidden items-center gap-2 sm:flex">
+          <div className="hidden flex-wrap items-center gap-2 sm:flex">
             {children}
             {sorts.length > 0 && (
               <>
@@ -257,6 +264,9 @@ export function FilterBar({
           </Sheet>
         </>
       )}
+        {controls}
+      </div>
+      {actions && <div className="ml-auto flex shrink-0 flex-wrap items-center justify-end gap-2">{actions}</div>}
     </div>
   )
 }

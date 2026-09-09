@@ -126,18 +126,15 @@ export default function ProjectsAdminPage() {
   }
 
   return (
-    <main className="mx-auto w-full max-w-6xl px-4 pt-6 pb-12 sm:px-6">
-      <div className="mb-8 flex items-center justify-between gap-4">
-        <div>
-          <h1 className="text-xl font-semibold">Projects</h1>
-        </div>
-        <div className="flex shrink-0 flex-wrap justify-end gap-2">
-          <Button onClick={() => setCreating(true)}>
-            <Plus className="mr-2 h-4 w-4" />
-            Add Project
-          </Button>
-        </div>
-      </div>
+    <main className="mx-auto w-full max-w-6xl px-4 pt-4 pb-12 sm:px-6">
+      <FilterBar
+        {...bar}
+        placeholder="Search projects"
+        controls={<ViewToggle view={view} onChange={setView} />}
+        actions={
+          <Button onClick={() => setCreating(true)}><Plus className="h-4 w-4" />Add Project</Button>
+        }
+      />
 
       {loading ? (
         <div className="flex items-center justify-center py-20">
@@ -161,12 +158,7 @@ export default function ProjectsAdminPage() {
         />
       ) : (
         <>
-          <div className="mb-6 flex flex-wrap items-center gap-3">
-            <div className="min-w-0 flex-1">
-              <FilterBar {...bar} placeholder="Search projects" className="mb-0" />
-            </div>
-            <ViewToggle view={view} onChange={setView} />
-          </div>
+
 
           {visibleProjects.length === 0 ? (
             <EmptySearchState label="No projects match your search." />

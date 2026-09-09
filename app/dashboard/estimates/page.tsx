@@ -136,14 +136,15 @@ export default function EstimatesPage() {
   const awaiting = estimates.filter((estimate) => estimate.status === "sent").length
 
   return (
-    <main className="mx-auto w-full max-w-5xl px-4 py-9 sm:px-6">
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-[-0.02em]">Estimates</h1>
-          <p className="mt-1 text-sm text-muted-foreground">Price and scope work before it becomes an invoice.</p>
-        </div>
-        {adminView && <Button asChild><Link href="/dashboard/estimates/new"><Plus className="size-4" aria-hidden="true" />New</Link></Button>}
-      </div>
+    <main className="mx-auto w-full max-w-5xl px-4 pt-4 pb-12 sm:px-6">
+      <FilterBar
+        {...bar}
+        placeholder="Search estimates"
+        actions={
+          adminView && <Button asChild><Link href="/dashboard/estimates/new"><Plus className="size-4" aria-hidden="true" />New</Link></Button>
+        }
+      />
+      <p className="mb-6 text-sm text-muted-foreground">Price and scope work before it becomes an invoice.</p>
 
       {loading ? (
         <div className="flex items-center justify-center py-20"><Loader2 className="size-8 animate-spin text-muted-foreground" aria-hidden="true" /></div>
@@ -161,7 +162,6 @@ export default function EstimatesPage() {
         <>
           {awaiting > 0 && <p className="mt-6 rounded-[12px] bg-amber-500/10 px-4 py-3 text-sm leading-6 text-amber-900 dark:text-amber-200">{awaiting} estimate{awaiting === 1 ? "" : "s"} awaiting a response.</p>}
           <div className="mt-6">
-            <FilterBar {...bar} placeholder="Search estimates" />
             {visibleEstimates.length === 0 ? <EmptySearchState label="No estimates match your search." /> : (
               <Table>
                 <TableHeader>
