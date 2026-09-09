@@ -24,7 +24,15 @@ import {
   SidebarMenuSubItem,
   SidebarRail,
   SidebarTrigger,
+  useSidebar,
 } from "@/components/ui/sidebar"
+
+// On mobile the sidebar is a slide-over sheet, so nav rows need finger-sized
+// hit areas. max-md: keeps the desktop rail untouched.
+const mobileNavButton =
+  "max-md:h-12 max-md:gap-3 max-md:px-3 max-md:text-base [&>svg]:max-md:size-5"
+const mobileNavSubButton =
+  "max-md:h-11 max-md:gap-3 max-md:px-3 max-md:text-base [&>svg]:max-md:size-5"
 
 export type NavLink = {
   label: string
@@ -52,6 +60,12 @@ export function AppSidebar({
   navExtra?: ReactNode
 }) {
   const pathname = usePathname()
+  const { isMobile, setOpenMobile } = useSidebar()
+
+  // Tapping a destination on mobile should dismiss the slide-over sheet.
+  function handleNavigate() {
+    if (isMobile) setOpenMobile(false)
+  }
 
   return (
     <Sidebar
@@ -91,7 +105,7 @@ export function AppSidebar({
                   >
                     <SidebarMenuItem>
                       <CollapsibleTrigger asChild>
-                        <SidebarMenuButton tooltip={link.label}>
+                        <SidebarMenuButton tooltip={link.label} className={mobileNavButton}>
                           <link.icon className="h-4 w-4" />
                           <span>{link.label}</span>
                           <ChevronRight className="ml-auto h-4 w-4 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
@@ -101,8 +115,8 @@ export function AppSidebar({
                         <SidebarMenuSub>
                           {link.items.map((item) => (
                             <SidebarMenuSubItem key={item.href}>
-                              <SidebarMenuSubButton asChild isActive={isActive(pathname, item.href, rootHref)}>
-                                <Link href={item.href}>
+                              <SidebarMenuSubButton asChild isActive={isActive(pathname, item.href, rootHref)} className={mobileNavSubButton}>
+                                <Link href={item.href} onClick={handleNavigate}>
                                   <item.icon className="h-4 w-4" />
                                   <span>{item.label}</span>
                                 </Link>
@@ -115,8 +129,8 @@ export function AppSidebar({
                   </Collapsible>
                 ) : (
                   <SidebarMenuItem key={link.href}>
-                    <SidebarMenuButton asChild isActive={isActive(pathname, link.href, rootHref)} tooltip={link.label}>
-                      <Link href={link.href}>
+                    <SidebarMenuButton asChild isActive={isActive(pathname, link.href, rootHref)} tooltip={link.label} className={mobileNavButton}>
+                      <Link href={link.href} onClick={handleNavigate}>
                         <link.icon className="h-4 w-4" />
                         <span>{link.label}</span>
                       </Link>
