@@ -11,7 +11,7 @@ import {
   Timestamp,
 } from "firebase/firestore"
 import { db } from "./firebase"
-import { syncPortalTask, deleteAgencyRecord } from "./portal-data"
+import { ensureTaskShared, deleteAgencyRecord } from "./portal-data"
 
 export type TaskStatus = "todo" | "in-progress" | "review" | "done"
 export type TaskPriority = "low" | "medium" | "high"
@@ -151,11 +151,15 @@ export async function createTask(data: Omit<Task, "id" | "createdAt" | "updatedA
     createdAt: Timestamp.now(),
     updatedAt: Timestamp.now(),
   })
+  // Client tasks show in the portal automatically - no separate publish step.
+  await ensureTaskShared({ ...(data as Task), id: ref.id })
   return ref.id
 }
 
 export async function updateTask(id: string, data: Partial<Omit<Task, "id" | "createdAt">>): Promise<void> {
-  await syncPortalTask(id, data)
+  await updateDoc(doc(db, COLLECTION_NAME, id), { ...data, updatedAt: Timestamp.now() })
+  const snapshot = await getDoc(doc(db, COLLECTION_NAME, id))
+  if (snapshot.exists()) await ensureTaskShared({ ...(snapshot.data() as Task), id })
 }
 
 export async function deleteTask(id: string): Promise<void> {

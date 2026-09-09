@@ -8,6 +8,8 @@ import { useAuth } from "@/components/auth-provider"
 import { Button } from "@/components/ui/button"
 import { formatMoney, type Contract, type Estimate, type Invoice } from "@/lib/billing"
 import { projectStatusMeta } from "@/lib/projects"
+import { taskStatusMeta, type TaskStatus } from "@/lib/tasks"
+import { cn } from "@/lib/utils"
 import type { SharedDocument } from "@/lib/documents"
 import { billingTotals, invoiceBalance, portalDocumentPath, portalPath, safeExternalUrl, type PortalProject, type PortalTab, type PortalTask } from "@/lib/portal-model"
 import { completePortalTask } from "@/lib/portal-data"
@@ -56,7 +58,9 @@ function Files({ files }: { files: SharedDocument[] }) {
   })}</ul> : <Empty>Files shared by your agency will appear here.</Empty>}</Panel>
 }
 
-function TaskItem({ task, uid, canAct, onChanged }: { task: PortalTask; uid: string; canAct: boolean; onChanged: () => void }) {
+const TASK_STATUS_ORDER: TaskStatus[] = ["todo", "in-progress", "review", "done"]
+
+function TaskItem({ task, uid, canAct, onChanged, card = false }: { task: PortalTask; uid: string; canAct: boolean; onChanged: () => void; card?: boolean }) {
   const [open, setOpen] = useState(false)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState("")
@@ -64,7 +68,7 @@ function TaskItem({ task, uid, canAct, onChanged }: { task: PortalTask; uid: str
     setSaving(true); setError("")
     try { await completePortalTask(task.id, task.status !== "done"); onChanged() } catch { setError("Couldn’t update this task. Please try again."); setSaving(false) }
   }
-  return <li className="py-4 first:pt-0 last:pb-0">
+  return <li className={card ? "bg-card p-3" : "py-4 first:pt-0 last:pb-0"}>
     <div className="flex items-start gap-3"><input type="checkbox" checked={task.status === "done"} disabled={saving || !canAct || task.assigneeUid !== uid} onChange={() => void toggle()} aria-label={`Complete ${task.name}`} className="mt-1 size-4 shrink-0 accent-primary" />
       <div className="min-w-0 flex-1"><button onClick={() => setOpen(value => !value)} aria-expanded={open} className="w-full rounded-sm text-left text-sm font-medium leading-6 underline-offset-4 hover:underline focus-visible:outline focus-visible:outline-2"><span className={task.status === "done" ? "text-muted-foreground line-through" : ""}>{task.name}</span></button><p className="mt-1 text-xs text-muted-foreground">{task.dueDate ? `Due ${shortDate(task.dueDate)}` : "No due date"}{task.assigneeUid === uid ? " · Assigned to you" : task.status === "done" ? " · Completed" : " · Shared task"}</p></div>
       <button aria-label={`Open feedback for ${task.name}`} aria-expanded={open} onClick={() => setOpen(value => !value)} className="rounded-md p-2 text-muted-foreground hover:bg-muted focus-visible:outline focus-visible:outline-2"><MessageSquare className="size-4" /></button>
@@ -74,9 +78,21 @@ function TaskItem({ task, uid, canAct, onChanged }: { task: PortalTask; uid: str
   </li>
 }
 
+/** Read-only kanban: the same status columns as the agency board, no drag and no editing. */
+function TaskBoard({ tasks, uid, canAct, onChanged }: { tasks: PortalTask[]; uid: string; canAct: boolean; onChanged: () => void }) {
+  return <div className="scrollbar-none flex gap-4 overflow-x-auto pb-1">{TASK_STATUS_ORDER.map(status => {
+    const items = tasks.filter(task => task.status === status)
+    const meta = taskStatusMeta[status]
+    return <div key={status} className="flex w-[260px] shrink-0 flex-col gap-3 rounded-xl bg-muted/30 p-2">
+      <div className="flex items-center gap-2 px-1 pt-1"><span className={cn("rounded-full px-2 py-0.5 text-xs font-medium", meta.className)}>{meta.label}</span><span className="text-xs tabular-nums text-muted-foreground">{items.length}</span></div>
+      {items.length ? <ul className="flex flex-col gap-2">{items.map(task => <TaskItem key={task.id} task={task} uid={uid} canAct={canAct} onChanged={onChanged} card />)}</ul> : <p className="px-1 pb-2 text-xs text-muted-foreground">Nothing here yet.</p>}
+    </div>
+  })}</div>
+}
+
 function Tasks({ tasks, uid, canAct, onChanged, all = false }: { tasks: PortalTask[]; uid: string; canAct: boolean; onChanged: () => void; all?: boolean }) {
   const visible = all ? tasks : tasks.filter(task => task.assigneeUid === uid)
-  return <Panel title={all ? "Shared tasks" : "My tasks"} count={visible.length}>{visible.length ? <ul className="divide-y divide-border">{visible.map(task => <TaskItem key={task.id} task={task} uid={uid} canAct={canAct} onChanged={onChanged} />)}</ul> : <Empty>{all ? "Your agency hasn’t shared any tasks here yet." : "No tasks are assigned to you right now."}</Empty>}</Panel>
+  return <Panel title={all ? "Shared tasks" : "My tasks"} count={visible.length}>{visible.length ? (all ? <TaskBoard tasks={visible} uid={uid} canAct={canAct} onChanged={onChanged} /> : <ul className="divide-y divide-border">{visible.map(task => <TaskItem key={task.id} task={task} uid={uid} canAct={canAct} onChanged={onChanged} />)}</ul>) : <Empty>{all ? "Your agency hasn’t shared any tasks here yet." : "No tasks are assigned to you right now."}</Empty>}</Panel>
 }
 
 function Documents({ company, invoices, contracts, estimates }: { company: string; invoices: Invoice[]; contracts: Contract[]; estimates: Estimate[] }) {

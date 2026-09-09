@@ -1,7 +1,7 @@
 import { collection, doc, getDoc, getDocs, query, serverTimestamp, where, writeBatch } from "firebase/firestore"
 import { db } from "./firebase"
 import type { PortalProject, PortalTask } from "./portal-model"
-import type { Project } from "./projects"
+import { getProject, type Project } from "./projects"
 import type { Task } from "./tasks"
 
 export async function getPortalProjects(clientId: string): Promise<PortalProject[]> {
@@ -35,6 +35,34 @@ export async function publishPortalTask(task: Task, instructions: string, assign
 
 export async function unpublishPortalTask(id: string) {
   await writeBatch(db).delete(doc(db, "portalTasks", id)).commit()
+}
+
+/**
+ * Mirror a task into the client-facing projection so it shows in the portal
+ * automatically, without the agency publishing it by hand. Only safe fields
+ * travel (never the internal `content`), and the task's project is published
+ * too so the portal can surface the task under a visible project. Any
+ * client-facing instructions or assignee the agency set through the portal
+ * dialog are preserved.
+ */
+export async function ensureTaskShared(task: Task) {
+  if (!task.clientId || !task.projectId) return
+
+  const projectRef = doc(db, "portalProjects", task.projectId)
+  const taskRef = doc(db, "portalTasks", task.id)
+  const [projSnap, taskSnap] = await Promise.all([getDoc(projectRef), getDoc(taskRef)])
+
+  if (!projSnap.exists()) {
+    const project = await getProject(task.projectId)
+    if (project) await writeBatch(db).set(projectRef, projectForPortal(project, "")).commit()
+  }
+
+  const safe = { clientId: task.clientId, projectId: task.projectId, name: task.name, status: task.status, dueDate: task.dueDate || "" }
+  if (taskSnap.exists()) {
+    await writeBatch(db).update(taskRef, safe).commit()
+  } else {
+    await writeBatch(db).set(taskRef, { ...safe, instructions: "", assigneeUid: "" }).commit()
+  }
 }
 
 export async function completePortalTask(id: string, done: boolean) {
