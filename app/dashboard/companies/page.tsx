@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react"
 import { useRouter } from "next/navigation"
-import { Building2, Database, Loader2, Plus } from "lucide-react"
+import { Building2, Plus } from "lucide-react"
 
 import { useAuth } from "@/components/auth-provider"
 import { CompanyCreateSheet } from "@/components/dashboard/company-create-sheet"
@@ -16,14 +16,12 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu"
 import { Skeleton } from "@/components/ui/skeleton"
 import { FilterBar, useFilterBar, type SortOption } from "@/components/dashboard/filter-bar"
-import { migrateClientsToOrganizations, type OrganizationMigrationResult } from "@/lib/migrate-organizations"
 import { getOrganizations, type Organization } from "@/lib/organizations"
 import { tsToMillis } from "@/lib/tasks"
 import { getProjects, type Project } from "@/lib/projects"
@@ -87,9 +85,6 @@ export default function CompaniesPage() {
   const [deleting, setDeleting] = useState<string | null>(null)
   const [pendingDelete, setPendingDelete] = useState<AppUser | null>(null)
   const [creating, setCreating] = useState(false)
-  const [migrating, setMigrating] = useState(false)
-  const [migrationResult, setMigrationResult] = useState<OrganizationMigrationResult | null>(null)
-  const [migrationError, setMigrationError] = useState<string | null>(null)
 
   const orgMap = useMemo(() => new Map(organizations.map((org) => [org.id, org])), [organizations])
 
@@ -197,76 +192,14 @@ export default function CompaniesPage() {
     router.push("/dashboard")
   }
 
-  async function handleMigration() {
-    if (migrating) return
-    setMigrating(true)
-    setMigrationResult(null)
-    setMigrationError(null)
-    try {
-      const result = await migrateClientsToOrganizations()
-      await fetchClients()
-      setMigrationResult(result)
-    } catch (migrationFailure) {
-      console.error("Error migrating clients to organizations:", migrationFailure)
-      setMigrationError(
-        migrationFailure instanceof Error
-          ? migrationFailure.message
-          : "The migration failed. Nothing was changed; check your connection and try again.",
-      )
-    } finally {
-      setMigrating(false)
-    }
-  }
-
   return (
     <main className="mx-auto w-full max-w-6xl px-4 pb-12 pt-6 sm:px-6">
       <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
         <h1 className="text-xl font-semibold">Companies</h1>
-        <div className="flex shrink-0 flex-wrap justify-end gap-2">
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button variant="outline" disabled={loading || migrating}>
-                {migrating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Database className="mr-2 h-4 w-4" />}
-                {migrating ? "Setting up companies…" : "Set up companies"}
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Set up a company for every client?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  Each client without one gets an organization doc for its name, logo, and industry, seeded from its
-                  existing account. Clients that already have one are left alone, so this is safe to run again later.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction onClick={() => void handleMigration()}>Set up companies</AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-          <Button className="shrink-0" onClick={() => setCreating(true)}>
-            <Plus className="mr-2 h-4 w-4" />
-            Add Company
-          </Button>
-        </div>
-      </div>
-
-      <div aria-live="polite">
-        {migrationResult && (
-          <div className="mb-6 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-950 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-100">
-            <p className="font-medium">Companies set up</p>
-            <p className="mt-1 text-emerald-800 dark:text-emerald-200">
-              {migrationResult.clientsScanned} clients scanned; {migrationResult.organizationsCreated} companies
-              created, {migrationResult.organizationsExisting} already had one.
-            </p>
-          </div>
-        )}
-        {migrationError && (
-          <div className="mb-6 rounded-xl border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">
-            <p className="font-medium">Companies could not be set up</p>
-            <p className="mt-1">{migrationError}</p>
-          </div>
-        )}
+        <Button className="shrink-0" onClick={() => setCreating(true)}>
+          <Plus className="mr-2 h-4 w-4" />
+          Add Company
+        </Button>
       </div>
 
       {error && (
