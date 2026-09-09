@@ -97,10 +97,10 @@ export function ProjectsView({ projects, onChanged }: { projects: Project[]; onC
   }
 
   return (
-    <section id="projects" className="mt-6 scroll-mt-20 sm:mt-10">
+    <section id="projects" className="mt-4 scroll-mt-20">
       <div className="flex items-center gap-2">
-        <h2 className="text-sm font-semibold uppercase tracking-widest text-muted-foreground">Projects</h2>
-        <span className="text-sm font-medium text-muted-foreground">{projects.length}</span>
+        <h2 className="text-xs font-medium text-muted-foreground">Projects</h2>
+        <span className="text-xs font-medium text-muted-foreground">{projects.length}</span>
       </div>
 
       {error && !renaming && !deleting && (

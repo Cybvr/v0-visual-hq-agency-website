@@ -12,15 +12,14 @@ export function SidebarSearch() {
   const [search, setSearch] = useState("")
   const inputRef = useRef<HTMLInputElement>(null)
   const router = useRouter()
-  const { isAdmin, isImpersonating } = useAuth()
+  const { isAdmin, isImpersonating, stopViewingAs } = useAuth()
   const { setOpen, isMobile, setOpenMobile } = useSidebar()
-  const adminView = isAdmin && !isImpersonating
 
   function handleSearch(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     const query = search.trim().toLowerCase()
     if (!query) return
-    const destinations = adminView
+    const destinations = isAdmin
       ? [
           { terms: ["agent", "chat", "assistant"], href: "/dashboard/agent" },
           { terms: ["project"], href: "/dashboard/projects" },
@@ -32,7 +31,7 @@ export function SidebarSearch() {
           { terms: ["contract", "agreement", "signature"], href: "/dashboard/contracts" },
           { terms: ["estimate", "quote", "proposal"], href: "/dashboard/estimates" },
           { terms: ["client", "company", "workspace"], href: "/dashboard/companies" },
-          { terms: ["user", "account", "settings"], href: "/dashboard/users" },
+          { terms: ["contact", "user", "account", "settings"], href: "/dashboard/users" },
         ]
       : [
           { terms: ["agent", "chat", "assistant"], href: "/dashboard/agent" },
@@ -46,6 +45,9 @@ export function SidebarSearch() {
           { terms: ["estimate", "quote", "proposal"], href: "/dashboard/estimates" },
         ]
     const match = destinations.find(({ terms }) => terms.some((term) => term.includes(query) || query.includes(term)))
+    if (isImpersonating && (match?.href === "/dashboard/companies" || match?.href === "/dashboard/users")) {
+      stopViewingAs()
+    }
     router.push(match?.href ?? "/dashboard")
     if (isMobile) setOpenMobile(false)
   }

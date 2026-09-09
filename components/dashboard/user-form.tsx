@@ -35,7 +35,7 @@ const EMPTY_FORM: FormState = {
 interface UserFormProps {
   user?: AppUser | null
   fixedRole?: UserRole
-  subjectNoun?: "user" | "client" | "company"
+  subjectNoun?: "user" | "client" | "company" | "contact"
   /**
    * Set when creating a person for a company that already exists: the new
    * user joins this workspace instead of getting one of its own, and no new
@@ -50,7 +50,7 @@ interface UserFormProps {
 export function UserForm({ user, fixedRole, subjectNoun = "user", workspaceId, workspaceName, onSaved, onCancel }: UserFormProps) {
   const isEdit = Boolean(user)
   const joiningExisting = Boolean(workspaceId) && !isEdit
-  const subjectLabel = subjectNoun === "company" ? "Company" : subjectNoun === "client" ? "Client" : "User"
+  const subjectLabel = subjectNoun === "company" ? "Company" : subjectNoun === "client" ? "Client" : subjectNoun === "contact" ? "Contact" : "User"
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [form, setForm] = useState<FormState>(EMPTY_FORM)
@@ -118,7 +118,7 @@ export function UserForm({ user, fixedRole, subjectNoun = "user", workspaceId, w
       }
     } catch (err) {
       console.error("Error saving user:", err)
-      setError(err instanceof Error ? err.message : "Failed to save user.")
+      setError(err instanceof Error ? err.message : `Failed to save ${subjectNoun}.`)
     } finally {
       setSaving(false)
     }

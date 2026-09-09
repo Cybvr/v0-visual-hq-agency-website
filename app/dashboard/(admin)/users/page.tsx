@@ -65,7 +65,7 @@ export default function UsersAdminPage() {
       setUsers(data)
     } catch (err) {
       console.error("Error fetching users:", err)
-      setError(err instanceof Error ? err.message : "Failed to load users.")
+      setError(err instanceof Error ? err.message : "Failed to load contacts.")
     } finally {
       setLoading(false)
     }
@@ -112,9 +112,9 @@ export default function UsersAdminPage() {
     <main className="mx-auto w-full max-w-6xl px-4 pt-4 pb-12 sm:px-6">
       <FilterBar
         {...bar}
-        placeholder="Search users"
+        placeholder="Search contacts"
         actions={
-          <Button onClick={() => setSelectedId("new")}><Plus className="h-4 w-4" />Add User</Button>
+          <Button onClick={() => setSelectedId("new")}><Plus className="h-4 w-4" />Add Contact</Button>
         }
       />
 
@@ -129,10 +129,10 @@ export default function UsersAdminPage() {
       ) : users.length === 0 ? (
         <Card>
           <CardContent className="py-16 text-center">
-            <p className="mb-4 text-muted-foreground">No users in the collection yet.</p>
+            <p className="mb-4 text-muted-foreground">No contacts yet.</p>
             <Button onClick={() => setSelectedId("new")}>
               <Plus className="mr-2 h-4 w-4" />
-              Add the first user
+              Add the first contact
             </Button>
           </CardContent>
         </Card>
@@ -141,7 +141,7 @@ export default function UsersAdminPage() {
           {visibleUsers.length === 0 ? (
             <Card>
               <CardContent className="py-16 text-center text-sm text-muted-foreground">
-                No users match your search.
+                No contacts match your search.
               </CardContent>
             </Card>
           ) : (
@@ -149,7 +149,7 @@ export default function UsersAdminPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>User</TableHead>
+                    <TableHead>Contact</TableHead>
                     <TableHead>Email</TableHead>
                     <TableHead>Role</TableHead>
                     <TableHead>Company</TableHead>
@@ -216,7 +216,7 @@ export default function UsersAdminPage() {
                             size="icon"
                             className="h-8 w-8 text-muted-foreground hover:text-foreground"
                             onClick={() => setSelectedId(u.uid)}
-                            aria-label="Edit user"
+                            aria-label="Edit contact"
                           >
                             <Pencil className="h-3.5 w-3.5" />
                           </Button>
@@ -226,16 +226,16 @@ export default function UsersAdminPage() {
                                 variant="ghost"
                                 size="icon"
                                 className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                                aria-label="Delete user"
+                                aria-label="Delete contact"
                               >
                                 <Trash2 className="h-3.5 w-3.5" />
                               </Button>
                             </AlertDialogTrigger>
                             <AlertDialogContent>
                               <AlertDialogHeader>
-                                <AlertDialogTitle>Remove user?</AlertDialogTitle>
+                                <AlertDialogTitle>Remove contact?</AlertDialogTitle>
                                 <AlertDialogDescription>
-                                  You&apos;re about to remove {u.displayName || u.email || "this user"}. This can&apos;t be
+                                  You&apos;re about to remove {u.displayName || u.email || "this contact"}. This can&apos;t be
                                   undone.
                                 </AlertDialogDescription>
                               </AlertDialogHeader>
@@ -262,6 +262,7 @@ export default function UsersAdminPage() {
       )}
 
       <UserEditorSheet
+        subjectNoun="contact"
         open={selectedId !== null}
         user={selectedId === "new" ? null : selectedUser}
         isNew={selectedId === "new"}

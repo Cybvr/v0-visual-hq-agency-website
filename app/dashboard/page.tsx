@@ -74,11 +74,9 @@ export default function DashboardPage() {
 
   if (!user) return null
 
-  const firstName = appUser?.displayName?.split(" ")[0] ?? appUser?.company ?? user.displayName?.split(" ")[0] ?? "there"
-
   return (
-    <main className="mx-auto w-full max-w-5xl px-4 pb-10 pt-4 sm:px-6 sm:py-10">
-      <HomeBanner firstName={firstName} onTrial={appUser?.plan === undefined || appUser?.plan === "trial"} />
+    <main className="mx-auto w-full max-w-5xl px-4 pb-10 pt-4 sm:px-6">
+      <HomeBanner onTrial={appUser?.plan === undefined || appUser?.plan === "trial"} />
 
       {loading ? (
         <div className="flex items-center justify-center py-20">

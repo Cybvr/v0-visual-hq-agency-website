@@ -74,8 +74,8 @@ export function TemplatesView({
 
   if (loading) {
     return (
-      <section className="mt-10">
-        <h2 className="text-sm font-semibold uppercase tracking-widest text-muted-foreground">Templates</h2>
+      <section className="mt-4">
+        <h2 className="text-xs font-medium text-muted-foreground">Templates</h2>
         <div className="flex items-center gap-2 py-6 text-sm text-muted-foreground">
           <Loader2 className="size-4 animate-spin" aria-hidden="true" />
           Loading templates
@@ -87,10 +87,10 @@ export function TemplatesView({
   if (templates.length === 0) return null
 
   return (
-    <section id="templates" className="mt-10 scroll-mt-20">
+    <section id="templates" className="mt-4 scroll-mt-20">
       <div className="flex items-center gap-2">
-        <h2 className="text-sm font-semibold uppercase tracking-widest text-muted-foreground">Templates</h2>
-        <span className="text-sm font-medium text-muted-foreground">{templates.length}</span>
+        <h2 className="text-xs font-medium text-muted-foreground">Templates</h2>
+        <span className="text-xs font-medium text-muted-foreground">{templates.length}</span>
       </div>
 
       {error && (

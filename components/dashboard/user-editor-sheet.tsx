@@ -35,7 +35,7 @@ export function UserEditorSheet({
   clientId?: string
   isNew?: boolean
   fixedRole?: UserRole
-  subjectNoun?: "user" | "client" | "company"
+  subjectNoun?: "user" | "client" | "company" | "contact"
   /** When creating, attach the new person to this existing workspace instead of giving them their own. */
   joinWorkspaceId?: string
   joinWorkspaceName?: string
@@ -75,7 +75,7 @@ export function UserEditorSheet({
   }, [lookup, clientId])
 
   const subject = isNew ? null : resolved
-  const subjectLabel = joinWorkspaceId ? "person" : subjectNoun === "company" ? "company" : subjectNoun === "client" ? "client" : "user"
+  const subjectLabel = joinWorkspaceId ? "person" : subjectNoun
 
   return (
     <Sheet open={open} onOpenChange={(next) => !next && onClose()}>

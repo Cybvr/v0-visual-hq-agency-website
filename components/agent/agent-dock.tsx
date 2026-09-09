@@ -5,7 +5,6 @@ import { RotateCcw, X } from "lucide-react"
 
 import { AgentChat } from "@/components/agent/agent-chat"
 import { useAgent } from "@/components/agent/agent-context"
-import { cn } from "@/lib/utils"
 
 function DockHeader({ onReset, onClose, showReset }: { onReset: () => void; onClose: () => void; showReset: boolean }) {
   return (
@@ -40,22 +39,21 @@ function DockHeader({ onReset, onClose, showReset }: { onReset: () => void; onCl
 }
 
 /**
- * The dashboard-wide assistant surface: a docked panel on desktop and a
+ * The dashboard-wide assistant surface: a floating widget on desktop and a
  * full-screen sheet on mobile, both driven by the shared AgentProvider.
  */
 export function AgentDock() {
   const { open, setOpen, messages, sending, firstName, send, reset } = useAgent()
   const hasMessages = messages.length > 0
 
+  if (!open) return null
+
   return (
     <>
-      {/* Desktop: right-docked panel. Width is matched by the shell's padding. */}
+      {/* Desktop: floating widget that leaves the dashboard layout unchanged. */}
       <aside
-        aria-hidden={!open}
-        className={cn(
-          "fixed right-0 top-0 z-40 hidden h-svh w-[26rem] flex-col border-l border-border bg-background shadow-xl transition-transform duration-300 lg:flex",
-          open ? "translate-x-0" : "pointer-events-none translate-x-full",
-        )}
+        aria-label="Agent"
+        className="fixed bottom-5 right-5 z-50 hidden h-[40rem] max-h-[calc(100svh-7rem)] w-[26rem] flex-col overflow-hidden rounded-2xl border border-border bg-background shadow-xl lg:flex"
       >
         <DockHeader onReset={reset} onClose={() => setOpen(false)} showReset={hasMessages} />
         <AgentChat messages={messages} sending={sending} firstName={firstName} onSend={send} compact />

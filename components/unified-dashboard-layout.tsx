@@ -2,21 +2,22 @@
 
 import { useEffect, type ReactNode } from "react"
 import Image from "next/image"
-import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { Bot, Briefcase, Building2, Eye, FileSignature, FileText, HardDrive, LayoutDashboard, ListTodo, Loader2, LogOut, Mail, Megaphone, Receipt, Settings, TrendingUp, Users, Wallet } from "lucide-react"
 import { AuthProvider, useAuth } from "@/components/auth-provider"
 import { AgentDock } from "@/components/agent/agent-dock"
-import { AgentProvider, useAgent } from "@/components/agent/agent-context"
+import { AgentProvider } from "@/components/agent/agent-context"
 import { Button } from "@/components/ui/button"
 import { DashboardShell, type NavLink } from "@/components/dashboard-shell"
-import { cn } from "@/lib/utils"
 
-const CLIENT_NAV: NavLink[] = [
+const DASHBOARD_NAV: NavLink[] = [
   { label: "Home", href: "/dashboard", icon: LayoutDashboard },
+  { label: "Companies", href: "/dashboard/companies", icon: Building2, adminOnly: true },
+  { label: "Contacts", href: "/dashboard/users", icon: Users, adminOnly: true },
   { label: "Agent", href: "/dashboard/agent", icon: Bot },
   { label: "Drive", href: "/dashboard/drive", icon: HardDrive },
   {
+    sectionLabel: "Workspace",
     label: "Operations",
     href: "/dashboard/projects",
     icon: Briefcase,
@@ -42,43 +43,7 @@ const CLIENT_NAV: NavLink[] = [
       { label: "Invoices", href: "/dashboard/invoices", icon: Receipt },
       { label: "Contracts", href: "/dashboard/contracts", icon: FileSignature },
       { label: "Estimates", href: "/dashboard/estimates", icon: FileText },
-    ],
-  },
-]
-
-const ADMIN_NAV: NavLink[] = [
-  { label: "Home", href: "/dashboard", icon: LayoutDashboard },
-  { label: "Agent", href: "/dashboard/agent", icon: Bot },
-  { label: "Drive", href: "/dashboard/drive", icon: HardDrive },
-  {
-    label: "Operations",
-    href: "/dashboard/projects",
-    icon: Briefcase,
-    items: [
-      { label: "Projects", href: "/dashboard/projects", icon: Briefcase },
-      { label: "Tasks", href: "/dashboard/tasks", icon: ListTodo },
-      { label: "Companies", href: "/dashboard/companies", icon: Building2 },
-      { label: "Users", href: "/dashboard/users", icon: Users },
-    ],
-  },
-  {
-    label: "Marketing",
-    href: "/dashboard/email",
-    icon: Megaphone,
-    items: [
-      { label: "Email", href: "/dashboard/email", icon: Mail },
-      { label: "SEO", href: "/dashboard/seo", icon: TrendingUp },
-    ],
-  },
-  {
-    label: "Finance",
-    href: "/dashboard/invoices",
-    icon: Wallet,
-    items: [
-      { label: "Invoices", href: "/dashboard/invoices", icon: Receipt },
-      { label: "Contracts", href: "/dashboard/contracts", icon: FileSignature },
-      { label: "Estimates", href: "/dashboard/estimates", icon: FileText },
-      { label: "Business profile", href: "/dashboard/settings/business", icon: Settings },
+      { label: "Business profile", href: "/dashboard/settings/business", icon: Settings, adminOnly: true },
     ],
   },
 ]
@@ -116,7 +81,12 @@ function UnifiedDashboardShell({ children, requireAdmin = false }: { children: R
     <AgentProvider>
       <DashboardWithAgent
         subtitle={appUser?.company || undefined}
-        navLinks={isAdmin && !isImpersonating ? ADMIN_NAV : CLIENT_NAV}
+        navLinks={DASHBOARD_NAV
+          .filter((link) => !link.adminOnly || isAdmin)
+          .map((link) => ({
+            ...link,
+            items: link.items?.filter((item) => !item.adminOnly || isAdmin),
+          }))}
         banner={isImpersonating ? (
           <div className="flex h-10 items-center justify-between gap-3 border-b border-amber-200 bg-amber-50 px-4 text-sm text-amber-900 dark:border-amber-500/30 dark:bg-amber-950 dark:text-amber-200 sm:px-6">
             <span className="flex min-w-0 items-center gap-2">
@@ -134,8 +104,8 @@ function UnifiedDashboardShell({ children, requireAdmin = false }: { children: R
 }
 
 /**
- * Wraps the shell so the docked agent can push the content left on desktop
- * (a full-screen sheet handles mobile) and offers a launcher when it's closed.
+ * Keeps the agent in a floating widget on desktop (a full-screen sheet handles
+ * mobile), opened from the dashboard header.
  */
 function DashboardWithAgent({
   subtitle,
@@ -148,31 +118,14 @@ function DashboardWithAgent({
   banner?: ReactNode
   children: ReactNode
 }) {
-  const { open, setOpen } = useAgent()
-
   return (
     <>
-      <div className={cn("h-svh transition-[padding] duration-300", open && "lg:pr-[26rem]")}>
-        <DashboardShell title="VisualCNS" subtitle={subtitle} navLinks={navLinks} rootHref="/dashboard" banner={banner}>
-          {children}
-        </DashboardShell>
-      </div>
+      <DashboardShell title="VisualCNS" subtitle={subtitle} navLinks={navLinks} rootHref="/dashboard" banner={banner}>
+        {children}
+      </DashboardShell>
 
       <AgentDock />
 
-      {!open && (
-        <button
-          type="button"
-          onClick={() => setOpen(true)}
-          aria-label="Open Agent"
-          className="fixed bottom-5 right-5 z-40 flex items-center gap-2 rounded-full bg-[linear-gradient(90deg,#c32cff,#6ed8ff)] p-[2px] shadow-lg outline-none transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-        >
-          <span className="flex h-11 items-center gap-2 rounded-full bg-[#110e2c] px-4 text-sm font-semibold text-white">
-            <Image src="/visualhqlogo.svg" alt="" width={20} height={20} className="brightness-0 invert" />
-            Agent
-          </span>
-        </button>
-      )}
     </>
   )
 }

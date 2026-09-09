@@ -52,7 +52,7 @@ export function dashboardPageTitle(pathname: string): string {
     case "tasks":
       return "Tasks"
     case "users":
-      return "Users"
+      return "Contacts"
     default:
       // The remaining dynamic /dashboard/[slug] route redirects to the
       // dashboard home, so it should never inherit a marketing-page title.

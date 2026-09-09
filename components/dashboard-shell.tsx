@@ -6,6 +6,7 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { Bell, CircleHelp, Crown } from "lucide-react"
 
+import { useAgent } from "@/components/agent/agent-context"
 import { AppSidebar, type NavLink } from "@/components/app-sidebar"
 import { Button } from "@/components/ui/button"
 import { dashboardPageTitle } from "@/components/dashboard/dashboard-document-title"
@@ -41,6 +42,7 @@ export function DashboardShell({
   children: ReactNode
 }) {
   const pathname = usePathname()
+  const { open: agentOpen, setOpen: setAgentOpen } = useAgent()
   // The company detail page carries its own banner, so the sticky dashboard
   // header would just duplicate it.
   const hideHeader = /^\/dashboard\/companies\/[^/]+/.test(pathname ?? "")
@@ -81,16 +83,18 @@ export function DashboardShell({
               <Button type="button" variant="ghost" size="icon" aria-label="Notifications">
                 <Bell className="size-4" aria-hidden="true" />
               </Button>
-              <Link
-                href="/dashboard/agent"
+              <button
+                type="button"
+                onClick={() => setAgentOpen(true)}
                 aria-label="Open Agent"
-                className="hidden rounded-full bg-[linear-gradient(90deg,#c32cff,#6ed8ff)] p-[2px] outline-none transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 sm:inline-block"
+                aria-expanded={agentOpen}
+                className="inline-flex rounded-full bg-[linear-gradient(90deg,#c32cff,#6ed8ff)] p-[2px] outline-none transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
               >
                 <span className="flex h-9 items-center gap-2 rounded-full bg-[#110e2c] px-3 text-sm font-semibold text-white">
                   <Image src="/visualhqlogo.svg" alt="" width={18} height={18} className="brightness-0 invert" />
                   <span className="hidden sm:inline">Agent</span>
                 </span>
-              </Link>
+              </button>
             </div>
           </header>
           )}

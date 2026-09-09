@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation"
 import { ChevronRight } from "lucide-react"
 import type { ComponentType, ReactNode } from "react"
 
+import { useAuth } from "@/components/auth-provider"
 import { BrandLockup } from "@/components/brand-lockup"
 import { SidebarSearch } from "@/components/dashboard/sidebar-search"
 import { NavUser } from "@/components/nav-user"
@@ -37,10 +38,14 @@ const mobileNavSubButton =
 
 export type NavLink = {
   label: string
+  /** Optional section label displayed before this navigation item. */
+  sectionLabel?: string
   href: string
   icon: ComponentType<{ className?: string }>
+  /** Admin destinations remain visible to admins while previewing another account. */
+  adminOnly?: boolean
   /** When present the item is a collapsible dropdown and href is only its default destination. */
-  items?: Array<{ label: string; href: string; icon: ComponentType<{ className?: string }> }>
+  items?: Array<{ label: string; href: string; icon: ComponentType<{ className?: string }>; adminOnly?: boolean }>
 }
 
 function isActive(pathname: string, href: string, rootHref: string) {
@@ -61,10 +66,13 @@ export function AppSidebar({
   navExtra?: ReactNode
 }) {
   const pathname = usePathname()
+  const { isImpersonating, stopViewingAs } = useAuth()
   const { isMobile, setOpenMobile } = useSidebar()
 
   // Tapping a destination on mobile should dismiss the slide-over sheet.
-  function handleNavigate() {
+  function handleNavigate(adminOnly = false) {
+    // Admin tools open in the signed-in account; client pages keep the preview.
+    if (adminOnly && isImpersonating) stopViewingAs()
     if (isMobile) setOpenMobile(false)
   }
 
@@ -77,7 +85,7 @@ export function AppSidebar({
       )}
       {...props}
     >
-      <div className="m-2 flex min-h-0 flex-1 flex-col overflow-hidden rounded-[16px] border border-border/60 bg-card text-[13px] font-medium text-muted-foreground [&_*]:text-muted-foreground! group-data-[collapsible=icon]:m-1 group-data-[collapsible=icon]:rounded-[12px]">
+      <div className="group/sidebar m-2 flex min-h-0 flex-1 flex-col overflow-hidden rounded-[16px] border border-border/60 bg-card text-[13px] font-medium text-muted-foreground [&_*]:text-muted-foreground! group-data-[collapsible=icon]:m-1 group-data-[collapsible=icon]:rounded-[12px]">
         <SidebarHeader className="group-data-[collapsible=icon]:p-1">
           <div className="flex h-12 items-center gap-2 group-data-[collapsible=icon]:justify-center">
             <SidebarMenu className="min-w-0 flex-1 group-data-[collapsible=icon]:hidden">
@@ -90,15 +98,21 @@ export function AppSidebar({
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>
-            <SidebarTrigger className="size-8 shrink-0" />
+            <SidebarTrigger className="size-8 shrink-0 opacity-0 transition-opacity group-hover/sidebar:opacity-100 focus-visible:opacity-100 [@media(hover:none)]:opacity-100" />
           </div>
           <SidebarSearch />
         </SidebarHeader>
         <SidebarContent>
           <SidebarGroup className="group-data-[collapsible=icon]:p-1">
             <SidebarMenu>
-              {navLinks.map((link) =>
-                link.items ? (
+              {navLinks.map((link) => (
+                <React.Fragment key={link.href}>
+                  {link.sectionLabel && (
+                    <SidebarMenuItem className="group-data-[collapsible=icon]:hidden">
+                      <p className="px-2 pb-1 pt-4 text-xs font-medium text-muted-foreground">{link.sectionLabel}</p>
+                    </SidebarMenuItem>
+                  )}
+                {link.items ? (
                   <Collapsible
                     key={link.label}
                     asChild
@@ -118,7 +132,7 @@ export function AppSidebar({
                           {link.items.map((item) => (
                             <SidebarMenuSubItem key={item.href}>
                               <SidebarMenuSubButton asChild isActive={isActive(pathname, item.href, rootHref)} className={mobileNavSubButton}>
-                                <Link href={item.href} onClick={handleNavigate}>
+                                <Link href={item.href} onClick={() => handleNavigate(item.adminOnly)}>
                                   <item.icon className="h-4 w-4" />
                                   <span>{item.label}</span>
                                 </Link>
@@ -132,14 +146,15 @@ export function AppSidebar({
                 ) : (
                   <SidebarMenuItem key={link.href}>
                     <SidebarMenuButton asChild isActive={isActive(pathname, link.href, rootHref)} tooltip={link.label} className={mobileNavButton}>
-                      <Link href={link.href} onClick={handleNavigate}>
+                      <Link href={link.href} onClick={() => handleNavigate(link.adminOnly)}>
                         <link.icon className="h-4 w-4" />
                         <span>{link.label}</span>
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
-                ),
-              )}
+                )}
+                </React.Fragment>
+              ))}
             </SidebarMenu>
             {navExtra && <div className="mt-2 group-data-[collapsible=icon]:hidden">{navExtra}</div>}
           </SidebarGroup>
