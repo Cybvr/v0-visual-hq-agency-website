@@ -3,20 +3,34 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 
+import { useAuth } from "@/components/auth-provider"
 import { cn } from "@/lib/utils"
 
 const LINKS = [
   { label: "Account", href: "/dashboard/account" },
   { label: "Profile", href: "/dashboard/account/profile" },
   { label: "Customization", href: "/dashboard/account/customization" },
+  { label: "Business profile", href: "/dashboard/account/business", adminOnly: true },
 ]
+
+/** The tab's title and one-line description, shown inside the page under the nav. */
+export function AccountHeader({ title, description }: { title: string; description: string }) {
+  return (
+    <header className="mt-7">
+      <h1 className="text-lg font-semibold">{title}</h1>
+      <p className="mt-1 text-sm leading-6 text-muted-foreground">{description}</p>
+    </header>
+  )
+}
 
 export function AccountNav() {
   const pathname = usePathname()
+  const { isAdmin } = useAuth()
+  const links = LINKS.filter((link) => !link.adminOnly || isAdmin)
 
   return (
-    <div className="mt-7 flex gap-6 border-b border-border" role="tablist" aria-label="Account settings">
-      {LINKS.map((link) => {
+    <div className="flex gap-6 border-b border-border" role="tablist" aria-label="Account settings">
+      {links.map((link) => {
         const active = pathname === link.href
         return (
           <Link

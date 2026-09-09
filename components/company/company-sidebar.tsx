@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, type ReactNode } from "react"
-import { Copy, Loader2, Pencil, Plus, Share2, X } from "lucide-react"
+import { Copy, Plus, Share2, X } from "lucide-react"
 import { toast } from "sonner"
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -22,7 +22,6 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Separator } from "@/components/ui/separator"
-import { Textarea } from "@/components/ui/textarea"
 import { INDUSTRIES } from "@/lib/industries"
 import { COMPANY_SIZES } from "@/lib/organizations"
 import { cn } from "@/lib/utils"
@@ -91,11 +90,11 @@ function DetailRow({ label, value, editable }: { label: string; value?: string; 
   )
 }
 
-function DetailsField({ label, children }: { label: string; children: ReactNode }) {
+function DetailsRow({ label, children }: { label: string; children: ReactNode }) {
   return (
-    <div className="space-y-1">
-      <label className="text-xs font-medium text-muted-foreground">{label}</label>
-      {children}
+    <div className="flex items-center justify-between gap-3 py-1 text-sm">
+      <span className="shrink-0 text-muted-foreground">{label}</span>
+      <div className="min-w-0 flex-1">{children}</div>
     </div>
   )
 }
@@ -116,17 +115,6 @@ export function CompanySidebar({
 }) {
   const [addingTag, setAddingTag] = useState(false)
   const [tagDraft, setTagDraft] = useState("")
-  const [editingDetails, setEditingDetails] = useState(false)
-  const [savingDetails, setSavingDetails] = useState(false)
-  const [detailsDraft, setDetailsDraft] = useState({
-    website: company.website ?? "",
-    description: company.description ?? "",
-    industry: company.industry ?? "",
-    location: company.location ?? "",
-    companySize: company.companySize ?? "",
-    source: company.source ?? "",
-    linkedIn: company.linkedIn ?? "",
-  })
 
   const primaryContact = people.find((person) => person.id === company.primaryContactId) ?? people[0]
 
@@ -136,6 +124,21 @@ export function CompanySidebar({
       await admin.onSave({ tags: next })
     } catch (error) {
       console.error("Error saving tags:", error)
+    }
+  }
+
+  /** Auto-save a single Details field, skipping the write when it's unchanged. */
+  async function commitField(
+    field: "website" | "description" | "industry" | "location" | "companySize" | "source" | "linkedIn",
+    value: string,
+  ) {
+    if (!admin) return
+    const next = value.trim()
+    if ((company[field] ?? "") === next) return
+    try {
+      await admin.onSave({ [field]: next })
+    } catch (error) {
+      console.error("Error saving company details:", error)
     }
   }
 
@@ -150,40 +153,6 @@ export function CompanySidebar({
 
   function removeTag(tag: string) {
     void commitTags((company.tags ?? []).filter((t) => t !== tag))
-  }
-
-  function openDetailsEditor() {
-    setDetailsDraft({
-      website: company.website ?? "",
-      description: company.description ?? "",
-      industry: company.industry ?? "",
-      location: company.location ?? "",
-      companySize: company.companySize ?? "",
-      source: company.source ?? "",
-      linkedIn: company.linkedIn ?? "",
-    })
-    setEditingDetails(true)
-  }
-
-  async function saveDetails() {
-    if (!admin || savingDetails) return
-    setSavingDetails(true)
-    try {
-      await admin.onSave({
-        website: detailsDraft.website.trim(),
-        description: detailsDraft.description.trim(),
-        industry: detailsDraft.industry,
-        location: detailsDraft.location.trim(),
-        companySize: detailsDraft.companySize,
-        source: detailsDraft.source.trim(),
-        linkedIn: detailsDraft.linkedIn.trim(),
-      })
-      setEditingDetails(false)
-    } catch (error) {
-      console.error("Error saving company details:", error)
-    } finally {
-      setSavingDetails(false)
-    }
   }
 
   function copyEmail(email: string) {
@@ -357,45 +326,35 @@ export function CompanySidebar({
         <Separator className="my-5" />
 
         <div>
-          <div className="flex items-center justify-between">
-            <h3 className="text-sm font-semibold text-muted-foreground">Details</h3>
-            {admin && !editingDetails && (
-              <button
-                type="button"
-                onClick={openDetailsEditor}
-                aria-label="Edit details"
-                className="flex size-6 items-center justify-center rounded-full text-muted-foreground outline-none transition-colors hover:bg-muted hover:text-foreground"
-              >
-                <Pencil className="size-3.5" aria-hidden="true" />
-              </button>
-            )}
-          </div>
+          <h3 className="text-sm font-semibold text-muted-foreground">Details</h3>
 
-          {editingDetails ? (
-            <div className="mt-3 space-y-3">
-              <DetailsField label="Domain">
+          {admin ? (
+            <div className="mt-3 divide-y divide-border/60">
+              <DetailsRow label="Domain">
                 <Input
-                  value={detailsDraft.website}
-                  onChange={(event) => setDetailsDraft((d) => ({ ...d, website: event.target.value }))}
+                  key={company.website ?? ""}
+                  defaultValue={company.website ?? ""}
+                  onBlur={(event) => void commitField("website", event.target.value)}
                   placeholder="acme.com"
-                  className="h-8 text-sm"
+                  className="h-7 border-transparent bg-transparent px-2 text-right text-sm shadow-none hover:border-input focus-visible:border-ring"
                 />
-              </DetailsField>
-              <DetailsField label="Description">
-                <Textarea
-                  value={detailsDraft.description}
-                  onChange={(event) => setDetailsDraft((d) => ({ ...d, description: event.target.value }))}
-                  placeholder="What does this company do?"
-                  className="min-h-16 text-sm"
+              </DetailsRow>
+              <DetailsRow label="Description">
+                <Input
+                  key={company.description ?? ""}
+                  defaultValue={company.description ?? ""}
+                  onBlur={(event) => void commitField("description", event.target.value)}
+                  placeholder="Add a description"
+                  className="h-7 border-transparent bg-transparent px-2 text-right text-sm shadow-none hover:border-input focus-visible:border-ring"
                 />
-              </DetailsField>
-              <DetailsField label="Industry">
+              </DetailsRow>
+              <DetailsRow label="Industry">
                 <Select
-                  value={detailsDraft.industry}
-                  onValueChange={(value) => setDetailsDraft((d) => ({ ...d, industry: value }))}
+                  value={company.industry ?? ""}
+                  onValueChange={(value) => void commitField("industry", value)}
                 >
-                  <SelectTrigger className="h-8 w-full text-sm">
-                    <SelectValue placeholder="Select an industry" />
+                  <SelectTrigger className="ml-auto h-7 w-fit border-transparent bg-muted! text-sm shadow-none focus-visible:border-transparent! focus-visible:ring-0!">
+                    <SelectValue placeholder="Add industry" />
                   </SelectTrigger>
                   <SelectContent>
                     {INDUSTRIES.map((industry) => (
@@ -405,22 +364,23 @@ export function CompanySidebar({
                     ))}
                   </SelectContent>
                 </Select>
-              </DetailsField>
-              <DetailsField label="Location">
+              </DetailsRow>
+              <DetailsRow label="Location">
                 <Input
-                  value={detailsDraft.location}
-                  onChange={(event) => setDetailsDraft((d) => ({ ...d, location: event.target.value }))}
-                  placeholder="Lagos, Nigeria"
-                  className="h-8 text-sm"
+                  key={company.location ?? ""}
+                  defaultValue={company.location ?? ""}
+                  onBlur={(event) => void commitField("location", event.target.value)}
+                  placeholder="Add location"
+                  className="h-7 border-transparent bg-transparent px-2 text-right text-sm shadow-none hover:border-input focus-visible:border-ring"
                 />
-              </DetailsField>
-              <DetailsField label="Company Size">
+              </DetailsRow>
+              <DetailsRow label="Company Size">
                 <Select
-                  value={detailsDraft.companySize}
-                  onValueChange={(value) => setDetailsDraft((d) => ({ ...d, companySize: value }))}
+                  value={company.companySize ?? ""}
+                  onValueChange={(value) => void commitField("companySize", value)}
                 >
-                  <SelectTrigger className="h-8 w-full text-sm">
-                    <SelectValue placeholder="Select a size" />
+                  <SelectTrigger className="ml-auto h-7 w-fit border-transparent bg-muted! text-sm shadow-none focus-visible:border-transparent! focus-visible:ring-0!">
+                    <SelectValue placeholder="Add size" />
                   </SelectTrigger>
                   <SelectContent>
                     {COMPANY_SIZES.map((size) => (
@@ -430,47 +390,39 @@ export function CompanySidebar({
                     ))}
                   </SelectContent>
                 </Select>
-              </DetailsField>
-              <DetailsField label="Source">
+              </DetailsRow>
+              <DetailsRow label="Source">
                 <Input
-                  value={detailsDraft.source}
-                  onChange={(event) => setDetailsDraft((d) => ({ ...d, source: event.target.value }))}
-                  placeholder="Referral, LinkedIn, ..."
-                  className="h-8 text-sm"
+                  key={company.source ?? ""}
+                  defaultValue={company.source ?? ""}
+                  onBlur={(event) => void commitField("source", event.target.value)}
+                  placeholder="Add source"
+                  className="h-7 border-transparent bg-transparent px-2 text-right text-sm shadow-none hover:border-input focus-visible:border-ring"
                 />
-              </DetailsField>
-              <DetailsField label="LinkedIn">
+              </DetailsRow>
+              <DetailsRow label="LinkedIn">
                 <Input
-                  value={detailsDraft.linkedIn}
-                  onChange={(event) => setDetailsDraft((d) => ({ ...d, linkedIn: event.target.value }))}
-                  placeholder="linkedin.com/company/..."
-                  className="h-8 text-sm"
+                  key={company.linkedIn ?? ""}
+                  defaultValue={company.linkedIn ?? ""}
+                  onBlur={(event) => void commitField("linkedIn", event.target.value)}
+                  placeholder="Add LinkedIn"
+                  className="h-7 border-transparent bg-transparent px-2 text-right text-sm shadow-none hover:border-input focus-visible:border-ring"
                 />
-              </DetailsField>
-
-              <div className="flex items-center justify-end gap-2 pt-1">
-                <Button type="button" size="sm" variant="ghost" onClick={() => setEditingDetails(false)} disabled={savingDetails}>
-                  Cancel
-                </Button>
-                <Button type="button" size="sm" onClick={() => void saveDetails()} disabled={savingDetails}>
-                  {savingDetails && <Loader2 className="size-3.5 animate-spin" aria-hidden="true" />}
-                  Save
-                </Button>
-              </div>
+              </DetailsRow>
             </div>
           ) : (
             <div className="mt-3 divide-y divide-border/60">
-              <DetailRow label="Domain" value={company.website} editable={Boolean(admin)} />
-              <DetailRow label="Description" value={company.description} editable={Boolean(admin)} />
-              <DetailRow label="Industry" value={company.industry} editable={Boolean(admin)} />
-              <DetailRow label="Location" value={company.location} editable={Boolean(admin)} />
+              <DetailRow label="Domain" value={company.website} editable={false} />
+              <DetailRow label="Description" value={company.description} editable={false} />
+              <DetailRow label="Industry" value={company.industry} editable={false} />
+              <DetailRow label="Location" value={company.location} editable={false} />
               <DetailRow
                 label="Company Size"
                 value={company.companySize ? `${company.companySize} employees` : undefined}
-                editable={Boolean(admin)}
+                editable={false}
               />
-              <DetailRow label="Source" value={company.source} editable={Boolean(admin)} />
-              <DetailRow label="LinkedIn" value={company.linkedIn} editable={Boolean(admin)} />
+              <DetailRow label="Source" value={company.source} editable={false} />
+              <DetailRow label="LinkedIn" value={company.linkedIn} editable={false} />
             </div>
           )}
         </div>

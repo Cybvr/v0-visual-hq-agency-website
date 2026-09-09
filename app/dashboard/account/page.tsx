@@ -1,7 +1,7 @@
 "use client"
 
 import { useAuth } from "@/components/auth-provider"
-import { AccountNav } from "@/components/account/account-nav"
+import { AccountHeader, AccountNav } from "@/components/account/account-nav"
 import { Button } from "@/components/ui/button"
 
 function Row({ label, value }: { label: string; value: string }) {
@@ -19,13 +19,14 @@ export default function AccountPage() {
 
   return (
     <main className="mx-auto w-full max-w-3xl px-4 py-9 sm:px-6">
-      <p className="mt-1.5 text-sm leading-6 text-muted-foreground">
-        Your sign-in details and the workspace this account belongs to.
-      </p>
-
       <AccountNav />
 
-      <section className="mt-7 rounded-[14px] border border-border bg-card px-5 py-1">
+      <AccountHeader
+        title="Account"
+        description="Your sign-in details and the workspace this account belongs to."
+      />
+
+      <section className="mt-5 rounded-[14px] border border-border bg-card px-5 py-1">
         <Row label="Email" value={appUser?.email || user.email || "Not set"} />
         <Row label="Name" value={appUser?.displayName || user.displayName || "Not set"} />
         <Row label="Workspace" value={appUser?.company || "Not set"} />

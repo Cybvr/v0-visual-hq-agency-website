@@ -5,7 +5,7 @@ import { useTheme } from "next-themes"
 import { Check, Moon, Sun } from "lucide-react"
 
 import { useAuth } from "@/components/auth-provider"
-import { AccountNav } from "@/components/account/account-nav"
+import { AccountHeader, AccountNav } from "@/components/account/account-nav"
 import { cn } from "@/lib/utils"
 
 const THEMES = [
@@ -28,13 +28,11 @@ export default function CustomizationPage() {
 
   return (
     <main className="mx-auto w-full max-w-3xl px-4 py-9 sm:px-6">
-      <p className="mt-1.5 text-sm leading-6 text-muted-foreground">
-        How the dashboard looks on this device.
-      </p>
-
       <AccountNav />
 
-      <section className="mt-7">
+      <AccountHeader title="Customization" description="How the dashboard looks on this device." />
+
+      <section className="mt-6">
         <h2 className="text-sm font-medium">Appearance</h2>
         <p className="mt-1 text-sm leading-6 text-muted-foreground">
           Saved in this browser, so it won&apos;t follow you to another device.

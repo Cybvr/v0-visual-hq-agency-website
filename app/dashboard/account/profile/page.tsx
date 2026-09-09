@@ -4,7 +4,7 @@ import { useEffect, useState, type FormEvent } from "react"
 import { Loader2 } from "lucide-react"
 
 import { useAuth } from "@/components/auth-provider"
-import { AccountNav } from "@/components/account/account-nav"
+import { AccountHeader, AccountNav } from "@/components/account/account-nav"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -75,13 +75,11 @@ export default function ProfilePage() {
 
   return (
     <main className="mx-auto w-full max-w-3xl px-4 py-9 sm:px-6">
-      <p className="mt-1.5 text-sm leading-6 text-muted-foreground">
-        How your name and picture appear across the dashboard.
-      </p>
-
       <AccountNav />
 
-      <form onSubmit={save} className="mt-7 rounded-[14px] border border-border bg-card p-5">
+      <AccountHeader title="Profile" description="How your name and picture appear across the dashboard." />
+
+      <form onSubmit={save} className="mt-5 rounded-[14px] border border-border bg-card p-5">
         <div className="flex items-center gap-4">
           <Avatar className="size-14 rounded-full">
             {photoURL && <AvatarImage src={photoURL} alt={name} referrerPolicy="no-referrer" />}
