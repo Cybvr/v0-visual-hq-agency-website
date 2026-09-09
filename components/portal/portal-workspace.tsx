@@ -12,7 +12,9 @@ import type { SharedDocument } from "@/lib/documents"
 import { billingTotals, invoiceBalance, portalDocumentPath, portalPath, safeExternalUrl, type PortalProject, type PortalTab, type PortalTask } from "@/lib/portal-model"
 import { completePortalTask } from "@/lib/portal-data"
 import type { Project } from "@/lib/projects"
+import type { PublicTeamMember } from "@/lib/organizations"
 import { CompanyMedia } from "@/components/company/company-media"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { usePortal, type PortalData } from "./portal-provider"
 import { PortalNotice } from "./portal-shell"
 import { PortalTaskFeedback } from "./portal-task-feedback"
@@ -28,6 +30,14 @@ function Panel({ title, count, action, children }: { title: string; count?: numb
 }
 
 function Empty({ children }: { children: ReactNode }) { return <p className="py-4 text-sm leading-6 text-muted-foreground">{children}</p> }
+
+function initials(name: string) {
+  return name.split(" ").map(part => part[0]).join("").slice(0, 2).toUpperCase() || "?"
+}
+
+function Contacts({ people }: { people: PublicTeamMember[] }) {
+  return <Panel title="Contacts" count={people.length}>{people.length ? <ul className="grid gap-3 sm:grid-cols-2">{people.map(person => <li key={person.uid} className="flex items-center gap-3 rounded-xl border border-border p-3"><Avatar size="lg">{person.photoUrl && <AvatarImage src={person.photoUrl} alt="" />}<AvatarFallback>{initials(person.name)}</AvatarFallback></Avatar><div className="min-w-0"><p className="truncate text-sm font-medium">{person.name}</p>{person.role && <p className="truncate text-xs capitalize text-muted-foreground">{person.role}</p>}</div></li>)}</ul> : <Empty>Your agency will list your team contacts here.</Empty>}</Panel>
+}
 
 function BillingSummary({ invoices, onView }: { invoices: Invoice[]; onView: () => void }) {
   const totals = billingTotals(invoices)
@@ -89,7 +99,7 @@ export function PortalWorkspaceView({ data, project, company, uid, canAct, tab, 
   const pendingContracts = contracts.filter(item => item.status === "sent")
   const count = pendingInvoices.length + pendingEstimates.length + pendingContracts.length
   const status = project ? projectStatusMeta[project.status] : null
-  const tabs = project ? ["overview", "tasks", "files", "billing"] : ["overview", "projects", "tasks", "files", "media", "billing"]
+  const tabs = project ? ["overview", "tasks", "files", "billing"] : ["overview", "projects", "contacts", "tasks", "files", "media", "billing"]
   const actionLink = (kind: "invoice" | "estimate" | "contract", id: string, label: string) => <Link href={portalDocumentPath(company, kind, id)} className="shrink-0 rounded-md bg-foreground px-3 py-2 text-xs font-medium text-background hover:opacity-80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2">{label}</Link>
   const projectList = <Panel title="Projects" count={data.projects.length}>{data.projects.length ? <ul className="divide-y divide-border">{data.projects.map(item => <li key={item.id}><Link href={`${portalPath(company)}/projects/${encodeURIComponent(item.id)}`} className="flex items-center gap-4 rounded-md py-4 hover:bg-muted/40 focus-visible:outline focus-visible:outline-2"><FolderOpen className="size-5 shrink-0 text-muted-foreground" /><div className="min-w-0 flex-1"><p className="break-words text-sm font-semibold">{item.title}</p><p className="mt-1 text-xs text-muted-foreground">{projectStatusMeta[item.status]?.label || item.status}{item.dueDate ? ` · Due ${shortDate(item.dueDate)}` : ""}</p></div><span className="text-xs tabular-nums text-muted-foreground">{Math.max(0, Math.min(100, item.progress || 0))}%</span><ChevronRight className="size-4 shrink-0" /></Link></li>)}</ul> : <Empty>Your agency will share projects here when they’re ready for you.</Empty>}</Panel>
   return <main className="mx-auto max-w-7xl px-5 pb-6 pt-7 sm:px-10 sm:pt-9">
@@ -104,6 +114,7 @@ export function PortalWorkspaceView({ data, project, company, uid, canAct, tab, 
       {pendingContracts.map(item => <li key={item.id} className="flex flex-wrap items-center gap-3 py-4 first:pt-0 last:pb-0"><FileText className="size-4 shrink-0 text-muted-foreground" /><div className="min-w-0 flex-1"><p className="text-sm font-medium">Review {item.title}</p><p className="mt-1 text-xs text-muted-foreground">Contract awaiting signature</p></div>{actionLink("contract", item.id, "View contract")}</li>)}
     </ul> : <div className="flex items-center gap-3 py-4 text-sm text-muted-foreground"><Check className="size-4 text-emerald-700" />You’re all caught up on documents.</div>}</Panel>{!project && projectList}<Tasks tasks={tasks} uid={uid} canAct={canAct} onChanged={onChanged} /></div><div className="space-y-6"><BillingSummary invoices={invoices} onView={() => onTab("billing")} /><Files files={files} /></div></div>}
     {tab === "projects" && projectList}
+    {tab === "contacts" && <Contacts people={data.organization.publicTeam ?? []} />}
     {tab === "tasks" && <Tasks tasks={tasks} uid={uid} canAct={canAct} onChanged={onChanged} all />}
     {tab === "files" && <Files files={files} />}
     {tab === "media" && <CompanyMedia logoUrl={data.organization.logoUrl} projects={data.projects as unknown as Project[]} uploaded={data.organization.media ?? []} />}
@@ -119,7 +130,7 @@ export function PortalWorkspace({ projectMode = false }: { projectMode?: boolean
   const search = useSearchParams()
   const router = useRouter()
   const project = projectMode ? data.projects.find(item => item.id === projectId || item.legacySlug === projectId) : undefined
-  const available = projectMode ? ["overview", "tasks", "files", "billing"] : ["overview", "projects", "tasks", "files", "media", "billing"]
+  const available = projectMode ? ["overview", "tasks", "files", "billing"] : ["overview", "projects", "contacts", "tasks", "files", "media", "billing"]
   const raw = search.get("tab") || "overview"
   const tab = available.includes(raw) ? raw : "overview"
   if (projectMode && !project) return <PortalNotice title="This project isn’t available">It may not have been shared with your company yet. <Link className="underline" href={portalPath(companySlug)}>Back to your company</Link></PortalNotice>
