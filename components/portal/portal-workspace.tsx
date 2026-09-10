@@ -3,7 +3,7 @@
 import { useState, type ComponentType, type ReactNode } from "react"
 import Link from "next/link"
 import { useParams, usePathname, useRouter, useSearchParams } from "next/navigation"
-import { ArrowLeft, ArrowUpRight, CalendarDays, Check, ChevronRight, ChevronsUpDown, FileText, FolderOpen, ImageIcon, LayoutDashboard, ListTodo, LogOut, MessageSquare, Receipt, Settings, Users } from "lucide-react"
+import { ArrowLeft, ArrowUpRight, CalendarDays, Check, ChevronsUpDown, ClipboardList, FileSignature, FileText, FolderOpen, ImageIcon, LayoutDashboard, ListTodo, LogOut, MessageSquare, Receipt, Settings, Users } from "lucide-react"
 import { useAuth } from "@/components/auth-provider"
 import { DOC_BADGE, DocTile } from "@/components/company/document-tile"
 import { Separator } from "@/components/ui/separator"
@@ -41,6 +41,7 @@ import { completePortalTask } from "@/lib/portal-data"
 import type { Project } from "@/lib/projects"
 import type { Organization, PublicTeamMember } from "@/lib/organizations"
 import { CompanyMedia } from "@/components/company/company-media"
+import { ProjectCard } from "@/components/project-card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { usePortal, type PortalData } from "./portal-provider"
 import { PortalNotice } from "./portal-shell"
@@ -69,10 +70,6 @@ function Panel({ title, count, action, children }: { title: string; count?: numb
 
 function Empty({ children }: { children: ReactNode }) { return <p className="py-4 text-sm leading-6 text-muted-foreground">{children}</p> }
 
-function initials(name: string) {
-  return name.split(" ").map(part => part[0]).join("").slice(0, 2).toUpperCase() || "?"
-}
-
 function About({ organization }: { organization: Organization }) {
   const externalLink = (value: string) => safeExternalUrl(/^https?:\/\//.test(value) ? value : `https://${value}`)
   const rows: { label: string; node: ReactNode }[] = []
@@ -99,7 +96,12 @@ function About({ organization }: { organization: Organization }) {
 }
 
 function Contacts({ people }: { people: PublicTeamMember[] }) {
-  return <Panel title="Contacts" count={people.length}>{people.length ? <ul className="grid gap-3 sm:grid-cols-2">{people.map(person => <li key={person.uid} className="flex items-center gap-3 rounded-xl border border-border p-3"><Avatar size="lg">{person.photoUrl && <AvatarImage src={person.photoUrl} alt="" />}<AvatarFallback>{initials(person.name)}</AvatarFallback></Avatar><div className="min-w-0"><p className="truncate text-sm font-medium">{person.name}</p>{person.role && <p className="truncate text-xs capitalize text-muted-foreground">{person.role}</p>}</div></li>)}</ul> : <Empty>Your agency will list your team contacts here.</Empty>}</Panel>
+  return <Panel title="Contacts" count={people.length}>{people.length ? <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">{people.map(person => <ProjectCard
+    key={person.uid}
+    project={{ id: person.uid, companyId: "", client: "", title: person.name, service: person.role || "Contact", status: "in-progress", progress: 0, dueDate: "", thumbnailUrl: person.photoUrl || "" }}
+    subtitle={person.role || "Contact"}
+    footer={person.role ? <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium capitalize text-muted-foreground">{person.role}</span> : undefined}
+  />)}</div> : <Empty>Your agency will list your team contacts here.</Empty>}</Panel>
 }
 
 function BillingSummary({ invoices, onView }: { invoices: Invoice[]; onView: () => void }) {
@@ -170,11 +172,11 @@ function CompanyDocuments({ company, documents }: { company: string; documents: 
 
 function BillingDocuments({ company, invoices, contracts, estimates }: { company: string; invoices: Invoice[]; contracts: Contract[]; estimates: Estimate[] }) {
   const rows = [
-    ...invoices.map(item => ({ id: item.id, kind: "invoice" as const, title: `Invoice ${item.invoiceNumber}`, status: item.status, detail: formatMoney(item.amount, item.currency) })),
-    ...estimates.map(item => ({ id: item.id, kind: "estimate" as const, title: item.title || `Estimate ${item.estimateNumber}`, status: item.status, detail: formatMoney(item.amount, item.currency) })),
-    ...contracts.map(item => ({ id: item.id, kind: "contract" as const, title: item.title, status: item.status, detail: "Contract" })),
+    ...invoices.map(item => ({ id: item.id, kind: "invoice" as const, title: `Invoice ${item.invoiceNumber}`, subtitle: `${formatMoney(item.amount, item.currency)} · ${item.status}`, icon: Receipt, badge: DOC_BADGE.invoice })),
+    ...estimates.map(item => ({ id: item.id, kind: "estimate" as const, title: item.title || `Estimate ${item.estimateNumber}`, subtitle: `${formatMoney(item.amount, item.currency)} · ${item.status}`, icon: ClipboardList, badge: DOC_BADGE.estimate })),
+    ...contracts.map(item => ({ id: item.id, kind: "contract" as const, title: item.title, subtitle: `Contract · ${item.status}`, icon: FileSignature, badge: DOC_BADGE.contract })),
   ]
-  return <Panel title="Billing documents" count={rows.length}>{rows.length ? <ul className="divide-y divide-border">{rows.map(row => <li key={`${row.kind}:${row.id}`}><Link href={portalDocumentPath(company, row.kind, row.id)} className="flex items-center gap-3 rounded-md py-4 hover:bg-muted/40 focus-visible:outline focus-visible:outline-2"><FileText className="size-4 shrink-0 text-muted-foreground" /><div className="min-w-0 flex-1"><p className="break-words text-sm font-medium">{row.title}</p><p className="mt-1 text-xs capitalize text-muted-foreground">{row.status} · {row.detail}</p></div><ChevronRight className="size-4 shrink-0" /></Link></li>)}</ul> : <Empty>Issued invoices, estimates and contracts will appear here.</Empty>}</Panel>
+  return <Panel title="Billing documents" count={rows.length}>{rows.length ? <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">{rows.map(row => <DocTile key={`${row.kind}:${row.id}`} icon={row.icon} badgeClass={row.badge} title={row.title} subtitle={row.subtitle} href={portalDocumentPath(company, row.kind, row.id)} />)}</div> : <Empty>Issued invoices, estimates and contracts will appear here.</Empty>}</Panel>
 }
 
 /** Footer account chip, styled like the dashboard's NavUser but with portal-only actions. */
@@ -234,7 +236,7 @@ export function PortalShellLayout({ company, organization, activeTab, title, chi
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>
-            <SidebarTrigger className="size-8 shrink-0 opacity-0 transition-opacity group-hover/sidebar:opacity-100 focus-visible:opacity-100 [@media(hover:none)]:opacity-100" />
+            <SidebarTrigger className="size-8 shrink-0" />
           </div>
         </SidebarHeader>
         <SidebarContent>
@@ -278,7 +280,13 @@ export function PortalWorkspaceView({ data, project, company, uid, canAct, tab, 
   const status = project ? projectStatusMeta[project.status] : null
   const projectTabs = ["overview", "tasks", "documents"]
   const actionLink = (kind: "invoice" | "estimate" | "contract" | "document", id: string, label: string) => <Link href={portalDocumentPath(company, kind, id)} className="shrink-0 rounded-md bg-foreground px-3 py-2 text-xs font-medium text-background hover:opacity-80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2">{label}</Link>
-  const projectList = <Panel title="Projects" count={data.projects.length}>{data.projects.length ? <ul className="divide-y divide-border">{data.projects.map(item => <li key={item.id}><Link href={`${portalPath(company)}/projects/${encodeURIComponent(item.id)}`} className="flex items-center gap-4 rounded-md py-4 hover:bg-muted/40 focus-visible:outline focus-visible:outline-2"><FolderOpen className="size-5 shrink-0 text-muted-foreground" /><div className="min-w-0 flex-1"><p className="break-words text-sm font-semibold">{item.title}</p><p className="mt-1 text-xs text-muted-foreground">{projectStatusMeta[item.status]?.label || item.status}{item.dueDate ? ` · Due ${shortDate(item.dueDate)}` : ""}</p></div><span className="text-xs tabular-nums text-muted-foreground">{Math.max(0, Math.min(100, item.progress || 0))}%</span><ChevronRight className="size-4 shrink-0" /></Link></li>)}</ul> : <Empty>Your agency will share projects here when they’re ready for you.</Empty>}</Panel>
+  const projectList = <Panel title="Projects" count={data.projects.length}>{data.projects.length ? <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">{data.projects.map(item => { const meta = projectStatusMeta[item.status]; return <ProjectCard
+    key={item.id}
+    project={{ ...item, client: data.organization.name, service: meta?.label || item.status }}
+    href={`${portalPath(company)}/projects/${encodeURIComponent(item.id)}`}
+    subtitle={`${meta?.label || item.status}${item.dueDate ? ` · Due ${shortDate(item.dueDate)}` : ""}`}
+    footer={<span className="text-xs tabular-nums text-muted-foreground">{Math.max(0, Math.min(100, item.progress || 0))}% complete</span>}
+  /> })}</div> : <Empty>Your agency will share projects here when they’re ready for you.</Empty>}</Panel>
   return <PortalShellLayout company={company} organization={data.organization} activeTab={project ? "projects" : tab} title={project ? data.organization.name : tab}>
     {project && <>
     <div className="mb-5 flex flex-wrap items-center justify-between gap-4 text-xs text-muted-foreground"><Link href={portalPath(company)} className="inline-flex items-center gap-2 rounded-sm hover:text-foreground focus-visible:outline focus-visible:outline-2"><ArrowLeft className="size-3.5" />{data.organization.name}</Link>{project.dueDate && <span className="inline-flex items-center gap-2"><CalendarDays className="size-3.5" />Due {shortDate(project.dueDate)}</span>}</div>
