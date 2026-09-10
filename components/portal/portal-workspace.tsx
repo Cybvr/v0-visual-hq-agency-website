@@ -5,6 +5,7 @@ import Link from "next/link"
 import { useParams, usePathname, useRouter, useSearchParams } from "next/navigation"
 import { ArrowLeft, ArrowUpRight, CalendarDays, Check, ChevronRight, FileText, FolderOpen, MessageSquare, Receipt } from "lucide-react"
 import { useAuth } from "@/components/auth-provider"
+import { DOC_BADGE, DocTile } from "@/components/company/document-tile"
 import { Button } from "@/components/ui/button"
 import { formatMoney, type Contract, type Estimate, type Invoice } from "@/lib/billing"
 import { companyDocumentKindMeta, type CompanyDocument } from "@/lib/company-documents"
@@ -123,10 +124,14 @@ function Tasks({ tasks, uid, canAct, onChanged, all = false }: { tasks: PortalTa
 
 /** The written documents: proposals, statements of work, briefs. */
 function CompanyDocuments({ company, documents }: { company: string; documents: CompanyDocument[] }) {
-  return <Panel title="Documents" count={documents.length}>{documents.length ? <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{documents.map(row => <Link key={row.id} href={portalDocumentPath(company, "document", row.id)} className="group flex flex-col gap-3 rounded-xl border border-border bg-card p-4 transition-colors hover:border-foreground/20 hover:bg-muted/40 focus-visible:outline focus-visible:outline-2">
-    <div className="flex items-center justify-between"><span className="inline-flex size-9 items-center justify-center rounded-lg bg-muted text-muted-foreground"><FileText className="size-4" /></span><ChevronRight className="size-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5" /></div>
-    <div className="min-w-0"><p className="break-words text-sm font-medium leading-6">{row.title}</p><p className="mt-1 text-xs text-muted-foreground">{companyDocumentKindMeta[row.kind]?.label ?? "Document"}</p>{row.summary && <p className="mt-2 line-clamp-2 text-xs leading-5 text-muted-foreground">{row.summary}</p>}</div>
-  </Link>)}</div> : <Empty>Proposals and other documents your agency writes for you will appear here.</Empty>}</Panel>
+  return <Panel title="Documents" count={documents.length}>{documents.length ? <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">{documents.map(row => <DocTile
+    key={row.id}
+    icon={FileText}
+    badgeClass={DOC_BADGE.document}
+    title={row.title}
+    subtitle={companyDocumentKindMeta[row.kind]?.label ?? "Document"}
+    href={portalDocumentPath(company, "document", row.id)}
+  />)}</div> : <Empty>Proposals and other documents your agency writes for you will appear here.</Empty>}</Panel>
 }
 
 function BillingDocuments({ company, invoices, contracts, estimates }: { company: string; invoices: Invoice[]; contracts: Contract[]; estimates: Estimate[] }) {
