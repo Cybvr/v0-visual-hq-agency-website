@@ -47,7 +47,7 @@ export function DashboardShell({
   return (
     // h-svh + overflow-hidden: the shell never grows taller than the viewport,
     // so the body never scrolls. Only SidebarInset (overflow-y-auto) scrolls.
-    <div className="flex h-svh flex-col overflow-hidden font-sans [&_*]:font-sans">
+    <div className="dashboard-body flex h-svh flex-col overflow-hidden font-sans [&_*]:font-sans">
       {banner && <div className="z-50 h-10 shrink-0">{banner}</div>}
       <SidebarProvider
         className={cn(
@@ -79,18 +79,15 @@ export function DashboardShell({
               <Button type="button" variant="ghost" size="icon" aria-label="Notifications">
                 <Bell className="size-4" aria-hidden="true" />
               </Button>
-              <button
-                type="button"
-                onClick={() => setAgentOpen(true)}
-                aria-label="Open Agent"
-                aria-expanded={agentOpen}
-                className="inline-flex rounded-full bg-[linear-gradient(90deg,#c32cff,#6ed8ff)] p-[2px] outline-none transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-              >
-                <span className="flex h-9 items-center gap-2 rounded-full bg-[#110e2c] px-3 text-sm font-semibold text-white">
-                  <Image src="/visualhqlogo.svg" alt="" width={18} height={18} className="brightness-0 invert" />
-                  <span className="hidden sm:inline">Agent</span>
-                </span>
-              </button>
+          <button
+            type="button"
+            onClick={() => setAgentOpen(true)}
+            aria-label="Open Ngai"
+            aria-expanded={agentOpen}
+            className="rounded-full outline-none transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+          >
+            <Image src="/ngai-logo.png" alt="Ngai" width={36} height={36} className="block rounded-full" />
+          </button>
             </div>
           </header>
           {children}

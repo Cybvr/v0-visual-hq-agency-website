@@ -1,20 +1,597 @@
-import { GoogleGenAI } from "@google/genai"
+import OpenAI from "openai"
+import { cert, getApps, initializeApp } from "firebase-admin/app"
+import { getAuth as getAdminAuth } from "firebase-admin/auth"
+import { FieldPath, FieldValue, getFirestore as getAdminFirestore } from "firebase-admin/firestore"
 
 export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
 
-const MODEL = process.env.GEMINI_MODEL || "gemini-2.5-flash"
+const MODEL = process.env.OPENAI_MODEL || "gpt-5.6-luna"
 
 type ChatMessage = { role: "user" | "assistant"; content: string }
+type Surface = "client_portal" | "agency_dashboard"
+type AgentBody = { messages?: ChatMessage[]; firstName?: string; surface?: Surface }
 
-const SYSTEM_PROMPT = `You are the VisualCNS assistant, a friendly guide for a creative and marketing agency dashboard.
+function adminServices() {
+  const app = getApps()[0] ?? initializeApp({
+    credential: cert({
+      projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || process.env.FIREBASE_PROJECT_ID,
+      clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+      privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
+    }),
+  })
+  return { auth: getAdminAuth(app), db: getAdminFirestore(app) }
+}
+
+const DASHBOARD_PROMPT = `You are Ngai, the VisualCNS assistant and a friendly guide for a creative and marketing agency dashboard.
+
+Talk like a normal person first. Answer what was asked in a sentence or two.
+
+When the message implies making something the dashboard holds (a company, contact, project, task,
+invoice, estimate, contract or file), follow your answer by creating a DRAFT, not by interviewing
+the user:
+
+1. Look up what you can with query_workspace. Never ask for an ID, a number, or anything you can
+   read yourself.
+2. Ask ONLY the 3 or 4 essentials that thing cannot exist without, in one collect_details call. For
+   an invoice that is the client and currency; for a project the client and title; for a task the
+   project and name. Everything else has a sensible default and is left for the editor.
+3. Call the creation tool straight away with those answers. Do not ask for confirmation, and do not
+   ask for line items, dates, prices, terms or long text in chat.
+4. Reply with one short line and a markdown link to the url the tool returned, so the user finishes
+   the details on the real page. For example: Draft invoice INV-004 created for Acme.
+   [Open it](/dashboard/invoices/abc/edit)
+
+If the thing already exists, use update_record to change it in place. You can fill in line items,
+scope, terms, dates, notes and status. Never say you can only create and not edit, and never make a
+duplicate to work around it. When asked to populate or complete a draft, write sensible professional
+content yourself and save it with update_record, leaving only real prices for the user unless they
+told you the numbers.
+
+You are forbidden from listing the fields you need as prose or bullets. If you are about to type
+"please provide" or "I need the following", call collect_details instead.
+
 Help users think through projects, tasks, briefs, marketing, email, and their files.
-Be concise, warm, and practical. Use plain language. When you do not know something specific
-to their account, say so and suggest where in the dashboard they can find it. You cannot take
-actions or change data yet; you are here to talk things through.`
+Be concise, warm, and practical.
+
+You can read the workspace database with the query_workspace tool: companies, projects, tasks,
+invoices, estimates, contracts, documents and users. Use it for every factual question about the
+account, including counts, lists, totals and lookups. Never say you cannot see the data or tell the
+user to go look somewhere in the dashboard without calling the tool first. The tool already applies
+the caller's permissions, so just call it and answer from what it returns.
+
+Creation tools are available for companies, projects, tasks, draft invoices, draft estimates, and
+draft contracts.
+
+Pass looked-up clients and projects to collect_details as select options so the user picks a name
+and never types an ID. The user's answers arrive as their next message; act on them immediately.
+Never invent prices, dates or legal terms, just leave them out of the draft.`
+
+const PORTAL_PROMPT = `You are Ngai, the VisualCNS client portal assistant for customers working with an agency.
+Help customers understand their work with the agency and how to use the portal: their projects,
+shared tasks, files and links, billing documents, and contacting their agency.
+Be concise, warm, and practical.
+
+You can read this customer's own records with the query_workspace tool: their company, projects,
+tasks, invoices, estimates, contracts and documents. It is automatically restricted to their own
+company, so use it freely for any factual question about their account, including counts, lists and
+status. Never say you cannot see the data without calling the tool first. Never invent details.
+You cannot change any data, only read it.`
+
+const AGENT_TOOLS = [
+  {
+    type: "function",
+    name: "query_workspace",
+    description:
+      "Read records from the workspace database to answer any factual question: counts, lists, lookups, totals, status. An agency admin reads every record; every other signed-in user is automatically restricted to their own company's records. Always use this instead of saying you cannot see the data.",
+    parameters: {
+      type: "object",
+      properties: {
+        collection: {
+          type: "string",
+          enum: ["organizations", "projects", "tasks", "invoices", "estimates", "contracts", "documents", "users"],
+          description:
+            "Which records to read. organizations = client companies, projects = projects, tasks = tasks, invoices/estimates/contracts = billing documents, documents = shared files, users = people.",
+        },
+        limit: { type: ["number", "null"], description: "Maximum records to return. Defaults to 100, capped at 300." },
+      },
+      required: ["collection"],
+      additionalProperties: false,
+    },
+  },
+  {
+    type: "function",
+    name: "update_record",
+    description:
+      "Update an existing record in place: fill in line items, scope, terms, dates, notes, status, or any other field. Use this whenever the user asks you to populate, complete, fill in, fix or change something that already exists. Never create a duplicate for that. Find the id with query_workspace, or use the id a create tool just returned.",
+    parameters: {
+      type: "object",
+      properties: {
+        collection: {
+          type: "string",
+          enum: ["organizations", "projects", "tasks", "invoices", "estimates", "contracts"],
+        },
+        id: { type: "string", description: "Document id of the record to update." },
+        patchJson: {
+          type: "string",
+          description:
+            'A JSON object of only the fields you are changing, as a string. Estimate line items are [{"description","amount","details"}]; invoice line items are [{"description","quantity","unitPrice","taxRate"}] with prices in minor units. Totals are recalculated for you.',
+        },
+      },
+      required: ["collection", "id", "patchJson"],
+    },
+  },
+  {
+    type: "function",
+    name: "collect_details",
+    description:
+      "Show the user an inline form to gather details you still need. Always use this instead of listing required fields as a bulleted list in your reply. Answer the user in your text first, then call this with only the fields that are still missing. Look up IDs yourself with query_workspace rather than asking for them.",
+    parameters: {
+      type: "object",
+      properties: {
+        title: { type: "string", description: "Short heading, e.g. 'New invoice'" },
+        fields: {
+          type: "array",
+          description:
+            "The questions to ask, in order. They are shown one at a time as a card in the chat, so write each label as the question itself, e.g. 'Which client is this for?'. Keep it to 3 or 4.",
+          items: {
+            type: "object",
+            properties: {
+              id: { type: "string", description: "Short machine key, e.g. currency" },
+              label: { type: "string", description: "Human label shown to the user" },
+              type: {
+                type: "string",
+                enum: ["text", "textarea", "number", "date", "select"],
+                description:
+                  "Use select for anything with a known set of answers: client, project, currency, priority, status. Use text only when the answer is genuinely free-form, like a title.",
+              },
+              options: {
+                type: ["array", "null"],
+                items: { type: "string" },
+                description:
+                  "REQUIRED when type is select: the exact choices. Real client or project names from query_workspace, or NGN/USD/GBP/EUR for currency. Never leave this empty on a select.",
+              },
+              placeholder: { type: ["string", "null"] },
+              required: { type: ["boolean", "null"] },
+            },
+            required: ["id", "label", "type"],
+          },
+        },
+      },
+      required: ["title", "fields"],
+    },
+  },
+  {
+    type: "function",
+    name: "create_company",
+    description: "Create a new client company in the agency workspace.",
+    parameters: {
+      type: "object",
+      properties: {
+        name: { type: "string", description: "Company name" },
+        email: { type: ["string", "null"] },
+        phone: { type: ["string", "null"] },
+        website: { type: ["string", "null"] },
+        industry: { type: ["string", "null"] },
+        location: { type: ["string", "null"] },
+        description: { type: ["string", "null"] },
+      },
+      required: ["name"],
+      additionalProperties: false,
+    },
+  },
+  {
+    type: "function",
+    name: "create_project",
+    description: "Create a client project and publish its safe summary to that client's portal.",
+    parameters: {
+      type: "object",
+      properties: {
+        clientId: { type: "string" },
+        client: { type: "string" },
+        title: { type: "string" },
+        service: { type: "string" },
+        dueDate: { type: ["string", "null"] },
+        summary: { type: ["string", "null"] },
+      },
+      required: ["clientId", "client", "title"],
+      additionalProperties: false,
+    },
+  },
+  {
+    type: "function",
+    name: "create_task",
+    description: "Create a task for a client project and publish its safe fields to the portal.",
+    parameters: {
+      type: "object",
+      properties: {
+        clientId: { type: "string" },
+        client: { type: "string" },
+        projectId: { type: "string" },
+        project: { type: "string" },
+        name: { type: "string" },
+        priority: { type: "string", enum: ["low", "medium", "high"] },
+        dueDate: { type: ["string", "null"] },
+        content: { type: ["string", "null"] },
+      },
+      required: ["clientId", "client", "projectId", "project", "name"],
+      additionalProperties: false,
+    },
+  },
+  {
+    type: "function",
+    name: "create_invoice",
+    description: "Create a draft invoice. Amounts are minor currency units, so 125000 means 1,250.00.",
+    parameters: {
+      type: "object",
+      properties: {
+        clientId: { type: "string" },
+        client: { type: "string" },
+        currency: { type: "string" },
+        issuedOn: { type: "string" },
+        dueOn: { type: "string" },
+        projectId: { type: ["string", "null"] },
+        project: { type: ["string", "null"] },
+        lineItems: {
+          type: "array",
+          items: {
+            type: "object",
+            properties: {
+              description: { type: "string" },
+              quantity: { type: "number" },
+              unitPrice: { type: "number" },
+              taxRate: { type: "number" },
+            },
+            required: ["description", "quantity", "unitPrice", "taxRate"],
+            additionalProperties: false,
+          },
+        },
+        notes: { type: ["string", "null"] },
+      },
+      required: ["clientId", "client"],
+      additionalProperties: false,
+    },
+  },
+  {
+    type: "function",
+    name: "create_estimate",
+    description: "Create a draft estimate. Line item amounts are minor currency units.",
+    parameters: {
+      type: "object",
+      properties: {
+        clientId: { type: "string" },
+        client: { type: "string" },
+        title: { type: "string" },
+        currency: { type: "string" },
+        issuedOn: { type: "string" },
+        validUntil: { type: ["string", "null"] },
+        scope: { type: ["string", "null"] },
+        terms: { type: ["string", "null"] },
+        lineItems: {
+          type: "array",
+          items: {
+            type: "object",
+            properties: {
+              description: { type: "string" },
+              amount: { type: "number" },
+              details: { type: ["string", "null"] },
+            },
+            required: ["description", "amount"],
+            additionalProperties: false,
+          },
+        },
+      },
+      required: ["clientId", "client", "title"],
+      additionalProperties: false,
+    },
+  },
+  {
+    type: "function",
+    name: "create_contract",
+    description: "Create a draft contract for a client.",
+    parameters: {
+      type: "object",
+      properties: {
+        clientId: { type: "string" },
+        client: { type: "string" },
+        title: { type: "string" },
+        body: { type: ["string", "null"] },
+        projectId: { type: ["string", "null"] },
+        project: { type: ["string", "null"] },
+      },
+      required: ["clientId", "client", "title"],
+      additionalProperties: false,
+    },
+  },
+] as const
+
+const PORTAL_TOOLS = AGENT_TOOLS.filter((tool) => tool.name === "query_workspace")
+
+/** Separates the assistant's text from a trailing inline form spec. */
+export const FORM_MARKER = "\n␞::ngai-form::"
+
+const READABLE_COLLECTIONS = [
+  "organizations",
+  "projects",
+  "tasks",
+  "invoices",
+  "estimates",
+  "contracts",
+  "documents",
+  "users",
+]
+
+const UPDATABLE_COLLECTIONS = ["organizations", "projects", "tasks", "invoices", "estimates", "contracts"]
+
+/** Where a record lives in the dashboard, so the agent can link straight to it. */
+function recordUrl(collectionName: string, id: string) {
+  if (collectionName === "invoices") return `/dashboard/invoices/${id}/edit`
+  if (collectionName === "estimates") return `/dashboard/estimates/${id}/edit`
+  if (collectionName === "contracts") return `/dashboard/contracts/${id}/edit`
+  if (collectionName === "organizations") return `/dashboard/companies/${id}`
+  if (collectionName === "projects") return `/dashboard/projects/${id}`
+  return "/dashboard/tasks"
+}
+
+/** Internal-only fields a client must never receive back through the agent. */
+const CLIENT_HIDDEN_FIELDS: Record<string, string[]> = {
+  tasks: ["content"],
+  projects: ["earnings", "cost", "internalNotes", "description"],
+  users: ["email", "phone"],
+}
+
+function safeRecord(collectionName: string, data: FirebaseFirestore.DocumentData, isAdmin: boolean) {
+  if (isAdmin) return data
+  const hidden = CLIENT_HIDDEN_FIELDS[collectionName]
+  if (!hidden) return data
+  const copy = { ...data }
+  for (const field of hidden) delete copy[field]
+  return copy
+}
+
+function today() {
+  return new Date().toISOString().slice(0, 10)
+}
+
+function requireText(args: Record<string, unknown>, key: string): string {
+  const value = args[key]
+  if (typeof value !== "string" || !value.trim()) throw new Error(`Missing ${key}.`)
+  return value.trim()
+}
+
+function optionalText(args: Record<string, unknown>, key: string): string {
+  return typeof args[key] === "string" ? String(args[key]).trim() : ""
+}
+
+function numberValue(args: Record<string, unknown>, key: string, fallback = 0): number {
+  const value = Number(args[key])
+  return Number.isFinite(value) ? value : fallback
+}
+
+async function nextDocumentNumber(db: ReturnType<typeof getAdminFirestore>, collectionName: string, prefix: string) {
+  const snapshot = await db.collection(collectionName).get()
+  let highest = 0
+  for (const item of snapshot.docs) {
+    const value = String(item.data()[collectionName === "invoices" ? "invoiceNumber" : "estimateNumber"] || "")
+    const match = new RegExp(`^${prefix}-(\\d+)$`, "i").exec(value)
+    if (match) highest = Math.max(highest, Number.parseInt(match[1], 10))
+  }
+  return `${prefix}-${String(highest + 1).padStart(4, "0")}`
+}
+
+async function runAgentTool(name: string, rawArgs: string, uid: string) {
+  const { db } = adminServices()
+  const userSnapshot = await db.collection("users").doc(uid).get()
+  const userData = userSnapshot.data()
+  if (!userSnapshot.exists) {
+    throw new Error("Your account is not ready for workspace tools.")
+  }
+
+  const isAdmin = userData?.role === "admin"
+
+  if (name === "query_workspace") {
+    const readArgs = JSON.parse(rawArgs) as Record<string, unknown>
+    const collectionName = requireText(readArgs, "collection")
+    if (!READABLE_COLLECTIONS.includes(collectionName)) {
+      throw new Error(`"${collectionName}" is not a readable collection.`)
+    }
+    const limit = Math.min(Math.max(Number(readArgs.limit) || 100, 1), 300)
+
+    // An admin reads the whole collection. Everyone else is pinned to their own
+    // company, so a client can ask about their own work and nothing else.
+    let query: FirebaseFirestore.Query = db.collection(collectionName)
+    if (!isAdmin) {
+      const clientId = typeof userData?.clientId === "string" ? userData.clientId : ""
+      if (!clientId) throw new Error("Your account is not linked to a client workspace.")
+      query =
+        collectionName === "organizations"
+          ? query.where(FieldPath.documentId(), "==", clientId)
+          : query.where("clientId", "==", clientId)
+    }
+
+    const snapshot = await query.limit(limit).get()
+    const records = snapshot.docs.map((item) => ({ id: item.id, ...safeRecord(collectionName, item.data(), isAdmin) }))
+    return {
+      type: "records",
+      collection: collectionName,
+      count: snapshot.size,
+      scope: isAdmin ? "agency workspace" : "your company",
+      records,
+    }
+  }
+
+  if (!isAdmin) {
+    throw new Error("Only an agency admin can change workspace records.")
+  }
+
+  const args = JSON.parse(rawArgs) as Record<string, unknown>
+  const now = FieldValue.serverTimestamp()
+
+  if (name === "update_record") {
+    const collectionName = requireText(args, "collection")
+    if (!UPDATABLE_COLLECTIONS.includes(collectionName)) {
+      throw new Error(`"${collectionName}" cannot be updated.`)
+    }
+    const id = requireText(args, "id")
+
+    let patch: Record<string, unknown>
+    try {
+      patch = JSON.parse(requireText(args, "patchJson")) as Record<string, unknown>
+    } catch {
+      throw new Error("patchJson must be a valid JSON object.")
+    }
+    if (!patch || typeof patch !== "object" || Array.isArray(patch)) {
+      throw new Error("patchJson must be a JSON object of fields to set.")
+    }
+    // Identity and audit fields are never rewritten from a patch.
+    for (const key of ["id", "createdAt", "clientId", "invoiceNumber", "estimateNumber"]) delete patch[key]
+
+    const ref = db.collection(collectionName).doc(id)
+    const existing = await ref.get()
+    if (!existing.exists) throw new Error("That record no longer exists.")
+
+    // Recalculate money so stored totals always match the lines.
+    if (Array.isArray(patch.lineItems)) {
+      const rows = patch.lineItems as Record<string, unknown>[]
+      if (collectionName === "invoices") {
+        const items = rows.map((row, index) => ({
+          id: `line-${Date.now()}-${index}`,
+          description: requireText(row, "description"),
+          quantity: numberValue(row, "quantity", 1),
+          unitPrice: numberValue(row, "unitPrice"),
+          taxRate: numberValue(row, "taxRate"),
+        }))
+        const subtotal = items.reduce((sum, item) => sum + Math.round(item.quantity * item.unitPrice), 0)
+        const taxTotal = items.reduce((sum, item) => sum + Math.round((item.quantity * item.unitPrice * item.taxRate) / 100), 0)
+        Object.assign(patch, { lineItems: items, subtotal, taxTotal, amount: subtotal + taxTotal })
+      }
+      if (collectionName === "estimates") {
+        const items = rows.map((row, index) => ({
+          id: `line-${Date.now()}-${index}`,
+          description: requireText(row, "description"),
+          amount: numberValue(row, "amount"),
+          ...(optionalText(row, "details") ? { details: optionalText(row, "details") } : {}),
+        }))
+        Object.assign(patch, { lineItems: items, amount: items.reduce((sum, item) => sum + item.amount, 0) })
+      }
+    }
+
+    await ref.set({ ...patch, updatedAt: now }, { merge: true })
+
+    // Keep the client-facing projections in step, safe fields only.
+    const clientId = existing.data()?.clientId
+    if (collectionName === "projects" && clientId) {
+      const safe: Record<string, unknown> = {}
+      for (const key of ["title", "status", "progress", "dueDate", "summary"]) {
+        if (patch[key] !== undefined) safe[key] = patch[key]
+      }
+      if (Object.keys(safe).length) await db.collection("portalProjects").doc(id).set(safe, { merge: true })
+    }
+    if (collectionName === "tasks" && clientId) {
+      const safe: Record<string, unknown> = {}
+      for (const key of ["name", "status", "dueDate"]) {
+        if (patch[key] !== undefined) safe[key] = patch[key]
+      }
+      if (Object.keys(safe).length) await db.collection("portalTasks").doc(id).set(safe, { merge: true })
+    }
+
+    return { type: "updated", collection: collectionName, id, fields: Object.keys(patch), url: recordUrl(collectionName, id) }
+  }
+
+  if (name === "create_company") {
+    const name = requireText(args, "name")
+    const ref = db.collection("organizations").doc()
+    await ref.set({
+      name,
+      slug: `${name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || "company"}-${ref.id.slice(0, 6)}`,
+      email: optionalText(args, "email"),
+      phone: optionalText(args, "phone"),
+      website: optionalText(args, "website"),
+      industry: optionalText(args, "industry"),
+      location: optionalText(args, "location"),
+      description: optionalText(args, "description"),
+      isOwner: false,
+      createdAt: now,
+      updatedAt: now,
+    })
+    return { type: "company", id: ref.id, name, url: `/dashboard/companies/${ref.id}` }
+  }
+
+  if (name === "create_project") {
+    const clientId = requireText(args, "clientId")
+    const client = requireText(args, "client")
+    const title = requireText(args, "title")
+    const service = optionalText(args, "service")
+    const ref = db.collection("projects").doc()
+    const dueDate = optionalText(args, "dueDate")
+    const summary = optionalText(args, "summary")
+    await ref.set({ clientId, client, title, service, status: "in-progress", progress: 0, dueDate, summary, isPublic: false, createdAt: now, updatedAt: now })
+    await db.collection("portalProjects").doc(ref.id).set({ clientId, title, status: "in-progress", progress: 0, dueDate, thumbnailUrl: "", summary, legacySlug: title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") })
+    return { type: "project", id: ref.id, title, client, url: `/dashboard/projects/${ref.id}` }
+  }
+
+  if (name === "create_task") {
+    const clientId = requireText(args, "clientId")
+    const client = requireText(args, "client")
+    const projectId = requireText(args, "projectId")
+    const project = requireText(args, "project")
+    const taskName = requireText(args, "name")
+    const priority = optionalText(args, "priority") || "medium"
+    if (!["low", "medium", "high"].includes(priority)) throw new Error("Priority must be low, medium, or high.")
+    const ref = db.collection("tasks").doc()
+    const dueDate = optionalText(args, "dueDate")
+    const content = optionalText(args, "content")
+    await ref.set({ name: taskName, clientId, client, projectId, project, status: "todo", priority, dueDate, content, isPublic: false, createdAt: now, updatedAt: now })
+    await db.collection("portalTasks").doc(ref.id).set({ clientId, projectId, name: taskName, status: "todo", dueDate, instructions: content, assigneeUid: "" })
+    return { type: "task", id: ref.id, name: taskName, project, url: `/dashboard/tasks` }
+  }
+
+  if (name === "create_invoice") {
+    const clientId = requireText(args, "clientId")
+    const client = requireText(args, "client")
+    const lineItems = Array.isArray(args.lineItems) ? args.lineItems : []
+    const items = lineItems.map((item, index) => {
+      const row = item as Record<string, unknown>
+      return { id: `line-${Date.now()}-${index}`, description: requireText(row, "description"), quantity: numberValue(row, "quantity", 1), unitPrice: numberValue(row, "unitPrice"), taxRate: numberValue(row, "taxRate") }
+    })
+    const subtotal = items.reduce((sum, item) => sum + Math.round(item.quantity * item.unitPrice), 0)
+    const taxTotal = items.reduce((sum, item) => sum + Math.round((item.quantity * item.unitPrice * item.taxRate) / 100), 0)
+    const ref = db.collection("invoices").doc()
+    const invoiceNumber = await nextDocumentNumber(db, "invoices", "INV")
+    const currency = optionalText(args, "currency") || "NGN"
+    await ref.set({ clientId, client, invoiceNumber, projectId: optionalText(args, "projectId"), project: optionalText(args, "project"), status: "draft", lineItems: items, subtotal, discountTotal: 0, taxTotal, amount: subtotal + taxTotal, currency, issuedOn: optionalText(args, "issuedOn") || today(), dueOn: optionalText(args, "dueOn"), notes: optionalText(args, "notes"), createdAt: now, updatedAt: now })
+    return { type: "invoice", id: ref.id, number: invoiceNumber, amount: subtotal + taxTotal, currency, status: "draft", url: `/dashboard/invoices/${ref.id}/edit` }
+  }
+
+  if (name === "create_estimate") {
+    const clientId = requireText(args, "clientId")
+    const client = requireText(args, "client")
+    const title = requireText(args, "title")
+    const lineItems = Array.isArray(args.lineItems) ? args.lineItems : []
+    const items = lineItems.map((item, index) => {
+      const row = item as Record<string, unknown>
+      return { id: `line-${Date.now()}-${index}`, description: requireText(row, "description"), amount: numberValue(row, "amount"), ...(optionalText(row, "details") ? { details: optionalText(row, "details") } : {}) }
+    })
+    const ref = db.collection("estimates").doc()
+    const estimateNumber = await nextDocumentNumber(db, "estimates", "EST")
+    await ref.set({ clientId, client, estimateNumber, title, projectId: optionalText(args, "projectId"), project: optionalText(args, "project"), status: "draft", lineItems: items, amount: items.reduce((sum, item) => sum + item.amount, 0), currency: optionalText(args, "currency") || "NGN", issuedOn: optionalText(args, "issuedOn") || today(), validUntil: optionalText(args, "validUntil"), scope: optionalText(args, "scope"), terms: optionalText(args, "terms"), createdAt: now, updatedAt: now })
+    return { type: "estimate", id: ref.id, number: estimateNumber, title, status: "draft", url: `/dashboard/estimates/${ref.id}/edit` }
+  }
+
+  if (name === "create_contract") {
+    const clientId = requireText(args, "clientId")
+    const client = requireText(args, "client")
+    const title = requireText(args, "title")
+    const ref = db.collection("contracts").doc()
+    await ref.set({ clientId, client, title, body: optionalText(args, "body"), projectId: optionalText(args, "projectId"), project: optionalText(args, "project"), status: "draft", createdAt: now, updatedAt: now })
+    return { type: "contract", id: ref.id, title, status: "draft", url: `/dashboard/contracts/${ref.id}/edit` }
+  }
+
+  throw new Error(`Unknown agent tool: ${name}`)
+}
 
 export async function POST(request: Request) {
-  const apiKey = process.env.GEMINI_API_KEY
+  const apiKey = process.env.OPENAI_API_KEY
   if (!apiKey) {
     return new Response(JSON.stringify({ error: "The assistant is not configured yet." }), {
       status: 503,
@@ -22,7 +599,7 @@ export async function POST(request: Request) {
     })
   }
 
-  let body: { messages?: ChatMessage[]; firstName?: string }
+  let body: AgentBody
   try {
     body = await request.json()
   } catch {
@@ -42,46 +619,90 @@ export async function POST(request: Request) {
     })
   }
 
-  const ai = new GoogleGenAI({ apiKey })
+  const client = new OpenAI({ apiKey })
+  const basePrompt = body.surface === "client_portal" ? PORTAL_PROMPT : DASHBOARD_PROMPT
   const systemInstruction = body.firstName
-    ? `${SYSTEM_PROMPT}\n\nThe person you are speaking with is called ${body.firstName}.`
-    : SYSTEM_PROMPT
-
-  // Gemini expects "model" for the assistant turns and alternating roles.
-  const contents = messages.map((m) => ({
-    role: m.role === "assistant" ? "model" : "user",
-    parts: [{ text: m.content }],
-  }))
+    ? `${basePrompt}\n\nThe person you are speaking with is called ${body.firstName}.`
+    : basePrompt
 
   try {
-    const result = await ai.models.generateContentStream({
+    const authorization = request.headers.get("authorization") || ""
+    let uid = ""
+    if (authorization.startsWith("Bearer ")) {
+      try {
+        uid = (await adminServices().auth.verifyIdToken(authorization.slice(7))).uid
+      } catch (error) {
+        console.error("Agent token verification failed", error)
+        return new Response(JSON.stringify({ error: "Ngai could not verify your signed-in account." }), {
+          status: 401,
+          headers: { "content-type": "application/json" },
+        })
+      }
+    }
+
+    const input = messages.map((message) => ({ role: message.role, content: message.content }))
+    const tools = body.surface === "client_portal" ? (PORTAL_TOOLS as any) : (AGENT_TOOLS as any)
+    let response = await client.responses.create({
       model: MODEL,
-      contents,
-      config: { systemInstruction },
+      instructions: systemInstruction,
+      input,
+      tools,
     })
 
-    const encoder = new TextEncoder()
-    const stream = new ReadableStream<Uint8Array>({
-      async start(controller) {
+    const textResponse = (value: string) =>
+      new Response(value, {
+        headers: { "content-type": "text/plain; charset=utf-8", "cache-control": "no-store" },
+      })
+
+    // Keep running tools until the model answers, asks for a form, or we hit the
+    // ceiling. The form can arrive on any round, e.g. after a query_workspace
+    // lookup, so it has to be checked every time and not just on the first.
+    let turns = 0
+    let conversation: any[] = [...input]
+    for (;;) {
+      const outputItems = response.output as Array<{ type: string; name?: string; arguments?: string; call_id?: string }>
+      const toolCalls = outputItems.filter((item) => item.type === "function_call")
+
+      // A form ends the turn: the UI renders it and the answers come back as the
+      // user's next message, so there is nothing to execute server-side.
+      const formCall = toolCalls.find((call) => call.name === "collect_details")
+      if (formCall) {
         try {
-          for await (const chunk of result) {
-            const text = chunk.text
-            if (text) controller.enqueue(encoder.encode(text))
+          const form = JSON.parse(formCall.arguments || "{}")
+          if (form?.fields?.length) {
+            const text = response.output_text?.trim() || "Here's what I need."
+            return textResponse(`${text}${FORM_MARKER}${JSON.stringify(form)}`)
           }
-        } catch (streamError) {
-          console.error("Agent stream error:", streamError)
-        } finally {
-          controller.close()
+        } catch {
+          // Fall through and let the model answer normally.
         }
-      },
-    })
+      }
 
-    return new Response(stream, {
-      headers: {
-        "content-type": "text/plain; charset=utf-8",
-        "cache-control": "no-store",
-      },
-    })
+      if (!toolCalls.length || turns >= 4) break
+
+      const toolOutputs = []
+      for (const call of toolCalls) {
+        let result: unknown
+        try {
+          if (!uid) throw new Error("Please sign in before using workspace tools.")
+          result = await runAgentTool(call.name || "", call.arguments || "{}", uid)
+        } catch (error) {
+          result = { error: error instanceof Error ? error.message : "That could not be completed." }
+        }
+        toolOutputs.push({ type: "function_call_output", call_id: call.call_id, output: JSON.stringify(result) })
+      }
+
+      conversation = [...conversation, ...response.output, ...toolOutputs]
+      turns += 1
+      response = await client.responses.create({
+        model: MODEL,
+        instructions: systemInstruction,
+        input: conversation as any,
+        tools,
+      })
+    }
+
+    return textResponse(response.output_text?.trim() || "Sorry, I could not put that together. Could you say it again?")
   } catch (error) {
     console.error("Agent request error:", error)
     return new Response(JSON.stringify({ error: "The assistant could not respond right now." }), {

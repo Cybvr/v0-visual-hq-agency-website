@@ -131,6 +131,12 @@
   body {
     @apply bg-background text-foreground;
   }
+  /* Dashboard default body text matches the sidebar (text-sm). Elements with an
+     explicit text-* utility keep their own size; only unstyled defaults shift. */
+  .dashboard-body {
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+  }
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-eb-garamond), ui-serif, Georgia, serif;
     font-weight: 400 !important;

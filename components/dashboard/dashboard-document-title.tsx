@@ -24,7 +24,7 @@ export function dashboardPageTitle(pathname: string): string {
       if (record === "business") return "Business profile"
       return "Account"
     case "agent":
-      return "Agent"
+      return "Ngai"
     case "companies":
       if (!record) return "Companies"
       return action === "edit" ? "Edit Company" : "Company"

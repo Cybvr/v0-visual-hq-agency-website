@@ -106,5 +106,14 @@ service cloud.firestore {
     }
     // No client approval UI currently uses this legacy collection.
     match /approvals/{id} { allow read, write: if isAdmin(); }
+
+    // One conversation transcript per signed-in account. The agent stores no
+    // portal records here; this is only the user's own chat history.
+    match /agentConversations/{uid} {
+      allow read, write: if signedIn() && request.auth.uid == uid;
+      match /chats/{chatId} {
+        allow read, write: if signedIn() && request.auth.uid == uid;
+      }
+    }
   }
 }
