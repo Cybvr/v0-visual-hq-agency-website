@@ -35,7 +35,7 @@ import {
   formatDate,
   formatMoney,
   getInvoices,
-  getInvoicesByClientId,
+  getInvoicesByCompanyId,
   invoiceStatusMeta,
   nextInvoiceNumber,
   type Invoice,
@@ -47,7 +47,7 @@ const INVOICE_SORTS: SortOption<Invoice>[] = [
   { value: "issuedOn", label: "Issue date", get: (i) => i.issuedOn, ascLabel: "Oldest", descLabel: "Newest" },
   { value: "dueOn", label: "Due date", get: (i) => i.dueOn, ascLabel: "Soonest", descLabel: "Latest" },
   { value: "invoiceNumber", label: "Invoice no.", get: (i) => i.invoiceNumber, ascLabel: "A–Z", descLabel: "Z–A" },
-  { value: "client", label: "Client", get: (i) => i.client || i.clientId, ascLabel: "A–Z", descLabel: "Z–A" },
+  { value: "client", label: "Client", get: (i) => i.client || i.companyId, ascLabel: "A–Z", descLabel: "Z–A" },
   { value: "amount", label: "Amount", get: (i) => i.amount ?? 0, ascLabel: "Lowest", descLabel: "Highest" },
   {
     value: "status",
@@ -59,13 +59,13 @@ const INVOICE_SORTS: SortOption<Invoice>[] = [
 ]
 
 function searchInvoice(i: Invoice) {
-  return [i.invoiceNumber, i.client, i.clientId, i.project, i.poReference, invoiceStatusMeta[i.status]?.label]
+  return [i.invoiceNumber, i.client, i.companyId, i.project, i.poReference, invoiceStatusMeta[i.status]?.label]
 }
 
 export default function InvoicesPage() {
   const router = useRouter()
   const { user, appUser, isAdmin, isImpersonating } = useAuth()
-  const clientId = appUser?.clientId ?? ""
+  const companyId = appUser?.companyId ?? ""
   const adminView = isAdmin && !isImpersonating
 
   const [invoices, setInvoices] = useState<Invoice[]>([])
@@ -80,14 +80,14 @@ export default function InvoicesPage() {
   const fetchData = useCallback(async () => {
     setError(false)
     try {
-      setInvoices(adminView ? await getInvoices() : await getInvoicesByClientId(clientId))
+      setInvoices(adminView ? await getInvoices() : await getInvoicesByCompanyId(companyId))
     } catch (err) {
       console.error("Error loading invoices:", err)
       setError(true)
     } finally {
       setLoading(false)
     }
-  }, [adminView, clientId])
+  }, [adminView, companyId])
 
   useEffect(() => {
     fetchData()
@@ -104,7 +104,7 @@ export default function InvoicesPage() {
         invoiceNumber,
         status: "draft",
         shareEnabled: false,
-        clientId: selection.clientId,
+        companyId: selection.companyId,
         client: selection.client || duplicateTarget.client,
         projectId: selection.projectId,
         project: selection.project,
@@ -232,10 +232,10 @@ export default function InvoicesPage() {
                         </TableCell>
                         {adminView && (
                           <TableCell>
-                            {invoice.clientId ? (
+                            {invoice.companyId ? (
                               <button
                                 type="button"
-                                onClick={() => setClientSheet(invoice.clientId)}
+                                onClick={() => setClientSheet(invoice.companyId)}
                                 className="rounded-sm text-left outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring"
                               >
                                 {invoice.client || "Client"}
@@ -347,7 +347,7 @@ export default function InvoicesPage() {
             onOpenChange={(open) => !open && setDuplicateTarget(null)}
             title={`Duplicate ${duplicateTarget?.invoiceNumber ?? "invoice"}`}
             description="Choose which client and project the copy belongs to."
-            defaultClientId={duplicateTarget?.clientId ?? ""}
+            defaultCompanyId={duplicateTarget?.companyId ?? ""}
             defaultProjectId={duplicateTarget?.projectId}
             submitting={duplicating}
             onConfirm={confirmDuplicateInvoice}
@@ -358,7 +358,7 @@ export default function InvoicesPage() {
       {adminView && (
         <UserEditorSheet
           open={clientSheet !== null}
-          clientId={clientSheet ?? ""}
+          companyId={clientSheet ?? ""}
           onClose={() => setClientSheet(null)}
           onSaved={() => setClientSheet(null)}
         />

@@ -14,11 +14,11 @@ export function LegacyClientRedirect() {
   const [failed, setFailed] = useState(false)
   useEffect(() => {
     let active = true
-    if (!appUser?.clientId) { router.replace("/portal"); return }
-    getOrganization(appUser.clientId).then(org => {
+    if (!appUser?.companyId) { router.replace("/portal"); return }
+    getOrganization(appUser.companyId).then(org => {
       if (active) router.replace(org ? legacyDashboardDestination(organizationRef(org), pathname, search) : "/portal")
     }).catch(() => { if (active) setFailed(true) })
     return () => { active = false }
-  }, [appUser?.clientId, pathname, search, router])
+  }, [appUser?.companyId, pathname, search, router])
   return failed ? <PortalNotice title="We couldn’t open your portal">Refresh to try again.</PortalNotice> : <PortalLoading />
 }

@@ -19,8 +19,8 @@ export type TaskPriority = "low" | "medium" | "high"
 export interface Task {
   id: string
   name: string
-  /** Matches the clientId on a user's Firestore doc */
-  clientId: string
+  /** Matches the companyId on a user's Firestore doc */
+  companyId: string
   /** Client display name, denormalized for the table */
   client: string
   /** Firestore id of the project this task belongs to */
@@ -91,9 +91,9 @@ export async function getTasks(): Promise<Task[]> {
   return snapshot.docs.map((d) => ({ ...(d.data() as object), id: d.id })) as Task[]
 }
 
-export async function getTasksByClientId(clientId: string): Promise<Task[]> {
-  if (!clientId) return []
-  const snapshot = await getDocs(query(collection(db, COLLECTION_NAME), where("clientId", "==", clientId)))
+export async function getTasksByCompanyId(companyId: string): Promise<Task[]> {
+  if (!companyId) return []
+  const snapshot = await getDocs(query(collection(db, COLLECTION_NAME), where("companyId", "==", companyId)))
   return snapshot.docs.map((d) => ({ ...(d.data() as object), id: d.id })) as Task[]
 }
 
@@ -109,16 +109,16 @@ export async function getTasksByProjectId(projectId: string): Promise<Task[]> {
 }
 
 /**
- * Client-safe project task query. Including clientId lets Firestore prove that
+ * Client-safe project task query. Including companyId lets Firestore prove that
  * every returned task belongs to the signed-in workspace.
  */
-export async function getTasksByProjectAndClientId(projectId: string, clientId: string): Promise<Task[]> {
-  if (!projectId || !clientId) return []
+export async function getTasksByProjectAndCompanyId(projectId: string, companyId: string): Promise<Task[]> {
+  if (!projectId || !companyId) return []
   const snapshot = await getDocs(
     query(
       collection(db, COLLECTION_NAME),
       where("projectId", "==", projectId),
-      where("clientId", "==", clientId),
+      where("companyId", "==", companyId),
     ),
   )
   const tasks = snapshot.docs.map((d) => ({ ...(d.data() as object), id: d.id })) as Task[]
@@ -221,7 +221,7 @@ function daysFromNow(n: number): string {
  * user doc), otherwise deleting every task would re-seed on the next load.
  */
 export async function seedDefaultTasks(
-  clientId: string,
+  companyId: string,
   clientName: string,
   project?: { id: string; title: string },
 ): Promise<Task[]> {
@@ -230,7 +230,7 @@ export async function seedDefaultTasks(
   for (const t of DEFAULT_TASKS) {
     const payload = {
       name: t.name,
-      clientId,
+      companyId,
       client: clientName,
       projectId: project?.id ?? "",
       project: project?.title ?? "",

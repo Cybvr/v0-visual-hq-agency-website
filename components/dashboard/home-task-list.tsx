@@ -22,13 +22,13 @@ function formatDueDate(value: string) {
 
 export function HomeTaskList({
   tasks,
-  clientId,
+  companyId,
   clientName,
   onSaved,
   className,
 }: {
   tasks: Task[]
-  clientId: string
+  companyId: string
   clientName: string
   onSaved: () => void | Promise<void>
   className?: string
@@ -108,7 +108,7 @@ export function HomeTaskList({
       <TaskEditorSheet
         open={editingTask !== null}
         task={editingTask}
-        clientId={clientId}
+        companyId={companyId}
         clientName={clientName}
         onClose={() => setEditingId(null)}
         onSaved={onSaved}

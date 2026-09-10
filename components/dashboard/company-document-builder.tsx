@@ -46,7 +46,7 @@ export function CompanyDocumentBuilder({ document: record }: { document: Company
   const formRef = useRef<HTMLFormElement>(null)
 
   const [title, setTitle] = useState(record?.title ?? "")
-  const [clientId, setClientId] = useState(record?.clientId ?? "")
+  const [companyId, setCompanyId] = useState(record?.companyId ?? "")
   const [projectId, setProjectId] = useState(record?.projectId ?? "")
   const [kind, setKind] = useState<CompanyDocumentKind>(record?.kind ?? "proposal")
   const [status, setStatus] = useState<CompanyDocumentStatus>(record?.status ?? "draft")
@@ -79,8 +79,8 @@ export function CompanyDocumentBuilder({ document: record }: { document: Company
         // One entry per company, since several people share a workspace.
         const seen = new Set<string>()
         setClients(userList.filter((user) => {
-          if (!user.clientId || seen.has(user.clientId)) return false
-          seen.add(user.clientId)
+          if (!user.companyId || seen.has(user.companyId)) return false
+          seen.add(user.companyId)
           return true
         }))
         setProjects(projectList)
@@ -96,17 +96,17 @@ export function CompanyDocumentBuilder({ document: record }: { document: Company
 
     const trimmedTitle = title.trim()
     if (!trimmedTitle) { setError("Give this document a title."); return }
-    if (!clientId) { setError("Choose which company this document is for."); return }
+    if (!companyId) { setError("Choose which company this document is for."); return }
     if (documentTextLength(body) === 0) { toast.error("Write the document before saving."); return }
 
     setSaving(true)
     setError(null)
     try {
-      const client = clients.find((entry) => entry.clientId === clientId)
+      const client = clients.find((entry) => entry.companyId === companyId)
       const project = projects.find((entry) => entry.id === projectId)
       const payload = {
         title: trimmedTitle,
-        clientId,
+        companyId,
         client: client?.company || client?.displayName || "",
         projectId: projectId || "",
         project: project?.title || "",
@@ -218,13 +218,13 @@ export function CompanyDocumentBuilder({ document: record }: { document: Company
             </div>
             <div>
               <Label htmlFor="company">Company</Label>
-              <Select value={clientId} onValueChange={setClientId}>
+              <Select value={companyId} onValueChange={setCompanyId}>
                 <SelectTrigger id="company" className="mt-1">
                   <SelectValue placeholder={optionsLoading ? "Loading..." : "Choose a company"} />
                 </SelectTrigger>
                 <SelectContent>
                   {clients.map((client) => (
-                    <SelectItem key={client.uid} value={client.clientId as string}>
+                    <SelectItem key={client.uid} value={client.companyId as string}>
                       {client.company || client.displayName || client.email}
                     </SelectItem>
                   ))}
@@ -238,7 +238,7 @@ export function CompanyDocumentBuilder({ document: record }: { document: Company
                   <SelectValue placeholder="Not tied to a project" />
                 </SelectTrigger>
                 <SelectContent>
-                  {projects.filter((project) => !clientId || project.clientId === clientId).map((project) => (
+                  {projects.filter((project) => !companyId || project.companyId === companyId).map((project) => (
                     <SelectItem key={project.id} value={project.id}>{project.title}</SelectItem>
                   ))}
                 </SelectContent>

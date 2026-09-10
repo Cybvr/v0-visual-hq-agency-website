@@ -18,7 +18,7 @@ Support agency operations and give clients a clear place to follow their engagem
 
 ## Operating Context
 
-The existing application contains projects, tasks, companies, invoices, estimates, contracts, and shared documents. Organizations and related records use existing clientId relationships. The agency has already sent clients company URLs in the form /company-name.
+The existing application contains projects, tasks, companies, invoices, estimates, contracts, and shared documents. Organizations and related records use existing companyId relationships. The agency has already sent clients company URLs in the form /company-name.
 
 ## Capabilities and Constraints
 

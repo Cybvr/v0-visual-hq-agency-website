@@ -4,16 +4,17 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState, t
 import { useParams } from "next/navigation"
 
 import {
-  getContractsByClientId,
-  getEstimatesByClientId,
-  getInvoicesByClientId,
+  getContractsByCompanyId,
+  getEstimatesByCompanyId,
+  getInvoicesByCompanyId,
   type Contract,
   type Estimate,
   type Invoice,
 } from "@/lib/billing"
+import { getCompanyDocumentsByCompanyId, type CompanyDocument } from "@/lib/company-documents"
 import { getOrganization, updateOrganization, type Organization, type PublicTeamMember } from "@/lib/organizations"
-import { getProjectsByClientId, type Project } from "@/lib/projects"
-import { getUserByRef, getUsersByClientId, type AppUser } from "@/lib/users"
+import { getProjectsByCompanyId, type Project } from "@/lib/projects"
+import { getUserByRef, getUsersByCompanyId, type AppUser } from "@/lib/users"
 
 export function clientName(client: AppUser): string {
   return client.company || client.displayName || client.email || "Unnamed company"
@@ -54,6 +55,7 @@ type CompanyState = {
   invoices: Invoice[]
   contracts: Contract[]
   estimates: Estimate[]
+  documents: CompanyDocument[]
   workspaceId: string
   name: string
   categoryLabel: string
@@ -78,6 +80,7 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
   const [invoices, setInvoices] = useState<Invoice[]>([])
   const [contracts, setContracts] = useState<Contract[]>([])
   const [estimates, setEstimates] = useState<Estimate[]>([])
+  const [documents, setDocuments] = useState<CompanyDocument[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -90,14 +93,15 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
         setError("That company doesn't exist, or it has been removed.")
         return
       }
-      const workspace = found.clientId || found.uid
-      const [foundOrg, foundPeople, foundProjects, foundInvoices, foundContracts, foundEstimates] = await Promise.all([
+      const workspace = found.companyId || found.uid
+      const [foundOrg, foundPeople, foundProjects, foundInvoices, foundContracts, foundEstimates, foundDocuments] = await Promise.all([
         getOrganization(workspace),
-        getUsersByClientId(workspace),
-        getProjectsByClientId(workspace),
-        getInvoicesByClientId(workspace, true),
-        getContractsByClientId(workspace, true),
-        getEstimatesByClientId(workspace, true),
+        getUsersByCompanyId(workspace),
+        getProjectsByCompanyId(workspace),
+        getInvoicesByCompanyId(workspace, true),
+        getContractsByCompanyId(workspace, true),
+        getEstimatesByCompanyId(workspace, true),
+        getCompanyDocumentsByCompanyId(workspace, true),
       ])
       setClient(found)
       setOrganization(foundOrg)
@@ -107,6 +111,7 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
       setInvoices(foundInvoices)
       setContracts(foundContracts)
       setEstimates(foundEstimates)
+      setDocuments(foundDocuments)
 
       // Keep the public page's Team section in step with the real roster.
       // Only an admin can write here, so this quietly no-ops for a client.
@@ -127,7 +132,7 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
   }, [load])
 
   const value = useMemo<CompanyState>(() => {
-    const workspaceId = client ? client.clientId || client.uid : ""
+    const workspaceId = client ? client.companyId || client.uid : ""
     return {
       loading,
       error,
@@ -138,12 +143,13 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
       invoices,
       contracts,
       estimates,
+      documents,
       workspaceId,
       name: client ? organization?.name || clientName(client) : "",
       categoryLabel: buildCategoryLabel(projects, organization),
       reload: load,
     }
-  }, [loading, error, client, organization, people, projects, invoices, contracts, estimates, load])
+  }, [loading, error, client, organization, people, projects, invoices, contracts, estimates, documents, load])
 
   return <CompanyContext.Provider value={value}>{children}</CompanyContext.Provider>
 }

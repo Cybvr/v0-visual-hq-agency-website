@@ -23,6 +23,8 @@ import {
 import { Textarea } from "@/components/ui/textarea"
 import { cn } from "@/lib/utils"
 
+import "./agent-chat.css"
+
 /** Inline markdown in one line of an agent reply: bold, italic, code, links. */
 function formatInline(text: string, keyPrefix: string): ReactNode[] {
   const nodes: ReactNode[] = []
@@ -282,7 +284,7 @@ export function AgentChat({
   }
 
   return (
-    <div className="dashboard-body flex min-h-0 flex-1 flex-col bg-background font-sans [&_*]:font-sans">
+    <div className={cn("dashboard-body flex min-h-0 flex-1 flex-col font-sans [&_*]:font-sans", compact ? "bg-background" : "agent-surface")}>
       <div className={cn("shrink-0 border-b border-border", compact ? "px-4 py-3" : "px-4 py-4 sm:px-6")}>
         <div className="flex items-center justify-between gap-3">
           <button
@@ -386,7 +388,7 @@ export function AgentChat({
         </div>
       )}
 
-      <div className={cn("shrink-0 bg-background", compact ? "px-4 pb-4 pt-2" : "px-4 pb-5 pt-3 sm:px-6 sm:pb-7")}>
+      <div className={cn("shrink-0", compact ? "bg-background px-4 pb-4 pt-2" : "px-4 pb-5 pt-3 sm:px-6 sm:pb-7")}>
         <form
           onSubmit={submit}
           className={cn(

@@ -32,7 +32,7 @@ export default function DocumentDetailPage() {
           setRecord(null)
           return
         }
-        const visible = (isAdmin && !isImpersonating) || (found.clientId === appUser.clientId && found.status !== "draft")
+        const visible = (isAdmin && !isImpersonating) || (found.companyId === appUser.companyId && found.status !== "draft")
         setRecord(visible ? found : null)
       })
       .catch((loadError) => {

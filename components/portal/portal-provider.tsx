@@ -5,9 +5,9 @@ import { useParams } from "next/navigation"
 import { useAuth } from "@/components/auth-provider"
 import { Button } from "@/components/ui/button"
 import { getOrganizationByRef, type Organization } from "@/lib/organizations"
-import { getInvoicesByClientId, getContractsByClientId, getEstimatesByClientId, type Invoice, type Contract, type Estimate } from "@/lib/billing"
+import { getInvoicesByCompanyId, getContractsByCompanyId, getEstimatesByCompanyId, type Invoice, type Contract, type Estimate } from "@/lib/billing"
 import { getDocumentsForClient, type SharedDocument } from "@/lib/documents"
-import { getPublicCompanyDocumentsByClientId, type CompanyDocument } from "@/lib/company-documents"
+import { getPublicCompanyDocumentsByCompanyId, type CompanyDocument } from "@/lib/company-documents"
 import { getPortalProjects, getPortalTasks } from "@/lib/portal-data"
 import type { PortalProject, PortalTask } from "@/lib/portal-model"
 import { PortalLoading, PortalNotice } from "./portal-shell"
@@ -20,26 +20,26 @@ export function PortalProvider({ children }: { children: ReactNode }) {
   const { appUser, isAdmin, isImpersonating } = useAuth()
   const [result, setResult] = useState<{ key: string; data?: PortalData; error?: string; denied?: boolean }>({ key: "" })
   const [revision, setRevision] = useState(0)
-  const key = `${companySlug}:${appUser?.uid}:${appUser?.clientId}:${isAdmin}:${isImpersonating}:${revision}`
+  const key = `${companySlug}:${appUser?.uid}:${appUser?.companyId}:${isAdmin}:${isImpersonating}:${revision}`
 
   useEffect(() => {
     let active = true
     async function load() {
       try {
         const organization = await getOrganizationByRef(companySlug)
-        if (!organization || ((!isAdmin || isImpersonating) && appUser?.clientId !== organization.id)) {
+        if (!organization || ((!isAdmin || isImpersonating) && appUser?.companyId !== organization.id)) {
           if (active) setResult({ key, denied: true })
           return
         }
         const projects = await getPortalProjects(organization.id)
         const [taskGroups, invoices, contracts, estimates, files, documents] = await Promise.all([
           Promise.all(projects.map(project => getPortalTasks(organization.id, project.id))),
-          getInvoicesByClientId(organization.id), getContractsByClientId(organization.id), getEstimatesByClientId(organization.id),
+          getInvoicesByCompanyId(organization.id), getContractsByCompanyId(organization.id), getEstimatesByCompanyId(organization.id),
           getDocumentsForClient(organization.id, appUser?.uid || ""),
           // A document reaches the client when it's toggled public, whatever its draft status.
-          getPublicCompanyDocumentsByClientId(organization.id),
+          getPublicCompanyDocumentsByCompanyId(organization.id),
         ])
-        if (active) setResult({ key, data: { organization, projects, tasks: taskGroups.flat(), invoices, contracts, estimates, files: files.filter(file => file.clientId === organization.id), documents } })
+        if (active) setResult({ key, data: { organization, projects, tasks: taskGroups.flat(), invoices, contracts, estimates, files: files.filter(file => file.companyId === organization.id), documents } })
       } catch (error) {
         console.error("Portal load failed", error)
         if (active) setResult({ key, error: "We couldn’t load this workspace. Check your connection and try again." })
@@ -47,7 +47,7 @@ export function PortalProvider({ children }: { children: ReactNode }) {
     }
     void load()
     return () => { active = false }
-  }, [key, companySlug, appUser?.uid, appUser?.clientId, isAdmin, isImpersonating])
+  }, [key, companySlug, appUser?.uid, appUser?.companyId, isAdmin, isImpersonating])
 
   if (result.key !== key) return <PortalLoading />
   if (result.denied) return <PortalNotice title="This workspace isn’t available to your account">Use the email your agency invited. If you need access, ask your agency to add you to this company.</PortalNotice>

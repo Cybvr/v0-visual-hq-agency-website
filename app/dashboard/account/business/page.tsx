@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { getBusinessProfile, updateBusinessProfile, type BusinessProfile } from "@/lib/business-profile"
+import { CompanyIdMigration } from "@/components/dashboard/company-id-migration"
 
 const EMPTY_FORM = { name: "", address: "", email: "", phone: "", website: "", taxNumber: "", logoUrl: "" }
 
@@ -170,6 +171,8 @@ export default function AccountBusinessPage() {
           </div>
         </form>
       )}
+
+      <CompanyIdMigration />
     </main>
   )
 }

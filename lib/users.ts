@@ -25,7 +25,7 @@ export interface AppUser {
   /** The user's own dashboard URL segment, e.g. /dashboard/ada-obi */
   slug?: string
   /** Links a client user to their project/deliverable data. */
-  clientId?: string
+  companyId?: string
   /** Set once we've seeded a client's starter tasks, so we never re-seed. */
   tasksSeeded?: boolean
   createdAt?: Timestamp
@@ -117,21 +117,21 @@ export async function getUsers(): Promise<AppUser[]> {
 }
 
 /**
- * The account owning a workspace. Several users can share a clientId, so this
+ * The account owning a workspace. Several users can share a companyId, so this
  * returns the first match, which is enough to open their record.
  */
-export async function getUserByClientId(clientId: string): Promise<AppUser | null> {
-  if (!clientId) return null
-  const snapshot = await getDocs(query(collection(db, COLLECTION_NAME), where("clientId", "==", clientId)))
+export async function getUserByCompanyId(companyId: string): Promise<AppUser | null> {
+  if (!companyId) return null
+  const snapshot = await getDocs(query(collection(db, COLLECTION_NAME), where("companyId", "==", companyId)))
   if (snapshot.empty) return null
   const first = snapshot.docs[0]
   return { ...(first.data() as object), uid: first.id } as AppUser
 }
 
 /** Every person who belongs to a workspace, for the company's People tab. */
-export async function getUsersByClientId(clientId: string): Promise<AppUser[]> {
-  if (!clientId) return []
-  const snapshot = await getDocs(query(collection(db, COLLECTION_NAME), where("clientId", "==", clientId)))
+export async function getUsersByCompanyId(companyId: string): Promise<AppUser[]> {
+  if (!companyId) return []
+  const snapshot = await getDocs(query(collection(db, COLLECTION_NAME), where("companyId", "==", companyId)))
   return snapshot.docs.map((d) => ({ ...(d.data() as object), uid: d.id })) as AppUser[]
 }
 
@@ -188,12 +188,12 @@ export async function upsertUserOnLogin(profile: {
     base.role = "client"
     base.createdAt = Timestamp.now()
   }
-  // Every user needs a clientId to have a workspace: it's what tasks/projects
-  // are scoped by and what the Firestore rules match on (myClientId()). Default
+  // Every user needs a companyId to have a workspace: it's what tasks/projects
+  // are scoped by and what the Firestore rules match on (myCompanyId()). Default
   // it to the uid so each account gets its own space; backfill older docs that
-  // predate this. An admin can still point several users at one shared clientId.
-  if (!existing.exists() || !existing.data()?.clientId) {
-    base.clientId = profile.uid
+  // predate this. An admin can still point several users at one shared companyId.
+  if (!existing.exists() || !existing.data()?.companyId) {
+    base.companyId = profile.uid
   }
 
   // Same idea for the URL segment: new accounts get one, and older docs that

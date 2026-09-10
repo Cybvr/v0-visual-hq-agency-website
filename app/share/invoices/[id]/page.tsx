@@ -33,7 +33,7 @@ export default function SharedInvoicePage() {
         // so a failure here never blocks the document from showing.
         const [profileResult, orgResult] = await Promise.allSettled([
           getBusinessProfile(),
-          visible ? getOrganization(visible.clientId) : Promise.resolve(null),
+          visible ? getOrganization(visible.companyId) : Promise.resolve(null),
         ])
         if (!active) return
         if (profileResult.status === "fulfilled") setIssuer(profileResult.value)
@@ -68,8 +68,8 @@ export default function SharedInvoicePage() {
 
   const companyName = organization?.name || invoice.client
   const coverProject: Project = {
-    id: invoice.clientId,
-    clientId: invoice.clientId,
+    id: invoice.companyId,
+    companyId: invoice.companyId,
     client: companyName,
     title: companyName,
     service: "",

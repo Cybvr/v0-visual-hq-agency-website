@@ -33,7 +33,7 @@ import {
   createCompanyDocument,
   deleteCompanyDocument,
   getCompanyDocuments,
-  getCompanyDocumentsByClientId,
+  getCompanyDocumentsByCompanyId,
   updateCompanyDocument,
   type CompanyDocument,
 } from "@/lib/company-documents"
@@ -43,13 +43,13 @@ import { cn } from "@/lib/utils"
 const DOCUMENT_SORTS: SortOption<CompanyDocument>[] = [
   { value: "updatedAt", label: "Last updated", get: (row) => tsToMillis(row.updatedAt) || tsToMillis(row.createdAt), ascLabel: "Oldest", descLabel: "Newest" },
   { value: "title", label: "Title", get: (row) => row.title, ascLabel: "A–Z", descLabel: "Z–A" },
-  { value: "client", label: "Company", get: (row) => row.client || row.clientId, ascLabel: "A–Z", descLabel: "Z–A" },
+  { value: "client", label: "Company", get: (row) => row.client || row.companyId, ascLabel: "A–Z", descLabel: "Z–A" },
   { value: "kind", label: "Type", get: (row) => companyDocumentKindMeta[row.kind]?.label ?? row.kind, ascLabel: "A–Z", descLabel: "Z–A" },
   { value: "status", label: "Status", get: (row) => companyDocumentStatusMeta[row.status]?.label ?? row.status, ascLabel: "A–Z", descLabel: "Z–A" },
 ]
 
 function searchDocument(row: CompanyDocument) {
-  return [row.title, row.summary, row.client, row.clientId, row.project, companyDocumentKindMeta[row.kind]?.label, companyDocumentStatusMeta[row.status]?.label]
+  return [row.title, row.summary, row.client, row.companyId, row.project, companyDocumentKindMeta[row.kind]?.label, companyDocumentStatusMeta[row.status]?.label]
 }
 
 /** The updated stamp, which is a Timestamp rather than the yyyy-mm-dd strings billing uses. */
@@ -61,7 +61,7 @@ function updatedLabel(row: CompanyDocument) {
 export default function DocumentsPage() {
   const router = useRouter()
   const { user, appUser, isAdmin, isImpersonating } = useAuth()
-  const clientId = appUser?.clientId ?? ""
+  const companyId = appUser?.companyId ?? ""
   const adminView = isAdmin && !isImpersonating
   const [documents, setDocuments] = useState<CompanyDocument[]>([])
   const [loading, setLoading] = useState(true)
@@ -77,14 +77,14 @@ export default function DocumentsPage() {
   const fetchData = useCallback(async () => {
     setError(false)
     try {
-      setDocuments(adminView ? await getCompanyDocuments() : await getCompanyDocumentsByClientId(clientId))
+      setDocuments(adminView ? await getCompanyDocuments() : await getCompanyDocumentsByCompanyId(companyId))
     } catch (loadError) {
       console.error("Error loading documents:", loadError)
       setError(true)
     } finally {
       setLoading(false)
     }
-  }, [adminView, clientId])
+  }, [adminView, companyId])
 
   useEffect(() => {
     void fetchData()
@@ -100,7 +100,7 @@ export default function DocumentsPage() {
         title: `${duplicateTarget.title} (copy)`,
         status: "draft",
         shareEnabled: false,
-        clientId: selection.clientId,
+        companyId: selection.companyId,
         client: selection.client || duplicateTarget.client,
         projectId: selection.projectId,
         project: selection.project,
@@ -203,7 +203,7 @@ export default function DocumentsPage() {
               return (
                 <TableRow key={row.id}>
                   <TableCell className="font-medium"><Link href={adminView ? `/dashboard/documents/${row.id}/edit` : `/dashboard/documents/${row.id}`} className="rounded-sm outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring">{row.title}</Link></TableCell>
-                  {adminView && <TableCell>{row.clientId ? <button type="button" onClick={() => setClientSheet(row.clientId)} className="rounded-sm text-left outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring">{row.client || "Company"}</button> : "—"}</TableCell>}
+                  {adminView && <TableCell>{row.companyId ? <button type="button" onClick={() => setClientSheet(row.companyId)} className="rounded-sm text-left outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring">{row.client || "Company"}</button> : "—"}</TableCell>}
                   <TableCell>
                     {adminView ? (
                       <Switch
@@ -247,7 +247,7 @@ export default function DocumentsPage() {
           onOpenChange={(open) => !open && setDuplicateTarget(null)}
           title={`Duplicate ${duplicateTarget?.title ?? "document"}`}
           description="Choose which company and project the copy belongs to."
-          defaultClientId={duplicateTarget?.clientId ?? ""}
+          defaultCompanyId={duplicateTarget?.companyId ?? ""}
           defaultProjectId={duplicateTarget?.projectId}
           submitting={duplicating}
           onConfirm={confirmDuplicateDocument}
@@ -258,7 +258,7 @@ export default function DocumentsPage() {
 
       {adminView && <ImportWordDocumentDialog open={importing} onOpenChange={setImporting} />}
 
-      {adminView && <UserEditorSheet open={clientSheet !== null} clientId={clientSheet ?? ""} onClose={() => setClientSheet(null)} onSaved={() => setClientSheet(null)} />}
+      {adminView && <UserEditorSheet open={clientSheet !== null} companyId={clientSheet ?? ""} onClose={() => setClientSheet(null)} onSaved={() => setClientSheet(null)} />}
     </main>
   )
 }

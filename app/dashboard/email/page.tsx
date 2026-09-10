@@ -88,7 +88,7 @@ export default function EmailPage() {
   const { user, appUser, isAdmin, isImpersonating } = useAuth()
   // An admin "viewing as" a client sees exactly what that client sees.
   const showOpsDetail = isAdmin && !isImpersonating
-  const workspaceId = appUser?.clientId || user?.uid || "workspace"
+  const workspaceId = appUser?.companyId || user?.uid || "workspace"
   const templateStorageKey = `visualcns-email-templates:${workspaceId}`
   const messageStorageKey = `visualcns-email-messages:${workspaceId}`
 

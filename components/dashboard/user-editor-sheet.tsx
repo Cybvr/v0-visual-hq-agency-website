@@ -11,17 +11,17 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet"
-import { getUserByClientId, type AppUser } from "@/lib/users"
+import { getUserByCompanyId, type AppUser } from "@/lib/users"
 import type { UserRole } from "@/lib/users"
 
 /**
  * The user record editor. Callers either hand it the user, ask for a blank one
- * with `isNew`, or give a `clientId` and let it look the account up.
+ * with `isNew`, or give a `companyId` and let it look the account up.
  */
 export function UserEditorSheet({
   open,
   user,
-  clientId,
+  companyId,
   isNew,
   fixedRole,
   subjectNoun = "user",
@@ -32,7 +32,7 @@ export function UserEditorSheet({
 }: {
   open: boolean
   user?: AppUser | null
-  clientId?: string
+  companyId?: string
   isNew?: boolean
   fixedRole?: UserRole
   subjectNoun?: "user" | "client" | "company" | "contact"
@@ -46,18 +46,18 @@ export function UserEditorSheet({
   const [loading, setLoading] = useState(false)
   const [failed, setFailed] = useState(false)
 
-  const lookup = Boolean(open && !isNew && !user && clientId)
+  const lookup = Boolean(open && !isNew && !user && companyId)
 
   useEffect(() => {
     if (user !== undefined) setResolved(user)
   }, [user])
 
   useEffect(() => {
-    if (!lookup || !clientId) return
+    if (!lookup || !companyId) return
     let active = true
     setLoading(true)
     setFailed(false)
-    getUserByClientId(clientId)
+    getUserByCompanyId(companyId)
       .then((found) => {
         if (!active) return
         if (found) setResolved(found)
@@ -72,7 +72,7 @@ export function UserEditorSheet({
     return () => {
       active = false
     }
-  }, [lookup, clientId])
+  }, [lookup, companyId])
 
   const subject = isNew ? null : resolved
   const subjectLabel = joinWorkspaceId ? "person" : subjectNoun

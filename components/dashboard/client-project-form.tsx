@@ -21,7 +21,7 @@ import { getUsers } from "@/lib/users"
 type CompanyOption = { id: string; name: string }
 
 type FormState = {
-  clientId: string
+  companyId: string
   title: string
   service: string
   description: string
@@ -31,7 +31,7 @@ type FormState = {
 }
 
 const EMPTY_FORM: FormState = {
-  clientId: "",
+  companyId: "",
   title: "",
   service: "",
   description: "",
@@ -42,16 +42,16 @@ const EMPTY_FORM: FormState = {
 
 interface ClientProjectFormProps {
   project?: Project | null
-  initialClientId?: string
+  initialCompanyId?: string
   onSaved: (id: string) => void
   onCancel: () => void
 }
 
-export function ClientProjectForm({ project, initialClientId, onSaved, onCancel }: ClientProjectFormProps) {
+export function ClientProjectForm({ project, initialCompanyId, onSaved, onCancel }: ClientProjectFormProps) {
   const isEdit = Boolean(project)
   // When the caller already knows the client (e.g. opened from that company's
   // own page), there's nothing to pick — skip the field instead of asking.
-  const showCompanyField = isEdit || !initialClientId
+  const showCompanyField = isEdit || !initialCompanyId
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [form, setForm] = useState<FormState>(EMPTY_FORM)
@@ -63,12 +63,12 @@ export function ClientProjectForm({ project, initialClientId, onSaved, onCancel 
       .then(([users, organizations]) => {
         const orgNames = new Map(organizations.map((org) => [org.id, org.name]))
         // Several people can share a workspace, so this is deduped to one row
-        // per clientId, preferring the organization's own name.
+        // per companyId, preferring the organization's own name.
         const byWorkspace = new Map<string, string>()
         for (const user of users) {
-          if (user.role !== "client" || !user.clientId) continue
-          if (byWorkspace.has(user.clientId)) continue
-          byWorkspace.set(user.clientId, orgNames.get(user.clientId) || user.company || user.displayName || user.email)
+          if (user.role !== "client" || !user.companyId) continue
+          if (byWorkspace.has(user.companyId)) continue
+          byWorkspace.set(user.companyId, orgNames.get(user.companyId) || user.company || user.displayName || user.email)
         }
         setCompanies(
           Array.from(byWorkspace, ([id, name]) => ({ id, name })).sort((a, b) => a.name.localeCompare(b.name)),
@@ -81,7 +81,7 @@ export function ClientProjectForm({ project, initialClientId, onSaved, onCancel 
   useEffect(() => {
     if (project) {
       setForm({
-        clientId: project.clientId ?? "",
+        companyId: project.companyId ?? "",
         title: project.title ?? "",
         service: project.service ?? "",
         description: project.description ?? "",
@@ -90,10 +90,10 @@ export function ClientProjectForm({ project, initialClientId, onSaved, onCancel 
         dueDate: project.dueDate ?? "",
       })
     } else {
-      setForm({ ...EMPTY_FORM, clientId: initialClientId ?? "" })
+      setForm({ ...EMPTY_FORM, companyId: initialCompanyId ?? "" })
     }
     setError(null)
-  }, [project, initialClientId])
+  }, [project, initialCompanyId])
 
   function set(field: keyof FormState, value: string) {
     setForm((prev) => ({ ...prev, [field]: value }))
@@ -104,7 +104,7 @@ export function ClientProjectForm({ project, initialClientId, onSaved, onCancel 
     if (saving) return
     setError(null)
 
-    if (!form.clientId) {
+    if (!form.companyId) {
       setError("Pick which client this project belongs to.")
       return
     }
@@ -113,10 +113,10 @@ export function ClientProjectForm({ project, initialClientId, onSaved, onCancel 
       return
     }
 
-    const company = companies.find((c) => c.id === form.clientId)
+    const company = companies.find((c) => c.id === form.companyId)
     const payload = {
-      clientId: form.clientId,
-      client: company?.name || project?.client || form.clientId,
+      companyId: form.companyId,
+      client: company?.name || project?.client || form.companyId,
       title: form.title.trim(),
       service: form.service.trim(),
       description: form.description.trim(),
@@ -146,9 +146,9 @@ export function ClientProjectForm({ project, initialClientId, onSaved, onCancel 
     <form onSubmit={handleSubmit} className="space-y-4">
       {showCompanyField && (
         <div className="space-y-1.5">
-          <Label htmlFor="clientId">Company</Label>
-          <Select value={form.clientId} onValueChange={(v) => set("clientId", v)}>
-            <SelectTrigger id="clientId" className="w-full">
+          <Label htmlFor="companyId">Company</Label>
+          <Select value={form.companyId} onValueChange={(v) => set("companyId", v)}>
+            <SelectTrigger id="companyId" className="w-full">
               <SelectValue placeholder={clientsLoading ? "Loading companies..." : "Select a company"} />
             </SelectTrigger>
             <SelectContent>

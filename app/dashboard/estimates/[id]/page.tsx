@@ -27,7 +27,7 @@ export default function EstimateDetailPage() {
     Promise.all([getEstimate(id), getBusinessProfile()])
       .then(([record, profile]) => {
         if (!active) return
-        const visible = record && (adminView || (record.clientId === appUser.clientId && record.status !== "draft"))
+        const visible = record && (adminView || (record.companyId === appUser.companyId && record.status !== "draft"))
         setEstimate(visible ? record : null)
         setIssuer(profile)
       })

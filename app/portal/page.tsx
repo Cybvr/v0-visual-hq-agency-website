@@ -15,14 +15,14 @@ export default function PortalEntry() {
   useEffect(() => {
     let active = true
     if (isAdmin && !isImpersonating) { setState("admin"); return }
-    if (!appUser?.clientId) { setState("missing"); return }
-    getOrganization(appUser.clientId).then(org => {
+    if (!appUser?.companyId) { setState("missing"); return }
+    getOrganization(appUser.companyId).then(org => {
       if (!active) return
       if (org) router.replace(portalPath(organizationRef(org)))
       else setState("missing")
     }).catch(() => { if (active) setState("error") })
     return () => { active = false }
-  }, [appUser?.clientId, isAdmin, isImpersonating, router])
+  }, [appUser?.companyId, isAdmin, isImpersonating, router])
   if (state === "loading") return <PortalLoading />
   if (state === "admin") return <PortalNotice title="Choose a client to preview"><p>Open a company and select Client portal to manage sharing or preview their workspace.</p><Link className="mt-5 inline-block font-medium text-foreground underline underline-offset-4" href="/dashboard/companies">Go to companies</Link></PortalNotice>
   return <PortalNotice title={state === "error" ? "We couldn’t load your workspace" : "Your workspace isn’t ready yet"}><p>{state === "error" ? "Check your connection and refresh to try again." : "Ask your agency to link this account to your company. Use the email they invited."}</p></PortalNotice>

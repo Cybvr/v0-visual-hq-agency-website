@@ -27,13 +27,13 @@ import {
   type TaskStatus,
   type TaskPriority,
 } from "@/lib/tasks"
-import { getProjects, getProjectsByClientId, createProject, type Project } from "@/lib/projects"
+import { getProjects, getProjectsByCompanyId, createProject, type Project } from "@/lib/projects"
 import { getUsers, type AppUser } from "@/lib/users"
 import { cn } from "@/lib/utils"
 
 type FormState = {
   name: string
-  clientId: string
+  companyId: string
   projectId: string
   status: TaskStatus
   priority: TaskPriority
@@ -43,7 +43,7 @@ type FormState = {
 
 const EMPTY_FORM: FormState = {
   name: "",
-  clientId: "",
+  companyId: "",
   projectId: "",
   status: "todo",
   priority: "medium",
@@ -69,7 +69,7 @@ interface TaskFormProps {
    * When set (client dashboard), the task is locked to this client: no client
    * picker, and only their projects load. Omit for the admin form.
    */
-  fixedClient?: { clientId: string; clientName: string }
+  fixedClient?: { companyId: string; clientName: string }
   /**
    * Seed values for a NEW task (ignored when editing). Lets a board column's
    * "+ New" open the form with that column's status preselected.
@@ -94,7 +94,7 @@ export function TaskForm({ task, fixedClient, defaults, onSaved, onCancel }: Tas
   useEffect(() => {
     if (fixedClient) {
       // Client-scoped: reading all users is admin-only, so just load their projects.
-      getProjectsByClientId(fixedClient.clientId)
+      getProjectsByCompanyId(fixedClient.companyId)
         .then(setProjects)
         .catch((err) => console.error("Error loading form options:", err))
         .finally(() => setOptionsLoading(false))
@@ -102,20 +102,20 @@ export function TaskForm({ task, fixedClient, defaults, onSaved, onCancel }: Tas
     }
     Promise.all([getUsers(), getProjects()])
       .then(([users, allProjects]) => {
-        setClients(users.filter((u) => u.clientId))
+        setClients(users.filter((u) => u.companyId))
         setProjects(allProjects)
       })
       .catch((err) => console.error("Error loading form options:", err))
       .finally(() => setOptionsLoading(false))
     // Depend on the id, not the object, so a new object literal each render doesn't refetch.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fixedClient?.clientId])
+  }, [fixedClient?.companyId])
 
   useEffect(() => {
     if (task) {
       setForm({
         name: task.name ?? "",
-        clientId: task.clientId ?? fixedClient?.clientId ?? "",
+        companyId: task.companyId ?? fixedClient?.companyId ?? "",
         projectId: task.projectId ?? "",
         status: normalizeTaskStatus(task.status),
         priority: task.priority ?? EMPTY_FORM.priority,
@@ -125,48 +125,48 @@ export function TaskForm({ task, fixedClient, defaults, onSaved, onCancel }: Tas
     } else {
       setForm({
         ...EMPTY_FORM,
-        clientId: fixedClient?.clientId ?? "",
+        companyId: fixedClient?.companyId ?? "",
         status: defaults?.status ?? EMPTY_FORM.status,
       })
     }
     setError(null)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [task, fixedClient?.clientId, defaults?.status])
+  }, [task, fixedClient?.companyId, defaults?.status])
 
   useEffect(() => {
     if (!task || optionsLoading) return
 
     setForm((prev) => {
-      if (prev.clientId && prev.projectId) return prev
+      if (prev.companyId && prev.projectId) return prev
 
-      let nextClientId = prev.clientId
+      let nextCompanyId = prev.companyId
       let nextProjectId = prev.projectId
 
       if (!nextProjectId && task.project) {
         const matchingProjects = projects.filter((project) => {
-          if (nextClientId && project.clientId !== nextClientId) return false
+          if (nextCompanyId && project.companyId !== nextCompanyId) return false
           return normalizeOptionLabel(project.title) === normalizeOptionLabel(task.project)
         })
         const matchedProject = matchingProjects[0]
         if (matchedProject) {
           nextProjectId = matchedProject.id
-          if (!nextClientId) nextClientId = matchedProject.clientId
+          if (!nextCompanyId) nextCompanyId = matchedProject.companyId
         }
       }
 
-      if (!nextClientId) {
+      if (!nextCompanyId) {
         const matchedClient = clients.find((client) =>
-          [client.company, client.displayName, client.email, client.clientId].some(
+          [client.company, client.displayName, client.email, client.companyId].some(
             (value) => normalizeOptionLabel(String(value ?? "")) === normalizeOptionLabel(task.client),
           ),
         )
-        if (matchedClient?.clientId) nextClientId = matchedClient.clientId
+        if (matchedClient?.companyId) nextCompanyId = matchedClient.companyId
       }
 
-      if (nextClientId === prev.clientId && nextProjectId === prev.projectId) return prev
+      if (nextCompanyId === prev.companyId && nextProjectId === prev.projectId) return prev
       return {
         ...prev,
-        clientId: nextClientId,
+        companyId: nextCompanyId,
         projectId: nextProjectId,
       }
     })
@@ -179,37 +179,37 @@ export function TaskForm({ task, fixedClient, defaults, onSaved, onCancel }: Tas
   const clientOptions = Array.from(
     new Map(
       clients.map((u) => [
-        u.clientId as string,
+        u.companyId as string,
         {
-          clientId: u.clientId as string,
-          label: u.company || u.displayName || u.email || (u.clientId as string),
+          companyId: u.companyId as string,
+          label: u.company || u.displayName || u.email || (u.companyId as string),
         },
       ]),
     ).values(),
   )
 
   const selectedClientFallback =
-    form.clientId && !clientOptions.some((option) => option.clientId === form.clientId)
+    form.companyId && !clientOptions.some((option) => option.companyId === form.companyId)
       ? {
-          clientId: form.clientId,
-          label: task?.client || form.clientId,
+          companyId: form.companyId,
+          label: task?.client || form.companyId,
         }
       : null
 
   const visibleClientOptions = selectedClientFallback ? [selectedClientFallback, ...clientOptions] : clientOptions
 
   // Only offer projects that belong to the chosen client.
-  const clientProjects = projects.filter((p) => !form.clientId || p.clientId === form.clientId)
+  const clientProjects = projects.filter((p) => !form.companyId || p.companyId === form.companyId)
 
   async function handleCreateProject() {
-    if (!form.clientId || !projectQuery.trim()) return
+    if (!form.companyId || !projectQuery.trim()) return
     setSaving(true)
     try {
       const title = projectQuery.trim()
-      const clientUser = clients.find((c) => c.clientId === form.clientId)
-      const clientName = fixedClient?.clientName || clientUser?.company || clientUser?.displayName || form.clientId
+      const clientUser = clients.find((c) => c.companyId === form.companyId)
+      const clientName = fixedClient?.clientName || clientUser?.company || clientUser?.displayName || form.companyId
       const newProjectId = await createProject({
-        clientId: form.clientId,
+        companyId: form.companyId,
         client: clientName,
         title: title,
         service: "General",
@@ -220,7 +220,7 @@ export function TaskForm({ task, fixedClient, defaults, onSaved, onCancel }: Tas
 
       const newProject: Project = {
         id: newProjectId,
-        clientId: form.clientId,
+        companyId: form.companyId,
         client: clientName,
         title,
         service: "General",
@@ -249,7 +249,7 @@ export function TaskForm({ task, fixedClient, defaults, onSaved, onCancel }: Tas
       setError("Task name is required.")
       return
     }
-    if (!form.clientId) {
+    if (!form.companyId) {
       setError("Pick a client.")
       return
     }
@@ -258,13 +258,13 @@ export function TaskForm({ task, fixedClient, defaults, onSaved, onCancel }: Tas
       return
     }
 
-    const clientUser = clients.find((c) => c.clientId === form.clientId)
+    const clientUser = clients.find((c) => c.companyId === form.companyId)
     const project = projects.find((p) => p.id === form.projectId)
     const payload = {
       name: form.name.trim(),
-      clientId: form.clientId,
+      companyId: form.companyId,
       client:
-        fixedClient?.clientName || clientUser?.company || clientUser?.displayName || task?.client || form.clientId,
+        fixedClient?.clientName || clientUser?.company || clientUser?.displayName || task?.client || form.companyId,
       projectId: form.projectId,
       project: project?.title || task?.project || "",
       status: form.status,
@@ -301,24 +301,24 @@ export function TaskForm({ task, fixedClient, defaults, onSaved, onCancel }: Tas
         <div className={fixedClient ? "grid gap-3" : "grid gap-3 md:grid-cols-2"}>
           {!fixedClient && (
           <div className="space-y-1.5">
-            <Label htmlFor="clientId">Client</Label>
+            <Label htmlFor="companyId">Client</Label>
             <Select
-              value={form.clientId || undefined}
+              value={form.companyId || undefined}
               onValueChange={(v) => {
                 setForm((prev) => ({
                   ...prev,
-                  clientId: v,
+                  companyId: v,
                   // Clear the project if it belongs to a different client.
-                  projectId: projects.find((p) => p.id === prev.projectId)?.clientId === v ? prev.projectId : "",
+                  projectId: projects.find((p) => p.id === prev.projectId)?.companyId === v ? prev.projectId : "",
                 }))
               }}
             >
-              <SelectTrigger id="clientId" className="w-full">
+              <SelectTrigger id="companyId" className="w-full">
                 <SelectValue placeholder={optionsLoading ? "Loading..." : "Select a client"} />
               </SelectTrigger>
               <SelectContent>
                 {visibleClientOptions.map((c) => (
-                  <SelectItem key={c.clientId} value={c.clientId}>
+                  <SelectItem key={c.companyId} value={c.companyId}>
                     {c.label}
                   </SelectItem>
                 ))}
@@ -336,7 +336,7 @@ export function TaskForm({ task, fixedClient, defaults, onSaved, onCancel }: Tas
                   role="combobox"
                   aria-expanded={projectOpen}
                   className="w-full justify-between px-3 font-normal"
-                  disabled={!form.clientId || optionsLoading}
+                  disabled={!form.companyId || optionsLoading}
                 >
                   <span className="truncate">
                     {(() => {
@@ -344,7 +344,7 @@ export function TaskForm({ task, fixedClient, defaults, onSaved, onCancel }: Tas
                       if (selected) return selected.title
                       if (optionsLoading) return "Loading..."
                       if (form.projectId) return task?.project || "Unknown project"
-                      if (form.clientId) return "Select a project"
+                      if (form.companyId) return "Select a project"
                       return "Pick a client first"
                     })()}
                   </span>

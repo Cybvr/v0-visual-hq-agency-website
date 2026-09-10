@@ -18,7 +18,7 @@ export interface SharedDocument {
   title: string
   url: string
   description?: string
-  clientId: string
+  companyId: string
   /** Optional project scope; unset documents appear at company level only. */
   projectId?: string
   sharedWith?: string
@@ -55,9 +55,9 @@ export async function getDocuments(): Promise<SharedDocument[]> {
 }
 
 /** The documents a client can see: theirs plus anything shared with everyone. */
-export async function getDocumentsForClient(clientId: string, userId: string): Promise<SharedDocument[]> {
+export async function getDocumentsForClient(companyId: string, userId: string): Promise<SharedDocument[]> {
   const queries = [
-    getDocs(query(collection(db, COLLECTION_NAME), where("clientId", "==", clientId))),
+    getDocs(query(collection(db, COLLECTION_NAME), where("companyId", "==", companyId))),
     getDocs(query(collection(db, COLLECTION_NAME), where("sharedWithUserIds", "array-contains", userId))),
   ]
   const snapshots = await Promise.all(queries)
@@ -96,7 +96,7 @@ export function contractsAsDocuments(contracts: Contract[]): SharedDocument[] {
     // Written agreements live on their own page; linked ones point at the file.
     url: contract.url || `/dashboard/contracts/${contract.id}`,
     description: contract.project || "",
-    clientId: contract.clientId,
+    companyId: contract.companyId,
     type: "doc" as const,
     createdAt: contract.createdAt,
   }))

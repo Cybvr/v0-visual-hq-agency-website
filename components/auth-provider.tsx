@@ -22,7 +22,7 @@ type AuthContextValue = {
   user: User | null
   /**
    * The Firestore user doc data consumers should read (tasks/projects are
-   * scoped by `appUser.clientId`). When an admin is viewing as a client this is
+   * scoped by `appUser.companyId`). When an admin is viewing as a client this is
    * the *target* client's doc; otherwise it's the signed-in user's own doc.
    */
   appUser: AppUser | null
@@ -70,7 +70,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           if (doc?.role === "admin") {
             try {
               await ensureAdminBusinessOrganization({
-                id: doc.clientId || doc.uid,
+                id: doc.companyId || doc.uid,
                 name: doc.company || doc.displayName || undefined,
                 email: doc.email || undefined,
                 logoUrl: doc.photoURL || undefined,

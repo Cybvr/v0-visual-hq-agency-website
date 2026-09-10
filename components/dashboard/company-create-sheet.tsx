@@ -22,9 +22,8 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet"
+import { findOrCreateCompany } from "@/lib/companies"
 import { INDUSTRIES } from "@/lib/industries"
-import { createOrganization } from "@/lib/organizations"
-import { createUser } from "@/lib/users"
 
 type FormState = {
   name: string
@@ -68,25 +67,16 @@ export function CompanyCreateSheet({
     setSaving(true)
     setError(null)
     try {
-      // The workspace id doubles as the organization doc id. The account
-      // itself starts with no contact - add people from the company page.
-      const uid = crypto.randomUUID()
-      await createUser(uid, {
-        displayName: "",
-        email: "",
-        company: form.name.trim(),
-        clientId: uid,
-        photoURL: "",
-        role: "client",
-      })
-      await createOrganization(uid, {
-        name: form.name.trim() || "Unnamed company",
+      // Reuse a workspace that already carries this name instead of making a
+      // second one; the account starts with no contact, added from its page.
+      const company = await findOrCreateCompany({
+        name: form.name.trim(),
         logoUrl: form.logoUrl.trim(),
         industry: form.industry.trim(),
         location: form.location.trim(),
       })
       reset()
-      await onSaved(uid)
+      await onSaved(company.id)
     } catch (err) {
       console.error("Error creating company:", err)
       setError(err instanceof Error ? err.message : "The company could not be created.")

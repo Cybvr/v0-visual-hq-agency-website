@@ -9,10 +9,10 @@ import { Combobox, type ComboboxOption } from "@/components/ui/combobox"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { findOrCreateCompany } from "@/lib/companies"
 import { COMPANY_DOCUMENT_TEMPLATES, createCompanyDocument } from "@/lib/company-documents"
-import { createOrganization } from "@/lib/organizations"
 import { createProject, getProjects, type Project } from "@/lib/projects"
-import { createUser, getUsers, type AppUser } from "@/lib/users"
+import { getUsers, type AppUser } from "@/lib/users"
 import { cn } from "@/lib/utils"
 
 /**
@@ -24,16 +24,16 @@ import { cn } from "@/lib/utils"
 export function NewDocumentDialog({
   open,
   onOpenChange,
-  initialClientId,
+  initialCompanyId,
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
-  initialClientId?: string
+  initialCompanyId?: string
 }) {
   const router = useRouter()
   const [templateId, setTemplateId] = useState(COMPANY_DOCUMENT_TEMPLATES[0].id)
   const [title, setTitle] = useState(COMPANY_DOCUMENT_TEMPLATES[0].title)
-  const [clientId, setClientId] = useState(initialClientId ?? "")
+  const [companyId, setCompanyId] = useState(initialCompanyId ?? "")
   const [projectId, setProjectId] = useState("")
   const [clients, setClients] = useState<AppUser[]>([])
   const [projects, setProjects] = useState<Project[]>([])
@@ -51,8 +51,8 @@ export function NewDocumentDialog({
         // One entry per company, since several people share a workspace.
         const seen = new Set<string>()
         setClients(userList.filter((user) => {
-          if (!user.clientId || seen.has(user.clientId)) return false
-          seen.add(user.clientId)
+          if (!user.companyId || seen.has(user.companyId)) return false
+          seen.add(user.companyId)
           return true
         }))
         setProjects(projectList)
@@ -67,38 +67,38 @@ export function NewDocumentDialog({
     if (open) return
     setTemplateId(COMPANY_DOCUMENT_TEMPLATES[0].id)
     setTitle(COMPANY_DOCUMENT_TEMPLATES[0].title)
-    setClientId(initialClientId ?? "")
+    setCompanyId(initialCompanyId ?? "")
     setProjectId("")
     setError(null)
-  }, [open, initialClientId])
+  }, [open, initialCompanyId])
 
   const template = COMPANY_DOCUMENT_TEMPLATES.find((entry) => entry.id === templateId) ?? COMPANY_DOCUMENT_TEMPLATES[0]
 
   const companyOptions: ComboboxOption[] = clients.map((client) => ({
-    value: client.clientId as string,
-    label: client.company || client.displayName || client.email || (client.clientId as string),
+    value: client.companyId as string,
+    label: client.company || client.displayName || client.email || (client.companyId as string),
   }))
 
   const projectOptions: ComboboxOption[] = projects
-    .filter((project) => !clientId || project.clientId === clientId)
+    .filter((project) => !companyId || project.companyId === companyId)
     .map((project) => ({ value: project.id, label: project.title }))
 
-  /** Spin up a bare workspace from just a name, the same shape the companies page makes. */
+  /** Reuse the workspace with this name, or spin up a bare one, the same shape the companies page makes. */
   async function createCompany(name: string): Promise<ComboboxOption | null> {
-    const uid = crypto.randomUUID()
-    await createUser(uid, { displayName: "", email: "", company: name, clientId: uid, photoURL: "", role: "client" })
-    await createOrganization(uid, { name })
-    setClients((prev) => [...prev, { uid, email: "", company: name, clientId: uid, role: "client" }])
-    return { value: uid, label: name }
+    const company = await findOrCreateCompany({ name })
+    setClients((prev) => prev.some((entry) => entry.companyId === company.id)
+      ? prev
+      : [...prev, { uid: company.id, email: "", company: company.name, companyId: company.id, role: "client" }])
+    return { value: company.id, label: company.name }
   }
 
   /** A new project belongs to the chosen company, so it needs one picked first. */
   async function createProjectOption(name: string): Promise<ComboboxOption | null> {
-    if (!clientId) { setError("Choose a company before adding a project."); return null }
-    const client = clients.find((entry) => entry.clientId === clientId)
-    const clientName = client?.company || client?.displayName || clientId
+    if (!companyId) { setError("Choose a company before adding a project."); return null }
+    const client = clients.find((entry) => entry.companyId === companyId)
+    const clientName = client?.company || client?.displayName || companyId
     const id = await createProject({
-      clientId,
+      companyId,
       client: clientName,
       title: name,
       service: "General",
@@ -106,7 +106,7 @@ export function NewDocumentDialog({
       progress: 0,
       dueDate: "",
     })
-    setProjects((prev) => [...prev, { id, clientId, client: clientName, title: name, service: "General", status: "in-progress", progress: 0, dueDate: "" }])
+    setProjects((prev) => [...prev, { id, companyId, client: clientName, title: name, service: "General", status: "in-progress", progress: 0, dueDate: "" }])
     return { value: id, label: name }
   }
 
@@ -123,16 +123,16 @@ export function NewDocumentDialog({
     if (creating) return
     const trimmedTitle = title.trim()
     if (!trimmedTitle) { setError("Give this document a title."); return }
-    if (!clientId) { setError("Choose which company this document is for."); return }
+    if (!companyId) { setError("Choose which company this document is for."); return }
 
     setCreating(true)
     setError(null)
     try {
-      const client = clients.find((entry) => entry.clientId === clientId)
+      const client = clients.find((entry) => entry.companyId === companyId)
       const project = projects.find((entry) => entry.id === projectId)
       const id = await createCompanyDocument({
         title: trimmedTitle,
-        clientId,
+        companyId,
         client: client?.company || client?.displayName || "",
         projectId: projectId || "",
         project: project?.title || "",
@@ -200,12 +200,12 @@ export function NewDocumentDialog({
               <Combobox
                 id="document-company"
                 options={companyOptions}
-                value={clientId}
+                value={companyId}
                 onChange={(next) => {
-                  setClientId(next)
+                  setCompanyId(next)
                   // Drop a project that belongs to a different company.
                   setProjectId((current) =>
-                    projects.find((project) => project.id === current)?.clientId === next ? current : "",
+                    projects.find((project) => project.id === current)?.companyId === next ? current : "",
                   )
                 }}
                 onCreate={createCompany}
@@ -228,9 +228,9 @@ export function NewDocumentDialog({
                 value={projectId}
                 onChange={setProjectId}
                 onCreate={createProjectOption}
-                disabled={!clientId}
+                disabled={!companyId}
                 loading={optionsLoading}
-                placeholder={clientId ? "Not tied to a project" : "Choose a company first"}
+                placeholder={companyId ? "Not tied to a project" : "Choose a company first"}
                 searchPlaceholder="Search projects..."
                 emptyText="No project found."
                 createLabel={(query) => `Add “${query}”`}

@@ -32,7 +32,7 @@ export default function InvoiceDetailPage() {
           return
         }
         const adminView = isAdmin && !isImpersonating
-        const visible = adminView || (record.clientId === appUser.clientId && record.status !== "draft")
+        const visible = adminView || (record.companyId === appUser.companyId && record.status !== "draft")
         setInvoice(visible ? record : null)
       })
       .catch((error) => {

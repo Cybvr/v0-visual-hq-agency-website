@@ -5,10 +5,10 @@ service cloud.firestore {
     function isAdmin() {
       return signedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
     }
-    function clientId() { return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.clientId; }
-    function owns(data) { return signedIn() && data.clientId == clientId(); }
+    function companyId() { return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.companyId; }
+    function owns(data) { return signedIn() && data.companyId == companyId(); }
     function visibleProject(projectId) {
-      return signedIn() && get(/databases/$(database)/documents/portalProjects/$(projectId)).data.clientId == clientId();
+      return signedIn() && get(/databases/$(database)/documents/portalProjects/$(projectId)).data.companyId == companyId();
     }
     function visibleTask(taskId) {
       let task = get(/databases/$(database)/documents/portalTasks/$(taskId)).data;
@@ -32,10 +32,10 @@ service cloud.firestore {
     match /users/{uid} {
       allow read: if isAdmin() || (signedIn() && request.auth.uid == uid);
       allow create: if isAdmin() || (signedIn() && request.auth.uid == uid
-        && request.resource.data.role == 'client' && request.resource.data.clientId == uid);
+        && request.resource.data.role == 'client' && request.resource.data.companyId == uid);
       allow update: if isAdmin() || (signedIn() && request.auth.uid == uid
         && request.resource.data.role == resource.data.role
-        && request.resource.data.clientId == resource.data.get('clientId', uid));
+        && request.resource.data.companyId == resource.data.get('companyId', uid));
       allow delete: if isAdmin();
     }
 
@@ -71,7 +71,7 @@ service cloud.firestore {
       allow read: if isAdmin() || (owns(resource.data) && visibleTask(resource.data.taskId));
       allow create: if isAdmin() || (owns(request.resource.data) && visibleTask(request.resource.data.taskId)
         && request.resource.data.authorUid == request.auth.uid
-        && request.resource.data.keys().hasOnly(['clientId', 'taskId', 'authorUid', 'authorName', 'body', 'createdAt'])
+        && request.resource.data.keys().hasOnly(['companyId', 'taskId', 'authorUid', 'authorName', 'body', 'createdAt'])
         && request.resource.data.body is string && request.resource.data.body.size() > 0 && request.resource.data.body.size() <= 4000
         && request.resource.data.authorName is string && request.resource.data.authorName.size() <= 200
         && request.resource.data.createdAt == request.time);

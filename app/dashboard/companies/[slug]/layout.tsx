@@ -43,7 +43,7 @@ function CompanyLayoutBody({ children }: { children: ReactNode }) {
 
   const coverProject: Project = {
     id: client.uid,
-    clientId: workspaceId,
+    companyId: workspaceId,
     client: name,
     title: name,
     service: "",

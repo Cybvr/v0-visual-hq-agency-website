@@ -15,7 +15,7 @@ Confirmed by the user: portal sign-in is required; the links already sent to cli
 - The company page supports tab and doc query parameters, including ?tab=documents&doc=invoice:ID. Project selection is currently local component state.
 - The company share dialog offers both a public organization slug and /dashboard/[userSlug]. Organization and user slugs are different identities and must not be substituted for one another.
 - Login currently redirects every signed-in user to /dashboard. Dashboard navigation exposes several operational tools to clients.
-- Existing organization ids already match the clientId on projects, tasks, and billing records. Preserve these ids and existing memberships.
+- Existing organization ids already match the companyId on projects, tasks, and billing records. Preserve these ids and existing memberships.
 - The dashboard CompanyProvider resolves users, queries a roster, includes draft finance records, and attempts to synchronize public-team data. It is not a suitable portal data loader without separation.
 - Local firestore.rules already restrict invoice/contract/estimate authoring to admins, but allow clients broad creation, editing, and deletion of their company's projects and tasks. Comments and approvals need more precise ownership and parent-record checks.
 - Local rules and share pages currently make non-draft invoices and contracts publicly readable irrespective of shareEnabled; estimates use the explicit share flag. Deployed rules have not been checked. Preserve link behavior deliberately while separating public document access from private portal access.
@@ -30,7 +30,7 @@ Confirmed by the user: portal sign-in is required; the links already sent to cli
 | /portal/[companySlug]/documents/[kind]/[id] | Signed-in document view; validate kind and company ownership. Reuse existing document renderers. |
 | /company-name | Resolve the existing organization slug and forward to its portal, preserving supported query parameters. No blanket redirect for every site-root path. |
 | /company-name?tab=documents&doc=invoice:ID | Resolve the company and translate to the matching portal document destination. Preserve the destination through login. |
-| /dashboard/[userSlug] | Retain as a legacy workspace entry. Resolve using the user's own profile or an authorized admin lookup, then its clientId and organization slug. |
+| /dashboard/[userSlug] | Retain as a legacy workspace entry. Resolve using the user's own profile or an authorized admin lookup, then its companyId and organization slug. |
 | /dashboard and supported client dashboard detail links | Route clients to the corresponding portal destination, not always its home. Agency users remain in the dashboard. Editing/creation URLs unavailable to clients show a clear permitted destination. |
 | /dashboard/companies/[slug] | Keep the agency management route. Update its Share and View as client actions to target the portal. |
 | /share/invoices/[id], /share/contracts/[id], /share/estimates/[id] | Keep existing URLs and document ids. Do not make a portal login a prerequisite for links that currently work publicly. |
@@ -79,10 +79,10 @@ Payments, contract signing, new forms, project-wide chat, and client file upload
 
 - Introduce a portal layout/auth boundary using the existing Firebase auth system and a read-only portal data provider. Keep loading, no-access, session-expired, and missing-resource states distinct.
 - After login, honor a validated same-origin return destination; otherwise route by actual role and company membership. Avoid redirect loops and protect against external return URLs.
-- Authorize by the authenticated user's clientId. A URL slug selects a destination, never grants access. All document/project reads and mutations verify parent ownership.
+- Authorize by the authenticated user's companyId. A URL slug selects a destination, never grants access. All document/project reads and mutations verify parent ownership.
 - Do not reuse global project-by-slug searches or admin roster loaders for client queries. Firestore queries must carry the constraints required by the rules.
 - Separate private agency notes from client-readable records: hiding fields in React is insufficient when clients can read the whole Firestore document.
-- Tighten client writes to the specific agreed actions and fields. Validate comment/approval ownership against the underlying task/project/document; require matching clientId and immutable author/parent identities.
+- Tighten client writes to the specific agreed actions and fields. Validate comment/approval ownership against the underlying task/project/document; require matching companyId and immutable author/parent identities.
 - Preserve admin preview with a visible Viewing as client banner and a reliable return to agency context. An admin preview remains an admin credential, so verify rules separately with real client-role test identities.
 - Restrict anonymous finance collection listing while preserving intentionally supported single-document share reads. Existing invoice/contract share semantics need explicit compatibility handling; do not switch all records to shareEnabled and silently revoke old links.
 - Inspect Firebase Storage rules before promising client uploads or private file protection; no Storage rules file was identified in firebase.json. Public marketing case studies/templates and intentionally shared documents remain separate from portal privacy.

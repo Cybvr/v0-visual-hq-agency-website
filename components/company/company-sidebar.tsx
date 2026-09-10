@@ -1,11 +1,12 @@
 "use client"
 
-import { useState, type ReactNode } from "react"
-import { Copy, Plus, Share2, X } from "lucide-react"
+import { useEffect, useRef, useState, type ReactNode } from "react"
+import { Copy, ImagePlus, Plus, Share2, X } from "lucide-react"
 import { toast } from "sonner"
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
+import { uploadToCloudinary } from "@/components/image-dropzone"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -51,7 +52,7 @@ export interface CompanySidebarCompany {
 export type CompanyDetailsPatch = Partial<
   Pick<
     CompanySidebarCompany,
-    "tags" | "description" | "industry" | "location" | "website" | "companySize" | "source" | "linkedIn" | "primaryContactId"
+    "name" | "logoUrl" | "tags" | "description" | "industry" | "location" | "website" | "companySize" | "source" | "linkedIn" | "primaryContactId"
   >
 >
 
@@ -115,8 +116,15 @@ export function CompanySidebar({
 }) {
   const [addingTag, setAddingTag] = useState(false)
   const [tagDraft, setTagDraft] = useState("")
+  const [nameDraft, setNameDraft] = useState(company.name)
+  const [uploadingLogo, setUploadingLogo] = useState(false)
+  const logoInputRef = useRef<HTMLInputElement>(null)
 
   const primaryContact = people.find((person) => person.id === company.primaryContactId) ?? people[0]
+
+  useEffect(() => {
+    setNameDraft(company.name)
+  }, [company.name])
 
   async function commitTags(next: string[]) {
     if (!admin) return
@@ -129,7 +137,7 @@ export function CompanySidebar({
 
   /** Auto-save a single Details field, skipping the write when it's unchanged. */
   async function commitField(
-    field: "website" | "description" | "industry" | "location" | "companySize" | "source" | "linkedIn",
+    field: "name" | "website" | "description" | "industry" | "location" | "companySize" | "source" | "linkedIn",
     value: string,
   ) {
     if (!admin) return
@@ -160,22 +168,98 @@ export function CompanySidebar({
     toast.success("Email copied to clipboard")
   }
 
+  async function handleLogoChange(file: File) {
+    if (!admin) return
+    if (!file.type.startsWith("image/")) {
+      toast.error("Choose an image file.")
+      return
+    }
+
+    setUploadingLogo(true)
+    try {
+      const logoUrl = await uploadToCloudinary(file)
+      await admin.onSave({ logoUrl })
+      toast.success("Company avatar updated")
+    } catch (error) {
+      console.error("Error uploading company avatar:", error)
+      toast.error("The company avatar could not be uploaded.")
+    } finally {
+      setUploadingLogo(false)
+    }
+  }
+
   return (
     <aside className="print:hidden lg:sticky lg:top-6 lg:self-start">
       <div className="rounded-2xl border border-border/60 bg-card p-5">
         <div className="flex items-start gap-3">
-          <div className="size-14 shrink-0 overflow-hidden rounded-xl bg-muted">
-            {company.logoUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={company.logoUrl} alt="" className="h-full w-full object-cover" />
-            ) : (
-              <span className="flex h-full w-full items-center justify-center text-lg font-semibold text-muted-foreground">
-                {company.name.trim().charAt(0).toUpperCase() || "?"}
-              </span>
-            )}
-          </div>
+          {admin ? (
+            <>
+              <button
+                type="button"
+                className="group relative size-14 shrink-0 overflow-hidden rounded-xl bg-muted outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                onClick={() => logoInputRef.current?.click()}
+                disabled={uploadingLogo}
+                aria-label="Change company avatar"
+                title="Change company avatar"
+              >
+                {company.logoUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={company.logoUrl} alt="" className="h-full w-full object-cover" />
+                ) : (
+                  <span className="flex h-full w-full items-center justify-center text-lg font-semibold text-muted-foreground">
+                    {company.name.trim().charAt(0).toUpperCase() || "?"}
+                  </span>
+                )}
+                <span className="absolute inset-0 flex items-center justify-center bg-foreground/55 text-background opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">
+                  <ImagePlus className="size-5" aria-hidden="true" />
+                </span>
+              </button>
+              <input
+                ref={logoInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(event) => {
+                  const file = event.target.files?.[0]
+                  if (file) void handleLogoChange(file)
+                  event.target.value = ""
+                }}
+              />
+            </>
+          ) : (
+            <div className="size-14 shrink-0 overflow-hidden rounded-xl bg-muted">
+              {company.logoUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={company.logoUrl} alt="" className="h-full w-full object-cover" />
+              ) : (
+                <span className="flex h-full w-full items-center justify-center text-lg font-semibold text-muted-foreground">
+                  {company.name.trim().charAt(0).toUpperCase() || "?"}
+                </span>
+              )}
+            </div>
+          )}
           <div className="min-w-0 flex-1 pt-1">
-            <h1 className="truncate text-lg font-bold">{company.name}</h1>
+            {admin ? (
+              <Input
+                aria-label="Company name"
+                value={nameDraft}
+                onChange={(event) => setNameDraft(event.target.value)}
+                onBlur={() => void commitField("name", nameDraft)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") {
+                    event.preventDefault()
+                    event.currentTarget.blur()
+                  }
+                  if (event.key === "Escape") {
+                    setNameDraft(company.name)
+                    event.currentTarget.blur()
+                  }
+                }}
+                className="h-8 border-transparent bg-transparent px-1.5 text-lg font-bold shadow-none hover:border-input focus-visible:border-ring"
+              />
+            ) : (
+              <h1 className="truncate text-lg font-bold">{company.name}</h1>
+            )}
             <div className="mt-2 flex flex-wrap items-center gap-1.5">
               {(company.tags ?? []).map((tag) => (
                 <span

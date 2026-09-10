@@ -205,7 +205,7 @@ function DroppableColumn({
 interface TasksViewProps {
   tasks: Task[]
   projects: Project[]
-  clientId: string
+  companyId: string
   clientName: string
   deleting: string | null
   onDelete: (id: string) => void
@@ -216,7 +216,7 @@ interface TasksViewProps {
 export function TasksView({
   tasks,
   projects,
-  clientId,
+  companyId,
   clientName,
   deleting,
   onDelete,
@@ -455,7 +455,7 @@ export function TasksView({
       <TaskEditorSheet
         open={formOpen}
         task={editingTask}
-        clientId={clientId}
+        companyId={companyId}
         clientName={clientName}
         defaults={adding ?? undefined}
         onClose={closeForm}

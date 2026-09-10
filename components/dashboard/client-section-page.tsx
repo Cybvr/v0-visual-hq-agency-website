@@ -8,14 +8,14 @@ import { ClientProjectCreateSheet } from "@/components/dashboard/client-project-
 import { ProjectsView } from "@/components/dashboard/projects-view"
 import { TemplatesView } from "@/components/dashboard/templates-view"
 import { TasksView } from "@/components/dashboard/tasks-view"
-import { getProjectsByClientId, type Project } from "@/lib/projects"
-import { deleteTask, getTasksByClientId, updateTask, type Task } from "@/lib/tasks"
+import { getProjectsByCompanyId, type Project } from "@/lib/projects"
+import { deleteTask, getTasksByCompanyId, updateTask, type Task } from "@/lib/tasks"
 
 export function ClientSectionPage({ section }: { section: "projects" | "tasks" }) {
   const { appUser } = useAuth()
   const router = useRouter()
   const searchParams = useSearchParams()
-  const clientId = appUser?.clientId ?? ""
+  const companyId = appUser?.companyId ?? ""
   const clientName = appUser?.company || appUser?.displayName || ""
   const [projects, setProjects] = useState<Project[]>([])
   const [tasks, setTasks] = useState<Task[]>([])
@@ -24,12 +24,12 @@ export function ClientSectionPage({ section }: { section: "projects" | "tasks" }
   const [deleting, setDeleting] = useState<string | null>(null)
 
   const fetchData = useCallback(async () => {
-    if (!clientId) { setLoading(false); return }
+    if (!companyId) { setLoading(false); return }
     setError(false)
     try {
       const [projectList, taskList] = await Promise.all([
-        getProjectsByClientId(clientId),
-        getTasksByClientId(clientId),
+        getProjectsByCompanyId(companyId),
+        getTasksByCompanyId(companyId),
       ])
       setProjects(projectList)
       setTasks(taskList)
@@ -39,7 +39,7 @@ export function ClientSectionPage({ section }: { section: "projects" | "tasks" }
     } finally {
       setLoading(false)
     }
-  }, [clientId, section])
+  }, [companyId, section])
 
   useEffect(() => { fetchData() }, [fetchData])
 
@@ -69,15 +69,15 @@ export function ClientSectionPage({ section }: { section: "projects" | "tasks" }
           : section === "projects" ? (
             <>
               <ProjectsView projects={projects} onChanged={fetchData} />
-              <TemplatesView clientId={clientId} clientName={clientName} onCreated={fetchData} />
+              <TemplatesView companyId={companyId} clientName={clientName} onCreated={fetchData} />
             </>
           )
-          : <TasksView tasks={tasks} projects={projects} clientId={clientId} clientName={clientName} deleting={deleting} onDelete={handleDelete} onPatch={handlePatch} onSaved={fetchData} />}
+          : <TasksView tasks={tasks} projects={projects} companyId={companyId} clientName={clientName} deleting={deleting} onDelete={handleDelete} onPatch={handlePatch} onSaved={fetchData} />}
       </main>
       {section === "projects" && (
         <ClientProjectCreateSheet
           open={creatingProject}
-          clientId={clientId}
+          companyId={companyId}
           clientName={clientName}
           onOpenChange={(open) => {
             if (!open) router.replace("/dashboard/projects")

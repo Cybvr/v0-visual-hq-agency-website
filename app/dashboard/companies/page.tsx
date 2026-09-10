@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react"
 import { useRouter } from "next/navigation"
 import { Building2, Plus } from "lucide-react"
+import type { Timestamp } from "firebase/firestore"
 
 import { useAuth } from "@/components/auth-provider"
 import { CompanyCreateSheet } from "@/components/dashboard/company-create-sheet"
@@ -22,84 +23,56 @@ import { Card, CardContent } from "@/components/ui/card"
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu"
 import { Skeleton } from "@/components/ui/skeleton"
 import { FilterBar, useFilterBar, type SortOption } from "@/components/dashboard/filter-bar"
-import { getOrganizations, type Organization } from "@/lib/organizations"
+import { deleteOrganization, getOrganizations, type Organization } from "@/lib/organizations"
 import { formatTimestamp, tsToMillis } from "@/lib/tasks"
 import { getProjects, type Project } from "@/lib/projects"
 import { deleteUser, getUsers, userRef, type AppUser } from "@/lib/users"
 
-function fallbackClientName(client: AppUser): string {
-  return client.company || client.displayName || client.email || "Unnamed client"
-}
-
-/** The workspace a client's projects, and its organization doc, hang off. */
-function workspaceId(client: AppUser): string {
-  return client.clientId || client.uid
-}
-
-type ClientMeta = {
-  /** "Brand & Product · Fintech", read off the org's industry and the projects' category. */
+/**
+ * A company as this page shows it: one card per real company, sourced from the
+ * organizations collection and joined to the client account only for the
+ * actions that still need one (open the workspace, remove it). Rows are folded
+ * by name so companies that were saved twice before the name check existed
+ * collapse into a single card.
+ */
+type CompanyRow = {
+  /** The workspace id: the organization doc id, and the client user's companyId. */
+  id: string
+  name: string
   label: string
   projectCount: number
+  logoUrl?: string
+  createdAt?: Timestamp
+  /** The client account behind this company, when there is one. */
+  user?: AppUser
+  hasOrg: boolean
 }
 
-const EMPTY_META: ClientMeta = { label: "", projectCount: 0 }
-
-/**
- * Category lives on the client's projects; industry lives on its organization
- * once migrated. Older, unmigrated clients still get a category from their
- * projects, just with no industry to join onto it.
- */
-function buildMeta(projects: Project[], organizations: Map<string, Organization>): Map<string, ClientMeta> {
-  const meta = new Map<string, ClientMeta>()
-
-  for (const project of projects) {
-    if (!project.clientId) continue
-    const current = meta.get(project.clientId) ?? { ...EMPTY_META }
-    current.projectCount += 1
-    meta.set(project.clientId, current)
-  }
-
-  for (const [id, current] of meta) {
-    const category = [...new Set(projects.filter((p) => p.clientId === id).flatMap((p) => p.category ?? []))]
-      .filter(Boolean)
-      .join(" & ")
-    current.label = [category, organizations.get(id)?.industry].filter(Boolean).join(" · ")
-  }
-
-  return meta
+function normalize(value?: string): string {
+  return (value ?? "").trim().toLowerCase()
 }
 
 export default function CompaniesPage() {
   const router = useRouter()
   const { viewAsUser } = useAuth()
-  const [clients, setClients] = useState<AppUser[]>([])
+  const [users, setUsers] = useState<AppUser[]>([])
   const [projects, setProjects] = useState<Project[]>([])
   const [organizations, setOrganizations] = useState<Organization[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [deleting, setDeleting] = useState<string | null>(null)
-  const [pendingDelete, setPendingDelete] = useState<AppUser | null>(null)
+  const [pendingDelete, setPendingDelete] = useState<CompanyRow | null>(null)
   const [creating, setCreating] = useState(false)
 
-  const orgMap = useMemo(() => new Map(organizations.map((org) => [org.id, org])), [organizations])
-
-  function orgFor(client: AppUser): Organization | undefined {
-    return orgMap.get(workspaceId(client))
-  }
-
-  function clientName(client: AppUser): string {
-    return orgFor(client)?.name || fallbackClientName(client)
-  }
-
-  async function fetchClients() {
+  async function fetchCompanies() {
     setError(null)
     try {
-      const [users, allProjects, allOrgs] = await Promise.all([getUsers(), getProjects(), getOrganizations()])
+      const [allUsers, allProjects, allOrgs] = await Promise.all([getUsers(), getProjects(), getOrganizations()])
+      setUsers(allUsers)
       setProjects(allProjects)
       setOrganizations(allOrgs)
-      setClients(users.filter((user) => user.role === "client"))
     } catch (fetchError) {
-      console.error("Error fetching clients:", fetchError)
+      console.error("Error fetching companies:", fetchError)
       setError(fetchError instanceof Error ? fetchError.message : "Companies could not be loaded.")
     } finally {
       setLoading(false)
@@ -107,83 +80,126 @@ export default function CompaniesPage() {
   }
 
   useEffect(() => {
-    void fetchClients()
+    void fetchCompanies()
   }, [])
 
-  const meta = useMemo(() => buildMeta(projects, orgMap), [projects, orgMap])
+  /** Project count and the "category · industry" line, keyed by workspace id. */
+  const metaByWorkspace = useMemo(() => {
+    const orgById = new Map(organizations.map((org) => [org.id, org]))
+    const meta = new Map<string, { label: string; projectCount: number }>()
+    for (const project of projects) {
+      if (!project.companyId) continue
+      const current = meta.get(project.companyId) ?? { label: "", projectCount: 0 }
+      current.projectCount += 1
+      meta.set(project.companyId, current)
+    }
+    for (const [id, current] of meta) {
+      const category = [...new Set(projects.filter((p) => p.companyId === id).flatMap((p) => p.category ?? []))]
+        .filter(Boolean)
+        .join(" & ")
+      current.label = [category, orgById.get(id)?.industry].filter(Boolean).join(" · ")
+    }
+    return meta
+  }, [projects, organizations])
 
-  function metaFor(client: AppUser): ClientMeta {
-    return meta.get(workspaceId(client)) ?? EMPTY_META
-  }
+  /** One row per company name, drawn from organizations first and legacy client accounts second. */
+  const companies = useMemo(() => {
+    const userByWorkspace = new Map<string, AppUser>()
+    for (const user of users) {
+      if (user.role === "client") userByWorkspace.set(user.companyId || user.uid, user)
+    }
+    const orgWorkspaces = new Set(organizations.map((org) => org.id))
 
-  const sorts = useMemo<SortOption<AppUser>[]>(
+    const rows = new Map<string, CompanyRow>()
+    const add = (row: CompanyRow) => {
+      const key = normalize(row.name) || row.id
+      const existing = rows.get(key)
+      if (!existing) { rows.set(key, row); return }
+      // Prefer the record that has an organization, then the older one; keep any user we found.
+      const keep = existing.hasOrg || !row.hasOrg
+        ? existing
+        : row
+      keep.user = keep.user ?? existing.user ?? row.user
+      keep.logoUrl = keep.logoUrl || existing.logoUrl || row.logoUrl
+      rows.set(key, keep)
+    }
+
+    for (const org of organizations) {
+      const meta = metaByWorkspace.get(org.id)
+      add({
+        id: org.id,
+        name: org.name || userByWorkspace.get(org.id)?.company || "Unnamed company",
+        label: meta?.label ?? "",
+        projectCount: meta?.projectCount ?? 0,
+        logoUrl: org.logoUrl || userByWorkspace.get(org.id)?.photoURL,
+        createdAt: org.createdAt,
+        user: userByWorkspace.get(org.id),
+        hasOrg: true,
+      })
+    }
+    // Legacy client accounts that never got an organization doc.
+    for (const [workspace, user] of userByWorkspace) {
+      if (orgWorkspaces.has(workspace)) continue
+      const meta = metaByWorkspace.get(workspace)
+      add({
+        id: workspace,
+        name: user.company || user.displayName || user.email || "Unnamed company",
+        label: meta?.label ?? "",
+        projectCount: meta?.projectCount ?? 0,
+        logoUrl: user.photoURL,
+        createdAt: user.createdAt,
+        user,
+        hasOrg: false,
+      })
+    }
+    return [...rows.values()]
+  }, [users, organizations, metaByWorkspace])
+
+  const sorts = useMemo<SortOption<CompanyRow>[]>(
     () => [
-      { value: "name", label: "Name", get: clientName, ascLabel: "A–Z", descLabel: "Z–A" },
-      {
-        value: "category",
-        label: "Category",
-        get: (client) => meta.get(workspaceId(client))?.label,
-        ascLabel: "A–Z",
-        descLabel: "Z–A",
-      },
-      {
-        value: "projects",
-        label: "Projects",
-        get: (client) => meta.get(workspaceId(client))?.projectCount ?? 0,
-        ascLabel: "Fewest",
-        descLabel: "Most",
-      },
-      {
-        value: "createdAt",
-        label: "Date added",
-        get: (client) => tsToMillis(client.createdAt),
-        ascLabel: "Oldest",
-        descLabel: "Newest",
-      },
+      { value: "name", label: "Name", get: (row) => row.name, ascLabel: "A–Z", descLabel: "Z–A" },
+      { value: "category", label: "Category", get: (row) => row.label, ascLabel: "A–Z", descLabel: "Z–A" },
+      { value: "projects", label: "Projects", get: (row) => row.projectCount, ascLabel: "Fewest", descLabel: "Most" },
+      { value: "createdAt", label: "Date added", get: (row) => tsToMillis(row.createdAt), ascLabel: "Oldest", descLabel: "Newest" },
     ],
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [meta, orgMap],
+    [],
   )
 
-  const search = useMemo(
-    () => (client: AppUser) => [
-      clientName(client),
-      client.displayName,
-      client.company,
-      client.email,
-      client.clientId,
-      orgFor(client)?.industry,
-      meta.get(workspaceId(client))?.label,
-    ],
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [meta, orgMap],
-  )
+  const search = useMemo(() => (row: CompanyRow) => [row.name, row.label, row.id], [])
 
-  const { results: visibleClients, bar } = useFilterBar({
-    items: clients,
+  const { results: visibleCompanies, bar } = useFilterBar({
+    items: companies,
     search,
     sorts,
     defaultSort: "name",
   })
 
-  async function handleDelete(client: AppUser) {
+  async function handleDelete(row: CompanyRow) {
     if (deleting) return
-    setDeleting(client.uid)
+    setDeleting(row.id)
     setError(null)
     try {
-      await deleteUser(client.uid)
-      setClients((current) => current.filter((item) => item.uid !== client.uid))
+      if (row.hasOrg) await deleteOrganization(row.id)
+      if (row.user) await deleteUser(row.user.uid)
       setPendingDelete(null)
+      await fetchCompanies()
     } catch (deleteError) {
-      console.error("Error deleting client:", deleteError)
+      console.error("Error deleting company:", deleteError)
       setError(deleteError instanceof Error ? deleteError.message : "The company could not be removed. Try again.")
     } finally {
       setDeleting(null)
     }
   }
 
-  function handleViewWorkspace(client: AppUser) {
-    viewAsUser(client)
+  function companyHref(row: CompanyRow): string {
+    // The detail route resolves a client account by ref, so use the user's when
+    // there is one; the raw workspace id still resolves for org-only rows.
+    return `/dashboard/companies/${row.user ? userRef(row.user) : row.id}`
+  }
+
+  function handleViewWorkspace(row: CompanyRow) {
+    if (!row.user) return
+    viewAsUser(row.user)
     router.push("/dashboard")
   }
 
@@ -200,7 +216,7 @@ export default function CompaniesPage() {
       {error && (
         <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">
           <p>{error}</p>
-          <Button variant="outline" size="sm" onClick={() => void fetchClients()}>
+          <Button variant="outline" size="sm" onClick={() => void fetchCompanies()}>
             Try again
           </Button>
         </div>
@@ -212,7 +228,7 @@ export default function CompaniesPage() {
             <Skeleton key={index} className="aspect-[4/3] rounded-[14px]" />
           ))}
         </div>
-      ) : clients.length === 0 ? (
+      ) : companies.length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center py-16 text-center">
             <span className="flex h-11 w-11 items-center justify-center rounded-full bg-muted">
@@ -228,68 +244,62 @@ export default function CompaniesPage() {
             </Button>
           </CardContent>
         </Card>
+      ) : visibleCompanies.length === 0 ? (
+        <Card>
+          <CardContent className="py-16 text-center text-sm text-muted-foreground">
+            No companies match your search.
+          </CardContent>
+        </Card>
       ) : (
-        <>
-          {visibleClients.length === 0 ? (
-            <Card>
-              <CardContent className="py-16 text-center text-sm text-muted-foreground">
-                No companies match your search.
-              </CardContent>
-            </Card>
-          ) : (
-            <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-              {visibleClients.map((client) => {
-                const name = clientName(client)
-                const { label } = metaFor(client)
-                const cardProject: Project = {
-                  id: client.uid,
-                  clientId: workspaceId(client),
-                  client: name,
-                  title: name,
-                  service: label,
-                  status: "in-progress",
-                  progress: 0,
-                  dueDate: "",
-                  thumbnailUrl: orgFor(client)?.logoUrl || client.photoURL,
-                }
+        <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+          {visibleCompanies.map((row) => {
+            const cardProject: Project = {
+              id: row.id,
+              companyId: row.id,
+              client: row.name,
+              title: row.name,
+              service: row.label,
+              status: "in-progress",
+              progress: 0,
+              dueDate: "",
+              thumbnailUrl: row.logoUrl,
+            }
 
-                return (
-                  <li key={client.uid}>
-                    <ProjectCard
-                      project={cardProject}
-                      href={`/dashboard/companies/${userRef(client)}`}
-                      subtitle={label || "No category yet"}
-                      footer={
-                        <span className="block truncate text-[11px] text-muted-foreground">
-                          Added {formatTimestamp(client.createdAt)}
-                        </span>
-                      }
-                      menuLabel={`Options for ${name}`}
-                      menu={
-                        <>
-                          <DropdownMenuItem onSelect={() => router.push(`/dashboard/companies/${userRef(client)}`)}>
-                            Open company
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onSelect={() => router.push(`/dashboard/companies/${userRef(client)}/edit`)}
-                          >
-                            Edit company
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onSelect={() => handleViewWorkspace(client)}>
-                            View workspace
-                          </DropdownMenuItem>
-                          <DropdownMenuItem variant="destructive" onSelect={() => setPendingDelete(client)}>
-                            Remove company
-                          </DropdownMenuItem>
-                        </>
-                      }
-                    />
-                  </li>
-                )
-              })}
-            </ul>
-          )}
-        </>
+            return (
+              <li key={row.id}>
+                <ProjectCard
+                  project={cardProject}
+                  href={companyHref(row)}
+                  subtitle={row.label || "No category yet"}
+                  footer={
+                    <span className="block truncate text-[11px] text-muted-foreground">
+                      Added {formatTimestamp(row.createdAt)}
+                    </span>
+                  }
+                  menuLabel={`Options for ${row.name}`}
+                  menu={
+                    <>
+                      <DropdownMenuItem onSelect={() => router.push(companyHref(row))}>
+                        Open company
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onSelect={() => router.push(`${companyHref(row)}/edit`)}>
+                        Edit company
+                      </DropdownMenuItem>
+                      {row.user && (
+                        <DropdownMenuItem onSelect={() => handleViewWorkspace(row)}>
+                          View workspace
+                        </DropdownMenuItem>
+                      )}
+                      <DropdownMenuItem variant="destructive" onSelect={() => setPendingDelete(row)}>
+                        Remove company
+                      </DropdownMenuItem>
+                    </>
+                  }
+                />
+              </li>
+            )
+          })}
+        </ul>
       )}
 
       <AlertDialog open={Boolean(pendingDelete)} onOpenChange={(open) => !open && !deleting && setPendingDelete(null)}>
@@ -297,9 +307,8 @@ export default function CompaniesPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>Remove company?</AlertDialogTitle>
             <AlertDialogDescription>
-              This removes {pendingDelete ? clientName(pendingDelete) : "this company"}&apos;s account. Their
-              projects, tasks, and documents will remain in the database, but the company will no longer appear here.
-              This cannot be undone.
+              This removes {pendingDelete?.name ?? "this company"}&apos;s account. Their projects, tasks, and documents
+              will remain in the database, but the company will no longer appear here. This cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

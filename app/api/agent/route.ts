@@ -199,14 +199,14 @@ const AGENT_TOOLS = [
     parameters: {
       type: "object",
       properties: {
-        clientId: { type: "string" },
+        companyId: { type: "string" },
         client: { type: "string" },
         title: { type: "string" },
         service: { type: "string" },
         dueDate: { type: ["string", "null"] },
         summary: { type: ["string", "null"] },
       },
-      required: ["clientId", "client", "title"],
+      required: ["companyId", "client", "title"],
       additionalProperties: false,
     },
   },
@@ -217,7 +217,7 @@ const AGENT_TOOLS = [
     parameters: {
       type: "object",
       properties: {
-        clientId: { type: "string" },
+        companyId: { type: "string" },
         client: { type: "string" },
         projectId: { type: "string" },
         project: { type: "string" },
@@ -226,7 +226,7 @@ const AGENT_TOOLS = [
         dueDate: { type: ["string", "null"] },
         content: { type: ["string", "null"] },
       },
-      required: ["clientId", "client", "projectId", "project", "name"],
+      required: ["companyId", "client", "projectId", "project", "name"],
       additionalProperties: false,
     },
   },
@@ -237,7 +237,7 @@ const AGENT_TOOLS = [
     parameters: {
       type: "object",
       properties: {
-        clientId: { type: "string" },
+        companyId: { type: "string" },
         client: { type: "string" },
         currency: { type: "string" },
         issuedOn: { type: "string" },
@@ -260,7 +260,7 @@ const AGENT_TOOLS = [
         },
         notes: { type: ["string", "null"] },
       },
-      required: ["clientId", "client"],
+      required: ["companyId", "client"],
       additionalProperties: false,
     },
   },
@@ -271,7 +271,7 @@ const AGENT_TOOLS = [
     parameters: {
       type: "object",
       properties: {
-        clientId: { type: "string" },
+        companyId: { type: "string" },
         client: { type: "string" },
         title: { type: "string" },
         currency: { type: "string" },
@@ -293,7 +293,7 @@ const AGENT_TOOLS = [
           },
         },
       },
-      required: ["clientId", "client", "title"],
+      required: ["companyId", "client", "title"],
       additionalProperties: false,
     },
   },
@@ -304,14 +304,14 @@ const AGENT_TOOLS = [
     parameters: {
       type: "object",
       properties: {
-        clientId: { type: "string" },
+        companyId: { type: "string" },
         client: { type: "string" },
         title: { type: "string" },
         body: { type: ["string", "null"] },
         projectId: { type: ["string", "null"] },
         project: { type: ["string", "null"] },
       },
-      required: ["clientId", "client", "title"],
+      required: ["companyId", "client", "title"],
       additionalProperties: false,
     },
   },
@@ -322,7 +322,7 @@ const AGENT_TOOLS = [
     parameters: {
       type: "object",
       properties: {
-        clientId: { type: "string" },
+        companyId: { type: "string" },
         client: { type: "string" },
         title: { type: "string" },
         kind: { type: "string", enum: ["proposal", "sow", "brief", "report", "other"] },
@@ -331,7 +331,7 @@ const AGENT_TOOLS = [
         summary: { type: ["string", "null"] },
         body: { type: ["string", "null"], description: "Editable HTML using headings, paragraphs, lists and blockquotes." },
       },
-      required: ["clientId", "client", "title"],
+      required: ["companyId", "client", "title"],
       additionalProperties: false,
     },
   },
@@ -435,12 +435,12 @@ async function runAgentTool(name: string, rawArgs: string, uid: string) {
     // company, so a client can ask about their own work and nothing else.
     let query: FirebaseFirestore.Query = db.collection(collectionName)
     if (!isAdmin) {
-      const clientId = typeof userData?.clientId === "string" ? userData.clientId : ""
-      if (!clientId) throw new Error("Your account is not linked to a client workspace.")
+      const companyId = typeof userData?.companyId === "string" ? userData.companyId : ""
+      if (!companyId) throw new Error("Your account is not linked to a client workspace.")
       query =
         collectionName === "organizations"
-          ? query.where(FieldPath.documentId(), "==", clientId)
-          : query.where("clientId", "==", clientId)
+          ? query.where(FieldPath.documentId(), "==", companyId)
+          : query.where("companyId", "==", companyId)
     }
 
     const snapshot = await query.limit(limit).get()
@@ -478,7 +478,7 @@ async function runAgentTool(name: string, rawArgs: string, uid: string) {
       throw new Error("patchJson must be a JSON object of fields to set.")
     }
     // Identity and audit fields are never rewritten from a patch.
-    for (const key of ["id", "createdAt", "clientId", "invoiceNumber", "estimateNumber"]) delete patch[key]
+    for (const key of ["id", "createdAt", "companyId", "invoiceNumber", "estimateNumber"]) delete patch[key]
 
     const ref = db.collection(collectionName).doc(id)
     const existing = await ref.get()
@@ -513,15 +513,15 @@ async function runAgentTool(name: string, rawArgs: string, uid: string) {
     await ref.set({ ...patch, updatedAt: now }, { merge: true })
 
     // Keep the client-facing projections in step, safe fields only.
-    const clientId = existing.data()?.clientId
-    if (collectionName === "projects" && clientId) {
+    const companyId = existing.data()?.companyId
+    if (collectionName === "projects" && companyId) {
       const safe: Record<string, unknown> = {}
       for (const key of ["title", "status", "progress", "dueDate", "summary"]) {
         if (patch[key] !== undefined) safe[key] = patch[key]
       }
       if (Object.keys(safe).length) await db.collection("portalProjects").doc(id).set(safe, { merge: true })
     }
-    if (collectionName === "tasks" && clientId) {
+    if (collectionName === "tasks" && companyId) {
       const safe: Record<string, unknown> = {}
       for (const key of ["name", "status", "dueDate"]) {
         if (patch[key] !== undefined) safe[key] = patch[key]
@@ -552,20 +552,20 @@ async function runAgentTool(name: string, rawArgs: string, uid: string) {
   }
 
   if (name === "create_project") {
-    const clientId = requireText(args, "clientId")
+    const companyId = requireText(args, "companyId")
     const client = requireText(args, "client")
     const title = requireText(args, "title")
     const service = optionalText(args, "service")
     const ref = db.collection("projects").doc()
     const dueDate = optionalText(args, "dueDate")
     const summary = optionalText(args, "summary")
-    await ref.set({ clientId, client, title, service, status: "in-progress", progress: 0, dueDate, summary, isPublic: false, createdAt: now, updatedAt: now })
-    await db.collection("portalProjects").doc(ref.id).set({ clientId, title, status: "in-progress", progress: 0, dueDate, thumbnailUrl: "", summary, legacySlug: title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") })
+    await ref.set({ companyId, client, title, service, status: "in-progress", progress: 0, dueDate, summary, isPublic: false, createdAt: now, updatedAt: now })
+    await db.collection("portalProjects").doc(ref.id).set({ companyId, title, status: "in-progress", progress: 0, dueDate, thumbnailUrl: "", summary, legacySlug: title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") })
     return { type: "project", id: ref.id, title, client, url: `/dashboard/projects/${ref.id}` }
   }
 
   if (name === "create_task") {
-    const clientId = requireText(args, "clientId")
+    const companyId = requireText(args, "companyId")
     const client = requireText(args, "client")
     const projectId = requireText(args, "projectId")
     const project = requireText(args, "project")
@@ -575,13 +575,13 @@ async function runAgentTool(name: string, rawArgs: string, uid: string) {
     const ref = db.collection("tasks").doc()
     const dueDate = optionalText(args, "dueDate")
     const content = optionalText(args, "content")
-    await ref.set({ name: taskName, clientId, client, projectId, project, status: "todo", priority, dueDate, content, isPublic: false, createdAt: now, updatedAt: now })
-    await db.collection("portalTasks").doc(ref.id).set({ clientId, projectId, name: taskName, status: "todo", dueDate, instructions: content, assigneeUid: "" })
+    await ref.set({ name: taskName, companyId, client, projectId, project, status: "todo", priority, dueDate, content, isPublic: false, createdAt: now, updatedAt: now })
+    await db.collection("portalTasks").doc(ref.id).set({ companyId, projectId, name: taskName, status: "todo", dueDate, instructions: content, assigneeUid: "" })
     return { type: "task", id: ref.id, name: taskName, project, url: `/dashboard/tasks` }
   }
 
   if (name === "create_invoice") {
-    const clientId = requireText(args, "clientId")
+    const companyId = requireText(args, "companyId")
     const client = requireText(args, "client")
     const lineItems = Array.isArray(args.lineItems) ? args.lineItems : []
     const items = lineItems.map((item, index) => {
@@ -593,12 +593,12 @@ async function runAgentTool(name: string, rawArgs: string, uid: string) {
     const ref = db.collection("invoices").doc()
     const invoiceNumber = await nextDocumentNumber(db, "invoices", "INV")
     const currency = optionalText(args, "currency") || "NGN"
-    await ref.set({ clientId, client, invoiceNumber, projectId: optionalText(args, "projectId"), project: optionalText(args, "project"), status: "draft", lineItems: items, subtotal, discountTotal: 0, taxTotal, amount: subtotal + taxTotal, currency, issuedOn: optionalText(args, "issuedOn") || today(), dueOn: optionalText(args, "dueOn"), notes: optionalText(args, "notes"), createdAt: now, updatedAt: now })
+    await ref.set({ companyId, client, invoiceNumber, projectId: optionalText(args, "projectId"), project: optionalText(args, "project"), status: "draft", lineItems: items, subtotal, discountTotal: 0, taxTotal, amount: subtotal + taxTotal, currency, issuedOn: optionalText(args, "issuedOn") || today(), dueOn: optionalText(args, "dueOn"), notes: optionalText(args, "notes"), createdAt: now, updatedAt: now })
     return { type: "invoice", id: ref.id, number: invoiceNumber, amount: subtotal + taxTotal, currency, status: "draft", url: `/dashboard/invoices/${ref.id}/edit` }
   }
 
   if (name === "create_estimate") {
-    const clientId = requireText(args, "clientId")
+    const companyId = requireText(args, "companyId")
     const client = requireText(args, "client")
     const title = requireText(args, "title")
     const lineItems = Array.isArray(args.lineItems) ? args.lineItems : []
@@ -608,21 +608,21 @@ async function runAgentTool(name: string, rawArgs: string, uid: string) {
     })
     const ref = db.collection("estimates").doc()
     const estimateNumber = await nextDocumentNumber(db, "estimates", "EST")
-    await ref.set({ clientId, client, estimateNumber, title, projectId: optionalText(args, "projectId"), project: optionalText(args, "project"), status: "draft", lineItems: items, amount: items.reduce((sum, item) => sum + item.amount, 0), currency: optionalText(args, "currency") || "NGN", issuedOn: optionalText(args, "issuedOn") || today(), validUntil: optionalText(args, "validUntil"), scope: optionalText(args, "scope"), terms: optionalText(args, "terms"), createdAt: now, updatedAt: now })
+    await ref.set({ companyId, client, estimateNumber, title, projectId: optionalText(args, "projectId"), project: optionalText(args, "project"), status: "draft", lineItems: items, amount: items.reduce((sum, item) => sum + item.amount, 0), currency: optionalText(args, "currency") || "NGN", issuedOn: optionalText(args, "issuedOn") || today(), validUntil: optionalText(args, "validUntil"), scope: optionalText(args, "scope"), terms: optionalText(args, "terms"), createdAt: now, updatedAt: now })
     return { type: "estimate", id: ref.id, number: estimateNumber, title, status: "draft", url: `/dashboard/estimates/${ref.id}/edit` }
   }
 
   if (name === "create_contract") {
-    const clientId = requireText(args, "clientId")
+    const companyId = requireText(args, "companyId")
     const client = requireText(args, "client")
     const title = requireText(args, "title")
     const ref = db.collection("contracts").doc()
-    await ref.set({ clientId, client, title, body: optionalText(args, "body"), projectId: optionalText(args, "projectId"), project: optionalText(args, "project"), status: "draft", createdAt: now, updatedAt: now })
+    await ref.set({ companyId, client, title, body: optionalText(args, "body"), projectId: optionalText(args, "projectId"), project: optionalText(args, "project"), status: "draft", createdAt: now, updatedAt: now })
     return { type: "contract", id: ref.id, title, status: "draft", url: `/dashboard/contracts/${ref.id}/edit` }
   }
 
   if (name === "create_document") {
-    const clientId = requireText(args, "clientId")
+    const companyId = requireText(args, "companyId")
     const client = requireText(args, "client")
     const title = requireText(args, "title")
     const kind = optionalText(args, "kind") || "other"
@@ -631,7 +631,7 @@ async function runAgentTool(name: string, rawArgs: string, uid: string) {
     }
     const ref = db.collection("companyDocuments").doc()
     await ref.set({
-      clientId,
+      companyId,
       client,
       title,
       kind,

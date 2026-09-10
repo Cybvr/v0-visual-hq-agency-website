@@ -83,18 +83,18 @@ export function UserForm({ user, fixedRole, subjectNoun = "user", workspaceId, w
     setSaving(true)
     try {
       // No manual UID needed: reuse the existing doc id on edit, or mint one on
-      // create. The workspace (clientId) defaults to the uid so every account
+      // create. The workspace (companyId) defaults to the uid so every account
       // gets its own space automatically, unless it's joining one that
       // already exists.
       const uid = isEdit && user ? user.uid : crypto.randomUUID()
-      const clientId = (isEdit && user?.clientId) || workspaceId || uid
+      const companyId = (isEdit && user?.companyId) || workspaceId || uid
       const payload = {
         email: form.email.trim(),
         displayName: form.displayName.trim(),
         // A person joining an existing company doesn't carry its name
         // themselves; that lives on the organization doc.
         company: joiningExisting ? "" : form.company.trim(),
-        clientId,
+        companyId,
         photoURL: form.photoURL.trim(),
         role: fixedRole ?? form.role,
       }
@@ -108,7 +108,7 @@ export function UserForm({ user, fixedRole, subjectNoun = "user", workspaceId, w
         if (!joiningExisting) {
           // Brand-new workspace: seed its organization doc so it shows up
           // right away, without needing the companies-page migration button.
-          await createOrganization(clientId, {
+          await createOrganization(companyId, {
             name: payload.company || payload.displayName || payload.email || "Unnamed company",
             logoUrl: payload.photoURL,
             industry: "",

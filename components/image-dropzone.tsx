@@ -8,7 +8,7 @@ import { mediaKindForFile, mediaKindForUrl } from "@/lib/media"
 const CLOUD_NAME = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME!
 const UPLOAD_PRESET = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET!
 
-async function uploadToCloudinary(file: File): Promise<string> {
+export async function uploadToCloudinary(file: File): Promise<string> {
   const kind = mediaKindForFile(file)
   if (!kind) throw new Error("Choose an image or video file.")
 

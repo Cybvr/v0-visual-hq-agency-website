@@ -10,14 +10,14 @@ import { TasksView } from "@/components/dashboard/tasks-view"
 import { ProjectCover } from "@/components/project-card"
 import { Button } from "@/components/ui/button"
 import { deleteProjectWithTasks, projectStatusMeta, type Project } from "@/lib/projects"
-import { deleteTask, getTasksByClientId, tsToMillis, updateTask, type Task } from "@/lib/tasks"
+import { deleteTask, getTasksByCompanyId, tsToMillis, updateTask, type Task } from "@/lib/tasks"
 import { cn } from "@/lib/utils"
 
 interface ProjectDetailProps {
   project: Project
   isAdmin: boolean
   publicView?: boolean
-  clientId?: string
+  companyId?: string
   clientName?: string
   backLabel?: string
   onBack: () => void
@@ -35,7 +35,7 @@ export function ProjectDetail({
   project,
   isAdmin,
   publicView = false,
-  clientId = "",
+  companyId = "",
   clientName = "",
   backLabel = "Back",
   onBack,
@@ -54,11 +54,11 @@ export function ProjectDetail({
     }
     // Tasks are fetched by client and narrowed here, reusing the same query
     // the rest of the dashboard already runs.
-    const all = await getTasksByClientId(project.clientId)
+    const all = await getTasksByCompanyId(project.companyId)
     const mine = all.filter((task) => task.projectId === project.id)
     mine.sort((a, b) => tsToMillis(b.createdAt) - tsToMillis(a.createdAt))
     setTasks(mine)
-  }, [project.clientId, project.id, publicView])
+  }, [project.companyId, project.id, publicView])
 
   useEffect(() => {
     fetchTasks()
@@ -95,7 +95,7 @@ export function ProjectDetail({
     <TasksView
       tasks={tasks}
       projects={[project]}
-      clientId={project.clientId || clientId}
+      companyId={project.companyId || companyId}
       clientName={project.client || clientName}
       deleting={deleting}
       onDelete={handleDelete}

@@ -34,7 +34,7 @@ import {
   renameProject,
   type Project,
 } from "@/lib/projects"
-import { getTasksByProjectAndClientId, taskStatusMeta, type Task } from "@/lib/tasks"
+import { getTasksByProjectAndCompanyId, taskStatusMeta, type Task } from "@/lib/tasks"
 
 function ProgressBar({ value }: { value: number }) {
   return (
@@ -63,7 +63,7 @@ export function ProjectsView({ projects, onChanged }: { projects: Project[]; onC
     setPreviewError(null)
     setPreviewLoading(true)
     try {
-      const tasks = await getTasksByProjectAndClientId(project.id, project.clientId)
+      const tasks = await getTasksByProjectAndCompanyId(project.id, project.companyId)
       if (request === previewRequest.current) setPreviewTasks(tasks)
     } catch (caughtError) {
       console.error("Error loading project task preview:", caughtError)

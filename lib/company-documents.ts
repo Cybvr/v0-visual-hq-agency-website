@@ -26,7 +26,7 @@ export type CompanyDocumentKind = "proposal" | "sow" | "brief" | "report" | "oth
  */
 export interface CompanyDocument {
   id: string
-  clientId: string
+  companyId: string
   client: string
   title: string
   kind: CompanyDocumentKind
@@ -118,19 +118,19 @@ export async function getCompanyDocuments(): Promise<CompanyDocument[]> {
 }
 
 /** Drafts stay internal, so a company only ever sees what has actually been sent. */
-export async function getCompanyDocumentsByClientId(clientId: string, includeDrafts = false): Promise<CompanyDocument[]> {
-  if (!clientId) return []
+export async function getCompanyDocumentsByCompanyId(companyId: string, includeDrafts = false): Promise<CompanyDocument[]> {
+  if (!companyId) return []
   const snapshot = await getDocs(includeDrafts
-    ? query(collection(db, COMPANY_DOCUMENTS), where("clientId", "==", clientId))
-    : query(collection(db, COMPANY_DOCUMENTS), where("clientId", "==", clientId), where("status", "!=", "draft")))
+    ? query(collection(db, COMPANY_DOCUMENTS), where("companyId", "==", companyId))
+    : query(collection(db, COMPANY_DOCUMENTS), where("companyId", "==", companyId), where("status", "!=", "draft")))
   const rows = snapshot.docs.map((d) => toDocument(d.id, d.data() as object))
   return byNewest(includeDrafts ? rows : rows.filter((row) => row.status !== "draft"))
 }
 
 /** What a signed-in client sees in their portal: the documents turned public, drafts included. */
-export async function getPublicCompanyDocumentsByClientId(clientId: string): Promise<CompanyDocument[]> {
-  if (!clientId) return []
-  const snapshot = await getDocs(query(collection(db, COMPANY_DOCUMENTS), where("clientId", "==", clientId), where("shareEnabled", "==", true)))
+export async function getPublicCompanyDocumentsByCompanyId(companyId: string): Promise<CompanyDocument[]> {
+  if (!companyId) return []
+  const snapshot = await getDocs(query(collection(db, COMPANY_DOCUMENTS), where("companyId", "==", companyId), where("shareEnabled", "==", true)))
   return byNewest(snapshot.docs.map((d) => toDocument(d.id, d.data() as object)))
 }
 

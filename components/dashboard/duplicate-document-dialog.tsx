@@ -11,7 +11,7 @@ import { getProjects, type Project } from "@/lib/projects"
 import { getUsers, type AppUser } from "@/lib/users"
 
 export interface DuplicateSelection {
-  clientId: string
+  companyId: string
   client: string
   projectId: string
   project: string
@@ -27,7 +27,7 @@ export function DuplicateDocumentDialog({
   onOpenChange,
   title,
   description,
-  defaultClientId,
+  defaultCompanyId,
   defaultProjectId,
   submitting = false,
   onConfirm,
@@ -36,7 +36,7 @@ export function DuplicateDocumentDialog({
   onOpenChange: (open: boolean) => void
   title: string
   description?: string
-  defaultClientId: string
+  defaultCompanyId: string
   defaultProjectId?: string
   submitting?: boolean
   onConfirm: (selection: DuplicateSelection) => void
@@ -44,12 +44,12 @@ export function DuplicateDocumentDialog({
   const [clients, setClients] = useState<AppUser[]>([])
   const [projects, setProjects] = useState<Project[]>([])
   const [loading, setLoading] = useState(true)
-  const [clientId, setClientId] = useState(defaultClientId)
+  const [companyId, setCompanyId] = useState(defaultCompanyId)
   const [projectId, setProjectId] = useState(defaultProjectId ?? "")
 
   useEffect(() => {
     if (!open) return
-    setClientId(defaultClientId)
+    setCompanyId(defaultCompanyId)
     setProjectId(defaultProjectId ?? "")
     let active = true
     setLoading(true)
@@ -59,8 +59,8 @@ export function DuplicateDocumentDialog({
         const seenWorkspaces = new Set<string>()
         setClients(
           userList.filter((user) => {
-            if (!user.clientId || seenWorkspaces.has(user.clientId)) return false
-            seenWorkspaces.add(user.clientId)
+            if (!user.companyId || seenWorkspaces.has(user.companyId)) return false
+            seenWorkspaces.add(user.companyId)
             return true
           }),
         )
@@ -74,14 +74,14 @@ export function DuplicateDocumentDialog({
     return () => {
       active = false
     }
-  }, [open, defaultClientId, defaultProjectId])
+  }, [open, defaultCompanyId, defaultProjectId])
 
-  const selectedClient = clients.find((entry) => entry.clientId === clientId)
+  const selectedClient = clients.find((entry) => entry.companyId === companyId)
   const selectedProject = projects.find((entry) => entry.id === projectId)
 
   function selectClient(value: string) {
-    setClientId(value)
-    if (projectId && projects.find((project) => project.id === projectId)?.clientId !== value) setProjectId("")
+    setCompanyId(value)
+    if (projectId && projects.find((project) => project.id === projectId)?.companyId !== value) setProjectId("")
   }
 
   return (
@@ -100,13 +100,13 @@ export function DuplicateDocumentDialog({
           <div className="space-y-4">
             <div>
               <Label htmlFor="duplicate-client">Client</Label>
-              <Select value={clientId} onValueChange={selectClient}>
+              <Select value={companyId} onValueChange={selectClient}>
                 <SelectTrigger id="duplicate-client" className="mt-1">
                   <SelectValue placeholder="Choose a client" />
                 </SelectTrigger>
                 <SelectContent>
                   {clients.map((client) => (
-                    <SelectItem key={client.uid} value={client.clientId as string}>
+                    <SelectItem key={client.uid} value={client.companyId as string}>
                       {client.company || client.displayName || client.email}
                     </SelectItem>
                   ))}
@@ -121,7 +121,7 @@ export function DuplicateDocumentDialog({
                 </SelectTrigger>
                 <SelectContent>
                   {projects
-                    .filter((project) => !clientId || project.clientId === clientId)
+                    .filter((project) => !companyId || project.companyId === companyId)
                     .map((project) => (
                       <SelectItem key={project.id} value={project.id}>
                         {project.title}
@@ -139,10 +139,10 @@ export function DuplicateDocumentDialog({
           </Button>
           <Button
             type="button"
-            disabled={submitting || loading || !clientId}
+            disabled={submitting || loading || !companyId}
             onClick={() =>
               onConfirm({
-                clientId,
+                companyId,
                 client: selectedClient?.company || selectedClient?.displayName || selectedClient?.email || "",
                 projectId,
                 project: selectedProject?.title || "",

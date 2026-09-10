@@ -20,17 +20,17 @@ export function PortalTaskFeedback({ task, canAct }: { task: PortalTask; canAct:
   useEffect(() => {
     let active = true
     setLoading(true)
-    getDocs(query(collection(db, "portalComments"), where("clientId", "==", task.clientId), where("taskId", "==", task.id))).then(snapshot => {
+    getDocs(query(collection(db, "portalComments"), where("companyId", "==", task.companyId), where("taskId", "==", task.id))).then(snapshot => {
       if (active) { setComments(snapshot.docs.map(d => ({ id: d.id, ...d.data() }) as { id: string; body: string; authorName: string; createdAt?: unknown }).sort((a, b) => tsToMillis(a.createdAt) - tsToMillis(b.createdAt))); setError("") }
     }).catch(() => { if (active) setError("Couldn’t load feedback. Try again.") }).finally(() => { if (active) setLoading(false) })
     return () => { active = false }
-  }, [task.clientId, task.id, revision])
+  }, [task.companyId, task.id, revision])
   async function submit(event: FormEvent) {
     event.preventDefault()
     if (!body.trim() || !user || saving) return
     setSaving(true); setError("")
     try {
-      await addDoc(collection(db, "portalComments"), { clientId: task.clientId, taskId: task.id, authorUid: user.uid, authorName: appUser?.displayName || "Client", body: body.trim(), createdAt: serverTimestamp() })
+      await addDoc(collection(db, "portalComments"), { companyId: task.companyId, taskId: task.id, authorUid: user.uid, authorName: appUser?.displayName || "Client", body: body.trim(), createdAt: serverTimestamp() })
       setBody(""); setRevision(n => n + 1)
     } catch { setError("Couldn’t send your feedback. Your message is still here; try again.") } finally { setSaving(false) }
   }

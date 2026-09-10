@@ -21,7 +21,7 @@ export interface Comment {
   /** Firestore id of the task this comment belongs to. */
   taskId: string
   /** The workspace the task belongs to, so the rules can scope reads. */
-  clientId: string
+  companyId: string
   /** Firebase Auth uid of whoever wrote it. */
   authorUid: string
   /** Display name at the time of writing, so the thread reads right later. */

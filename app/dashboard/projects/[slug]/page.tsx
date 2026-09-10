@@ -28,7 +28,7 @@ export default function ProjectDetailPage() {
   const slug = params?.slug ?? ""
   const router = useRouter()
   const { user, appUser, isAdmin } = useAuth()
-  const clientId = appUser?.clientId ?? ""
+  const companyId = appUser?.companyId ?? ""
   const clientName = appUser?.company || appUser?.displayName || ""
 
   const [project, setProject] = useState<Project | null>(null)
@@ -66,7 +66,7 @@ export default function ProjectDetailPage() {
   }
 
   // A client should only ever reach their own projects, even by typing a slug.
-  const forbidden = project !== null && !isAdmin && project.clientId !== clientId
+  const forbidden = project !== null && !isAdmin && project.companyId !== companyId
 
   if (error || !project || forbidden) {
     return (
@@ -86,7 +86,7 @@ export default function ProjectDetailPage() {
       <ProjectDetail
         project={project}
         isAdmin={isAdmin}
-        clientId={clientId}
+        companyId={companyId}
         clientName={clientName}
         onBack={() => (window.history.length > 1 ? router.back() : router.push("/dashboard"))}
         onProjectPatched={(patch) => {

@@ -17,13 +17,13 @@ import { createProject } from "@/lib/projects"
 
 export function ClientProjectCreateSheet({
   open,
-  clientId,
+  companyId,
   clientName,
   onOpenChange,
   onCreated,
 }: {
   open: boolean
-  clientId: string
+  companyId: string
   clientName: string
   onOpenChange: (open: boolean) => void
   onCreated: () => Promise<void>
@@ -46,7 +46,7 @@ export function ClientProjectCreateSheet({
     event.preventDefault()
     const projectTitle = title.trim()
 
-    if (!clientId) {
+    if (!companyId) {
       setError("This account is not connected to a workspace yet.")
       return
     }
@@ -59,7 +59,7 @@ export function ClientProjectCreateSheet({
     setError(null)
     try {
       await createProject({
-        clientId,
+        companyId,
         client: clientName || "Client workspace",
         title: projectTitle,
         service: service.trim(),

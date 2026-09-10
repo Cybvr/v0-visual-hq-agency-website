@@ -173,7 +173,7 @@ type UploadingCard = { id: string; name: string; progress: number }
 export default function DrivePage() {
   const { appUser, isAdmin, isImpersonating } = useAuth()
   const adminView = isAdmin && !isImpersonating
-  const clientId = appUser?.clientId ?? ""
+  const companyId = appUser?.companyId ?? ""
   const uid = appUser?.uid ?? ""
 
   const [documents, setDocuments] = useState<SharedDocument[]>([])
@@ -200,7 +200,7 @@ export default function DrivePage() {
         setDocuments(docs)
         setUsers(us)
       } else {
-        setDocuments(await getDocumentsForClient(clientId, uid))
+        setDocuments(await getDocumentsForClient(companyId, uid))
       }
     } catch (err) {
       console.error("Error loading documents:", err)
@@ -208,7 +208,7 @@ export default function DrivePage() {
     } finally {
       setLoading(false)
     }
-  }, [adminView, clientId, uid])
+  }, [adminView, companyId, uid])
 
   useEffect(() => {
     fetchData()
@@ -239,7 +239,7 @@ export default function DrivePage() {
           title: file.name.replace(/\.[^.]+$/, ""),
           url,
           description: "",
-          clientId: "",
+          companyId: "",
           sharedWith: "Private",
           sharedWithUserIds: [],
           type: isImage ? "image" : "file",

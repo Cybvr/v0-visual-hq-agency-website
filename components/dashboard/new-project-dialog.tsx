@@ -9,13 +9,13 @@ import { getProject, projectSlug, type Project } from "@/lib/projects"
 interface NewProjectDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  initialClientId?: string
+  initialCompanyId?: string
   /** Called with the created project instead of redirecting, e.g. to open it inline within a company shell. */
   onCreated?: (project: Project) => void
 }
 
 /** Create-project modal shared by the projects list and the company page. Redirects to the new project on save, unless the caller wants it handed back instead (e.g. to open inline). */
-export function NewProjectDialog({ open, onOpenChange, initialClientId, onCreated }: NewProjectDialogProps) {
+export function NewProjectDialog({ open, onOpenChange, initialCompanyId, onCreated }: NewProjectDialogProps) {
   const router = useRouter()
 
   async function handleSaved(id: string) {
@@ -39,7 +39,7 @@ export function NewProjectDialog({ open, onOpenChange, initialClientId, onCreate
           <ClientProjectForm
             key="new"
             project={null}
-            initialClientId={initialClientId}
+            initialCompanyId={initialCompanyId}
             onSaved={handleSaved}
             onCancel={() => onOpenChange(false)}
           />

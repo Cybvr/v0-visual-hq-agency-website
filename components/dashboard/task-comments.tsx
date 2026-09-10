@@ -21,7 +21,7 @@ function initials(name: string) {
  * The comment thread on one task. Anyone who can open the task can post, and a
  * comment can only be removed by whoever wrote it, or by an admin.
  */
-export function TaskComments({ taskId, clientId }: { taskId: string; clientId: string }) {
+export function TaskComments({ taskId, companyId }: { taskId: string; companyId: string }) {
   const { user, appUser, isAdmin } = useAuth()
   const [comments, setComments] = useState<Comment[]>([])
   const [loading, setLoading] = useState(true)
@@ -62,12 +62,12 @@ export function TaskComments({ taskId, clientId }: { taskId: string; clientId: s
       const authorName = appUser?.displayName || appUser?.company || user.displayName || user.email || "Someone"
       const id = await createComment({
         taskId,
-        clientId,
+        companyId,
         authorUid: user.uid,
         authorName,
         body: text,
       })
-      setComments((current) => [...current, { id, taskId, clientId, authorUid: user.uid, authorName, body: text }])
+      setComments((current) => [...current, { id, taskId, companyId, authorUid: user.uid, authorName, body: text }])
       setBody("")
     } catch (caughtError) {
       setError(caughtError instanceof Error ? caughtError.message : "The comment could not be posted.")

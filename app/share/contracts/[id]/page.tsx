@@ -33,7 +33,7 @@ export default function SharedContractPage() {
         // failure here never blocks the document from showing.
         if (!visible) return
         const [orgResult, profileResult] = await Promise.allSettled([
-          getOrganization(visible.clientId),
+          getOrganization(visible.companyId),
           getBusinessProfile(),
         ])
         if (!active) return
@@ -72,8 +72,8 @@ export default function SharedContractPage() {
 
   const companyName = organization?.name || contract.client
   const coverProject: Project = {
-    id: contract.clientId,
-    clientId: contract.clientId,
+    id: contract.companyId,
+    companyId: contract.companyId,
     client: companyName,
     title: companyName,
     service: "",

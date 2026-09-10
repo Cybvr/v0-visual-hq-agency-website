@@ -84,7 +84,7 @@ export function InvoiceBuilder({ invoice }: { invoice?: Invoice | null }) {
   const isEdit = Boolean(invoice)
 
   const [invoiceNumber, setInvoiceNumber] = useState(invoice?.invoiceNumber ?? "")
-  const [clientId, setClientId] = useState(invoice?.clientId ?? "")
+  const [companyId, setCompanyId] = useState(invoice?.companyId ?? "")
   const [projectId, setProjectId] = useState(invoice?.projectId ?? "")
   const [status, setStatus] = useState<InvoiceStatus>(invoice?.status ?? "draft")
   const [currency, setCurrency] = useState(invoice?.currency || "USD")
@@ -166,13 +166,13 @@ export function InvoiceBuilder({ invoice }: { invoice?: Invoice | null }) {
       .then(([userList, projectList]) => {
         if (!active) return
         // Several people can share a workspace, so this is narrowed to one
-        // entry per clientId - otherwise the same company lists twice (and
-        // the duplicate clientId shows up as a duplicate React key).
+        // entry per companyId - otherwise the same company lists twice (and
+        // the duplicate companyId shows up as a duplicate React key).
         const seenWorkspaces = new Set<string>()
         setClients(
           userList.filter((user) => {
-            if (!user.clientId || seenWorkspaces.has(user.clientId)) return false
-            seenWorkspaces.add(user.clientId)
+            if (!user.companyId || seenWorkspaces.has(user.companyId)) return false
+            seenWorkspaces.add(user.companyId)
             return true
           }),
         )
@@ -204,12 +204,12 @@ export function InvoiceBuilder({ invoice }: { invoice?: Invoice | null }) {
 
   // Addressing details follow the chosen client until they are edited by hand.
   useEffect(() => {
-    if (!clientId || billToName) return
-    const client = clients.find((entry) => entry.clientId === clientId)
+    if (!companyId || billToName) return
+    const client = clients.find((entry) => entry.companyId === companyId)
     if (!client) return
     setBillToName(client.company || client.displayName || "")
     setBillToEmail((current) => current || client.email || "")
-  }, [clientId, clients, billToName])
+  }, [companyId, clients, billToName])
 
   const lineItems: InvoiceLineItem[] = useMemo(
     () =>
@@ -257,7 +257,7 @@ export function InvoiceBuilder({ invoice }: { invoice?: Invoice | null }) {
     event.preventDefault()
     if (saving) return
 
-    if (!clientId) {
+    if (!companyId) {
       setError("Choose which client this invoice is for.")
       return
     }
@@ -282,7 +282,7 @@ export function InvoiceBuilder({ invoice }: { invoice?: Invoice | null }) {
     setError(null)
     try {
       const number = invoiceNumber.trim() || (await nextInvoiceNumber())
-      const client = clients.find((entry) => entry.clientId === clientId)
+      const client = clients.find((entry) => entry.companyId === companyId)
       const project = projects.find((entry) => entry.id === projectId)
       const finalTotals = linked
         ? {
@@ -295,7 +295,7 @@ export function InvoiceBuilder({ invoice }: { invoice?: Invoice | null }) {
 
       const payload = {
         invoiceNumber: number,
-        clientId,
+        companyId,
         client: client?.company || client?.displayName || "",
         projectId: projectId || "",
         project: project?.title || "",
@@ -379,13 +379,13 @@ export function InvoiceBuilder({ invoice }: { invoice?: Invoice | null }) {
         <div className="space-y-4">
           <div>
             <Label htmlFor="client">Client</Label>
-            <Select value={clientId} onValueChange={setClientId}>
+            <Select value={companyId} onValueChange={setCompanyId}>
               <SelectTrigger id="client" className="mt-1">
                 <SelectValue placeholder={optionsLoading ? "Loading..." : "Choose a client"} />
               </SelectTrigger>
               <SelectContent>
                 {clients.map((client) => (
-                  <SelectItem key={client.uid} value={client.clientId as string}>
+                  <SelectItem key={client.uid} value={client.companyId as string}>
                     {client.company || client.displayName || client.email}
                   </SelectItem>
                 ))}
@@ -441,7 +441,7 @@ export function InvoiceBuilder({ invoice }: { invoice?: Invoice | null }) {
               </SelectTrigger>
               <SelectContent>
                 {projects
-                  .filter((project) => !clientId || project.clientId === clientId)
+                  .filter((project) => !companyId || project.companyId === companyId)
                   .map((project) => (
                     <SelectItem key={project.id} value={project.id}>
                       {project.title}

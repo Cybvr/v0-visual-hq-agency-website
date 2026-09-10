@@ -9,22 +9,25 @@ import {
   type Estimate,
   type Invoice,
 } from "@/lib/billing"
+import { companyDocumentKindMeta, companyDocumentStatusMeta, type CompanyDocument } from "@/lib/company-documents"
 import { cn } from "@/lib/utils"
 
-export type CompanyDocumentKind = "invoice" | "contract" | "estimate"
+export type CompanyDocumentKind = "invoice" | "contract" | "estimate" | "document"
 
 export function CompanyDocuments({
   invoices,
   contracts,
   estimates,
+  documents,
   onSelect,
 }: {
   invoices: Invoice[]
   contracts: Contract[]
   estimates: Estimate[]
+  documents: CompanyDocument[]
   onSelect: (kind: CompanyDocumentKind, id: string) => void
 }) {
-  const count = invoices.length + contracts.length + estimates.length
+  const count = invoices.length + contracts.length + estimates.length + documents.length
 
   return (
     <section className="mt-4" aria-labelledby="company-documents-heading">
@@ -43,6 +46,35 @@ export function CompanyDocuments({
         </div>
       ) : (
         <div className="mt-4 grid gap-3 md:grid-cols-2">
+          {documents.map((document) => {
+            const status = companyDocumentStatusMeta[document.status] ?? companyDocumentStatusMeta.draft
+            return (
+              <button
+                key={`document-${document.id}`}
+                type="button"
+                onClick={() => onSelect("document", document.id)}
+                className="flex items-start gap-4 rounded-[14px] border border-border/60 bg-card p-4 text-left outline-none transition-colors hover:border-foreground/30 hover:bg-muted/40 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              >
+                <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-muted">
+                  <FileText className="size-4" aria-hidden="true" />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-medium">{document.title || "Document"}</p>
+                      <p className="mt-0.5 truncate text-xs text-muted-foreground">
+                        {companyDocumentKindMeta[document.kind]?.label ?? "Document"}
+                      </p>
+                    </div>
+                    <span className={cn("shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium", status.className)}>
+                      {status.label}
+                    </span>
+                  </div>
+                </div>
+              </button>
+            )
+          })}
+
           {invoices.map((invoice) => {
             const status = invoiceStatusMeta[invoice.status]
             return (

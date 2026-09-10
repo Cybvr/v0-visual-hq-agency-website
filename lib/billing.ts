@@ -44,8 +44,8 @@ export interface InvoiceParty {
 
 export interface Invoice {
   id: string
-  /** Matches the clientId on a user's Firestore doc */
-  clientId: string
+  /** Matches the companyId on a user's Firestore doc */
+  companyId: string
   client: string
   /** Invoice number shown to the client, generated as INV-0001 upward */
   invoiceNumber: string
@@ -85,7 +85,7 @@ export interface Invoice {
 
 export interface Contract {
   id: string
-  clientId: string
+  companyId: string
   client: string
   title: string
   projectId?: string
@@ -117,7 +117,7 @@ export interface EstimateLineItem {
 
 export interface Estimate {
   id: string
-  clientId: string
+  companyId: string
   client: string
   /** Estimate number shown to the client, generated as EST-0001 upward. */
   estimateNumber: string
@@ -282,11 +282,11 @@ export async function getInvoices(): Promise<Invoice[]> {
   return byNewest(snapshot.docs.map((d) => toInvoice(d.id, d.data() as object)))
 }
 
-export async function getInvoicesByClientId(clientId: string, includeDrafts = false): Promise<Invoice[]> {
-  if (!clientId) return []
+export async function getInvoicesByCompanyId(companyId: string, includeDrafts = false): Promise<Invoice[]> {
+  if (!companyId) return []
   const snapshot = await getDocs(includeDrafts
-    ? query(collection(db, INVOICES), where("clientId", "==", clientId))
-    : query(collection(db, INVOICES), where("clientId", "==", clientId), where("status", "!=", "draft")))
+    ? query(collection(db, INVOICES), where("companyId", "==", companyId))
+    : query(collection(db, INVOICES), where("companyId", "==", companyId), where("status", "!=", "draft")))
   const rows = snapshot.docs.map((d) => toInvoice(d.id, d.data() as object))
   return byNewest(includeDrafts ? rows : rows.filter((row) => isVisibleToClient(row.status)))
 }
@@ -337,11 +337,11 @@ export async function getContracts(): Promise<Contract[]> {
   return byNewest(snapshot.docs.map((d) => ({ ...(d.data() as object), id: d.id })) as Contract[])
 }
 
-export async function getContractsByClientId(clientId: string, includeDrafts = false): Promise<Contract[]> {
-  if (!clientId) return []
+export async function getContractsByCompanyId(companyId: string, includeDrafts = false): Promise<Contract[]> {
+  if (!companyId) return []
   const snapshot = await getDocs(includeDrafts
-    ? query(collection(db, CONTRACTS), where("clientId", "==", clientId))
-    : query(collection(db, CONTRACTS), where("clientId", "==", clientId), where("status", "!=", "draft")))
+    ? query(collection(db, CONTRACTS), where("companyId", "==", companyId))
+    : query(collection(db, CONTRACTS), where("companyId", "==", companyId), where("status", "!=", "draft")))
   const rows = snapshot.docs.map((d) => ({ ...(d.data() as object), id: d.id })) as Contract[]
   return byNewest(includeDrafts ? rows : rows.filter((row) => isVisibleToClient(row.status)))
 }
@@ -374,11 +374,11 @@ export async function getEstimates(): Promise<Estimate[]> {
   return byNewest(snapshot.docs.map((d) => ({ ...(d.data() as object), id: d.id })) as Estimate[])
 }
 
-export async function getEstimatesByClientId(clientId: string, includeDrafts = false): Promise<Estimate[]> {
-  if (!clientId) return []
+export async function getEstimatesByCompanyId(companyId: string, includeDrafts = false): Promise<Estimate[]> {
+  if (!companyId) return []
   const snapshot = await getDocs(includeDrafts
-    ? query(collection(db, ESTIMATES), where("clientId", "==", clientId))
-    : query(collection(db, ESTIMATES), where("clientId", "==", clientId), where("status", "!=", "draft")))
+    ? query(collection(db, ESTIMATES), where("companyId", "==", companyId))
+    : query(collection(db, ESTIMATES), where("companyId", "==", companyId), where("status", "!=", "draft")))
   const rows = snapshot.docs.map((d) => ({ ...(d.data() as object), id: d.id })) as Estimate[]
   return byNewest(includeDrafts ? rows : rows.filter((row) => isVisibleToClient(row.status)))
 }
@@ -387,12 +387,12 @@ export async function getEstimatesByClientId(clientId: string, includeDrafts = f
  * Unlike invoices/contracts, an estimate's public-read rule only allows an
  * unauthenticated reader through when shareEnabled is set (not just
  * non-draft) - so this is what the company's public page queries instead of
- * getEstimatesByClientId, matching that rule shape exactly.
+ * getEstimatesByCompanyId, matching that rule shape exactly.
  */
-export async function getSharedEstimatesByClientId(clientId: string): Promise<Estimate[]> {
-  if (!clientId) return []
+export async function getSharedEstimatesByCompanyId(companyId: string): Promise<Estimate[]> {
+  if (!companyId) return []
   const snapshot = await getDocs(
-    query(collection(db, ESTIMATES), where("clientId", "==", clientId), where("shareEnabled", "==", true)),
+    query(collection(db, ESTIMATES), where("companyId", "==", companyId), where("shareEnabled", "==", true)),
   )
   return byNewest(snapshot.docs.map((d) => ({ ...(d.data() as object), id: d.id })) as Estimate[])
 }

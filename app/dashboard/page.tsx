@@ -9,13 +9,13 @@ import { HomeBanner } from "@/components/dashboard/home-banner"
 import { HomeTaskList } from "@/components/dashboard/home-task-list"
 import { ProjectsView } from "@/components/dashboard/projects-view"
 import { TemplatesView } from "@/components/dashboard/templates-view"
-import { getProjectsByClientId, type Project } from "@/lib/projects"
-import { getTasksByClientId, seedDefaultTasks, tsToMillis, type Task } from "@/lib/tasks"
+import { getProjectsByCompanyId, type Project } from "@/lib/projects"
+import { getTasksByCompanyId, seedDefaultTasks, tsToMillis, type Task } from "@/lib/tasks"
 import { updateUser } from "@/lib/users"
 
 export default function DashboardPage() {
   const { user, appUser } = useAuth()
-  const clientId = appUser?.clientId ?? ""
+  const companyId = appUser?.companyId ?? ""
   const clientName = appUser?.company || appUser?.displayName || ""
   const uid = appUser?.uid
   const tasksSeeded = appUser?.tasksSeeded === true
@@ -27,7 +27,7 @@ export default function DashboardPage() {
   const seedingRef = useRef(false)
 
   const fetchData = useCallback(async () => {
-    if (!clientId) {
+    if (!companyId) {
       setLoading(false)
       return
     }
@@ -36,8 +36,8 @@ export default function DashboardPage() {
 
     try {
       const [nextProjects, nextTasks] = await Promise.all([
-        getProjectsByClientId(clientId),
-        getTasksByClientId(clientId),
+        getProjectsByCompanyId(companyId),
+        getTasksByCompanyId(companyId),
       ])
       setProjects(nextProjects)
 
@@ -46,7 +46,7 @@ export default function DashboardPage() {
       if (taskList.length === 0 && !tasksSeeded && uid && !seedingRef.current) {
         seedingRef.current = true
         taskList = await seedDefaultTasks(
-          clientId,
+          companyId,
           clientName,
           nextProjects[0] ? { id: nextProjects[0].id, title: nextProjects[0].title } : undefined,
         )
@@ -66,7 +66,7 @@ export default function DashboardPage() {
     } finally {
       setLoading(false)
     }
-  }, [clientId, clientName, uid, tasksSeeded])
+  }, [companyId, clientName, uid, tasksSeeded])
 
   useEffect(() => {
     void fetchData()
@@ -87,11 +87,11 @@ export default function DashboardPage() {
       ) : (
         <>
           <ProjectsView projects={projects} onChanged={fetchData} />
-          <TemplatesView clientId={clientId} clientName={clientName} onCreated={fetchData} />
+          <TemplatesView companyId={companyId} clientName={clientName} onCreated={fetchData} />
           <div className="mt-8 grid items-start gap-6 lg:grid-cols-2">
             <HomeTaskList
               tasks={tasks}
-              clientId={clientId}
+              companyId={companyId}
               clientName={clientName}
               onSaved={fetchData}
               className="mt-0"

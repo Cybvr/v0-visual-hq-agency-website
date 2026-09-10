@@ -4,7 +4,7 @@ import type { TaskStatus } from "./tasks"
 
 export interface PortalProject {
   id: string
-  clientId: string
+  companyId: string
   title: string
   status: ProjectStatus
   progress: number
@@ -16,7 +16,7 @@ export interface PortalProject {
 
 export interface PortalTask {
   id: string
-  clientId: string
+  companyId: string
   projectId: string
   name: string
   status: TaskStatus

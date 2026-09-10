@@ -5,7 +5,7 @@ export type ApprovalStatus = "approved" | "changes-requested"
 
 export type Approval = {
   deliverableId: string
-  clientId: string
+  companyId: string
   status: ApprovalStatus
   note: string
   byEmail: string

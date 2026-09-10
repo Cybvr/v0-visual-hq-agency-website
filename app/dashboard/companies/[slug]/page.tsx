@@ -21,6 +21,7 @@ export default function DashboardCompanyPage() {
     invoices,
     contracts,
     estimates,
+    documents,
     reload,
   } = useCompany()
 
@@ -54,6 +55,7 @@ export default function DashboardCompanyPage() {
       invoices={invoices}
       contracts={contracts}
       estimates={estimates}
+      documents={documents}
       admin={
         isAdmin
           ? {

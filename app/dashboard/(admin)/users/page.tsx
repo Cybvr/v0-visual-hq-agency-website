@@ -46,7 +46,7 @@ const USER_SORTS: SortOption<AppUser>[] = [
 ]
 
 function searchUser(u: AppUser) {
-  return [u.displayName, u.email, u.company, u.role, u.clientId]
+  return [u.displayName, u.email, u.company, u.role, u.companyId]
 }
 
 export default function UsersAdminPage() {

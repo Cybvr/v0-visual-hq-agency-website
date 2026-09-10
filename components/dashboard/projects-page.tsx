@@ -33,7 +33,7 @@ import { cn } from "@/lib/utils"
 
 const PROJECT_SORTS: SortOption<Project>[] = [
   { value: "title", label: "Project", get: (p) => p.title, ascLabel: "A–Z", descLabel: "Z–A" },
-  { value: "client", label: "Client", get: (p) => p.client || p.clientId, ascLabel: "A–Z", descLabel: "Z–A" },
+  { value: "client", label: "Client", get: (p) => p.client || p.companyId, ascLabel: "A–Z", descLabel: "Z–A" },
   {
     value: "status",
     label: "Status",
@@ -46,7 +46,7 @@ const PROJECT_SORTS: SortOption<Project>[] = [
 ]
 
 function searchProject(p: Project) {
-  return [p.title, p.client, p.clientId, p.service, projectStatusMeta[p.status]?.label]
+  return [p.title, p.client, p.companyId, p.service, projectStatusMeta[p.status]?.label]
 }
 
 /** Card / list switch for the projects grid. Cards are the default. */
@@ -166,7 +166,7 @@ export default function ProjectsAdminPage() {
                     <ProjectCard
                       project={p}
                       href={`/dashboard/projects/${projectSlug(p)}`}
-                      subtitle={p.client || p.clientId}
+                      subtitle={p.client || p.companyId}
                       footer={
                         <div className="flex flex-wrap items-center gap-1.5">
                           <span className={cn("rounded-full px-2 py-0.5 text-[11px] font-medium", meta.className)}>
@@ -228,7 +228,7 @@ export default function ProjectsAdminPage() {
                             )}
                           </div>
                         </TableCell>
-                        <TableCell className="text-muted-foreground">{p.client || p.clientId}</TableCell>
+                        <TableCell className="text-muted-foreground">{p.client || p.companyId}</TableCell>
                         <TableCell className="text-muted-foreground">{p.service || "—"}</TableCell>
                         <TableCell>
                           <span className={cn("rounded-full px-2 py-0.5 text-xs font-medium", meta.className)}>

@@ -1,11 +1,13 @@
 "use client"
 
 import { useEffect, useMemo, useState } from "react"
+import Link from "next/link"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { ArrowLeft, Plus, User as UserIcon } from "lucide-react"
 import { toast } from "sonner"
 
 import { CompanyDocuments, type CompanyDocumentKind } from "@/components/company/company-documents"
+import { CompanyDocumentView } from "@/components/dashboard/company-document-view"
 import { CompanyMedia } from "@/components/company/company-media"
 import { CompanySidebar, type CompanyDetailsPatch } from "@/components/company/company-sidebar"
 import { SectionNav } from "@/components/company/section-nav"
@@ -34,6 +36,7 @@ import { DropdownMenuItem } from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
 import type { Contract, Estimate, Invoice } from "@/lib/billing"
 import { getBusinessProfile, type BusinessProfile } from "@/lib/business-profile"
+import type { CompanyDocument } from "@/lib/company-documents"
 import { projectStatusMeta, type Project } from "@/lib/projects"
 import { deleteUser, type AppUser } from "@/lib/users"
 import { cn } from "@/lib/utils"
@@ -86,7 +89,7 @@ export interface CompanyPageAdmin {
 function personProject(person: CompanyPagePerson, company: CompanyPageCompany): Project {
   return {
     id: person.id,
-    clientId: company.id,
+    companyId: company.id,
     client: company.name,
     title: person.name,
     service: person.subtitle || "Team member",
@@ -109,6 +112,7 @@ export function CompanyPage({
   invoices,
   contracts,
   estimates,
+  documents = [],
   admin,
   emptyProjectsLabel = "No projects yet.",
 }: {
@@ -118,6 +122,7 @@ export function CompanyPage({
   invoices: Invoice[]
   contracts: Contract[]
   estimates: Estimate[]
+  documents?: CompanyDocument[]
   admin?: CompanyPageAdmin
   emptyProjectsLabel?: string
 }) {
@@ -133,8 +138,9 @@ export function CompanyPage({
     if (docKind === "invoice") return invoices.find((i) => i.id === docId) ? { kind: "invoice" as const, id: docId } : null
     if (docKind === "contract") return contracts.find((c) => c.id === docId) ? { kind: "contract" as const, id: docId } : null
     if (docKind === "estimate") return estimates.find((e) => e.id === docId) ? { kind: "estimate" as const, id: docId } : null
+    if (docKind === "document") return documents.find((d) => d.id === docId) ? { kind: "document" as const, id: docId } : null
     return null
-  }, [docKind, docId, invoices, contracts, estimates])
+  }, [docKind, docId, invoices, contracts, estimates, documents])
 
   const [selectedProject, setSelectedProject] = useState<Project | null>(null)
   const [addingPerson, setAddingPerson] = useState(false)
@@ -199,6 +205,16 @@ export function CompanyPage({
 
   return (
     <main className="mx-auto min-h-screen w-full max-w-7xl px-4 pb-16 pt-6 sm:px-6">
+      {admin && (
+        <Link
+          href="/dashboard/companies"
+          aria-label="Back to companies"
+          title="Back to companies"
+          className="mb-4 inline-flex size-8 items-center justify-center rounded-md text-muted-foreground outline-none transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          <ArrowLeft className="size-4" aria-hidden="true" />
+        </Link>
+      )}
       <div className="grid gap-6 lg:grid-cols-[300px_1fr]">
         <CompanySidebar
           company={{
@@ -349,7 +365,7 @@ export function CompanyPage({
                   project={selectedProject}
                   isAdmin={Boolean(admin)}
                   publicView={!admin}
-                  clientId={company.id}
+                  companyId={company.id}
                   clientName={company.name}
                   backLabel="Back to Projects"
                   onBack={() => setSelectedProject(null)}
@@ -459,7 +475,7 @@ export function CompanyPage({
                     </button>
                     {!admin && (
                       <DocumentActions
-                        title={`${company.name} ${selectedDocument.kind === "invoice" ? "Invoice" : selectedDocument.kind === "contract" ? "Contract" : "Estimate"}`}
+                        title={`${company.name} ${selectedDocument.kind === "invoice" ? "Invoice" : selectedDocument.kind === "contract" ? "Contract" : selectedDocument.kind === "estimate" ? "Estimate" : "Document"}`}
                       />
                     )}
                   </div>
@@ -481,12 +497,18 @@ export function CompanyPage({
                       issuer={issuer ?? undefined}
                     />
                   )}
+                  {selectedDocument.kind === "document" && (
+                    <CompanyDocumentView
+                      document={documents.find((d) => d.id === selectedDocument.id) as CompanyDocument}
+                    />
+                  )}
                 </div>
               ) : (
                 <CompanyDocuments
                   invoices={invoices}
                   contracts={contracts}
                   estimates={estimates}
+                  documents={documents}
                   onSelect={handleSelectDocument}
                 />
               )}
@@ -552,7 +574,7 @@ export function CompanyPage({
           <NewProjectDialog
             open={creatingProject}
             onOpenChange={setCreatingProject}
-            initialClientId={company.id}
+            initialCompanyId={company.id}
             onCreated={async (project) => {
               await admin.reload()
               updateParams({ tab: "projects", doc: null })

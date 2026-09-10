@@ -13,11 +13,11 @@ import { TemplateGallery, type TemplateCard } from "@/components/template-galler
  * the copy - clicking a card only opens it, it never creates anything.
  */
 export function TemplatesView({
-  clientId,
+  companyId,
   clientName,
   onCreated,
 }: {
-  clientId: string
+  companyId: string
   clientName: string
   onCreated: () => Promise<void>
 }) {
@@ -55,7 +55,7 @@ export function TemplatesView({
   }, [])
 
   async function handleUse(template: Project) {
-    if (!clientId) {
+    if (!companyId) {
       setError("This account is not connected to a workspace yet.")
       return
     }
@@ -63,7 +63,7 @@ export function TemplatesView({
     setApplying(template.id)
     setError(null)
     try {
-      await createProjectFromTemplate(template, clientId, clientName || "Client workspace")
+      await createProjectFromTemplate(template, companyId, clientName || "Client workspace")
       await onCreated()
     } catch (caughtError) {
       setError(caughtError instanceof Error ? caughtError.message : "The template could not be copied. Try again.")

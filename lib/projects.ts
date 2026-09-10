@@ -25,8 +25,8 @@ export type ProjectStatus = "in-progress" | "review" | "done" | "on-hold"
 
 export interface Project {
   id: string
-  /** Matches the clientId on a user's Firestore doc - which client owns this project */
-  clientId: string
+  /** Matches the companyId on a user's Firestore doc - which client owns this project */
+  companyId: string
   client: string
   title: string
   service: string
@@ -97,9 +97,9 @@ export async function getProjects(): Promise<Project[]> {
   return snapshot.docs.map((d) => ({ ...(d.data() as object), id: d.id })) as Project[]
 }
 
-export async function getProjectsByClientId(clientId: string): Promise<Project[]> {
-  if (!clientId) return []
-  const snapshot = await getDocs(query(collection(db, COLLECTION_NAME), where("clientId", "==", clientId)))
+export async function getProjectsByCompanyId(companyId: string): Promise<Project[]> {
+  if (!companyId) return []
+  const snapshot = await getDocs(query(collection(db, COLLECTION_NAME), where("companyId", "==", companyId)))
   return snapshot.docs.map((d) => ({ ...(d.data() as object), id: d.id })) as Project[]
 }
 
@@ -186,7 +186,7 @@ export async function deleteProject(id: string): Promise<void> {
  */
 export async function duplicateProject(project: Project): Promise<string> {
   const copyId = await createProject({
-    clientId: project.clientId,
+    companyId: project.companyId,
     client: project.client,
     title: `${project.title} copy`,
     service: project.service,
@@ -206,7 +206,7 @@ export async function duplicateProject(project: Project): Promise<string> {
   for (const task of tasks) {
     await createTask({
       name: task.name,
-      clientId: project.clientId,
+      companyId: project.companyId,
       client: project.client,
       projectId: copyId,
       project: `${project.title} copy`,
@@ -298,11 +298,11 @@ export async function unpublishTemplate(projectId: string): Promise<void> {
  */
 export async function createProjectFromTemplate(
   template: Project,
-  clientId: string,
+  companyId: string,
   clientName: string,
 ): Promise<string> {
   const projectId = await createProject({
-    clientId,
+    companyId,
     client: clientName,
     title: template.title,
     service: template.service,
@@ -312,7 +312,7 @@ export async function createProjectFromTemplate(
     // Titles repeat once several clients run the same template, and
     // getProjectBySlug looks across every project, so the copy stores a slug
     // scoped to its owner instead of deriving a colliding one from the title.
-    slug: `${slugify(template.title)}-${slugify(clientId)}`,
+    slug: `${slugify(template.title)}-${slugify(companyId)}`,
     thumbnailUrl: template.thumbnailUrl ?? "",
     summary: template.summary ?? "",
     tools: template.tools ?? [],
@@ -327,7 +327,7 @@ export async function createProjectFromTemplate(
   for (const step of steps) {
     await createTask({
       name: step.name,
-      clientId,
+      companyId,
       client: clientName,
       projectId,
       project: template.title,

@@ -31,7 +31,7 @@ export default function SharedDocumentPage() {
         setLoading(false)
         // The header is nice-to-have, so a failure here never hides the document.
         if (!visible) return
-        const [orgResult, profileResult] = await Promise.allSettled([getOrganization(visible.clientId), getBusinessProfile()])
+        const [orgResult, profileResult] = await Promise.allSettled([getOrganization(visible.companyId), getBusinessProfile()])
         if (!active) return
         if (orgResult.status === "fulfilled") setOrganization(orgResult.value)
         if (profileResult.status === "fulfilled") setIssuer(profileResult.value)
@@ -63,8 +63,8 @@ export default function SharedDocumentPage() {
 
   const companyName = organization?.name || record.client
   const coverProject: Project = {
-    id: record.clientId,
-    clientId: record.clientId,
+    id: record.companyId,
+    companyId: record.companyId,
     client: companyName,
     title: companyName,
     service: "",

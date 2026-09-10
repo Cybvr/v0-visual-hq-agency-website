@@ -46,7 +46,7 @@ export function ImportWordDocumentDialog({
   const [files, setFiles] = useState<File[]>([])
   const [title, setTitle] = useState("")
   const [kind, setKind] = useState<CompanyDocumentKind>("other")
-  const [clientId, setClientId] = useState("")
+  const [companyId, setCompanyId] = useState("")
   const [projectId, setProjectId] = useState("")
   const [clients, setClients] = useState<AppUser[]>([])
   const [projects, setProjects] = useState<Project[]>([])
@@ -63,8 +63,8 @@ export function ImportWordDocumentDialog({
         if (!active) return
         const seen = new Set<string>()
         setClients(userList.filter((user) => {
-          if (!user.clientId || seen.has(user.clientId)) return false
-          seen.add(user.clientId)
+          if (!user.companyId || seen.has(user.companyId)) return false
+          seen.add(user.companyId)
           return true
         }))
         setProjects(projectList)
@@ -79,24 +79,24 @@ export function ImportWordDocumentDialog({
     setFiles([])
     setTitle("")
     setKind("other")
-    setClientId("")
+    setCompanyId("")
     setProjectId("")
     setError(null)
   }, [open])
 
   const companyOptions: ComboboxOption[] = useMemo(
     () => clients.map((client) => ({
-      value: client.clientId as string,
-      label: client.company || client.displayName || client.email || (client.clientId as string),
+      value: client.companyId as string,
+      label: client.company || client.displayName || client.email || (client.companyId as string),
     })),
     [clients],
   )
 
   const projectOptions: ComboboxOption[] = useMemo(
     () => projects
-      .filter((project) => !clientId || project.clientId === clientId)
+      .filter((project) => !companyId || project.companyId === companyId)
       .map((project) => ({ value: project.id, label: project.title })),
-    [clientId, projects],
+    [companyId, projects],
   )
 
   function chooseFile(event: ChangeEvent<HTMLInputElement>) {
@@ -119,20 +119,20 @@ export function ImportWordDocumentDialog({
     if (files.length === 0) { setError("Choose one or more Word or Markdown files first."); return }
     const trimmedTitle = title.trim()
     if (files.length === 1 && !trimmedTitle) { setError("Give this document a title."); return }
-    if (!clientId) { setError("Choose which company this document is for."); return }
+    if (!companyId) { setError("Choose which company this document is for."); return }
 
     setImporting(true)
     setError(null)
     const createdIds: string[] = []
     try {
-      const client = clients.find((entry) => entry.clientId === clientId)
+      const client = clients.find((entry) => entry.companyId === companyId)
       const project = projects.find((entry) => entry.id === projectId)
       for (const file of files) {
         const body = await fileToHtml(file)
         if (!body) throw new Error(`empty-document:${file.name}`)
         const id = await createCompanyDocument({
           title: files.length === 1 ? trimmedTitle : fileTitle(file.name),
-          clientId,
+          companyId,
           client: client?.company || client?.displayName || "",
           projectId: projectId || "",
           project: project?.title || "",
@@ -200,10 +200,10 @@ export function ImportWordDocumentDialog({
               <Combobox
                 id="import-company"
                 options={companyOptions}
-                value={clientId}
+                value={companyId}
                 onChange={(next) => {
-                  setClientId(next)
-                  setProjectId((current) => projects.find((project) => project.id === current)?.clientId === next ? current : "")
+                  setCompanyId(next)
+                  setProjectId((current) => projects.find((project) => project.id === current)?.companyId === next ? current : "")
                 }}
                 loading={optionsLoading}
                 placeholder="Choose a company"
@@ -219,9 +219,9 @@ export function ImportWordDocumentDialog({
               options={projectOptions}
               value={projectId}
               onChange={setProjectId}
-              disabled={!clientId}
+              disabled={!companyId}
               loading={optionsLoading}
-              placeholder={clientId ? "Not tied to a project" : "Choose a company first"}
+              placeholder={companyId ? "Not tied to a project" : "Choose a company first"}
               searchPlaceholder="Search projects..."
               emptyText="No project found."
             />

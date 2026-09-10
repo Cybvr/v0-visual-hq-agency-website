@@ -32,7 +32,7 @@ export interface TemplateSeed {
 }
 
 /** Templates belong to VisualHQ, not to a client, so no client dashboard shows them. */
-export const TEMPLATE_OWNER_CLIENT_ID = "visualhq"
+export const TEMPLATE_OWNER_COMPANY_ID = "visualhq"
 export const TEMPLATE_OWNER_CLIENT_NAME = "VisualHQ"
 
 export const TEMPLATE_SEEDS: TemplateSeed[] = [
@@ -153,7 +153,7 @@ export function templateSeedSlug(seed: TemplateSeed): string {
 export async function publishTemplateSeed(seed: TemplateSeed): Promise<{ created: boolean; steps: number }> {
   const slug = templateSeedSlug(seed)
   const payload: Omit<Project, "id" | "createdAt" | "updatedAt"> = {
-    clientId: TEMPLATE_OWNER_CLIENT_ID,
+    companyId: TEMPLATE_OWNER_COMPANY_ID,
     client: TEMPLATE_OWNER_CLIENT_NAME,
     title: seed.title,
     service: "Workflow",
@@ -190,7 +190,7 @@ export async function publishTemplateSeed(seed: TemplateSeed): Promise<{ created
   for (const step of seed.steps) {
     await createTask({
       name: step,
-      clientId: TEMPLATE_OWNER_CLIENT_ID,
+      companyId: TEMPLATE_OWNER_COMPANY_ID,
       client: TEMPLATE_OWNER_CLIENT_NAME,
       projectId,
       project: seed.title,

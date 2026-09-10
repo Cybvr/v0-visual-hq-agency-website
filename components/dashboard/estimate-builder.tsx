@@ -149,7 +149,7 @@ export function EstimateBuilder({ estimate }: { estimate?: Estimate | null }) {
 
   const [estimateNumber, setEstimateNumber] = useState(estimate?.estimateNumber ?? "")
   const [title, setTitle] = useState(estimate?.title ?? "")
-  const [clientId, setClientId] = useState(estimate?.clientId ?? "")
+  const [companyId, setCompanyId] = useState(estimate?.companyId ?? "")
   const [projectId, setProjectId] = useState(estimate?.projectId ?? "")
   const [status, setStatus] = useState<EstimateStatus>(estimate?.status ?? "draft")
   const [currency, setCurrency] = useState(estimate?.currency || "NGN")
@@ -193,13 +193,13 @@ export function EstimateBuilder({ estimate }: { estimate?: Estimate | null }) {
       .then(([userList, projectList]) => {
         if (!active) return
         // Several people can share a workspace, so this is narrowed to one
-        // entry per clientId - otherwise the same company lists twice (and
-        // the duplicate clientId shows up as a duplicate React key).
+        // entry per companyId - otherwise the same company lists twice (and
+        // the duplicate companyId shows up as a duplicate React key).
         const seenWorkspaces = new Set<string>()
         setClients(
           userList.filter((user) => {
-            if (!user.clientId || seenWorkspaces.has(user.clientId)) return false
-            seenWorkspaces.add(user.clientId)
+            if (!user.companyId || seenWorkspaces.has(user.companyId)) return false
+            seenWorkspaces.add(user.companyId)
             return true
           }),
         )
@@ -222,13 +222,13 @@ export function EstimateBuilder({ estimate }: { estimate?: Estimate | null }) {
   )
 
   function selectClient(value: string) {
-    setClientId(value)
-    const client = clients.find((entry) => entry.clientId === value)
+    setCompanyId(value)
+    const client = clients.find((entry) => entry.companyId === value)
     if (client && !preparedForName.trim()) {
       setPreparedForName(client.company || client.displayName || "")
       setPreparedForEmail(client.email || "")
     }
-    if (projectId && projects.find((project) => project.id === projectId)?.clientId !== value) setProjectId("")
+    if (projectId && projects.find((project) => project.id === projectId)?.companyId !== value) setProjectId("")
   }
 
   function updateLine(id: string, patch: Partial<EditableLine>) {
@@ -249,7 +249,7 @@ export function EstimateBuilder({ estimate }: { estimate?: Estimate | null }) {
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (saving) return
-    if (!clientId) return setError("Choose which client this estimate is for.")
+    if (!companyId) return setError("Choose which client this estimate is for.")
     if (!title.trim()) return setError("Give this estimate a title.")
     if (!preparedForName.trim()) return setError("Enter who this estimate is prepared for.")
 
@@ -259,7 +259,7 @@ export function EstimateBuilder({ estimate }: { estimate?: Estimate | null }) {
     setSaving(true)
     setError(null)
     try {
-      const client = clients.find((entry) => entry.clientId === clientId)
+      const client = clients.find((entry) => entry.companyId === companyId)
       const project = projects.find((entry) => entry.id === projectId)
       const lineItems: EstimateLineItem[] = usefulLines.map((line) => ({
         id: line.id,
@@ -272,7 +272,7 @@ export function EstimateBuilder({ estimate }: { estimate?: Estimate | null }) {
       const payload = {
         estimateNumber: estimateNumber.trim() || (await nextEstimateNumber()),
         title: title.trim(),
-        clientId,
+        companyId,
         client: client?.company || client?.displayName || preparedForName.trim(),
         projectId: projectId || "",
         project: project?.title || "",
@@ -366,10 +366,10 @@ export function EstimateBuilder({ estimate }: { estimate?: Estimate | null }) {
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
                 <Label htmlFor="estimate-client">Client</Label>
-                <Select value={clientId} onValueChange={selectClient}>
+                <Select value={companyId} onValueChange={selectClient}>
                   <SelectTrigger id="estimate-client" className="mt-1"><SelectValue placeholder={optionsLoading ? "Loading…" : "Choose a client"} /></SelectTrigger>
                   <SelectContent>
-                    {clients.map((client) => <SelectItem key={client.uid} value={client.clientId as string}>{client.company || client.displayName || client.email}</SelectItem>)}
+                    {clients.map((client) => <SelectItem key={client.uid} value={client.companyId as string}>{client.company || client.displayName || client.email}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
@@ -380,7 +380,7 @@ export function EstimateBuilder({ estimate }: { estimate?: Estimate | null }) {
                     <SelectValue className="min-w-0 flex-1 truncate" placeholder="Not tied to a project" />
                   </SelectTrigger>
                   <SelectContent>
-                    {projects.filter((project) => !clientId || project.clientId === clientId).map((project) => <SelectItem key={project.id} value={project.id}>{project.title}</SelectItem>)}
+                    {projects.filter((project) => !companyId || project.companyId === companyId).map((project) => <SelectItem key={project.id} value={project.id}>{project.title}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>

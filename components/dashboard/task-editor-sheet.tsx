@@ -14,7 +14,7 @@ import type { Task, TaskStatus } from "@/lib/tasks"
 export function TaskEditorSheet({
   open,
   task,
-  clientId,
+  companyId,
   clientName,
   defaults,
   onClose,
@@ -22,7 +22,7 @@ export function TaskEditorSheet({
 }: {
   open: boolean
   task?: Task | null
-  clientId: string
+  companyId: string
   clientName: string
   defaults?: { status?: TaskStatus }
   onClose: () => void
@@ -47,7 +47,7 @@ export function TaskEditorSheet({
             <TaskForm
               key={task?.id ?? `new-${defaults?.status ?? "todo"}`}
               task={task}
-              fixedClient={{ clientId, clientName }}
+              fixedClient={{ companyId, clientName }}
               defaults={defaults}
               onSaved={() => {
                 onClose()
@@ -58,7 +58,7 @@ export function TaskEditorSheet({
           )}
 
           {/* Only an existing task has an id to hang a thread off. */}
-          {open && task && <TaskComments taskId={task.id} clientId={task.clientId || clientId} />}
+          {open && task && <TaskComments taskId={task.id} companyId={task.companyId || companyId} />}
         </div>
       </SheetContent>
     </Sheet>

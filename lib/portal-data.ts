@@ -4,19 +4,19 @@ import type { PortalProject, PortalTask } from "./portal-model"
 import { getProject, type Project } from "./projects"
 import type { Task } from "./tasks"
 
-export async function getPortalProjects(clientId: string): Promise<PortalProject[]> {
-  const snapshot = await getDocs(query(collection(db, "portalProjects"), where("clientId", "==", clientId)))
+export async function getPortalProjects(companyId: string): Promise<PortalProject[]> {
+  const snapshot = await getDocs(query(collection(db, "portalProjects"), where("companyId", "==", companyId)))
   return snapshot.docs.map(d => ({ ...d.data(), id: d.id }) as PortalProject)
 }
 
-export async function getPortalTasks(clientId: string, projectId: string): Promise<PortalTask[]> {
-  const snapshot = await getDocs(query(collection(db, "portalTasks"), where("clientId", "==", clientId), where("projectId", "==", projectId)))
+export async function getPortalTasks(companyId: string, projectId: string): Promise<PortalTask[]> {
+  const snapshot = await getDocs(query(collection(db, "portalTasks"), where("companyId", "==", companyId), where("projectId", "==", projectId)))
   return snapshot.docs.map(d => ({ ...d.data(), id: d.id }) as PortalTask)
 }
 
 /** Explicit allowlist: internal descriptions, earnings and task bodies never travel. */
 export function projectForPortal(project: Project, summary: string): Omit<PortalProject, "id"> {
-  return { clientId: project.clientId, title: project.title, status: project.status, progress: project.progress, dueDate: project.dueDate || "", thumbnailUrl: project.thumbnailUrl || "", summary, legacySlug: project.slug || project.title.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") }
+  return { companyId: project.companyId, title: project.title, status: project.status, progress: project.progress, dueDate: project.dueDate || "", thumbnailUrl: project.thumbnailUrl || "", summary, legacySlug: project.slug || project.title.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") }
 }
 
 export async function publishPortalProject(project: Project, summary: string) {
@@ -29,7 +29,7 @@ export async function unpublishPortalProject(projectId: string) {
 }
 
 export async function publishPortalTask(task: Task, instructions: string, assigneeUid: string) {
-  const data: Omit<PortalTask, "id"> = { clientId: task.clientId, projectId: task.projectId, name: task.name, status: task.status, dueDate: task.dueDate || "", instructions, assigneeUid }
+  const data: Omit<PortalTask, "id"> = { companyId: task.companyId, projectId: task.projectId, name: task.name, status: task.status, dueDate: task.dueDate || "", instructions, assigneeUid }
   await writeBatch(db).set(doc(db, "portalTasks", task.id), data).commit()
 }
 
@@ -46,7 +46,7 @@ export async function unpublishPortalTask(id: string) {
  * dialog are preserved.
  */
 export async function ensureTaskShared(task: Task) {
-  if (!task.clientId || !task.projectId) return
+  if (!task.companyId || !task.projectId) return
 
   const projectRef = doc(db, "portalProjects", task.projectId)
   const taskRef = doc(db, "portalTasks", task.id)
@@ -57,7 +57,7 @@ export async function ensureTaskShared(task: Task) {
     if (project) await writeBatch(db).set(projectRef, projectForPortal(project, "")).commit()
   }
 
-  const safe = { clientId: task.clientId, projectId: task.projectId, name: task.name, status: task.status, dueDate: task.dueDate || "" }
+  const safe = { companyId: task.companyId, projectId: task.projectId, name: task.name, status: task.status, dueDate: task.dueDate || "" }
   if (taskSnap.exists()) {
     await writeBatch(db).update(taskRef, safe).commit()
   } else {
@@ -79,7 +79,7 @@ export async function syncPortalProject(id: string, patch: Partial<Project>) {
   const existing = await getDoc(ref)
   const batch = writeBatch(db).update(doc(db, "projects", id), { ...patch, updatedAt: serverTimestamp() })
   if (!existing.exists()) { await batch.commit(); return }
-  if (patch.clientId && patch.clientId !== existing.data().clientId) { await batch.delete(ref).commit(); return }
+  if (patch.companyId && patch.companyId !== existing.data().companyId) { await batch.delete(ref).commit(); return }
   const safe: Record<string, string | number> = {}
   for (const key of ["title", "status", "progress", "dueDate", "thumbnailUrl"] as const) { const value = patch[key]; if (value !== undefined) safe[key] = value }
   if (Object.keys(safe).length) batch.update(ref, safe)
@@ -91,7 +91,7 @@ export async function syncPortalTask(id: string, patch: Partial<Task>) {
   const existing = await getDoc(ref)
   const batch = writeBatch(db).update(doc(db, "tasks", id), { ...patch, updatedAt: serverTimestamp() })
   if (!existing.exists()) { await batch.commit(); return }
-  if ((patch.clientId && patch.clientId !== existing.data().clientId) || (patch.projectId && patch.projectId !== existing.data().projectId)) {
+  if ((patch.companyId && patch.companyId !== existing.data().companyId) || (patch.projectId && patch.projectId !== existing.data().projectId)) {
     await batch.delete(ref).commit()
     return
   }

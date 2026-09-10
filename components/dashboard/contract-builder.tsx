@@ -36,7 +36,7 @@ export function ContractBuilder({ contract }: { contract?: Contract | null }) {
   const isEdit = Boolean(contract)
 
   const [title, setTitle] = useState(contract?.title ?? "")
-  const [clientId, setClientId] = useState(contract?.clientId ?? "")
+  const [companyId, setCompanyId] = useState(contract?.companyId ?? "")
   const [projectId, setProjectId] = useState(contract?.projectId ?? "")
   const [status, setStatus] = useState<ContractStatus>(contract?.status ?? "draft")
   const [startsOn, setStartsOn] = useState(contract?.startsOn ?? "")
@@ -64,13 +64,13 @@ export function ContractBuilder({ contract }: { contract?: Contract | null }) {
       .then(([userList, projectList]) => {
         if (!active) return
         // Several people can share a workspace, so this is narrowed to one
-        // entry per clientId - otherwise the same company lists twice (and
-        // the duplicate clientId shows up as a duplicate React key).
+        // entry per companyId - otherwise the same company lists twice (and
+        // the duplicate companyId shows up as a duplicate React key).
         const seenWorkspaces = new Set<string>()
         setClients(
           userList.filter((user) => {
-            if (!user.clientId || seenWorkspaces.has(user.clientId)) return false
-            seenWorkspaces.add(user.clientId)
+            if (!user.companyId || seenWorkspaces.has(user.companyId)) return false
+            seenWorkspaces.add(user.companyId)
             return true
           }),
         )
@@ -96,7 +96,7 @@ export function ContractBuilder({ contract }: { contract?: Contract | null }) {
       setError("Give this contract a title.")
       return
     }
-    if (!clientId) {
+    if (!companyId) {
       setError("Choose which client this contract is for.")
       return
     }
@@ -116,12 +116,12 @@ export function ContractBuilder({ contract }: { contract?: Contract | null }) {
     setSaving(true)
     setError(null)
     try {
-      const client = clients.find((entry) => entry.clientId === clientId)
+      const client = clients.find((entry) => entry.companyId === companyId)
       const project = projects.find((entry) => entry.id === projectId)
 
       const payload = {
         title: trimmedTitle,
-        clientId,
+        companyId,
         client: client?.company || client?.displayName || "",
         projectId: projectId || "",
         project: project?.title || "",
@@ -199,13 +199,13 @@ export function ContractBuilder({ contract }: { contract?: Contract | null }) {
             </div>
             <div>
               <Label htmlFor="client">Client</Label>
-              <Select value={clientId} onValueChange={setClientId}>
+              <Select value={companyId} onValueChange={setCompanyId}>
                 <SelectTrigger id="client" className="mt-1">
                   <SelectValue placeholder={optionsLoading ? "Loading..." : "Choose a client"} />
                 </SelectTrigger>
                 <SelectContent>
                   {clients.map((client) => (
-                    <SelectItem key={client.uid} value={client.clientId as string}>
+                    <SelectItem key={client.uid} value={client.companyId as string}>
                       {client.company || client.displayName || client.email}
                     </SelectItem>
                   ))}
@@ -220,7 +220,7 @@ export function ContractBuilder({ contract }: { contract?: Contract | null }) {
                 </SelectTrigger>
                 <SelectContent>
                   {projects
-                    .filter((project) => !clientId || project.clientId === clientId)
+                    .filter((project) => !companyId || project.companyId === companyId)
                     .map((project) => (
                       <SelectItem key={project.id} value={project.id}>
                         {project.title}

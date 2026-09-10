@@ -35,7 +35,7 @@ import {
   deleteContract,
   formatDate,
   getContracts,
-  getContractsByClientId,
+  getContractsByCompanyId,
   type Contract,
 } from "@/lib/billing"
 import { FilterBar, useFilterBar, type SortOption } from "@/components/dashboard/filter-bar"
@@ -51,7 +51,7 @@ const CONTRACT_SORTS: SortOption<Contract>[] = [
     descLabel: "Newest",
   },
   { value: "title", label: "Title", get: (c) => c.title, ascLabel: "A–Z", descLabel: "Z–A" },
-  { value: "client", label: "Client", get: (c) => c.client || c.clientId, ascLabel: "A–Z", descLabel: "Z–A" },
+  { value: "client", label: "Client", get: (c) => c.client || c.companyId, ascLabel: "A–Z", descLabel: "Z–A" },
   { value: "startsOn", label: "Start date", get: (c) => c.startsOn, ascLabel: "Oldest", descLabel: "Newest" },
   { value: "endsOn", label: "End date", get: (c) => c.endsOn, ascLabel: "Soonest", descLabel: "Latest" },
   {
@@ -64,13 +64,13 @@ const CONTRACT_SORTS: SortOption<Contract>[] = [
 ]
 
 function searchContract(c: Contract) {
-  return [c.title, c.client, c.clientId, c.project, contractStatusMeta[c.status]?.label]
+  return [c.title, c.client, c.companyId, c.project, contractStatusMeta[c.status]?.label]
 }
 
 export default function ContractsPage() {
   const router = useRouter()
   const { user, appUser, isAdmin, isImpersonating } = useAuth()
-  const clientId = appUser?.clientId ?? ""
+  const companyId = appUser?.companyId ?? ""
   const adminView = isAdmin && !isImpersonating
 
   const [contracts, setContracts] = useState<Contract[]>([])
@@ -85,14 +85,14 @@ export default function ContractsPage() {
   const fetchData = useCallback(async () => {
     setError(false)
     try {
-      setContracts(adminView ? await getContracts() : await getContractsByClientId(clientId))
+      setContracts(adminView ? await getContracts() : await getContractsByCompanyId(companyId))
     } catch (err) {
       console.error("Error loading contracts:", err)
       setError(true)
     } finally {
       setLoading(false)
     }
-  }, [adminView, clientId])
+  }, [adminView, companyId])
 
   useEffect(() => {
     fetchData()
@@ -109,7 +109,7 @@ export default function ContractsPage() {
         status: "draft",
         signedOn: "",
         shareEnabled: false,
-        clientId: selection.clientId,
+        companyId: selection.companyId,
         client: selection.client || duplicateTarget.client,
         projectId: selection.projectId,
         project: selection.project,
@@ -240,10 +240,10 @@ export default function ContractsPage() {
                         </TableCell>
                         {adminView && (
                           <TableCell>
-                            {contract.clientId ? (
+                            {contract.companyId ? (
                               <button
                                 type="button"
-                                onClick={() => setClientSheet(contract.clientId)}
+                                onClick={() => setClientSheet(contract.companyId)}
                                 className="rounded-sm text-left outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring"
                               >
                                 {contract.client || "Client"}
@@ -364,7 +364,7 @@ export default function ContractsPage() {
             onOpenChange={(open) => !open && setDuplicateTarget(null)}
             title={`Duplicate ${duplicateTarget?.title ?? "contract"}`}
             description="Choose which client and project the copy belongs to."
-            defaultClientId={duplicateTarget?.clientId ?? ""}
+            defaultCompanyId={duplicateTarget?.companyId ?? ""}
             defaultProjectId={duplicateTarget?.projectId}
             submitting={duplicating}
             onConfirm={confirmDuplicateContract}
@@ -375,7 +375,7 @@ export default function ContractsPage() {
       {adminView && (
         <UserEditorSheet
           open={clientSheet !== null}
-          clientId={clientSheet ?? ""}
+          companyId={clientSheet ?? ""}
           onClose={() => setClientSheet(null)}
           onSaved={() => setClientSheet(null)}
         />

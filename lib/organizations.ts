@@ -4,11 +4,11 @@ import { slugify } from "./projects"
 
 /**
  * The company a user belongs to: the actual tenant that owns projects,
- * invoices, contracts, and documents. Its id is the same `clientId` those
+ * invoices, contracts, and documents. Its id is the same `companyId` those
  * collections already key off, so nothing about them changes.
  */
 export interface Organization {
-  /** Firestore document id === the clientId used across projects/invoices/tasks. */
+  /** Firestore document id === the companyId used across projects/invoices/tasks. */
   id: string
   name: string
   /** Marks the agency's own organization, used as the issuer on financial documents. */

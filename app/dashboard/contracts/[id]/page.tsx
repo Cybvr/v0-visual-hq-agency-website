@@ -32,7 +32,7 @@ export default function ContractDetailPage() {
           return
         }
         const adminView = isAdmin && !isImpersonating
-        const visible = adminView || (record.clientId === appUser.clientId && record.status !== "draft")
+        const visible = adminView || (record.companyId === appUser.companyId && record.status !== "draft")
         setContract(visible ? record : null)
       })
       .catch((error) => {

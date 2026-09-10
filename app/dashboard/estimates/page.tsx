@@ -30,7 +30,7 @@ import {
   formatDate,
   formatMoney,
   getEstimates,
-  getEstimatesByClientId,
+  getEstimatesByCompanyId,
   nextEstimateNumber,
   type Estimate,
 } from "@/lib/billing"
@@ -40,20 +40,20 @@ import { cn } from "@/lib/utils"
 const ESTIMATE_SORTS: SortOption<Estimate>[] = [
   { value: "createdAt", label: "Date created", get: (estimate) => tsToMillis(estimate.createdAt), ascLabel: "Oldest", descLabel: "Newest" },
   { value: "estimateNumber", label: "Estimate no.", get: (estimate) => estimate.estimateNumber, ascLabel: "A–Z", descLabel: "Z–A" },
-  { value: "client", label: "Client", get: (estimate) => estimate.client || estimate.clientId, ascLabel: "A–Z", descLabel: "Z–A" },
+  { value: "client", label: "Client", get: (estimate) => estimate.client || estimate.companyId, ascLabel: "A–Z", descLabel: "Z–A" },
   { value: "amount", label: "Amount", get: (estimate) => estimate.amount, ascLabel: "Lowest", descLabel: "Highest" },
   { value: "validUntil", label: "Valid until", get: (estimate) => estimate.validUntil, ascLabel: "Soonest", descLabel: "Latest" },
   { value: "status", label: "Status", get: (estimate) => estimateStatusMeta[estimate.status]?.label ?? estimate.status, ascLabel: "A–Z", descLabel: "Z–A" },
 ]
 
 function searchEstimate(estimate: Estimate) {
-  return [estimate.estimateNumber, estimate.title, estimate.client, estimate.clientId, estimate.project, estimateStatusMeta[estimate.status]?.label]
+  return [estimate.estimateNumber, estimate.title, estimate.client, estimate.companyId, estimate.project, estimateStatusMeta[estimate.status]?.label]
 }
 
 export default function EstimatesPage() {
   const router = useRouter()
   const { user, appUser, isAdmin, isImpersonating } = useAuth()
-  const clientId = appUser?.clientId ?? ""
+  const companyId = appUser?.companyId ?? ""
   const adminView = isAdmin && !isImpersonating
   const [estimates, setEstimates] = useState<Estimate[]>([])
   const [loading, setLoading] = useState(true)
@@ -67,14 +67,14 @@ export default function EstimatesPage() {
   const fetchData = useCallback(async () => {
     setError(false)
     try {
-      setEstimates(adminView ? await getEstimates() : await getEstimatesByClientId(clientId))
+      setEstimates(adminView ? await getEstimates() : await getEstimatesByCompanyId(companyId))
     } catch (loadError) {
       console.error("Error loading estimates:", loadError)
       setError(true)
     } finally {
       setLoading(false)
     }
-  }, [adminView, clientId])
+  }, [adminView, companyId])
 
   useEffect(() => {
     void fetchData()
@@ -91,7 +91,7 @@ export default function EstimatesPage() {
         estimateNumber,
         status: "draft",
         shareEnabled: false,
-        clientId: selection.clientId,
+        companyId: selection.companyId,
         client: selection.client || duplicateTarget.client,
         projectId: selection.projectId,
         project: selection.project,
@@ -184,7 +184,7 @@ export default function EstimatesPage() {
                       <TableRow key={estimate.id}>
                         <TableCell className="font-medium"><Link href={`/dashboard/estimates/${estimate.id}`} className="rounded-sm outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring">{estimate.estimateNumber}</Link></TableCell>
                         <TableCell>{estimate.title}</TableCell>
-                        {adminView && <TableCell>{estimate.clientId ? <button type="button" onClick={() => setClientSheet(estimate.clientId)} className="rounded-sm text-left outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring">{estimate.client || "Client"}</button> : "—"}</TableCell>}
+                        {adminView && <TableCell>{estimate.companyId ? <button type="button" onClick={() => setClientSheet(estimate.companyId)} className="rounded-sm text-left outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring">{estimate.client || "Client"}</button> : "—"}</TableCell>}
                         <TableCell>{formatMoney(estimate.amount, estimate.currency)}</TableCell>
                         <TableCell>{formatDate(estimate.validUntil)}</TableCell>
                         <TableCell><span className={cn("inline-flex rounded-full px-2 py-0.5 text-xs font-medium", meta.className)}>{meta.label}</span></TableCell>
@@ -221,14 +221,14 @@ export default function EstimatesPage() {
           onOpenChange={(open) => !open && setDuplicateTarget(null)}
           title={`Duplicate ${duplicateTarget?.estimateNumber ?? "estimate"}`}
           description="Choose which client and project the copy belongs to."
-          defaultClientId={duplicateTarget?.clientId ?? ""}
+          defaultCompanyId={duplicateTarget?.companyId ?? ""}
           defaultProjectId={duplicateTarget?.projectId}
           submitting={duplicating}
           onConfirm={confirmDuplicateEstimate}
         />
       )}
 
-      {adminView && <UserEditorSheet open={clientSheet !== null} clientId={clientSheet ?? ""} onClose={() => setClientSheet(null)} onSaved={() => setClientSheet(null)} />}
+      {adminView && <UserEditorSheet open={clientSheet !== null} companyId={clientSheet ?? ""} onClose={() => setClientSheet(null)} onSaved={() => setClientSheet(null)} />}
     </main>
   )
 }

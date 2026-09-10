@@ -63,7 +63,7 @@ const TASK_SORTS: SortOption<Task>[] = [
     descLabel: "Newest",
   },
   { value: "name", label: "Task", get: (t) => t.name, ascLabel: "A–Z", descLabel: "Z–A" },
-  { value: "client", label: "Client", get: (t) => t.client || t.clientId, ascLabel: "A–Z", descLabel: "Z–A" },
+  { value: "client", label: "Client", get: (t) => t.client || t.companyId, ascLabel: "A–Z", descLabel: "Z–A" },
   { value: "project", label: "Project", get: (t) => t.project, ascLabel: "A–Z", descLabel: "Z–A" },
   { value: "status", label: "Status", get: (t) => STATUS_RANK[t.status] ?? 0, ascLabel: "To do first", descLabel: "Done first" },
   {
@@ -77,7 +77,7 @@ const TASK_SORTS: SortOption<Task>[] = [
 ]
 
 function searchTask(t: Task) {
-  return [t.name, t.client, t.clientId, t.project, taskStatusMeta[t.status]?.label, taskPriorityMeta[t.priority]?.label]
+  return [t.name, t.client, t.companyId, t.project, taskStatusMeta[t.status]?.label, taskPriorityMeta[t.priority]?.label]
 }
 
 export default function TasksAdminPage() {
@@ -198,11 +198,11 @@ export default function TasksAdminPage() {
                       <TableCell className="font-medium">
                         <InlineText value={t.name} onCommit={(name) => handlePatch(t.id, { name })} />
                       </TableCell>
-                      <TableCell className="text-muted-foreground">{t.client || t.clientId || "—"}</TableCell>
+                      <TableCell className="text-muted-foreground">{t.client || t.companyId || "—"}</TableCell>
                       <TableCell>
                         <InlineProject
                           projectId={t.projectId}
-                          projects={projects.filter((p) => p.clientId === t.clientId)}
+                          projects={projects.filter((p) => p.companyId === t.companyId)}
                           onChange={(p) => handlePatch(t.id, { projectId: p.id, project: p.title })}
                         />
                       </TableCell>
