@@ -1,12 +1,35 @@
 "use client"
 
-import { useState, type ReactNode } from "react"
+import { useState, type ComponentType, type ReactNode } from "react"
 import Link from "next/link"
 import { useParams, usePathname, useRouter, useSearchParams } from "next/navigation"
-import { ArrowLeft, ArrowUpRight, CalendarDays, Check, ChevronRight, FileText, FolderOpen, MessageSquare, Receipt } from "lucide-react"
+import { ArrowLeft, ArrowUpRight, CalendarDays, Check, ChevronRight, ChevronsUpDown, FileText, FolderOpen, ImageIcon, LayoutDashboard, ListTodo, LogOut, MessageSquare, Receipt, Settings, Users } from "lucide-react"
 import { useAuth } from "@/components/auth-provider"
 import { DOC_BADGE, DocTile } from "@/components/company/document-tile"
-import { Button } from "@/components/ui/button"
+import { Separator } from "@/components/ui/separator"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarGroup,
+  SidebarHeader,
+  SidebarInset,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarProvider,
+  SidebarRail,
+  SidebarTrigger,
+  useSidebar,
+} from "@/components/ui/sidebar"
 import { formatMoney, type Contract, type Estimate, type Invoice } from "@/lib/billing"
 import { companyDocumentKindMeta, type CompanyDocument } from "@/lib/company-documents"
 import { projectStatusMeta } from "@/lib/projects"
@@ -23,6 +46,17 @@ import { usePortal, type PortalData } from "./portal-provider"
 import { PortalNotice } from "./portal-shell"
 import { PortalTaskFeedback } from "./portal-task-feedback"
 
+const TAB_ICONS: Record<string, ComponentType<{ className?: string }>> = {
+  overview: LayoutDashboard,
+  projects: FolderOpen,
+  contacts: Users,
+  tasks: ListTodo,
+  documents: FileText,
+  media: ImageIcon,
+}
+
+const COMPANY_TABS = ["overview", "projects", "contacts", "tasks", "documents", "media"]
+
 function shortDate(value: string) {
   if (!value) return ""
   const date = new Date(value.includes("T") ? value : `${value}T12:00:00`)
@@ -30,7 +64,7 @@ function shortDate(value: string) {
 }
 
 function Panel({ title, count, action, children }: { title: string; count?: number; action?: ReactNode; children: ReactNode }) {
-  return <section className="rounded-2xl border border-border bg-background p-5 sm:p-6"><div className="mb-5 flex flex-wrap items-center justify-between gap-3"><h2 className="flex items-center gap-2 text-sm font-semibold">{title}{count !== undefined && <span className="font-normal tabular-nums text-muted-foreground">{count}</span>}</h2>{action}</div>{children}</section>
+  return <section><div className="mb-5 flex flex-wrap items-center justify-between gap-3"><h2 className="flex items-center gap-2 text-sm font-semibold">{title}{count !== undefined && <span className="font-normal tabular-nums text-muted-foreground">{count}</span>}</h2>{action}</div>{children}</section>
 }
 
 function Empty({ children }: { children: ReactNode }) { return <p className="py-4 text-sm leading-6 text-muted-foreground">{children}</p> }
@@ -143,6 +177,92 @@ function BillingDocuments({ company, invoices, contracts, estimates }: { company
   return <Panel title="Billing documents" count={rows.length}>{rows.length ? <ul className="divide-y divide-border">{rows.map(row => <li key={`${row.kind}:${row.id}`}><Link href={portalDocumentPath(company, row.kind, row.id)} className="flex items-center gap-3 rounded-md py-4 hover:bg-muted/40 focus-visible:outline focus-visible:outline-2"><FileText className="size-4 shrink-0 text-muted-foreground" /><div className="min-w-0 flex-1"><p className="break-words text-sm font-medium">{row.title}</p><p className="mt-1 text-xs capitalize text-muted-foreground">{row.status} · {row.detail}</p></div><ChevronRight className="size-4 shrink-0" /></Link></li>)}</ul> : <Empty>Issued invoices, estimates and contracts will appear here.</Empty>}</Panel>
 }
 
+/** Footer account chip, styled like the dashboard's NavUser but with portal-only actions. */
+function PortalNavUser() {
+  const { isMobile } = useSidebar()
+  const { user, appUser, isAdmin, isImpersonating, signOut, stopViewingAs } = useAuth()
+  const router = useRouter()
+  const { companySlug } = useParams<{ companySlug: string }>()
+  const name = appUser?.displayName || appUser?.company || user?.displayName || "Account"
+  const email = appUser?.email || user?.email || ""
+  const photoURL = appUser?.photoURL || user?.photoURL
+  const initials = name.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase() || "U"
+  return (
+    <SidebarMenu>
+      <SidebarMenuItem>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <SidebarMenuButton size="lg" className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground">
+              <Avatar className="h-8 w-8 rounded-lg">{photoURL && <AvatarImage src={photoURL} alt={name} referrerPolicy="no-referrer" />}<AvatarFallback className="rounded-lg">{initials}</AvatarFallback></Avatar>
+              <div className="grid flex-1 text-left text-[13px] font-medium leading-tight text-muted-foreground"><span className="truncate font-medium">{name}</span><span className="truncate text-xs">Basic</span></div>
+              <ChevronsUpDown className="ml-auto size-4" />
+            </SidebarMenuButton>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent className="w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg" side={isMobile ? "bottom" : "top"} align="end" sideOffset={4}>
+            <DropdownMenuLabel className="p-0 font-normal">
+              <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
+                <Avatar className="h-8 w-8 rounded-lg">{photoURL && <AvatarImage src={photoURL} alt={name} referrerPolicy="no-referrer" />}<AvatarFallback className="rounded-lg">{initials}</AvatarFallback></Avatar>
+                <div className="grid flex-1 text-left text-sm leading-tight"><span className="truncate font-medium">{name}</span><span className="truncate text-xs">{email}</span>{isImpersonating && <span className="truncate text-[10px] text-amber-700">Viewing as client</span>}</div>
+              </div>
+            </DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem asChild><Link href={`${portalPath(companySlug)}?tab=account`}><Settings />Account settings</Link></DropdownMenuItem>
+            {isAdmin && <DropdownMenuItem onClick={() => { stopViewingAs(); router.push("/dashboard/companies") }}><ArrowLeft />Back to agency</DropdownMenuItem>}
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => void signOut()}><LogOut />Log out</DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </SidebarMenuItem>
+    </SidebarMenu>
+  )
+}
+
+/** The portal chrome: collapsible company sidebar + dashboard-style header, wrapping any page's content. */
+export function PortalShellLayout({ company, organization, activeTab, title, children }: { company: string; organization: Organization; activeTab?: string; title?: ReactNode; children: ReactNode }) {
+  return <SidebarProvider>
+    <Sidebar collapsible="icon" className="bg-background text-muted-foreground group-data-[side=left]:border-r-0 [&_[data-slot=sidebar-inner]]:bg-background">
+      <div className="group/sidebar m-2 flex min-h-0 flex-1 flex-col overflow-hidden rounded-[16px] bg-card text-[13px] font-medium text-muted-foreground group-data-[collapsible=icon]:m-1 group-data-[collapsible=icon]:rounded-[12px]">
+        <SidebarHeader className="group-data-[collapsible=icon]:p-1">
+          <div className="flex h-12 items-center gap-2 group-data-[collapsible=icon]:justify-center">
+            <SidebarMenu className="min-w-0 flex-1 group-data-[collapsible=icon]:hidden">
+              <SidebarMenuItem>
+                <SidebarMenuButton size="lg" asChild>
+                  <Link href={portalPath(company)}>
+                    {safeExternalUrl(organization.logoUrl) ? <img src={organization.logoUrl} alt="" className="size-7 shrink-0 rounded-md border border-border object-contain p-0.5" /> : <span className="flex size-7 shrink-0 items-center justify-center rounded-md bg-muted text-sm font-semibold" aria-hidden="true">{organization.name.slice(0, 1).toUpperCase()}</span>}
+                    <span className="truncate font-semibold text-foreground">{organization.name}</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+            <SidebarTrigger className="size-8 shrink-0 opacity-0 transition-opacity group-hover/sidebar:opacity-100 focus-visible:opacity-100 [@media(hover:none)]:opacity-100" />
+          </div>
+        </SidebarHeader>
+        <SidebarContent>
+          <SidebarGroup className="group-data-[collapsible=icon]:p-1">
+            <SidebarMenu>
+              {COMPANY_TABS.map(item => { const Icon = TAB_ICONS[item] ?? LayoutDashboard; return <SidebarMenuItem key={item}><SidebarMenuButton isActive={activeTab === item} tooltip={item} asChild className="capitalize"><Link href={item === "overview" ? portalPath(company) : `${portalPath(company)}?tab=${item}`}><Icon className="h-4 w-4" /><span>{item}</span></Link></SidebarMenuButton></SidebarMenuItem> })}
+            </SidebarMenu>
+          </SidebarGroup>
+        </SidebarContent>
+        <SidebarFooter className="group-data-[collapsible=icon]:p-1">
+          <PortalNavUser />
+        </SidebarFooter>
+      </div>
+      <SidebarRail />
+    </Sidebar>
+    <SidebarInset>
+      <header className="sticky top-0 z-40 flex h-14 shrink-0 items-center gap-2 bg-background px-4 text-[13px] font-medium text-muted-foreground max-md:text-sm">
+        <div className="flex shrink-0 items-center gap-2 md:hidden">
+          <SidebarTrigger className="-ml-1" />
+          <Separator orientation="vertical" className="data-[orientation=vertical]:h-4" />
+        </div>
+        <h1 className="min-w-0 truncate capitalize text-[13px] font-medium text-muted-foreground max-md:text-sm">{title}</h1>
+      </header>
+      <div className="px-4 py-5 sm:px-6">{children}</div>
+    </SidebarInset>
+  </SidebarProvider>
+}
+
 export function PortalWorkspaceView({ data, project, company, uid, canAct, tab, onTab, onChanged }: { data: PortalData; project?: PortalProject; company: string; uid: string; canAct: boolean; tab: string; onTab: (tab: string) => void; onChanged: () => void }) {
   const tasks = data.tasks.filter(item => !project || item.projectId === project.id)
   const invoices = data.invoices.filter(item => !project || item.projectId === project.id)
@@ -156,29 +276,28 @@ export function PortalWorkspaceView({ data, project, company, uid, canAct, tab, 
   const pendingDocuments = documents.filter(item => item.status === "sent")
   const count = pendingInvoices.length + pendingEstimates.length + pendingContracts.length + pendingDocuments.length
   const status = project ? projectStatusMeta[project.status] : null
-  const tabs = project ? ["overview", "tasks", "documents", "billing"] : ["overview", "about", "projects", "contacts", "tasks", "documents", "media", "billing"]
+  const projectTabs = ["overview", "tasks", "documents"]
   const actionLink = (kind: "invoice" | "estimate" | "contract" | "document", id: string, label: string) => <Link href={portalDocumentPath(company, kind, id)} className="shrink-0 rounded-md bg-foreground px-3 py-2 text-xs font-medium text-background hover:opacity-80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2">{label}</Link>
   const projectList = <Panel title="Projects" count={data.projects.length}>{data.projects.length ? <ul className="divide-y divide-border">{data.projects.map(item => <li key={item.id}><Link href={`${portalPath(company)}/projects/${encodeURIComponent(item.id)}`} className="flex items-center gap-4 rounded-md py-4 hover:bg-muted/40 focus-visible:outline focus-visible:outline-2"><FolderOpen className="size-5 shrink-0 text-muted-foreground" /><div className="min-w-0 flex-1"><p className="break-words text-sm font-semibold">{item.title}</p><p className="mt-1 text-xs text-muted-foreground">{projectStatusMeta[item.status]?.label || item.status}{item.dueDate ? ` · Due ${shortDate(item.dueDate)}` : ""}</p></div><span className="text-xs tabular-nums text-muted-foreground">{Math.max(0, Math.min(100, item.progress || 0))}%</span><ChevronRight className="size-4 shrink-0" /></Link></li>)}</ul> : <Empty>Your agency will share projects here when they’re ready for you.</Empty>}</Panel>
-  return <main className="mx-auto max-w-7xl px-5 pb-6 pt-7 sm:px-10 sm:pt-9">
+  return <PortalShellLayout company={company} organization={data.organization} activeTab={project ? "projects" : tab} title={project ? data.organization.name : tab}>
     {project && <>
-    <div className="mb-9 flex flex-wrap items-center justify-between gap-4 text-xs text-muted-foreground"><Link href={portalPath(company)} className="inline-flex items-center gap-2 rounded-sm hover:text-foreground focus-visible:outline focus-visible:outline-2"><ArrowLeft className="size-3.5" />{data.organization.name}</Link>{project.dueDate && <span className="inline-flex items-center gap-2"><CalendarDays className="size-3.5" />Due {shortDate(project.dueDate)}</span>}</div>
-    <div className="mb-8 min-w-0"><div className="flex flex-wrap items-center gap-3"><h1 className="break-words text-2xl font-semibold tracking-tight sm:text-3xl">{project.title}</h1><span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-900"><span className="size-1.5 rounded-full bg-emerald-700" />{Math.max(0, Math.min(100, project.progress || 0))}% complete</span></div>{(project.summary || status?.label) && <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">{project.summary || status?.label}</p>}</div>
+    <div className="mb-5 flex flex-wrap items-center justify-between gap-4 text-xs text-muted-foreground"><Link href={portalPath(company)} className="inline-flex items-center gap-2 rounded-sm hover:text-foreground focus-visible:outline focus-visible:outline-2"><ArrowLeft className="size-3.5" />{data.organization.name}</Link>{project.dueDate && <span className="inline-flex items-center gap-2"><CalendarDays className="size-3.5" />Due {shortDate(project.dueDate)}</span>}</div>
+    <div className="mb-5 min-w-0"><div className="flex flex-wrap items-center gap-3"><h1 className="break-words text-2xl font-semibold tracking-tight sm:text-3xl">{project.title}</h1><span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-900"><span className="size-1.5 rounded-full bg-emerald-700" />{Math.max(0, Math.min(100, project.progress || 0))}% complete</span></div>{(project.summary || status?.label) && <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">{project.summary || status?.label}</p>}</div>
+    <nav aria-label="Project sections" className="mb-6 flex gap-1 overflow-x-auto border-b border-border">{projectTabs.map(item => <button key={item} onClick={() => onTab(item)} aria-current={tab === item ? "page" : undefined} className={`-mb-px shrink-0 border-b-2 px-3 py-2 text-sm capitalize transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] ${tab === item ? "border-foreground font-semibold text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"}`}>{item}</button>)}</nav>
     </>}
-    <nav aria-label={project ? "Project sections" : "Company sections"} className="mb-7 flex max-w-full gap-1 overflow-x-auto border-b border-border pb-3">{tabs.map(item => <button key={item} aria-current={tab === item ? "page" : undefined} onClick={() => onTab(item)} className={`shrink-0 rounded-lg px-3 py-2 text-sm capitalize transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] ${tab === item ? "bg-muted font-semibold text-foreground" : "text-muted-foreground hover:bg-muted/60 hover:text-foreground"}`}>{item}</button>)}</nav>
-    {tab === "overview" && <div className="grid items-start gap-6 lg:grid-cols-[1.35fr_1fr]"><div className="space-y-6"><Panel title="Outstanding items" count={count}>{count ? <ul className="divide-y divide-border">
+    {tab === "overview" &&<div className="grid items-start gap-6 lg:grid-cols-[1.35fr_1fr]"><div className="space-y-6"><Panel title="Outstanding items" count={count}>{count ? <ul className="divide-y divide-border">
       {pendingInvoices.map(item => <li key={item.id} className="flex flex-wrap items-center gap-3 py-4 first:pt-0 last:pb-0"><Receipt className="size-4 shrink-0 text-muted-foreground" /><div className="min-w-0 flex-1"><p className="text-sm font-medium">Invoice {item.invoiceNumber}</p><p className="mt-1 text-xs text-muted-foreground">{formatMoney(invoiceBalance(item), item.currency)} outstanding{item.dueOn ? ` · Due ${shortDate(item.dueOn)}` : ""}</p></div>{actionLink("invoice", item.id, "View invoice")}</li>)}
       {pendingEstimates.map(item => <li key={item.id} className="flex flex-wrap items-center gap-3 py-4 first:pt-0 last:pb-0"><FileText className="size-4 shrink-0 text-muted-foreground" /><div className="min-w-0 flex-1"><p className="text-sm font-medium">Review {item.title || item.estimateNumber}</p><p className="mt-1 text-xs text-muted-foreground">Estimate awaiting your response</p></div>{actionLink("estimate", item.id, "View estimate")}</li>)}
       {pendingContracts.map(item => <li key={item.id} className="flex flex-wrap items-center gap-3 py-4 first:pt-0 last:pb-0"><FileText className="size-4 shrink-0 text-muted-foreground" /><div className="min-w-0 flex-1"><p className="text-sm font-medium">Review {item.title}</p><p className="mt-1 text-xs text-muted-foreground">Contract awaiting signature</p></div>{actionLink("contract", item.id, "View contract")}</li>)}
       {pendingDocuments.map(item => <li key={item.id} className="flex flex-wrap items-center gap-3 py-4 first:pt-0 last:pb-0"><FileText className="size-4 shrink-0 text-muted-foreground" /><div className="min-w-0 flex-1"><p className="text-sm font-medium">Read {item.title}</p><p className="mt-1 text-xs text-muted-foreground">{companyDocumentKindMeta[item.kind]?.label ?? "Document"} shared with you</p></div>{actionLink("document", item.id, "View document")}</li>)}
-    </ul> : <div className="flex items-center gap-3 py-4 text-sm text-muted-foreground"><Check className="size-4 text-emerald-700" />You’re all caught up on documents.</div>}</Panel>{!project && projectList}<Tasks tasks={tasks} uid={uid} canAct={canAct} onChanged={onChanged} /></div><div className="space-y-6"><BillingSummary invoices={invoices} onView={() => onTab("billing")} /><Files files={files} /></div></div>}
+    </ul> : <div className="flex items-center gap-3 py-4 text-sm text-muted-foreground"><Check className="size-4 text-emerald-700" />You’re all caught up on documents.</div>}</Panel>{!project && projectList}<Tasks tasks={tasks} uid={uid} canAct={canAct} onChanged={onChanged} /><BillingSummary invoices={invoices} onView={() => window.document.getElementById("portal-documents")?.scrollIntoView({ behavior: "smooth" })} /><div id="portal-documents"><BillingDocuments company={company} invoices={invoices} contracts={contracts} estimates={estimates} /></div></div><div className="space-y-6"><Files files={files} /></div></div>}
     {tab === "projects" && projectList}
-    {tab === "about" && <About organization={data.organization} />}
     {tab === "contacts" && <Contacts people={data.organization.publicTeam ?? []} />}
     {tab === "tasks" && <Tasks tasks={tasks} uid={uid} canAct={canAct} onChanged={onChanged} all />}
     {tab === "documents" && <div className="space-y-6"><CompanyDocuments company={company} documents={documents} /><Files files={files} /></div>}
     {tab === "media" && <CompanyMedia logoUrl={data.organization.logoUrl} projects={data.projects as unknown as Project[]} uploaded={data.organization.media ?? []} />}
-    {tab === "billing" && <div className="space-y-6"><BillingSummary invoices={invoices} onView={() => window.document.getElementById("portal-documents")?.scrollIntoView({ behavior: "smooth" })} /><div id="portal-documents"><BillingDocuments company={company} invoices={invoices} contracts={contracts} estimates={estimates} /></div></div>}
-  </main>
+    {tab === "account" && <About organization={data.organization} />}
+  </PortalShellLayout>
 }
 
 export function PortalWorkspace({ projectMode = false }: { projectMode?: boolean }) {
@@ -189,7 +308,7 @@ export function PortalWorkspace({ projectMode = false }: { projectMode?: boolean
   const search = useSearchParams()
   const router = useRouter()
   const project = projectMode ? data.projects.find(item => item.id === projectId || item.legacySlug === projectId) : undefined
-  const available = projectMode ? ["overview", "tasks", "documents", "billing"] : ["overview", "about", "projects", "contacts", "tasks", "documents", "media", "billing"]
+  const available = projectMode ? ["overview", "tasks", "documents"] : ["overview", "projects", "contacts", "tasks", "documents", "media", "account"]
   const raw = search.get("tab") || "overview"
   const tab = available.includes(raw) ? raw : "overview"
   if (projectMode && !project) return <PortalNotice title="This project isn’t available">It may not have been shared with your company yet. <Link className="underline" href={portalPath(companySlug)}>Back to your company</Link></PortalNotice>
