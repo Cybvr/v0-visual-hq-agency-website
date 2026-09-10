@@ -7,6 +7,7 @@ export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
 
 const MODEL = process.env.OPENAI_MODEL || "gpt-5.6-luna"
+const MAX_TOOL_ROUNDS = 12
 
 type ChatMessage = { role: "user" | "assistant"; content: string }
 type Surface = "client_portal" | "agency_dashboard"
@@ -28,14 +29,16 @@ const DASHBOARD_PROMPT = `You are Ngai, the VisualCNS assistant and a friendly g
 Talk like a normal person first. Answer what was asked in a sentence or two.
 
 When the message implies making something the dashboard holds (a company, contact, project, task,
-invoice, estimate, contract or file), follow your answer by creating a DRAFT, not by interviewing
+invoice, estimate, contract, document or file), follow your answer by creating a DRAFT, not by interviewing
 the user:
 
 1. Look up what you can with query_workspace. Never ask for an ID, a number, or anything you can
    read yourself.
 2. Ask ONLY the 3 or 4 essentials that thing cannot exist without, in one collect_details call. For
-   an invoice that is the client and currency; for a project the client and title; for a task the
-   project and name. Everything else has a sensible default and is left for the editor.
+   an invoice that is the client (use NGN unless another currency is clear); for a project the
+   client and title; for a task the project and name. Everything else has a sensible default and is
+   left for the editor. If the user gives a client name and enough context for a batch, look it up
+   and proceed without asking for each title or description.
 3. Call the creation tool straight away with those answers. Do not ask for confirmation, and do not
    ask for line items, dates, prices, terms or long text in chat.
 4. Reply with one short line and a markdown link to the url the tool returned, so the user finishes
@@ -48,6 +51,15 @@ duplicate to work around it. When asked to populate or complete a draft, write s
 content yourself and save it with update_record, leaving only real prices for the user unless they
 told you the numbers.
 
+When the user gives explicit counts or says "populate everything", treat it as one batch job. Create
+exactly the requested number of each thing, even when that means several calls to the same creation
+tool. Create projects before tasks, then attach tasks and billing documents to the projects you just
+created. Create written documents with useful titles, summaries and editable HTML body content based
+on the information in the user's message. Do not ask for individual names, document bodies, task
+wording or invoice line items unless the user explicitly supplied them or they are genuinely required.
+Use NGN when no currency is specified, leave prices at zero, and use today's date/default statuses.
+After the batch finishes, give a concise completion summary with links to the created records.
+
 You are forbidden from listing the fields you need as prose or bullets. If you are about to type
 "please provide" or "I need the following", call collect_details instead.
 
@@ -55,13 +67,13 @@ Help users think through projects, tasks, briefs, marketing, email, and their fi
 Be concise, warm, and practical.
 
 You can read the workspace database with the query_workspace tool: companies, projects, tasks,
-invoices, estimates, contracts, documents and users. Use it for every factual question about the
+invoices, estimates, contracts, written company documents, uploaded files and users. Use it for every factual question about the
 account, including counts, lists, totals and lookups. Never say you cannot see the data or tell the
 user to go look somewhere in the dashboard without calling the tool first. The tool already applies
 the caller's permissions, so just call it and answer from what it returns.
 
-Creation tools are available for companies, projects, tasks, draft invoices, draft estimates, and
-draft contracts.
+Creation tools are available for companies, projects, tasks, draft invoices, draft estimates, draft
+contracts and written company documents.
 
 Pass looked-up clients and projects to collect_details as select options so the user picks a name
 and never types an ID. The user's answers arrive as their next message; act on them immediately.
@@ -73,7 +85,7 @@ shared tasks, files and links, billing documents, and contacting their agency.
 Be concise, warm, and practical.
 
 You can read this customer's own records with the query_workspace tool: their company, projects,
-tasks, invoices, estimates, contracts and documents. It is automatically restricted to their own
+tasks, invoices, estimates, contracts, written company documents and uploaded files. It is automatically restricted to their own
 company, so use it freely for any factual question about their account, including counts, lists and
 status. Never say you cannot see the data without calling the tool first. Never invent details.
 You cannot change any data, only read it.`
@@ -89,9 +101,9 @@ const AGENT_TOOLS = [
       properties: {
         collection: {
           type: "string",
-          enum: ["organizations", "projects", "tasks", "invoices", "estimates", "contracts", "documents", "users"],
+          enum: ["organizations", "projects", "tasks", "invoices", "estimates", "contracts", "companyDocuments", "documents", "users"],
           description:
-            "Which records to read. organizations = client companies, projects = projects, tasks = tasks, invoices/estimates/contracts = billing documents, documents = shared files, users = people.",
+            "Which records to read. organizations = client companies, projects = projects, tasks = tasks, invoices/estimates/contracts = billing documents, companyDocuments = written company documents, documents = uploaded/shared files, users = people.",
         },
         limit: { type: ["number", "null"], description: "Maximum records to return. Defaults to 100, capped at 300." },
       },
@@ -109,7 +121,7 @@ const AGENT_TOOLS = [
       properties: {
         collection: {
           type: "string",
-          enum: ["organizations", "projects", "tasks", "invoices", "estimates", "contracts"],
+          enum: ["organizations", "projects", "tasks", "invoices", "estimates", "contracts", "companyDocuments"],
         },
         id: { type: "string", description: "Document id of the record to update." },
         patchJson: {
@@ -303,6 +315,26 @@ const AGENT_TOOLS = [
       additionalProperties: false,
     },
   },
+  {
+    type: "function",
+    name: "create_document",
+    description: "Create a written company document as a draft. Use the user's project or website information to write a useful editable HTML body instead of leaving it empty.",
+    parameters: {
+      type: "object",
+      properties: {
+        clientId: { type: "string" },
+        client: { type: "string" },
+        title: { type: "string" },
+        kind: { type: "string", enum: ["proposal", "sow", "brief", "report", "other"] },
+        projectId: { type: ["string", "null"] },
+        project: { type: ["string", "null"] },
+        summary: { type: ["string", "null"] },
+        body: { type: ["string", "null"], description: "Editable HTML using headings, paragraphs, lists and blockquotes." },
+      },
+      required: ["clientId", "client", "title"],
+      additionalProperties: false,
+    },
+  },
 ] as const
 
 const PORTAL_TOOLS = AGENT_TOOLS.filter((tool) => tool.name === "query_workspace")
@@ -317,17 +349,19 @@ const READABLE_COLLECTIONS = [
   "invoices",
   "estimates",
   "contracts",
+  "companyDocuments",
   "documents",
   "users",
 ]
 
-const UPDATABLE_COLLECTIONS = ["organizations", "projects", "tasks", "invoices", "estimates", "contracts"]
+const UPDATABLE_COLLECTIONS = ["organizations", "projects", "tasks", "invoices", "estimates", "contracts", "companyDocuments"]
 
 /** Where a record lives in the dashboard, so the agent can link straight to it. */
 function recordUrl(collectionName: string, id: string) {
   if (collectionName === "invoices") return `/dashboard/invoices/${id}/edit`
   if (collectionName === "estimates") return `/dashboard/estimates/${id}/edit`
   if (collectionName === "contracts") return `/dashboard/contracts/${id}/edit`
+  if (collectionName === "companyDocuments") return `/dashboard/documents/${id}/edit`
   if (collectionName === "organizations") return `/dashboard/companies/${id}`
   if (collectionName === "projects") return `/dashboard/projects/${id}`
   return "/dashboard/tasks"
@@ -587,6 +621,32 @@ async function runAgentTool(name: string, rawArgs: string, uid: string) {
     return { type: "contract", id: ref.id, title, status: "draft", url: `/dashboard/contracts/${ref.id}/edit` }
   }
 
+  if (name === "create_document") {
+    const clientId = requireText(args, "clientId")
+    const client = requireText(args, "client")
+    const title = requireText(args, "title")
+    const kind = optionalText(args, "kind") || "other"
+    if (!["proposal", "sow", "brief", "report", "other"].includes(kind)) {
+      throw new Error("Document type must be proposal, sow, brief, report, or other.")
+    }
+    const ref = db.collection("companyDocuments").doc()
+    await ref.set({
+      clientId,
+      client,
+      title,
+      kind,
+      projectId: optionalText(args, "projectId"),
+      project: optionalText(args, "project"),
+      status: "draft",
+      summary: optionalText(args, "summary"),
+      body: optionalText(args, "body"),
+      shareEnabled: false,
+      createdAt: now,
+      updatedAt: now,
+    })
+    return { type: "document", id: ref.id, title, status: "draft", url: `/dashboard/documents/${ref.id}/edit` }
+  }
+
   throw new Error(`Unknown agent tool: ${name}`)
 }
 
@@ -678,7 +738,7 @@ export async function POST(request: Request) {
         }
       }
 
-      if (!toolCalls.length || turns >= 4) break
+      if (!toolCalls.length || turns >= MAX_TOOL_ROUNDS) break
 
       const toolOutputs = []
       for (const call of toolCalls) {

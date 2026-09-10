@@ -3,12 +3,12 @@
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useCallback, useEffect, useMemo, useState } from "react"
-import { Copy, Download, Eye, FileSignature, Loader2, Pencil, Plus, Trash2 } from "lucide-react"
+import { Copy, Download, Eye, Loader2, Pencil, Plus, Trash2 } from "lucide-react"
 import { toast } from "sonner"
 
 import { useAuth } from "@/components/auth-provider"
 import { DuplicateDocumentDialog, type DuplicateSelection } from "@/components/dashboard/duplicate-document-dialog"
-import { EmptyState, EmptySearchState } from "@/components/dashboard/empty-state"
+import { EmptySearchState, FirstRunState } from "@/components/dashboard/empty-state"
 import { UserEditorSheet } from "@/components/dashboard/user-editor-sheet"
 import {
   AlertDialog,
@@ -172,20 +172,19 @@ export default function ContractsPage() {
       ) : error ? (
         <p className="mt-10 text-sm text-destructive">Couldn&apos;t load contracts right now.</p>
       ) : contracts.length === 0 ? (
-        <EmptyState
+        <FirstRunState
           className="mt-8"
-          icon={FileSignature}
-          title="No contracts yet"
+          label="Contract"
+          title={adminView ? "Let's create your first contract" : "No contracts yet"}
           description={
-            adminView ? "Send a contract to start work with a client." : "Contracts sent to you will show up here."
+            adminView
+              ? "The agreements you send clients before work starts. Write one here or link one you already hold, then follow it through to signature."
+              : "Contracts sent to you will show up here."
           }
           action={
             adminView ? (
-              <Button asChild variant="outline">
-                <Link href="/dashboard/contracts/new">
-                  <Plus className="size-4" aria-hidden="true" />
-                  New
-                </Link>
+              <Button asChild>
+                <Link href="/dashboard/contracts/new">New Contract</Link>
               </Button>
             ) : undefined
           }

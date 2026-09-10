@@ -108,8 +108,11 @@ service cloud.firestore {
     // briefs. Drafts stay internal; a sent document is readable by its own
     // company, or by anyone holding the link once sharing is turned on.
     match /companyDocuments/{id} {
-      allow get: if isAdmin() || (resource.data.status != 'draft' && (owns(resource.data) || resource.data.get('shareEnabled', false) == true));
-      allow list: if isAdmin() || (owns(resource.data) && resource.data.status != 'draft');
+      // Public is the visibility switch: a public document reaches the client and the
+      // no-account share link whatever its draft status. Non-public documents only ever
+      // reach their own client once sent.
+      allow get: if isAdmin() || resource.data.get('shareEnabled', false) == true || (owns(resource.data) && resource.data.status != 'draft');
+      allow list: if isAdmin() || (owns(resource.data) && resource.data.get('shareEnabled', false) == true);
       allow write: if isAdmin();
     }
 

@@ -1,8 +1,11 @@
 "use client"
 
-import { useEffect } from "react"
+import { useEffect, useRef } from "react"
 import { EditorContent, useEditor, type Editor } from "@tiptap/react"
 import StarterKit from "@tiptap/starter-kit"
+import { TableKit } from "@tiptap/extension-table"
+
+import { looksLikeMarkdown, markdownToHtml } from "@/lib/markdown"
 import {
   Bold,
   Heading2,
@@ -13,6 +16,7 @@ import {
   Quote,
   Redo2,
   Strikethrough,
+  Table as TableIcon,
   Undo2,
 } from "lucide-react"
 
@@ -81,6 +85,14 @@ const BUTTONS: ToolbarButton[][] = [
     },
   ],
   [
+    {
+      label: "Table",
+      icon: TableIcon,
+      isActive: (editor) => editor.isActive("table"),
+      run: (editor) => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run(),
+    },
+  ],
+  [
     { label: "Undo", icon: Undo2, run: (editor) => editor.chain().focus().undo().run() },
     { label: "Redo", icon: Redo2, run: (editor) => editor.chain().focus().redo().run() },
   ],
@@ -97,22 +109,38 @@ export function RichTextEditor({
   placeholder?: string
   className?: string
 }) {
+  // Referenced inside handlePaste, which runs long after the editor is built.
+  const editorRef = useRef<Editor | null>(null)
+
   const editor = useEditor({
-    extensions: [StarterKit],
+    extensions: [StarterKit, TableKit.configure({ table: { resizable: true } })],
     content: value,
     // Next renders this on the server first, and tiptap needs the DOM.
     immediatelyRender: false,
     editorProps: {
+      // Pasted plain text that is really Markdown arrives as literal #, * and |,
+      // so format it before it lands. Rich (text/html) pastes are left untouched.
+      handlePaste: (_view, event) => {
+        const clipboard = event.clipboardData
+        if (!clipboard || clipboard.getData("text/html")) return false
+        const text = clipboard.getData("text/plain")
+        if (!text || !looksLikeMarkdown(text)) return false
+        editorRef.current?.chain().focus().insertContent(markdownToHtml(text)).run()
+        return true
+      },
       attributes: {
         class: cn(
           "min-h-64 px-4 py-3 text-sm outline-none",
           "[&_h2]:mt-5 [&_h2]:text-lg [&_h2]:font-semibold [&_h3]:mt-4 [&_h3]:text-base [&_h3]:font-semibold [&_p]:my-2 [&_p]:leading-7 [&_ul]:my-2 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:my-2 [&_ol]:list-decimal [&_ol]:pl-5 [&_li]:my-1 [&_strong]:font-semibold [&_blockquote]:my-3 [&_blockquote]:border-l-2 [&_blockquote]:pl-3 [&_blockquote]:italic [&_blockquote]:border-border",
+          "[&_table]:my-3 [&_table]:w-full [&_table]:table-fixed [&_table]:border-collapse [&_td]:border [&_td]:border-border [&_td]:p-2 [&_td]:align-top [&_th]:border [&_th]:border-border [&_th]:bg-muted [&_th]:p-2 [&_th]:text-left [&_th]:font-semibold [&_.selectedCell]:bg-muted/60",
         ),
         ...(placeholder ? { "data-placeholder": placeholder } : {}),
       },
     },
     onUpdate: ({ editor: current }) => onChange(current.getHTML()),
   })
+
+  editorRef.current = editor
 
   // Content arriving after mount (an edit page finishing its load) has to be
   // pushed in, but only when it differs or the caret jumps on every keystroke.

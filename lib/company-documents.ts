@@ -127,6 +127,13 @@ export async function getCompanyDocumentsByClientId(clientId: string, includeDra
   return byNewest(includeDrafts ? rows : rows.filter((row) => row.status !== "draft"))
 }
 
+/** What a signed-in client sees in their portal: the documents turned public, drafts included. */
+export async function getPublicCompanyDocumentsByClientId(clientId: string): Promise<CompanyDocument[]> {
+  if (!clientId) return []
+  const snapshot = await getDocs(query(collection(db, COMPANY_DOCUMENTS), where("clientId", "==", clientId), where("shareEnabled", "==", true)))
+  return byNewest(snapshot.docs.map((d) => toDocument(d.id, d.data() as object)))
+}
+
 export async function getCompanyDocument(id: string): Promise<CompanyDocument | null> {
   const snapshot = await getDoc(doc(db, COMPANY_DOCUMENTS, id))
   if (!snapshot.exists()) return null

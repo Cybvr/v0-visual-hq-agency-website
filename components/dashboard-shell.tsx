@@ -1,15 +1,24 @@
 "use client"
 
-import { type ReactNode } from "react"
+import { useEffect, useState, type FormEvent, type ReactNode } from "react"
 import Image from "next/image"
 import Link from "next/link"
-import { usePathname } from "next/navigation"
-import { Bell, CircleHelp, Crown } from "lucide-react"
+import { usePathname, useRouter } from "next/navigation"
+import { Bell, Briefcase, Building2, CircleHelp, Crown, FileText, ListTodo, Plus, Receipt, ScrollText } from "lucide-react"
 
 import { useAgent } from "@/components/agent/agent-context"
 import { AppSidebar, type NavLink } from "@/components/app-sidebar"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import { dashboardPageTitle } from "@/components/dashboard/dashboard-document-title"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import { Separator } from "@/components/ui/separator"
 import {
   SidebarInset,
@@ -17,8 +26,25 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar"
 import { cn } from "@/lib/utils"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
 export type { NavLink }
+
+const QUICK_CREATE_LINKS = [
+  { label: "Company", href: "/dashboard/companies", icon: Building2 },
+  { label: "Project", href: "/dashboard/projects", icon: Briefcase },
+  { label: "Task", href: "/dashboard/tasks", icon: ListTodo },
+  { label: "Invoice", href: "/dashboard/invoices/new", icon: Receipt },
+  { label: "Estimate", href: "/dashboard/estimates/new", icon: FileText },
+  { label: "Contract", href: "/dashboard/contracts/new", icon: ScrollText },
+  // Documents open from a modal on their list page, as companies, projects and tasks do.
+  { label: "Document", href: "/dashboard/documents", icon: FileText },
+] as const
 
 /**
  * Shared dashboard layout (admin + client), built on the shadcn sidebar-07
@@ -42,7 +68,33 @@ export function DashboardShell({
   children: ReactNode
 }) {
   const pathname = usePathname()
+  const router = useRouter()
+  // Document detail and editor screens keep the focused layout, while the
+  // navigation remains available as a collapsed icon rail.
+  const isDocumentRoute = /^\/dashboard\/documents\/[^/]+/.test(pathname ?? "")
+  const hideHeader = isDocumentRoute
+  const [sidebarOpen, setSidebarOpen] = useState(!isDocumentRoute)
   const { open: agentOpen, setOpen: setAgentOpen } = useAgent()
+  const [createItem, setCreateItem] = useState<(typeof QUICK_CREATE_LINKS)[number] | null>(null)
+  const [createName, setCreateName] = useState("")
+
+  useEffect(() => {
+    setSidebarOpen(!isDocumentRoute)
+  }, [isDocumentRoute])
+
+  function closeCreateModal() {
+    setCreateItem(null)
+    setCreateName("")
+  }
+
+  function createFromHeader(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    if (!createItem) return
+    const query = createName.trim() ? `?name=${encodeURIComponent(createName.trim())}` : ""
+    const destination = `${createItem.href}${query}`
+    closeCreateModal()
+    router.push(destination)
+  }
 
   return (
     // h-svh + overflow-hidden: the shell never grows taller than the viewport,
@@ -50,6 +102,8 @@ export function DashboardShell({
     <div className="dashboard-body flex h-svh flex-col overflow-hidden font-sans [&_*]:font-sans">
       {banner && <div className="z-50 h-10 shrink-0">{banner}</div>}
       <SidebarProvider
+        open={sidebarOpen}
+        onOpenChange={setSidebarOpen}
         className={cn(
           "min-h-0 flex-1",
           banner && "[&_[data-slot=sidebar-container]]:top-10 [&_[data-slot=sidebar-container]]:h-[calc(100svh-2.5rem)]"
@@ -58,13 +112,34 @@ export function DashboardShell({
         <AppSidebar navLinks={navLinks} rootHref={rootHref} subtitle={subtitle} navExtra={navExtra} />
         {/* overflow-y-auto: this column is the scroll container, not the body */}
         <SidebarInset className="overflow-y-auto">
-          <header className="sticky top-0 z-40 flex h-14 shrink-0 items-center gap-2 bg-background px-4 text-[13px] font-medium text-muted-foreground max-md:text-sm">
+          <header className={cn("sticky top-0 z-40 flex h-14 shrink-0 items-center gap-2 bg-background px-4 text-[13px] font-medium text-muted-foreground max-md:text-sm", hideHeader && "md:hidden")}>
             <div className="flex shrink-0 items-center gap-2 md:hidden">
               <SidebarTrigger className="-ml-1" />
               <Separator orientation="vertical" className="data-[orientation=vertical]:h-4" />
             </div>
             <h1 className="min-w-0 truncate text-[13px] font-medium text-muted-foreground max-md:text-sm">{dashboardPageTitle(pathname ?? "/dashboard")}</h1>
             <div className="ml-auto flex shrink-0 items-center gap-2">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button type="button" variant="outline" size="icon" aria-label="Create new" title="Create new">
+                    <Plus className="size-4" aria-hidden="true" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="dashboard-body">
+                  {QUICK_CREATE_LINKS.map(({ label, icon: Icon }) => (
+                    <DropdownMenuItem
+                      key={label}
+                      onSelect={() => {
+                        setCreateName("")
+                        setCreateItem(QUICK_CREATE_LINKS.find((item) => item.label === label) ?? null)
+                      }}
+                    >
+                      <Icon aria-hidden="true" />
+                      <span>{label}</span>
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
               <Button asChild variant="outline" className="text-[13px] font-medium text-muted-foreground max-md:text-sm">
                 <Link href="/pricing" aria-label="Upgrade" title="Upgrade">
                   <Crown className="size-4 sm:hidden" aria-hidden="true" />
@@ -93,6 +168,39 @@ export function DashboardShell({
           {children}
         </SidebarInset>
       </SidebarProvider>
+
+      <Dialog
+        open={Boolean(createItem)}
+        onOpenChange={(open) => {
+          if (!open) closeCreateModal()
+        }}
+      >
+        <DialogContent className="max-w-md gap-0 p-0">
+          <DialogHeader className="border-b border-border px-5 py-4">
+            <DialogTitle>Create {createItem?.label ?? "new"}</DialogTitle>
+            <DialogDescription>Add the basics, then continue to the {createItem?.label?.toLowerCase() ?? "new item"} page.</DialogDescription>
+          </DialogHeader>
+          {createItem && (
+            <form onSubmit={createFromHeader} className="space-y-5 p-5">
+              <div className="space-y-2">
+                <Label htmlFor="quick-create-name">{createItem.label} name</Label>
+                <Input
+                  id="quick-create-name"
+                  value={createName}
+                  onChange={(event) => setCreateName(event.target.value)}
+                  placeholder={`Enter a ${createItem.label.toLowerCase()} name`}
+                  autoFocus
+                  required
+                />
+              </div>
+              <div className="flex justify-end gap-2 border-t border-border pt-4">
+                <Button type="button" variant="ghost" onClick={closeCreateModal}>Cancel</Button>
+                <Button type="submit">Create {createItem.label}</Button>
+              </div>
+            </form>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

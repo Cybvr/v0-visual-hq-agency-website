@@ -174,7 +174,8 @@ export function AgentProvider({ children }: { children: ReactNode }) {
   const send = useCallback(
     (text: string) => {
       const content = text.trim()
-      if (!content || sending) return
+      const currentUser = user
+      if (!content || sending || !currentUser) return
 
       const userMessage: AgentMessage = { id: messageId(nextId), role: "user", content }
       const assistantId = messageId(nextId)
@@ -196,7 +197,7 @@ export function AgentProvider({ children }: { children: ReactNode }) {
           const surface = pathname?.startsWith("/portal") ? "client_portal" : "agency_dashboard"
           const response = await fetch("/api/agent", {
             method: "POST",
-            headers: { "content-type": "application/json", Authorization: `Bearer ${await user.getIdToken()}` },
+            headers: { "content-type": "application/json", Authorization: `Bearer ${await currentUser.getIdToken()}` },
             body: JSON.stringify({ messages: payload, firstName, surface }),
           })
 

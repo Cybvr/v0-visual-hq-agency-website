@@ -4,32 +4,32 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  --background: hsl(0 0% 100%);
-  --foreground: hsl(0 0% 0%);
-  --card: #f2f2f2;
-  --card-foreground: #0a0a0a;
-  --popover: hsl(0 0% 100%);
-  --popover-foreground: #0a0a0a;
-  --primary: hsl(221.2 83.2% 53.3%);
-  --primary-foreground: #fafafa;
-  --secondary: hsl(0 0% 96%);
-  --secondary-foreground: #0a0a0a;
-  --muted: hsl(0 0% 96%);
-  --muted-foreground: #525252;
-  --accent: hsl(221.2 83.2% 53.3%);
-  --accent-foreground: #fafafa;
-  --destructive: hsl(0 84.2% 60.2%);
-  --destructive-foreground: #fafafa;
-  --border: hsl(0 0% 91%);
-  --input: hsl(0 0% 91%);
-  --ring: hsl(221.2 83.2% 53.3%);
+  --radius: 0.5rem;
+  --background: oklch(1 0 180);
+  --foreground: oklch(0.126 0.026 268.939);
+  --muted: oklch(0.885 0.01 276.021);
+  --muted-foreground: oklch(0.464 0.025 275.387);
+  --popover: oklch(0.992 0 168.69);
+  --popover-foreground: oklch(0.114 0.022 268.251);
+  --card: oklch(0.992 0 168.69);
+  --card-foreground: oklch(0.114 0.022 268.251);
+  --border: oklch(0.928 0.006 264.531);
+  --input: oklch(0.928 0.006 264.531);
+  --primary: oklch(0.567 0.237 267.896);
+  --primary-foreground: oklch(1 0 180);
+  --secondary: oklch(0.915 0.011 276);
+  --secondary-foreground: oklch(0.388 0.043 274.435);
+  --accent: oklch(0.866 0.024 275.781);
+  --accent-foreground: oklch(0.335 0.052 273.604);
+  --destructive: oklch(0.63 0.256 29.629);
+  --destructive-foreground: oklch(1 0 180);
+  --ring: oklch(0.567 0.237 267.896);
   --company-banner: #172554;
-  --chart-1: hsl(221.2 83.2% 53.3%);
-  --chart-2: hsl(212 95% 68%);
-  --chart-3: hsl(216 92% 60%);
-  --chart-4: hsl(210 98% 78%);
-  --chart-5: hsl(212 97% 87%);
-  --radius: 0.625rem;
+  --chart-1: oklch(0.567 0.237 267.896);
+  --chart-2: oklch(0.915 0.011 276);
+  --chart-3: oklch(0.866 0.024 275.781);
+  --chart-4: oklch(0.94 0.008 276.055);
+  --chart-5: oklch(0.565 0.244 267.612);
   --sidebar: hsl(0 0% 98%);
   --sidebar-foreground: oklch(0.145 0 0);
   --sidebar-primary: oklch(0.205 0 0);
@@ -45,30 +45,31 @@
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.145 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.145 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.985 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: hsl(221.2 83.2% 53.3%);
-  --accent-foreground: #fafafa;
-  --destructive: oklch(0.396 0.141 25.723);
-  --destructive-foreground: oklch(0.637 0.237 25.331);
-  --border: oklch(0.269 0 0);
-  --input: oklch(0.269 0 0);
-  --ring: oklch(0.439 0 0);
-  --chart-1: hsl(221.2 83.2% 53.3%);
-  --chart-2: hsl(212 95% 68%);
-  --chart-3: hsl(216 92% 60%);
-  --chart-4: hsl(210 98% 78%);
-  --chart-5: hsl(212 97% 87%);
+  --radius: 0.5rem;
+  --background: oklch(0.134 0.016 272.261);
+  --foreground: oklch(0.991 0.001 276.148);
+  --muted: oklch(0.249 0.013 275.396);
+  --muted-foreground: oklch(0.691 0.023 275.711);
+  --popover: oklch(0.144 0.019 273.129);
+  --popover-foreground: oklch(1 0 180);
+  --card: oklch(0.144 0.019 273.129);
+  --card-foreground: oklch(1 0 180);
+  --border: oklch(0.278 0.03 256.848);
+  --input: oklch(0.278 0.03 256.848);
+  --primary: oklch(0.567 0.237 267.896);
+  --primary-foreground: oklch(1 0 180);
+  --secondary: oklch(0.186 0.01 275.429);
+  --secondary-foreground: oklch(0.728 0.027 275.646);
+  --accent: oklch(0.269 0.031 274.373);
+  --accent-foreground: oklch(0.798 0.032 275.616);
+  --destructive: oklch(0.62 0.232 29.041);
+  --destructive-foreground: oklch(1 0 180);
+  --ring: oklch(0.567 0.237 267.896);
+  --chart-1: oklch(0.567 0.237 267.896);
+  --chart-2: oklch(0.186 0.01 275.429);
+  --chart-3: oklch(0.269 0.031 274.373);
+  --chart-4: oklch(0.217 0.013 275.322);
+  --chart-5: oklch(0.565 0.244 267.612);
   --sidebar: oklch(0.205 0 0);
   --sidebar-foreground: oklch(0.985 0 0);
   --sidebar-primary: hsl(221.2 83.2% 53.3%);
@@ -126,16 +127,25 @@
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    @apply border-border;
   }
   body {
     @apply bg-background text-foreground;
   }
-  /* Dashboard default body text matches the sidebar (text-sm). Elements with an
-     explicit text-* utility keep their own size; only unstyled defaults shift. */
+  /* Dashboard defaults match the sidebar navigation text. Explicit text-* and
+     font-* utilities can still override these values where needed. */
   .dashboard-body {
-    font-size: 0.875rem;
-    line-height: 1.25rem;
+    font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+    font-size: 12px !important;
+    line-height: 1.25rem !important;
+    font-weight: 500 !important;
+    color: var(--muted-foreground) !important;
+  }
+  .dashboard-body :where(p, a, button, label, input, textarea, select, option, th, td, [data-slot="dropdown-menu-item"]) {
+    font-family: inherit;
+    font-size: inherit !important;
+    line-height: inherit !important;
+    font-weight: inherit !important;
   }
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-eb-garamond), ui-serif, Georgia, serif;

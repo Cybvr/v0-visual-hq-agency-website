@@ -2,9 +2,9 @@
 
 import { useRef, useState } from "react"
 import Link from "next/link"
-import { Briefcase, Loader2, Plus } from "lucide-react"
+import { Loader2, Plus } from "lucide-react"
 
-import { EmptyState } from "@/components/dashboard/empty-state"
+import { FirstRunState } from "@/components/dashboard/empty-state"
 import { ProjectCard } from "@/components/project-card"
 import { Button } from "@/components/ui/button"
 import {
@@ -110,17 +110,14 @@ export function ProjectsView({ projects, onChanged }: { projects: Project[]; onC
       )}
 
       {projects.length === 0 ? (
-        <EmptyState
+        <FirstRunState
           className="mt-4"
-          icon={Briefcase}
+          label="Project"
           title="No projects yet"
-          description="Projects created for you will show up here."
+          description="Projects created for you will show up here, with their tasks and progress alongside."
           action={
-            <Button asChild variant="outline">
-              <Link href="/dashboard/projects?new=1">
-                <Plus className="mr-2 size-4" aria-hidden="true" />
-                Create a new project
-              </Link>
+            <Button asChild>
+              <Link href="/dashboard/projects?new=1">New Project</Link>
             </Button>
           }
         />

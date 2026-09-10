@@ -7,6 +7,7 @@ import { ArrowLeft, ArrowUpRight, CalendarDays, Check, ChevronRight, FileText, F
 import { useAuth } from "@/components/auth-provider"
 import { Button } from "@/components/ui/button"
 import { formatMoney, type Contract, type Estimate, type Invoice } from "@/lib/billing"
+import { companyDocumentKindMeta, type CompanyDocument } from "@/lib/company-documents"
 import { projectStatusMeta } from "@/lib/projects"
 import { taskStatusMeta, type TaskStatus } from "@/lib/tasks"
 import { cn } from "@/lib/utils"
@@ -120,13 +121,18 @@ function Tasks({ tasks, uid, canAct, onChanged, all = false }: { tasks: PortalTa
   return <Panel title={all ? "Shared tasks" : "My tasks"} count={visible.length}>{visible.length ? (all ? <TaskBoard tasks={visible} uid={uid} canAct={canAct} onChanged={onChanged} /> : <ul className="divide-y divide-border">{visible.map(task => <TaskItem key={task.id} task={task} uid={uid} canAct={canAct} onChanged={onChanged} />)}</ul>) : <Empty>{all ? "Your agency hasn’t shared any tasks here yet." : "No tasks are assigned to you right now."}</Empty>}</Panel>
 }
 
-function Documents({ company, invoices, contracts, estimates }: { company: string; invoices: Invoice[]; contracts: Contract[]; estimates: Estimate[] }) {
+/** The written documents: proposals, statements of work, briefs. */
+function CompanyDocuments({ company, documents }: { company: string; documents: CompanyDocument[] }) {
+  return <Panel title="Documents" count={documents.length}>{documents.length ? <ul className="divide-y divide-border">{documents.map(row => <li key={row.id}><Link href={portalDocumentPath(company, "document", row.id)} className="flex items-center gap-3 rounded-md py-4 hover:bg-muted/40 focus-visible:outline focus-visible:outline-2"><FileText className="size-4 shrink-0 text-muted-foreground" /><div className="min-w-0 flex-1"><p className="break-words text-sm font-medium">{row.title}</p><p className="mt-1 text-xs text-muted-foreground">{companyDocumentKindMeta[row.kind]?.label ?? "Document"}{row.summary ? ` · ${row.summary}` : ""}</p></div><ChevronRight className="size-4 shrink-0" /></Link></li>)}</ul> : <Empty>Proposals and other documents your agency writes for you will appear here.</Empty>}</Panel>
+}
+
+function BillingDocuments({ company, invoices, contracts, estimates }: { company: string; invoices: Invoice[]; contracts: Contract[]; estimates: Estimate[] }) {
   const rows = [
     ...invoices.map(item => ({ id: item.id, kind: "invoice" as const, title: `Invoice ${item.invoiceNumber}`, status: item.status, detail: formatMoney(item.amount, item.currency) })),
     ...estimates.map(item => ({ id: item.id, kind: "estimate" as const, title: item.title || `Estimate ${item.estimateNumber}`, status: item.status, detail: formatMoney(item.amount, item.currency) })),
     ...contracts.map(item => ({ id: item.id, kind: "contract" as const, title: item.title, status: item.status, detail: "Contract" })),
   ]
-  return <Panel title="Documents" count={rows.length}>{rows.length ? <ul className="divide-y divide-border">{rows.map(row => <li key={`${row.kind}:${row.id}`}><Link href={portalDocumentPath(company, row.kind, row.id)} className="flex items-center gap-3 rounded-md py-4 hover:bg-muted/40 focus-visible:outline focus-visible:outline-2"><FileText className="size-4 shrink-0 text-muted-foreground" /><div className="min-w-0 flex-1"><p className="break-words text-sm font-medium">{row.title}</p><p className="mt-1 text-xs capitalize text-muted-foreground">{row.status} · {row.detail}</p></div><ChevronRight className="size-4 shrink-0" /></Link></li>)}</ul> : <Empty>Issued invoices, estimates and contracts will appear here.</Empty>}</Panel>
+  return <Panel title="Billing documents" count={rows.length}>{rows.length ? <ul className="divide-y divide-border">{rows.map(row => <li key={`${row.kind}:${row.id}`}><Link href={portalDocumentPath(company, row.kind, row.id)} className="flex items-center gap-3 rounded-md py-4 hover:bg-muted/40 focus-visible:outline focus-visible:outline-2"><FileText className="size-4 shrink-0 text-muted-foreground" /><div className="min-w-0 flex-1"><p className="break-words text-sm font-medium">{row.title}</p><p className="mt-1 text-xs capitalize text-muted-foreground">{row.status} · {row.detail}</p></div><ChevronRight className="size-4 shrink-0" /></Link></li>)}</ul> : <Empty>Issued invoices, estimates and contracts will appear here.</Empty>}</Panel>
 }
 
 export function PortalWorkspaceView({ data, project, company, uid, canAct, tab, onTab, onChanged }: { data: PortalData; project?: PortalProject; company: string; uid: string; canAct: boolean; tab: string; onTab: (tab: string) => void; onChanged: () => void }) {
@@ -135,13 +141,15 @@ export function PortalWorkspaceView({ data, project, company, uid, canAct, tab, 
   const estimates = data.estimates.filter(item => !project || item.projectId === project.id)
   const contracts = data.contracts.filter(item => !project || item.projectId === project.id)
   const files = data.files.filter(item => !project || item.projectId === project.id)
+  const documents = data.documents.filter(item => !project || item.projectId === project.id)
   const pendingInvoices = invoices.filter(item => invoiceBalance(item) > 0 && (item.status === "sent" || item.status === "overdue"))
   const pendingEstimates = estimates.filter(item => item.status === "sent")
   const pendingContracts = contracts.filter(item => item.status === "sent")
-  const count = pendingInvoices.length + pendingEstimates.length + pendingContracts.length
+  const pendingDocuments = documents.filter(item => item.status === "sent")
+  const count = pendingInvoices.length + pendingEstimates.length + pendingContracts.length + pendingDocuments.length
   const status = project ? projectStatusMeta[project.status] : null
-  const tabs = project ? ["overview", "tasks", "files", "billing"] : ["overview", "about", "projects", "contacts", "tasks", "files", "media", "billing"]
-  const actionLink = (kind: "invoice" | "estimate" | "contract", id: string, label: string) => <Link href={portalDocumentPath(company, kind, id)} className="shrink-0 rounded-md bg-foreground px-3 py-2 text-xs font-medium text-background hover:opacity-80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2">{label}</Link>
+  const tabs = project ? ["overview", "tasks", "documents", "billing"] : ["overview", "about", "projects", "contacts", "tasks", "documents", "media", "billing"]
+  const actionLink = (kind: "invoice" | "estimate" | "contract" | "document", id: string, label: string) => <Link href={portalDocumentPath(company, kind, id)} className="shrink-0 rounded-md bg-foreground px-3 py-2 text-xs font-medium text-background hover:opacity-80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2">{label}</Link>
   const projectList = <Panel title="Projects" count={data.projects.length}>{data.projects.length ? <ul className="divide-y divide-border">{data.projects.map(item => <li key={item.id}><Link href={`${portalPath(company)}/projects/${encodeURIComponent(item.id)}`} className="flex items-center gap-4 rounded-md py-4 hover:bg-muted/40 focus-visible:outline focus-visible:outline-2"><FolderOpen className="size-5 shrink-0 text-muted-foreground" /><div className="min-w-0 flex-1"><p className="break-words text-sm font-semibold">{item.title}</p><p className="mt-1 text-xs text-muted-foreground">{projectStatusMeta[item.status]?.label || item.status}{item.dueDate ? ` · Due ${shortDate(item.dueDate)}` : ""}</p></div><span className="text-xs tabular-nums text-muted-foreground">{Math.max(0, Math.min(100, item.progress || 0))}%</span><ChevronRight className="size-4 shrink-0" /></Link></li>)}</ul> : <Empty>Your agency will share projects here when they’re ready for you.</Empty>}</Panel>
   return <main className="mx-auto max-w-7xl px-5 pb-6 pt-7 sm:px-10 sm:pt-9">
     {project && <>
@@ -153,14 +161,15 @@ export function PortalWorkspaceView({ data, project, company, uid, canAct, tab, 
       {pendingInvoices.map(item => <li key={item.id} className="flex flex-wrap items-center gap-3 py-4 first:pt-0 last:pb-0"><Receipt className="size-4 shrink-0 text-muted-foreground" /><div className="min-w-0 flex-1"><p className="text-sm font-medium">Invoice {item.invoiceNumber}</p><p className="mt-1 text-xs text-muted-foreground">{formatMoney(invoiceBalance(item), item.currency)} outstanding{item.dueOn ? ` · Due ${shortDate(item.dueOn)}` : ""}</p></div>{actionLink("invoice", item.id, "View invoice")}</li>)}
       {pendingEstimates.map(item => <li key={item.id} className="flex flex-wrap items-center gap-3 py-4 first:pt-0 last:pb-0"><FileText className="size-4 shrink-0 text-muted-foreground" /><div className="min-w-0 flex-1"><p className="text-sm font-medium">Review {item.title || item.estimateNumber}</p><p className="mt-1 text-xs text-muted-foreground">Estimate awaiting your response</p></div>{actionLink("estimate", item.id, "View estimate")}</li>)}
       {pendingContracts.map(item => <li key={item.id} className="flex flex-wrap items-center gap-3 py-4 first:pt-0 last:pb-0"><FileText className="size-4 shrink-0 text-muted-foreground" /><div className="min-w-0 flex-1"><p className="text-sm font-medium">Review {item.title}</p><p className="mt-1 text-xs text-muted-foreground">Contract awaiting signature</p></div>{actionLink("contract", item.id, "View contract")}</li>)}
+      {pendingDocuments.map(item => <li key={item.id} className="flex flex-wrap items-center gap-3 py-4 first:pt-0 last:pb-0"><FileText className="size-4 shrink-0 text-muted-foreground" /><div className="min-w-0 flex-1"><p className="text-sm font-medium">Read {item.title}</p><p className="mt-1 text-xs text-muted-foreground">{companyDocumentKindMeta[item.kind]?.label ?? "Document"} shared with you</p></div>{actionLink("document", item.id, "View document")}</li>)}
     </ul> : <div className="flex items-center gap-3 py-4 text-sm text-muted-foreground"><Check className="size-4 text-emerald-700" />You’re all caught up on documents.</div>}</Panel>{!project && projectList}<Tasks tasks={tasks} uid={uid} canAct={canAct} onChanged={onChanged} /></div><div className="space-y-6"><BillingSummary invoices={invoices} onView={() => onTab("billing")} /><Files files={files} /></div></div>}
     {tab === "projects" && projectList}
     {tab === "about" && <About organization={data.organization} />}
     {tab === "contacts" && <Contacts people={data.organization.publicTeam ?? []} />}
     {tab === "tasks" && <Tasks tasks={tasks} uid={uid} canAct={canAct} onChanged={onChanged} all />}
-    {tab === "files" && <Files files={files} />}
+    {tab === "documents" && <div className="space-y-6"><CompanyDocuments company={company} documents={documents} /><Files files={files} /></div>}
     {tab === "media" && <CompanyMedia logoUrl={data.organization.logoUrl} projects={data.projects as unknown as Project[]} uploaded={data.organization.media ?? []} />}
-    {tab === "billing" && <div className="space-y-6"><BillingSummary invoices={invoices} onView={() => document.getElementById("portal-documents")?.scrollIntoView({ behavior: "smooth" })} /><div id="portal-documents"><Documents company={company} invoices={invoices} contracts={contracts} estimates={estimates} /></div></div>}
+    {tab === "billing" && <div className="space-y-6"><BillingSummary invoices={invoices} onView={() => window.document.getElementById("portal-documents")?.scrollIntoView({ behavior: "smooth" })} /><div id="portal-documents"><BillingDocuments company={company} invoices={invoices} contracts={contracts} estimates={estimates} /></div></div>}
   </main>
 }
 
@@ -172,7 +181,7 @@ export function PortalWorkspace({ projectMode = false }: { projectMode?: boolean
   const search = useSearchParams()
   const router = useRouter()
   const project = projectMode ? data.projects.find(item => item.id === projectId || item.legacySlug === projectId) : undefined
-  const available = projectMode ? ["overview", "tasks", "files", "billing"] : ["overview", "about", "projects", "contacts", "tasks", "files", "media", "billing"]
+  const available = projectMode ? ["overview", "tasks", "documents", "billing"] : ["overview", "about", "projects", "contacts", "tasks", "documents", "media", "billing"]
   const raw = search.get("tab") || "overview"
   const tab = available.includes(raw) ? raw : "overview"
   if (projectMode && !project) return <PortalNotice title="This project isn’t available">It may not have been shared with your company yet. <Link className="underline" href={portalPath(companySlug)}>Back to your company</Link></PortalNotice>

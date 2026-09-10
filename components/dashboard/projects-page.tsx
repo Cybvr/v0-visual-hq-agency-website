@@ -23,11 +23,11 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu"
-import { Briefcase, Eye, LayoutGrid, List, Loader2, Plus, Trash2 } from "lucide-react"
+import { Eye, LayoutGrid, List, Loader2, Plus, Trash2 } from "lucide-react"
 import { getProjects, deleteProject, projectSlug, projectStatusMeta, type Project } from "@/lib/projects"
 import { NewProjectDialog } from "@/components/dashboard/new-project-dialog"
 import { ProjectCard } from "@/components/project-card"
-import { EmptyState, EmptySearchState } from "@/components/dashboard/empty-state"
+import { EmptySearchState, FirstRunState } from "@/components/dashboard/empty-state"
 import { FilterBar, useFilterBar, type SortOption } from "@/components/dashboard/filter-bar"
 import { cn } from "@/lib/utils"
 
@@ -145,16 +145,11 @@ export default function ProjectsAdminPage() {
           <CardContent className="py-10 text-center text-sm text-destructive">{error}</CardContent>
         </Card>
       ) : projects.length === 0 ? (
-        <EmptyState
-          icon={Briefcase}
-          title="No projects yet"
-          description="Create the first project to start tracking work for a client."
-          action={
-            <Button onClick={() => setCreating(true)}>
-              <Plus className="mr-2 h-4 w-4" />
-              Add the first project
-            </Button>
-          }
+        <FirstRunState
+          label="Project"
+          title="Let's set up your first project"
+          description="A project holds the work you do for one client: the tasks, the progress, and whatever you choose to share with them in their portal."
+          action={<Button onClick={() => setCreating(true)}>New Project</Button>}
         />
       ) : (
         <>

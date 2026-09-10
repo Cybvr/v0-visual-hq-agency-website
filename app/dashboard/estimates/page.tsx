@@ -3,12 +3,12 @@
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useCallback, useEffect, useMemo, useState } from "react"
-import { Copy, Eye, FileText, Loader2, Pencil, Plus, Trash2 } from "lucide-react"
+import { Copy, Eye, Loader2, Pencil, Plus, Trash2 } from "lucide-react"
 import { toast } from "sonner"
 
 import { useAuth } from "@/components/auth-provider"
 import { DuplicateDocumentDialog, type DuplicateSelection } from "@/components/dashboard/duplicate-document-dialog"
-import { EmptySearchState, EmptyState } from "@/components/dashboard/empty-state"
+import { EmptySearchState, FirstRunState } from "@/components/dashboard/empty-state"
 import { FilterBar, useFilterBar, type SortOption } from "@/components/dashboard/filter-bar"
 import { UserEditorSheet } from "@/components/dashboard/user-editor-sheet"
 import {
@@ -151,12 +151,14 @@ export default function EstimatesPage() {
       ) : error ? (
         <p className="mt-10 text-sm text-destructive">Couldn’t load estimates right now.</p>
       ) : estimates.length === 0 ? (
-        <EmptyState
+        <FirstRunState
           className="mt-8"
-          icon={FileText}
-          title="No estimates yet"
-          description={adminView ? "Create an estimate to price and scope client work." : "Estimates sent to you will show up here."}
-          action={adminView ? <Button asChild variant="outline"><Link href="/dashboard/estimates/new"><Plus className="size-4" aria-hidden="true" />New</Link></Button> : undefined}
+          label="Estimate"
+          title={adminView ? "Let's create your first estimate" : "No estimates yet"}
+          description={adminView
+            ? "Price and scope work before it becomes an invoice. Build up the line items, send it over, and turn it into an invoice once the client accepts."
+            : "Estimates sent to you will show up here."}
+          action={adminView ? <Button asChild><Link href="/dashboard/estimates/new">New Estimate</Link></Button> : undefined}
         />
       ) : (
         <>

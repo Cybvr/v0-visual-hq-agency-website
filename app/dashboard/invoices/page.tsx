@@ -3,12 +3,12 @@
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useCallback, useEffect, useMemo, useState } from "react"
-import { Copy, Eye, Loader2, Pencil, Plus, Receipt, Trash2 } from "lucide-react"
+import { Copy, Eye, Loader2, Pencil, Plus, Trash2 } from "lucide-react"
 import { toast } from "sonner"
 
 import { useAuth } from "@/components/auth-provider"
 import { DuplicateDocumentDialog, type DuplicateSelection } from "@/components/dashboard/duplicate-document-dialog"
-import { EmptyState, EmptySearchState } from "@/components/dashboard/empty-state"
+import { EmptySearchState, FirstRunState } from "@/components/dashboard/empty-state"
 import { UserEditorSheet } from "@/components/dashboard/user-editor-sheet"
 import {
   AlertDialog,
@@ -168,20 +168,19 @@ export default function InvoicesPage() {
       ) : error ? (
         <p className="mt-10 text-sm text-destructive">Couldn&apos;t load invoices right now.</p>
       ) : invoices.length === 0 ? (
-        <EmptyState
+        <FirstRunState
           className="mt-8"
-          icon={Receipt}
-          title="No invoices yet"
+          label="Invoice"
+          title={adminView ? "Let's raise your first invoice" : "No invoices yet"}
           description={
-            adminView ? "Issue an invoice to start billing a client." : "Invoices issued to you will show up here."
+            adminView
+              ? "This is where you bill clients. Issue an invoice, keep track of what's outstanding, and mark it paid once the money lands."
+              : "Invoices issued to you will show up here."
           }
           action={
             adminView ? (
-              <Button asChild variant="outline">
-                <Link href="/dashboard/invoices/new">
-                  <Plus className="mr-2 size-4" aria-hidden="true" />
-                  New invoice
-                </Link>
+              <Button asChild>
+                <Link href="/dashboard/invoices/new">New Invoice</Link>
               </Button>
             ) : undefined
           }

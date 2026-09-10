@@ -7,11 +7,12 @@ import { Button } from "@/components/ui/button"
 import { getOrganizationByRef, type Organization } from "@/lib/organizations"
 import { getInvoicesByClientId, getContractsByClientId, getEstimatesByClientId, type Invoice, type Contract, type Estimate } from "@/lib/billing"
 import { getDocumentsForClient, type SharedDocument } from "@/lib/documents"
+import { getPublicCompanyDocumentsByClientId, type CompanyDocument } from "@/lib/company-documents"
 import { getPortalProjects, getPortalTasks } from "@/lib/portal-data"
 import type { PortalProject, PortalTask } from "@/lib/portal-model"
 import { PortalLoading, PortalNotice } from "./portal-shell"
 
-export type PortalData = { organization: Organization; projects: PortalProject[]; tasks: PortalTask[]; invoices: Invoice[]; contracts: Contract[]; estimates: Estimate[]; files: SharedDocument[] }
+export type PortalData = { organization: Organization; projects: PortalProject[]; tasks: PortalTask[]; invoices: Invoice[]; contracts: Contract[]; estimates: Estimate[]; files: SharedDocument[]; documents: CompanyDocument[] }
 const Context = createContext<(PortalData & { reload: () => void }) | null>(null)
 
 export function PortalProvider({ children }: { children: ReactNode }) {
@@ -31,12 +32,14 @@ export function PortalProvider({ children }: { children: ReactNode }) {
           return
         }
         const projects = await getPortalProjects(organization.id)
-        const [taskGroups, invoices, contracts, estimates, files] = await Promise.all([
+        const [taskGroups, invoices, contracts, estimates, files, documents] = await Promise.all([
           Promise.all(projects.map(project => getPortalTasks(organization.id, project.id))),
           getInvoicesByClientId(organization.id), getContractsByClientId(organization.id), getEstimatesByClientId(organization.id),
           getDocumentsForClient(organization.id, appUser?.uid || ""),
+          // A document reaches the client when it's toggled public, whatever its draft status.
+          getPublicCompanyDocumentsByClientId(organization.id),
         ])
-        if (active) setResult({ key, data: { organization, projects, tasks: taskGroups.flat(), invoices, contracts, estimates, files: files.filter(file => file.clientId === organization.id) } })
+        if (active) setResult({ key, data: { organization, projects, tasks: taskGroups.flat(), invoices, contracts, estimates, files: files.filter(file => file.clientId === organization.id), documents } })
       } catch (error) {
         console.error("Portal load failed", error)
         if (active) setResult({ key, error: "We couldn’t load this workspace. Check your connection and try again." })

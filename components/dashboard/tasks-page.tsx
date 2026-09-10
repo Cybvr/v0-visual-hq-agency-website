@@ -29,7 +29,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet"
-import { ListTodo, Pencil, Plus, Trash2, Loader2 } from "lucide-react"
+import { Pencil, Plus, Trash2, Loader2 } from "lucide-react"
 import {
   getTasks,
   deleteTask,
@@ -45,7 +45,7 @@ import {
 import { getProjects, type Project } from "@/lib/projects"
 import { Badge, InlineDate, InlineProject, InlineSelect, InlineText } from "@/components/inline-table-cells"
 import { TaskForm } from "@/components/dashboard/task-form"
-import { EmptyState, EmptySearchState } from "@/components/dashboard/empty-state"
+import { EmptySearchState, FirstRunState } from "@/components/dashboard/empty-state"
 import { FilterBar, useFilterBar, type SortOption } from "@/components/dashboard/filter-bar"
 
 const STATUS_OPTIONS: TaskStatus[] = ["todo", "in-progress", "review", "done"]
@@ -167,16 +167,11 @@ export default function TasksAdminPage() {
           <CardContent className="py-10 text-center text-sm text-destructive">{error}</CardContent>
         </Card>
       ) : tasks.length === 0 ? (
-        <EmptyState
-          icon={ListTodo}
-          title="No tasks yet"
-          description="Add the first task to start tracking work."
-          action={
-            <Button onClick={() => setSelectedId("new")}>
-              <Plus className="mr-2 h-4 w-4" />
-              Add the first task
-            </Button>
-          }
+        <FirstRunState
+          label="Task"
+          title="Let's add your first task"
+          description="Tasks are the individual pieces of work inside a project. Assign one, give it a due date, and it shows up on the client's board too."
+          action={<Button onClick={() => setSelectedId("new")}>New Task</Button>}
         />
       ) : (
         <>

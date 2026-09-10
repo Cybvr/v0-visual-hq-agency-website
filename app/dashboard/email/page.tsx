@@ -17,6 +17,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
+import { FilterBar, useFilterBar, type SortOption } from "@/components/dashboard/filter-bar"
 import { DEFAULT_EMAIL_TEMPLATES, type EmailTemplateSeed } from "@/lib/email-templates"
 import { getUsers } from "@/lib/users"
 import { cn } from "@/lib/utils"
@@ -38,10 +39,24 @@ type Notice = {
   text: string
 } | null
 
-const TABS: Array<{ id: EmailTab; label: string; icon: typeof Mail }> = [
-  { id: "messages", label: "Messages", icon: Inbox },
-  { id: "templates", label: "Templates", icon: FileText },
+const MESSAGE_SORTS: SortOption<SentMessage>[] = [
+  { value: "createdAt", label: "Last sent", get: (message) => message.createdAt, ascLabel: "Oldest", descLabel: "Newest" },
+  { value: "recipient", label: "Recipient", get: (message) => message.to, ascLabel: "A–Z", descLabel: "Z–A" },
+  { value: "subject", label: "Subject", get: (message) => message.subject, ascLabel: "A–Z", descLabel: "Z–A" },
 ]
+
+function searchMessage(message: SentMessage) {
+  return [message.to, message.subject]
+}
+
+const TEMPLATE_SORTS: SortOption<EmailTemplate>[] = [
+  { value: "updatedAt", label: "Last updated", get: (template) => template.updatedAt, ascLabel: "Oldest", descLabel: "Newest" },
+  { value: "name", label: "Name", get: (template) => template.name, ascLabel: "A–Z", descLabel: "Z–A" },
+]
+
+function searchTemplate(template: EmailTemplate) {
+  return [template.name, template.subject, template.body]
+}
 
 function makeId() {
   return typeof crypto !== "undefined" && "randomUUID" in crypto
@@ -97,6 +112,22 @@ export default function EmailPage() {
   const [templateSubject, setTemplateSubject] = useState("")
   const [templateBody, setTemplateBody] = useState("")
   const [templateNotice, setTemplateNotice] = useState<Notice>(null)
+  const { results: visibleMessages, bar: messageFilterBar } = useFilterBar({
+    items: messages,
+    search: searchMessage,
+    sorts: MESSAGE_SORTS,
+    defaultSort: "createdAt",
+    defaultDirection: "desc",
+  })
+  const { results: visibleTemplates, bar: templateFilterBar } = useFilterBar({
+    items: templates,
+    search: searchTemplate,
+    sorts: TEMPLATE_SORTS,
+    defaultSort: "updatedAt",
+    defaultDirection: "desc",
+  })
+
+  const activeFilterBar = tab === "messages" ? messageFilterBar : templateFilterBar
 
   useEffect(() => {
     setLoadedWorkspace(null)
@@ -305,34 +336,36 @@ export default function EmailPage() {
   }
 
   return (
-    <main className="min-h-full bg-background px-4 py-7 sm:px-6 sm:py-9">
-      <div className="mx-auto w-full max-w-5xl">
-        <div className="flex gap-6 border-b border-border" role="tablist" aria-label="Email tools">
-          {TABS.map(({ id, label, icon: Icon }) => (
-            <button
-              key={id}
-              type="button"
-              role="tab"
-              aria-selected={tab === id}
-              onClick={() => setTab(id)}
-              className={cn(
-                "relative flex h-11 items-center gap-2 text-sm font-medium text-muted-foreground outline-none transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-                tab === id && "text-foreground after:absolute after:inset-x-0 after:bottom-[-1px] after:h-0.5 after:bg-foreground",
-              )}
-            >
-              <Icon className="size-4" aria-hidden="true" />
-              {label}
-              {id === "messages" && messages.length > 0 && (
-                <span className="rounded-full bg-muted px-1.5 py-0.5 text-[11px] leading-none text-muted-foreground">
-                  {messages.length}
-                </span>
-              )}
-            </button>
-          ))}
-        </div>
+    <main className="mx-auto w-full max-w-5xl px-4 pt-4 pb-12 sm:px-6">
+      <div className="w-full">
+        <FilterBar
+          {...activeFilterBar}
+          placeholder={tab === "messages" ? "Search messages" : "Search templates"}
+          actions={
+            <>
+              <Button
+                type="button"
+                variant={tab === "messages" ? "default" : "outline"}
+                onClick={() => {
+                  setTab("messages")
+                  clearComposer()
+                }}
+              >
+                <Mail aria-hidden="true" />New mail
+              </Button>
+              <Button
+                type="button"
+                variant={tab === "templates" ? "default" : "outline"}
+                onClick={() => setTab("templates")}
+              >
+                <FileText aria-hidden="true" />Templates
+              </Button>
+            </>
+          }
+        />
 
         {tab === "messages" && (
-          <section className="grid gap-6 pt-7 lg:grid-cols-[18rem_minmax(0,1fr)]" role="tabpanel">
+          <section className="grid gap-6 lg:grid-cols-[18rem_minmax(0,1fr)]" role="tabpanel">
             <aside className="overflow-hidden rounded-[14px] border border-border bg-card lg:min-h-[38rem]">
               <div className="flex items-center justify-between gap-3 border-b border-border px-4 py-3.5">
                 <h2 className="text-sm font-semibold">Sent messages</h2>
@@ -344,9 +377,13 @@ export default function EmailPage() {
                   <p className="mt-3 text-sm font-medium">No sent messages</p>
                   <p className="mt-1 text-xs leading-5 text-muted-foreground">Your sent emails will appear here.</p>
                 </div>
+              ) : visibleMessages.length === 0 ? (
+                <div className="px-4 py-10 text-center text-sm text-muted-foreground">
+                  No messages match your search.
+                </div>
               ) : (
                 <div className="divide-y divide-border">
-                  {messages.map((message) => (
+                  {visibleMessages.map((message) => (
                     <div key={message.id} className="space-y-1 px-4 py-3">
                       <div className="flex items-center justify-between gap-3">
                         <span className="truncate text-xs font-medium">{message.to}</span>
@@ -523,9 +560,13 @@ export default function EmailPage() {
                   <p className="mt-3 text-sm font-medium">No templates yet</p>
                   <p className="mt-1 text-xs leading-5 text-muted-foreground">Save the first one using the editor.</p>
                 </div>
+              ) : visibleTemplates.length === 0 ? (
+                <div className="mt-3 rounded-[12px] border border-dashed border-border px-4 py-8 text-center text-sm text-muted-foreground">
+                  No templates match your search.
+                </div>
               ) : (
                 <div className="mt-3 divide-y divide-border overflow-hidden rounded-[12px] border border-border bg-card">
-                  {templates.map((template) => (
+                  {visibleTemplates.map((template) => (
                     <div key={template.id} className={cn("group flex items-start gap-2 p-3", editingTemplateId === template.id && "bg-muted/60")}>
                       <button type="button" onClick={() => editTemplate(template)} className="min-w-0 flex-1 text-left outline-none focus-visible:ring-2 focus-visible:ring-ring">
                         <span className="block truncate text-sm font-medium">{template.name}</span>

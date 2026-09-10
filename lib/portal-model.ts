@@ -25,10 +25,12 @@ export interface PortalTask {
   assigneeUid: string
 }
 
-export const portalTabs = ["overview", "tasks", "files", "billing"] as const
+export const portalTabs = ["overview", "tasks", "documents", "billing"] as const
 export type PortalTab = (typeof portalTabs)[number]
-export type DocumentKind = "invoice" | "estimate" | "contract"
-export const isDocumentKind = (value: string): value is DocumentKind => ["invoice", "estimate", "contract"].includes(value)
+export type DocumentKind = "invoice" | "estimate" | "contract" | "document"
+export const isDocumentKind = (value: string): value is DocumentKind => ["invoice", "estimate", "contract", "document"].includes(value)
+/** Invoices, estimates and contracts sit under billing; written documents under their own tab. */
+export const documentKindTab = (kind: DocumentKind): PortalTab => (kind === "document" ? "documents" : "billing")
 
 export function portalPath(company: string) { return `/portal/${encodeURIComponent(company)}` }
 export function portalDocumentPath(company: string, kind: DocumentKind, id: string) {
@@ -52,7 +54,9 @@ export function legacyCompanyDestination(company: string, search: string): strin
   const [kind, id] = (params.get("doc") || "").split(":")
   if (id && isDocumentKind(kind)) return portalDocumentPath(company, kind, id)
   const oldTab = params.get("tab")
-  const tab = oldTab === "documents" ? "billing" : oldTab === "media" ? "files" : oldTab
+  // `documents` once meant the billing list, and `files`/`media` the shared
+  // files, which now live under the Documents tab.
+  const tab = oldTab === "documents" ? "billing" : oldTab === "media" || oldTab === "files" ? "documents" : oldTab
   return portalPath(company) + (tab && [...portalTabs, "projects"].includes(tab as PortalTab) ? `?tab=${tab}` : "")
 }
 
@@ -66,7 +70,7 @@ export function legacyDashboardDestination(company: string, pathname: string, se
   if (section === "projects" && id && id !== "new") {
     try { return `${portalPath(company)}/projects/${encodeURIComponent(decodeURIComponent(id))}` } catch { return portalPath(company) }
   }
-  const tabs: Record<string, string> = { tasks: "tasks", drive: "files", invoices: "billing", estimates: "billing", contracts: "billing", projects: "projects" }
+  const tabs: Record<string, string> = { tasks: "tasks", drive: "documents", documents: "documents", invoices: "billing", estimates: "billing", contracts: "billing", projects: "projects" }
   if (tabs[section]) return `${portalPath(company)}?tab=${tabs[section]}`
   return legacyCompanyDestination(company, search)
 }
