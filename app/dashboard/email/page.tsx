@@ -17,17 +17,13 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
+import { DEFAULT_EMAIL_TEMPLATES, type EmailTemplateSeed } from "@/lib/email-templates"
+import { getUsers } from "@/lib/users"
 import { cn } from "@/lib/utils"
 
-type EmailTab = "compose" | "templates" | "messages"
+type EmailTab = "templates" | "messages"
 
-type EmailTemplate = {
-  id: string
-  name: string
-  subject: string
-  body: string
-  updatedAt: string
-}
+type EmailTemplate = EmailTemplateSeed & { updatedAt: string }
 
 type SentMessage = {
   id: string
@@ -43,9 +39,8 @@ type Notice = {
 } | null
 
 const TABS: Array<{ id: EmailTab; label: string; icon: typeof Mail }> = [
-  { id: "compose", label: "Compose", icon: Mail },
-  { id: "templates", label: "Templates", icon: FileText },
   { id: "messages", label: "Messages", icon: Inbox },
+  { id: "templates", label: "Templates", icon: FileText },
 ]
 
 function makeId() {
@@ -82,12 +77,13 @@ export default function EmailPage() {
   const templateStorageKey = `visualcns-email-templates:${workspaceId}`
   const messageStorageKey = `visualcns-email-messages:${workspaceId}`
 
-  const [tab, setTab] = useState<EmailTab>("compose")
+  const [tab, setTab] = useState<EmailTab>("messages")
   const [templates, setTemplates] = useState<EmailTemplate[]>([])
   const [messages, setMessages] = useState<SentMessage[]>([])
   const [loadedWorkspace, setLoadedWorkspace] = useState<string | null>(null)
   const [senderConfigured, setSenderConfigured] = useState<boolean | null>(null)
   const [senderAddress, setSenderAddress] = useState<string | null>(null)
+  const [contacts, setContacts] = useState<Array<{ email: string; label: string }>>([])
 
   const [to, setTo] = useState("")
   const [subject, setSubject] = useState("")
@@ -104,7 +100,15 @@ export default function EmailPage() {
 
   useEffect(() => {
     setLoadedWorkspace(null)
-    setTemplates(readStoredList<EmailTemplate>(templateStorageKey))
+    const storedTemplates = readStoredList<EmailTemplate>(templateStorageKey)
+    setTemplates(
+      storedTemplates.length > 0
+        ? storedTemplates
+        : DEFAULT_EMAIL_TEMPLATES.map((template) => ({
+            ...template,
+            updatedAt: new Date().toISOString(),
+          })),
+    )
     setMessages(readStoredList<SentMessage>(messageStorageKey))
     setLoadedWorkspace(workspaceId)
   }, [workspaceId, templateStorageKey, messageStorageKey])
@@ -118,6 +122,40 @@ export default function EmailPage() {
     if (loadedWorkspace !== workspaceId) return
     localStorage.setItem(messageStorageKey, JSON.stringify(messages))
   }, [loadedWorkspace, workspaceId, messageStorageKey, messages])
+
+  useEffect(() => {
+    if (!showOpsDetail) {
+      setContacts([])
+      return
+    }
+
+    let active = true
+    void getUsers()
+      .then((users) => {
+        if (!active) return
+        const seen = new Set<string>()
+        const nextContacts = users
+          .filter((contact) => contact.role === "client" && contact.email?.trim())
+          .map((contact) => ({
+            email: contact.email.trim(),
+            label: [contact.company, contact.displayName].filter(Boolean).join(" · ") || contact.email.trim(),
+          }))
+          .filter((contact) => {
+            const key = contact.email.toLowerCase()
+            if (seen.has(key)) return false
+            seen.add(key)
+            return true
+          })
+        setContacts(nextContacts)
+      })
+      .catch(() => {
+        if (active) setContacts([])
+      })
+
+    return () => {
+      active = false
+    }
+  }, [showOpsDetail])
 
   useEffect(() => {
     let active = true
@@ -269,28 +307,7 @@ export default function EmailPage() {
   return (
     <main className="min-h-full bg-background px-4 py-7 sm:px-6 sm:py-9">
       <div className="mx-auto w-full max-w-5xl">
-        <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
-          {showOpsDetail && (
-            <div className="flex items-center gap-2 text-sm">
-              <span
-                className={cn(
-                  "size-2 rounded-full",
-                  senderConfigured === null
-                    ? "bg-muted-foreground/40"
-                    : senderConfigured
-                      ? "bg-emerald-500"
-                      : "bg-amber-500",
-                )}
-                aria-hidden="true"
-              />
-              <span className="font-medium">
-                {senderConfigured === null ? "Checking sender" : senderConfigured ? "Sender ready" : "Sender setup required"}
-              </span>
-            </div>
-          )}
-        </div>
-
-        <div className="mt-7 flex gap-6 border-b border-border" role="tablist" aria-label="Email tools">
+        <div className="flex gap-6 border-b border-border" role="tablist" aria-label="Email tools">
           {TABS.map(({ id, label, icon: Icon }) => (
             <button
               key={id}
@@ -314,8 +331,38 @@ export default function EmailPage() {
           ))}
         </div>
 
-        {tab === "compose" && (
-          <section className="pt-7" role="tabpanel">
+        {tab === "messages" && (
+          <section className="grid gap-6 pt-7 lg:grid-cols-[18rem_minmax(0,1fr)]" role="tabpanel">
+            <aside className="overflow-hidden rounded-[14px] border border-border bg-card lg:min-h-[38rem]">
+              <div className="flex items-center justify-between gap-3 border-b border-border px-4 py-3.5">
+                <h2 className="text-sm font-semibold">Sent messages</h2>
+                <span className="text-xs tabular-nums text-muted-foreground">{messages.length}</span>
+              </div>
+              {messages.length === 0 ? (
+                <div className="px-4 py-10 text-center">
+                  <Inbox className="mx-auto size-5 text-muted-foreground" aria-hidden="true" />
+                  <p className="mt-3 text-sm font-medium">No sent messages</p>
+                  <p className="mt-1 text-xs leading-5 text-muted-foreground">Your sent emails will appear here.</p>
+                </div>
+              ) : (
+                <div className="divide-y divide-border">
+                  {messages.map((message) => (
+                    <div key={message.id} className="space-y-1 px-4 py-3">
+                      <div className="flex items-center justify-between gap-3">
+                        <span className="truncate text-xs font-medium">{message.to}</span>
+                        <span className="shrink-0 text-[11px] text-muted-foreground">{formatMessageDate(message.createdAt)}</span>
+                      </div>
+                      <p className="truncate text-sm">{message.subject}</p>
+                      <span className="inline-flex items-center gap-1 text-[11px] text-emerald-700 dark:text-emerald-300">
+                        <CheckCircle2 className="size-3" aria-hidden="true" />Accepted
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </aside>
+
+            <div>
             {!senderConfigured && senderConfigured !== null && (
               <div className="mb-5 rounded-[12px] bg-amber-500/10 px-4 py-3 text-sm leading-6 text-amber-900 dark:text-amber-200">
                 {showOpsDetail
@@ -353,11 +400,20 @@ export default function EmailPage() {
                     id="email-to"
                     type="email"
                     autoComplete="email"
+                    list="email-contacts"
                     value={to}
                     onChange={(event) => setTo(event.target.value)}
                     placeholder="client@example.com"
                     required
                   />
+                  <datalist id="email-contacts">
+                    {contacts.map((contact) => (
+                      <option key={contact.email} value={contact.email} label={contact.label} />
+                    ))}
+                  </datalist>
+                  {showOpsDetail && contacts.length > 0 && (
+                    <p className="text-xs text-muted-foreground">Start typing to choose a saved client contact.</p>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="email-subject">Subject</Label>
@@ -410,12 +466,13 @@ export default function EmailPage() {
                 </div>
               </div>
             </form>
+            </div>
           </section>
         )}
 
         {tab === "templates" && (
-          <section className="grid gap-6 pt-7 lg:grid-cols-[minmax(0,1fr)_18rem]" role="tabpanel">
-            <form onSubmit={saveTemplate} className="rounded-[14px] border border-border bg-card p-4 sm:p-6">
+          <section className="grid gap-6 pt-7 lg:grid-cols-[18rem_minmax(0,1fr)]" role="tabpanel">
+            <form onSubmit={saveTemplate} className="rounded-[14px] border border-border bg-card p-4 sm:p-6 lg:order-2">
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <h2 className="font-semibold">{editingTemplateId ? "Edit template" : "New template"}</h2>
@@ -455,7 +512,7 @@ export default function EmailPage() {
               </div>
             </form>
 
-            <div>
+            <div className="lg:order-1">
               <div className="flex items-center justify-between gap-3">
                 <h2 className="font-semibold">Saved templates</h2>
                 <span className="text-xs tabular-nums text-muted-foreground">{templates.length}</span>
@@ -485,39 +542,6 @@ export default function EmailPage() {
           </section>
         )}
 
-        {tab === "messages" && (
-          <section className="pt-7" role="tabpanel">
-            {messages.length === 0 ? (
-              <div className="rounded-[14px] border border-dashed border-border px-5 py-16 text-center">
-                <Inbox className="mx-auto size-6 text-muted-foreground" aria-hidden="true" />
-                <h2 className="mt-4 font-semibold">No sent messages</h2>
-                <p className="mx-auto mt-1 max-w-sm text-sm leading-6 text-muted-foreground">Messages accepted by the provider will appear here.</p>
-                <Button type="button" variant="outline" className="mt-5" onClick={() => setTab("compose")}>Compose email</Button>
-              </div>
-            ) : (
-              <div className="overflow-hidden rounded-[14px] border border-border bg-card">
-                <div className="hidden grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)_10rem_7rem] gap-4 border-b border-border bg-muted/40 px-5 py-3 text-xs font-medium text-muted-foreground sm:grid">
-                  <span>Recipient</span>
-                  <span>Subject</span>
-                  <span>Sent</span>
-                  <span>Status</span>
-                </div>
-                <div className="divide-y divide-border">
-                  {messages.map((message) => (
-                    <div key={message.id} className="grid gap-2 px-4 py-4 text-sm sm:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)_10rem_7rem] sm:items-center sm:gap-4 sm:px-5">
-                      <span className="truncate font-medium">{message.to}</span>
-                      <span className="truncate text-muted-foreground sm:text-foreground">{message.subject}</span>
-                      <span className="text-xs text-muted-foreground sm:text-sm">{formatMessageDate(message.createdAt)}</span>
-                      <span className="inline-flex w-fit items-center gap-1.5 text-xs font-medium text-emerald-700 dark:text-emerald-300">
-                        <CheckCircle2 className="size-3.5" aria-hidden="true" />Accepted
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </section>
-        )}
       </div>
     </main>
   )

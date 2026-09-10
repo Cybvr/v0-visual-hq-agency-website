@@ -104,6 +104,15 @@ service cloud.firestore {
         && request.resource.data.acceptedAt == request.time && request.resource.data.updatedAt == request.time
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'acceptedAt', 'updatedAt']));
     }
+    // Written documents sent to a company: proposals, statements of work,
+    // briefs. Drafts stay internal; a sent document is readable by its own
+    // company, or by anyone holding the link once sharing is turned on.
+    match /companyDocuments/{id} {
+      allow get: if isAdmin() || (resource.data.status != 'draft' && (owns(resource.data) || resource.data.get('shareEnabled', false) == true));
+      allow list: if isAdmin() || (owns(resource.data) && resource.data.status != 'draft');
+      allow write: if isAdmin();
+    }
+
     // No client approval UI currently uses this legacy collection.
     match /approvals/{id} { allow read, write: if isAdmin(); }
 
