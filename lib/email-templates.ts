@@ -9,6 +9,40 @@ export type EmailTemplateSeed = {
 
 export const DEFAULT_EMAIL_TEMPLATES: EmailTemplateSeed[] = [
   {
+    id: "client-portal-blue-print",
+    name: "Client portal — blue print campaign",
+    subject: "Your whole project, in one place",
+    body: `Dear [Customer Name],
+
+Your whole project, in one place.
+
+Track progress, review files, approve estimates and message your team, anytime. Your VisualCNS client portal gives you a clear, shared view of the work—from the latest project update to the files and decisions that keep everything moving.
+
+Open your portal to see what’s happening, review what needs your attention, and stay connected with our team.
+
+Best regards,
+VisualCNS Team`,
+    imageUrl: "/email/client-portal-blue-print.png",
+    imageAlt: "A Nigerian client manager in a blue African-print suit promoting the VisualCNS client portal",
+  },
+  {
+    id: "client-portal-manager",
+    name: "Client portal — manager campaign",
+    subject: "A clearer way to manage your project",
+    body: `Dear [Customer Name],
+
+Ready to handle the next step?
+
+Your VisualCNS client portal keeps project progress, files, estimates, and conversations together, so you can review work and make decisions without chasing updates across different channels.
+
+Open your portal whenever it suits you and keep your project moving with our team.
+
+Best regards,
+VisualCNS Team`,
+    imageUrl: "/email/client-portal-manager.png",
+    imageAlt: "A Nigerian client manager in a tailored navy suit promoting the VisualCNS client portal",
+  },
+  {
     id: "welcome-client-portal",
     name: "Welcome to your client portal",
     subject: "Welcome to your VisualCNS client portal",
@@ -22,6 +56,8 @@ Use the button below to open your portal and get started.
 
 Best regards,
 VisualCNS Team`,
+    imageUrl: "/email/portal-overview.svg",
+    imageAlt: "A client overview in the VisualCNS portal showing recent projects and their status",
   },
   {
     id: "introducing-ngai",
@@ -75,12 +111,14 @@ VisualCNS Team`,
 
 Here’s a quick update on your project. We’re making steady progress and have completed the latest planned milestone.
 
-You can view the current progress, project details, and any related files in your client portal.
+Sign in to your client portal to see live progress bars, current status, and any related files for each project.
 
 We’ll share another update as the next milestone is completed. If you have any questions, please reply to this email.
 
 Best regards,
 VisualCNS Team`,
+    imageUrl: "/email/project-progress.svg",
+    imageAlt: "A projects list in the VisualCNS portal showing progress bars and status for each project",
   },
   {
     id: "document-ready",
@@ -103,10 +141,12 @@ VisualCNS Team`,
 
 We’ve added a new task for you in the VisualCNS client portal.
 
-You can review the task details, due date, and any attached files in the Tasks section. Please let us know if you need clarification or additional information.
+Open the Tasks section to review the task details, its due date, and any attached files. You can mark it complete there once it’s done, and let us know if you need clarification or additional information.
 
 Best regards,
 VisualCNS Team`,
+    imageUrl: "/email/task-assigned.svg",
+    imageAlt: "A task list in the VisualCNS portal with a newly assigned task highlighted at the top",
   },
   {
     id: "invoice-available",
@@ -116,12 +156,14 @@ VisualCNS Team`,
 
 Your latest VisualCNS invoice is now available in the client portal.
 
-Please sign in to review the invoice details, amount due, and payment information in the Billing section.
+Sign in and open the Billing section to review the line items, amount due, and payment information, or to download a PDF copy for your records.
 
 If you have any questions about this invoice, please contact our team.
 
 Best regards,
 VisualCNS Team`,
+    imageUrl: "/email/invoice-available.svg",
+    imageAlt: "A billing screen in the VisualCNS portal showing an invoice, amount due, and a view button",
   },
   {
     id: "estimate-for-approval",
@@ -131,10 +173,12 @@ VisualCNS Team`,
 
 We’ve prepared an estimate for your review in the VisualCNS client portal.
 
-Please open the estimate to review the proposed work, pricing, and next steps. Once you’re ready, you can respond to our team with any questions or approval.
+Open the estimate to review the proposed work, pricing, and total. When you’re ready you can approve it directly in the portal, or send us a question first.
 
 Best regards,
 VisualCNS Team`,
+    imageUrl: "/email/estimate-approval.svg",
+    imageAlt: "An estimate in the VisualCNS portal showing proposed work, a total, and approve and question buttons",
   },
   {
     id: "contract-ready",
