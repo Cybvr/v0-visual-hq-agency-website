@@ -17,7 +17,7 @@ type AuthAction = "email" | "google" | "reset" | null
 export default function LoginPage() {
   const router = useRouter()
   const emailInputRef = useRef<HTMLInputElement>(null)
-  const { user, role, loading, signInWithEmail, sendPasswordReset, signInWithGoogle } = useAuth()
+  const { user, role, loading, signInWithEmail, signInWithGoogle } = useAuth()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [action, setAction] = useState<AuthAction>(null)
@@ -77,10 +77,16 @@ export default function LoginPage() {
 
     setAction("reset")
     try {
-      await sendPasswordReset(trimmedEmail)
+      const response = await fetch("/api/auth/password-reset", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: trimmedEmail }),
+      })
+      const result = (await response.json().catch(() => ({}))) as { error?: string }
+      if (!response.ok) throw new Error(result.error || "We couldn’t send the reset email. Please try again.")
       setNotice(`If an account exists for ${trimmedEmail}, a password reset link has been sent.`)
     } catch (err) {
-      setError(authErrorMessage(err))
+      setError(err instanceof Error ? err.message : authErrorMessage(err))
     } finally {
       setAction(null)
     }

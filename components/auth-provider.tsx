@@ -4,7 +4,6 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from "
 import {
   createUserWithEmailAndPassword,
   onAuthStateChanged,
-  sendPasswordResetEmail,
   signInWithEmailAndPassword,
   signInWithPopup,
   signOut as firebaseSignOut,
@@ -69,7 +68,6 @@ type AuthContextValue = {
   stopViewingAs: () => void
   signUpWithEmail: (name: string, email: string, password: string) => Promise<void>
   signInWithEmail: (email: string, password: string) => Promise<void>
-  sendPasswordReset: (email: string) => Promise<void>
   signInWithGoogle: () => Promise<void>
   signOut: () => Promise<void>
 }
@@ -161,10 +159,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     })
   }
 
-  async function sendPasswordReset(email: string) {
-    await sendPasswordResetEmail(auth, email)
-  }
-
   async function signOut() {
     sessionStorage.removeItem(VIEW_AS_KEY)
     setImpersonated(null)
@@ -200,7 +194,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         stopViewingAs,
         signUpWithEmail,
         signInWithEmail,
-        sendPasswordReset,
         signInWithGoogle,
         signOut,
       }}
