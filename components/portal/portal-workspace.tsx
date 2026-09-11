@@ -450,7 +450,7 @@ export function PortalWorkspaceView({ data, project, company, uid, canAct, tab, 
   </PortalShellLayout>
 }
 
-export function PortalWorkspace({ projectMode = false }: { projectMode?: boolean }) {
+export function PortalWorkspace({ projectMode = false, section }: { projectMode?: boolean; section?: string }) {
   const data = usePortal()
   const { appUser, isAdmin } = useAuth()
   const { companySlug, projectId } = useParams<{ companySlug: string; projectId?: string }>()
@@ -459,7 +459,7 @@ export function PortalWorkspace({ projectMode = false }: { projectMode?: boolean
   const router = useRouter()
   const project = projectMode ? data.projects.find(item => item.id === projectId || item.legacySlug === projectId) : undefined
   const available = projectMode ? ["overview", "tasks", "documents"] : ["overview", "projects", "contacts", "tasks", "documents", "media", "ngai", "account"]
-  const raw = search.get("tab") || "overview"
+  const raw = section || search.get("tab") || "overview"
   const tab = available.includes(raw) ? raw : "overview"
   if (projectMode && !project) return <PortalNotice title="This project isn’t available">It may not have been shared with your company yet. <Link className="underline" href={portalPath(companySlug)}>Back to your company</Link></PortalNotice>
   return <PortalWorkspaceView data={data} project={project} company={companySlug} uid={appUser?.uid || ""} canAct={!isAdmin} tab={tab} onTab={value => router.push(`${pathname}${value === "overview" ? "" : `?tab=${value}`}`, { scroll: false })} onChanged={data.reload} />

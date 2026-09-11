@@ -9,12 +9,13 @@ import {
   Inbox,
   Loader2,
   List,
+  Linkedin,
   Mail,
   Plus,
   Send,
   Trash2,
+  Twitter,
 } from "lucide-react"
-import { FaLinkedinIn, FaXTwitter } from "react-icons/fa6"
 
 import { useAuth } from "@/components/auth-provider"
 import { RichTextEditor } from "@/components/dashboard/rich-text-editor"
@@ -270,9 +271,15 @@ export default function EmailPage() {
   const [messageSenderFilter, setMessageSenderFilter] = useState("all")
   const [messageStatusFilter, setMessageStatusFilter] = useState("all")
   const messageFilterOptions = useMemo(() => ({
-    companies: Array.from(new Map(messages.filter((message) => message.companyId).map((message) => [message.companyId, message.companyName || message.companyId])).entries()),
-    projects: Array.from(new Map(messages.filter((message) => message.projectId).map((message) => [message.projectId, message.projectName || message.projectId])).entries()),
-    documents: Array.from(new Map(messages.filter((message) => message.documentType).map((message) => [message.documentType, message.documentTitle || message.documentType])).entries()),
+    companies: Array.from(new Map(messages.flatMap((message) => message.companyId
+      ? [[message.companyId, message.companyName || message.companyId] as [string, string]]
+      : [])).entries()),
+    projects: Array.from(new Map(messages.flatMap((message) => message.projectId
+      ? [[message.projectId, message.projectName || message.projectId] as [string, string]]
+      : [])).entries()),
+    documents: Array.from(new Map(messages.flatMap((message) => message.documentType
+      ? [[message.documentType, message.documentTitle || message.documentType] as [string, string]]
+      : [])).entries()),
     senders: Array.from(new Set(messages.map((message) => cleanSenderDisplay(message.from || "VisualCNS")).filter(Boolean))),
   }), [messages])
   const filteredMessages = useMemo(() => messages.filter((message) => (
@@ -1375,10 +1382,10 @@ export default function EmailPage() {
                           </div>
                           <div className="flex shrink-0 items-center gap-3 pt-0.5">
                             <a href="https://x.com/visualcns" target="_blank" rel="noreferrer" aria-label="VisualCNS on X" className="text-neutral-700 hover:text-neutral-950">
-                              <FaXTwitter className="size-3.5" aria-hidden="true" />
+                              <Twitter className="size-3.5" aria-hidden="true" />
                             </a>
                             <a href="https://www.linkedin.com/company/visualng" target="_blank" rel="noreferrer" aria-label="VisualCNS on LinkedIn" className="text-neutral-700 hover:text-neutral-950">
-                              <FaLinkedinIn className="size-3.5" aria-hidden="true" />
+                              <Linkedin className="size-3.5" aria-hidden="true" />
                             </a>
                           </div>
                         </div>

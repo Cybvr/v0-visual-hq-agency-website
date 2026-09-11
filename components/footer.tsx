@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { FaLinkedinIn, FaXTwitter } from "react-icons/fa6"
+import { Linkedin, Twitter, type LucideIcon } from "lucide-react"
 import { BrandLockup } from "@/components/brand-lockup"
 
 const footerGroups = [
@@ -53,9 +53,9 @@ const offices = [
   },
 ]
 
-const socialLinks = [
-  { name: "X", href: "https://x.com/visualcns", icon: FaXTwitter },
-  { name: "LinkedIn", href: "https://www.linkedin.com/company/visualng", icon: FaLinkedinIn },
+const socialLinks: Array<{ name: string; href: string; icon: LucideIcon }> = [
+  { name: "X", href: "https://x.com/visualcns", icon: Twitter },
+  { name: "LinkedIn", href: "https://www.linkedin.com/company/visualng", icon: Linkedin },
 ]
 
 export function Footer() {
