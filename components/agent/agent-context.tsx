@@ -26,6 +26,8 @@ export type AgentMessage = {
   id: string
   role: "user" | "assistant"
   content: string
+  /** Storage URLs of images the user attached to this message. */
+  images?: string[]
   /** Present when the agent answered and then asked for details as a form. */
   form?: AgentForm
 }
@@ -62,7 +64,7 @@ interface AgentContextValue {
   activeConversationId: string
   sending: boolean
   firstName: string
-  send: (text: string) => void
+  send: (text: string, images?: string[]) => void
   reset: () => void
   selectConversation: (id: string) => void
 }
@@ -105,14 +107,14 @@ export function AgentProvider({ children }: { children: ReactNode }) {
           const stored = chat.data().messages
           const chatMessages = Array.isArray(stored)
             ? stored
-                .filter((message): message is { id: string | number; role: "user" | "assistant"; content: string } =>
+                .filter((message): message is { id: string | number; role: "user" | "assistant"; content: string; images?: string[] } =>
                   Boolean(message) &&
                   (message.role === "user" || message.role === "assistant") &&
                   typeof message.content === "string" &&
                   !(message.role === "assistant" && !message.content.trim()),
                 )
                 .slice(-MAX_HISTORY_MESSAGES)
-                .map((message) => ({ ...message, id: String(message.id) }))
+                .map((message) => ({ ...message, id: String(message.id), ...(Array.isArray(message.images) ? { images: message.images.filter((url): url is string => typeof url === "string") } : {}) }))
             : []
           return { id: chat.id, title: String(chat.data().title || NEW_CHAT_TITLE), messages: chatMessages }
         })
@@ -123,14 +125,14 @@ export function AgentProvider({ children }: { children: ReactNode }) {
           const stored = legacy.data()?.messages
           const legacyMessages = Array.isArray(stored)
             ? stored
-                .filter((message): message is { id: string | number; role: "user" | "assistant"; content: string } =>
+                .filter((message): message is { id: string | number; role: "user" | "assistant"; content: string; images?: string[] } =>
                   Boolean(message) &&
                   (message.role === "user" || message.role === "assistant") &&
                   typeof message.content === "string" &&
                   !(message.role === "assistant" && !message.content.trim()),
                 )
                 .slice(-MAX_HISTORY_MESSAGES)
-                .map((message) => ({ ...message, id: String(message.id) }))
+                .map((message) => ({ ...message, id: String(message.id), ...(Array.isArray(message.images) ? { images: message.images.filter((url): url is string => typeof url === "string") } : {}) }))
             : []
           if (legacyMessages.length) restored = [{ id: "previous-chat", title: "Previous chat", messages: legacyMessages }]
         }
@@ -172,17 +174,19 @@ export function AgentProvider({ children }: { children: ReactNode }) {
   )
 
   const send = useCallback(
-    (text: string) => {
+    (text: string, images?: string[]) => {
       const content = text.trim()
+      const attachments = (images ?? []).filter((url) => typeof url === "string" && url)
       const currentUser = user
-      if (!content || sending || !currentUser) return
+      if ((!content && !attachments.length) || sending || !currentUser) return
 
-      const userMessage: AgentMessage = { id: messageId(nextId), role: "user", content }
+      const userMessage: AgentMessage = { id: messageId(nextId), role: "user", content, ...(attachments.length ? { images: attachments } : {}) }
       const assistantId = messageId(nextId)
       const history = [...messages, userMessage]
       const conversationId = activeConversationId || messageId(nextId)
       const existing = conversations.find((conversation) => conversation.id === conversationId)
-      const title = existing?.title && existing.title !== NEW_CHAT_TITLE ? existing.title : content.slice(0, 56)
+      const fallbackTitle = content.slice(0, 56) || "Shared an image"
+      const title = existing?.title && existing.title !== NEW_CHAT_TITLE ? existing.title : fallbackTitle
       const pending = [...history, { id: assistantId, role: "assistant" as const, content: "" }]
 
       setActiveConversationId(conversationId)
@@ -190,7 +194,7 @@ export function AgentProvider({ children }: { children: ReactNode }) {
       rememberConversation({ id: conversationId, title, messages: history })
       setSending(true)
 
-      const payload = history.map(({ role, content: c }) => ({ role, content: c }))
+      const payload = history.map(({ role, content: c, images: im }) => ({ role, content: c, ...(im?.length ? { images: im } : {}) }))
 
       void (async () => {
         try {

@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic"
 const MODEL = process.env.OPENAI_MODEL || "gpt-5.6-luna"
 const MAX_TOOL_ROUNDS = 12
 
-type ChatMessage = { role: "user" | "assistant"; content: string }
+type ChatMessage = { role: "user" | "assistant"; content: string; images?: string[] }
 type Surface = "client_portal" | "agency_dashboard"
 type AgentBody = { messages?: ChatMessage[]; firstName?: string; surface?: Surface }
 
@@ -670,7 +670,11 @@ export async function POST(request: Request) {
   }
 
   const messages = (body.messages ?? []).filter(
-    (m) => (m.role === "user" || m.role === "assistant") && typeof m.content === "string" && m.content.trim(),
+    (m) =>
+      (m.role === "user" || m.role === "assistant") &&
+      typeof m.content === "string" &&
+      // A user turn can be just an image, so keep it when it carries attachments.
+      (m.content.trim() || (m.role === "user" && Array.isArray(m.images) && m.images.length > 0)),
   )
   if (messages.length === 0) {
     return new Response(JSON.stringify({ error: "No message to answer." }), {
@@ -700,12 +704,27 @@ export async function POST(request: Request) {
       }
     }
 
-    const input = messages.map((message) => ({ role: message.role, content: message.content }))
+    // A user turn with attachments becomes a content array of text + images, so
+    // a vision-capable model can actually see what was shared. Plain turns stay
+    // simple strings.
+    const input = messages.map((message) => {
+      const images = message.role === "user" && Array.isArray(message.images)
+        ? message.images.filter((url): url is string => typeof url === "string" && /^https?:\/\//.test(url))
+        : []
+      if (!images.length) return { role: message.role, content: message.content }
+      return {
+        role: message.role,
+        content: [
+          ...(message.content.trim() ? [{ type: "input_text", text: message.content }] : []),
+          ...images.map((url) => ({ type: "input_image", image_url: url })),
+        ],
+      }
+    })
     const tools = body.surface === "client_portal" ? (PORTAL_TOOLS as any) : (AGENT_TOOLS as any)
     let response = await client.responses.create({
       model: MODEL,
       instructions: systemInstruction,
-      input,
+      input: input as any,
       tools,
     })
 

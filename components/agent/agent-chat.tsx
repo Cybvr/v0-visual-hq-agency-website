@@ -1,10 +1,11 @@
 "use client"
 
 import Image from "next/image"
-import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent, type ReactNode } from "react"
-import { ArrowUp, History, Loader2 } from "lucide-react"
+import { useEffect, useRef, useState, type ChangeEvent, type FormEvent, type KeyboardEvent, type ReactNode } from "react"
+import { ArrowUp, History, Loader2, Plus, X } from "lucide-react"
 
 import type { AgentConversation, AgentForm, AgentMessage } from "@/components/agent/agent-context"
+import { uploadFileToStorage } from "@/lib/documents"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
@@ -245,7 +246,7 @@ export function AgentChat({
   activeConversationId: string
   sending: boolean
   firstName: string
-  onSend: (text: string) => void
+  onSend: (text: string, images?: string[]) => void
   onSelectConversation: (id: string) => void
   onNewChat: () => void
   compact?: boolean
@@ -260,20 +261,43 @@ export function AgentChat({
     "How many projects do I have?",
   ]
   const [input, setInput] = useState("")
+  const [attachments, setAttachments] = useState<string[]>([])
+  const [uploading, setUploading] = useState(false)
+  const [attachError, setAttachError] = useState("")
+  const fileInput = useRef<HTMLInputElement>(null)
   const transcriptEnd = useRef<HTMLDivElement>(null)
   // The last assistant message is empty while its stream is still arriving.
   const streaming = sending && messages[messages.length - 1]?.content === ""
+  const canSend = (input.trim().length > 0 || attachments.length > 0) && !uploading && !streaming
 
   useEffect(() => {
     transcriptEnd.current?.scrollIntoView({ behavior: "smooth", block: "end" })
   }, [messages, sending])
 
+  async function handleFiles(event: ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(event.target.files ?? []).filter((file) => file.type.startsWith("image/"))
+    event.target.value = ""
+    if (!files.length) return
+    setAttachError("")
+    setUploading(true)
+    try {
+      const urls = await Promise.all(files.map((file) => uploadFileToStorage(file)))
+      setAttachments((current) => [...current, ...urls])
+    } catch {
+      setAttachError("Couldn’t upload that image. Try again.")
+    } finally {
+      setUploading(false)
+    }
+  }
+
   function submit(event?: FormEvent<HTMLFormElement>) {
     event?.preventDefault()
     const content = input.trim()
-    if (!content || sending) return
-    onSend(content)
+    if ((!content && !attachments.length) || sending || uploading) return
+    onSend(content, attachments)
     setInput("")
+    setAttachments([])
+    setAttachError("")
   }
 
   function handleKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
@@ -376,7 +400,21 @@ export function AgentChat({
                       : "pt-0.5 text-foreground",
                   )}
                 >
-                  {message.role === "user" ? message.content : <AgentMarkdown content={message.content} />}
+                  {message.role === "user" ? (
+                    <>
+                      {message.images && message.images.length > 0 && (
+                        <div className={cn("flex flex-wrap gap-2", message.content ? "mb-2" : "")}>
+                          {message.images.map((src, index) => (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img key={`${message.id}-img-${index}`} src={src} alt="Attachment" className="max-h-40 w-auto rounded-[10px] border border-border object-cover" />
+                          ))}
+                        </div>
+                      )}
+                      {message.content}
+                    </>
+                  ) : (
+                    <AgentMarkdown content={message.content} />
+                  )}
                   {message.form && (
                     <AgentFormCard form={message.form} disabled={sending} onSubmit={onSend} />
                   )}
@@ -392,28 +430,66 @@ export function AgentChat({
         <form
           onSubmit={submit}
           className={cn(
-            "mx-auto flex w-full items-end gap-3 rounded-[16px] border border-border bg-background p-2.5 focus-within:border-ring",
+            "mx-auto flex w-full flex-col gap-2 rounded-[16px] border border-border bg-background p-2.5 focus-within:border-ring",
             compact ? "" : "max-w-3xl",
           )}
         >
-          <Textarea
-            value={input}
-            onChange={(event) => setInput(event.target.value)}
-            onKeyDown={handleKeyDown}
-            rows={1}
-            placeholder="Ask Ngai"
-            aria-label="Message Ngai"
-            className="max-h-40 min-h-11 resize-none border-0 bg-transparent px-2 py-2.5 shadow-none focus-visible:border-transparent focus-visible:ring-0"
-          />
-          <Button
-            type="submit"
-            size="icon"
-            aria-label="Send message"
-            disabled={!input.trim() || streaming}
-            className="size-10 rounded-full bg-accent text-accent-foreground hover:bg-accent/90"
-          >
-            <ArrowUp className="size-4" aria-hidden="true" />
-          </Button>
+          {(attachments.length > 0 || uploading) && (
+            <div className="flex flex-wrap gap-2 px-1 pt-1">
+              {attachments.map((src, index) => (
+                <div key={src} className="relative">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={src} alt="Attachment preview" className="size-16 rounded-[10px] border border-border object-cover" />
+                  <button
+                    type="button"
+                    aria-label="Remove image"
+                    onClick={() => setAttachments((current) => current.filter((_, i) => i !== index))}
+                    className="absolute -right-1.5 -top-1.5 flex size-5 items-center justify-center rounded-full bg-foreground text-background shadow-sm hover:opacity-80"
+                  >
+                    <X className="size-3" aria-hidden="true" />
+                  </button>
+                </div>
+              ))}
+              {uploading && (
+                <div className="flex size-16 items-center justify-center rounded-[10px] border border-dashed border-border text-muted-foreground">
+                  <Loader2 className="size-4 animate-spin" aria-hidden="true" />
+                </div>
+              )}
+            </div>
+          )}
+          <div className="flex items-end gap-2">
+            <input ref={fileInput} type="file" accept="image/*" multiple onChange={handleFiles} className="hidden" />
+            <Button
+              type="button"
+              size="icon"
+              variant="ghost"
+              aria-label="Add image"
+              disabled={uploading || streaming}
+              onClick={() => fileInput.current?.click()}
+              className="size-10 shrink-0 rounded-full text-muted-foreground hover:bg-muted hover:text-foreground"
+            >
+              <Plus className="size-5" aria-hidden="true" />
+            </Button>
+            <Textarea
+              value={input}
+              onChange={(event) => setInput(event.target.value)}
+              onKeyDown={handleKeyDown}
+              rows={1}
+              placeholder="Ask Ngai"
+              aria-label="Message Ngai"
+              className="max-h-40 min-h-11 resize-none border-0 bg-transparent px-2 py-2.5 shadow-none focus-visible:border-transparent focus-visible:ring-0"
+            />
+            <Button
+              type="submit"
+              size="icon"
+              aria-label="Send message"
+              disabled={!canSend}
+              className="size-10 shrink-0 rounded-full bg-accent text-accent-foreground hover:bg-accent/90"
+            >
+              <ArrowUp className="size-4" aria-hidden="true" />
+            </Button>
+          </div>
+          {attachError && <p role="alert" className="px-1 text-xs text-destructive">{attachError}</p>}
         </form>
       </div>
     </div>
