@@ -187,7 +187,7 @@ export function formatMoney(amount: number, currency: string): string {
 /** Who the invoice is from. Printed at the top of every invoice. */
 export const INVOICE_ISSUER: InvoiceParty = {
   name: "VisualCNS",
-  email: "hello@visualcns.com",
+  email: "info@visualcns.com",
   address: "Lagos, Nigeria",
   website: "visualcns.com",
 }

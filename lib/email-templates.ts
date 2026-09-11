@@ -9,12 +9,27 @@ export type EmailTemplateSeed = {
 
 export const DEFAULT_EMAIL_TEMPLATES: EmailTemplateSeed[] = [
   {
+    id: "welcome-client-portal",
+    name: "Welcome to your client portal",
+    subject: "Welcome to your VisualCNS client portal",
+    body: `Dear [Customer Name],
+
+Welcome to your VisualCNS client portal.
+
+This is where you can keep up with your projects, review tasks and documents, view billing information, and contact our team in one place.
+
+Use the button below to open your portal and get started.
+
+Best regards,
+VisualCNS Team`,
+  },
+  {
     id: "introducing-ngai",
     name: "Introducing Ngai",
     subject: "Meet Ngai, Your New AI Teammate",
     body: `Dear [Customer Name],
 
-Meet Ngai, your new AI teammate inside VisualCNS.
+**Meet Ngai, your new AI teammate inside VisualCNS.**
 
 You can ask Ngai to:
 
@@ -27,7 +42,7 @@ Open your client portal and select Ask Ngai to get started.
 
 Best regards,
 VisualCNS Team`,
-    imageUrl: "/ngai-feature-announcement.svg",
+    imageUrl: "/ngai-welcome.png",
     imageAlt: "Ngai AI assistant connecting workspace information to actions",
   },
   {

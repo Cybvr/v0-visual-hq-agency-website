@@ -15,6 +15,7 @@ const DASHBOARD_NAV: NavLink[] = [
   { label: "Home", href: "/dashboard", icon: LayoutDashboard },
   { label: "Companies", href: "/dashboard/companies", icon: Building2, adminOnly: true },
   { label: "Contacts", href: "/dashboard/users", icon: Users, adminOnly: true },
+  { label: "Email", href: "/dashboard/email", icon: Mail },
   { label: "Ngai", href: "/dashboard/agent", icon: Bot },
   {
     sectionLabel: "Workspace",
@@ -27,15 +28,7 @@ const DASHBOARD_NAV: NavLink[] = [
       { label: "Documents", href: "/dashboard/documents", icon: FileType2 },
     ],
   },
-  {
-    label: "Marketing",
-    href: "/dashboard/email",
-    icon: Megaphone,
-    items: [
-      { label: "Email", href: "/dashboard/email", icon: Mail },
-      { label: "SEO", href: "/dashboard/seo", icon: TrendingUp },
-    ],
-  },
+  { label: "Marketing", href: "/dashboard/seo", icon: Megaphone, items: [{ label: "SEO", href: "/dashboard/seo", icon: TrendingUp }] },
   {
     label: "Finance",
     href: "/dashboard/invoices",

@@ -54,10 +54,19 @@ export function legacyCompanyDestination(company: string, search: string): strin
   const [kind, id] = (params.get("doc") || "").split(":")
   if (id && isDocumentKind(kind)) return portalDocumentPath(company, kind, id)
   const oldTab = params.get("tab")
-  // `documents` once meant the billing list, and `files`/`media` the shared
-  // files, which now live under the Documents tab.
-  const tab = oldTab === "documents" ? "billing" : oldTab === "media" || oldTab === "files" ? "documents" : oldTab
-  return portalPath(company) + (tab && [...portalTabs, "projects"].includes(tab as PortalTab) ? `?tab=${tab}` : "")
+  const tab = oldTab === "documents" || oldTab === "files" ? "documents" : oldTab
+  const pageMap: Record<string, string> = {
+    projects: "projects",
+    contacts: "contacts",
+    tasks: "tasks",
+    documents: "documents",
+    billing: "documents",
+    media: "media",
+    ngai: "ngai",
+    account: "account",
+  }
+  const page = tab ? pageMap[tab] : undefined
+  return page ? `${portalPath(company)}/${page}` : portalPath(company)
 }
 
 /** Retain existing ids and legacy project slugs until the scoped loader resolves them. */
@@ -70,8 +79,8 @@ export function legacyDashboardDestination(company: string, pathname: string, se
   if (section === "projects" && id && id !== "new") {
     try { return `${portalPath(company)}/projects/${encodeURIComponent(decodeURIComponent(id))}` } catch { return portalPath(company) }
   }
-  const tabs: Record<string, string> = { tasks: "tasks", drive: "documents", documents: "documents", invoices: "billing", estimates: "billing", contracts: "billing", projects: "projects" }
-  if (tabs[section]) return `${portalPath(company)}?tab=${tabs[section]}`
+  const routes: Record<string, string> = { tasks: "tasks", drive: "documents", documents: "documents", invoices: "documents", estimates: "documents", contracts: "documents", projects: "projects" }
+  if (routes[section]) return `${portalPath(company)}/${routes[section]}`
   return legacyCompanyDestination(company, search)
 }
 

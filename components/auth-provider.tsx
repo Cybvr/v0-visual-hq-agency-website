@@ -14,9 +14,38 @@ import {
 import { auth, googleProvider } from "@/lib/firebase"
 import { ensureAdminBusinessOrganization } from "@/lib/business-profile"
 import { getUser, upsertUserOnLogin, type AppUser, type UserRole } from "@/lib/users"
+import { DEFAULT_EMAIL_TEMPLATES } from "@/lib/email-templates"
+import { markdownToHtml } from "@/lib/markdown"
+import { portalPath } from "@/lib/portal-model"
 
 /** sessionStorage key holding the uid an admin is currently "viewing as". */
 const VIEW_AS_KEY = "viewAsUid"
+
+async function sendWelcomeEmailIfPending(firebaseUser: User, appUser: AppUser | null) {
+  if (!appUser?.welcomeEmailPending || appUser.welcomeEmailSentAt || appUser.role !== "client" || !appUser.email) return
+  const template = DEFAULT_EMAIL_TEMPLATES.find((item) => item.id === "welcome-client-portal")
+  if (!template) return
+  const name = appUser.displayName?.trim() || appUser.email.split("@")[0]
+  const text = template.body.replaceAll("[Customer Name]", name)
+  try {
+    const idToken = await firebaseUser.getIdToken()
+    await fetch("/api/email/send", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${idToken}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        welcome: true,
+        to: appUser.email,
+        subject: template.subject,
+        text,
+        html: markdownToHtml(text),
+        cta: { text: "Open your client portal", url: `${portalPath(appUser.companyId || appUser.uid)}` },
+      }),
+    })
+  } catch (error) {
+    // Welcome delivery should never prevent the user from entering the portal.
+    console.warn("Welcome email could not be sent", error)
+  }
+}
 
 type AuthContextValue = {
   user: User | null
@@ -80,6 +109,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             }
           }
           setRealAppUser(doc)
+          void sendWelcomeEmailIfPending(u, doc)
 
           // Restore a "view as" selection made before navigating here. Only
           // admins can impersonate, and never themselves.

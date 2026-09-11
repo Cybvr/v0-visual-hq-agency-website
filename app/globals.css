@@ -155,6 +155,42 @@
     font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
     font-weight: 600 !important;
   }
+
+  .portal-content-area {
+    --portal-content-left: 0px;
+    --portal-content-right: 0px;
+  }
+
+  .portal-ngai-bar {
+    position: fixed;
+    inset-inline: var(--portal-content-left) var(--portal-content-right);
+    bottom: 0;
+    z-index: 40;
+    display: flex;
+    justify-content: center;
+    padding: 0.75rem 1rem calc(0.75rem + env(safe-area-inset-bottom));
+    background: var(--background);
+  }
+
+  @media (min-width: 768px) {
+    .peer[data-state="expanded"] ~ .portal-content-area {
+      --portal-content-left: 16rem;
+    }
+
+    .peer[data-state="collapsed"] ~ .portal-content-area {
+      --portal-content-left: 3rem;
+    }
+
+    .portal-content-area[data-ngai-open="true"] {
+      --portal-content-right: 20rem;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .portal-content-area[data-ngai-open="true"] {
+      --portal-content-right: 26rem;
+    }
+  }
 }
 
 @layer utilities {

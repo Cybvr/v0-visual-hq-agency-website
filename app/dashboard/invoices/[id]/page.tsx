@@ -7,9 +7,11 @@ import { ArrowLeft, Loader2 } from "lucide-react"
 
 import { useAuth } from "@/components/auth-provider"
 import { DocumentActions } from "@/components/dashboard/document-actions"
+import { ContextualEmailButton } from "@/components/dashboard/contextual-email-button"
 import { InvoiceDocument } from "@/components/dashboard/invoice-document"
 import { getBusinessProfile, type BusinessProfile } from "@/lib/business-profile"
 import { getInvoice, type Invoice } from "@/lib/billing"
+import { portalDocumentPath } from "@/lib/portal-model"
 
 export default function InvoiceDetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -61,7 +63,10 @@ export default function InvoiceDetailPage() {
     <main className="mx-auto w-full max-w-5xl px-4 py-8 sm:px-6 sm:py-10">
       <div className="mb-6 flex items-center justify-between gap-4 print:hidden">
         <Link href="/dashboard/invoices" className="inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"><ArrowLeft className="size-4" />Back to invoices</Link>
-        <DocumentActions url={invoice.url} />
+        <div className="flex items-center gap-2">
+          {isAdmin && !isImpersonating && <ContextualEmailButton label="Send invoice" context={{ companyId: invoice.companyId, companyName: invoice.client, recipientEmail: invoice.billTo?.email, recipientName: invoice.billTo?.name, projectId: invoice.projectId, projectName: invoice.project, documentType: "invoice", documentId: invoice.id, documentTitle: invoice.invoiceNumber, subject: `Invoice ${invoice.invoiceNumber}`, ctaText: "View invoice", ctaUrl: portalDocumentPath(invoice.companyId, "invoice", invoice.id) }} />}
+          <DocumentActions url={invoice.url} />
+        </div>
       </div>
 
       <InvoiceDocument invoice={invoice} issuer={issuer ?? undefined} />

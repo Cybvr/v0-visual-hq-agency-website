@@ -2,7 +2,7 @@
 
 import Image from "next/image"
 import { useEffect, useRef, useState, type ChangeEvent, type FormEvent, type KeyboardEvent, type ReactNode } from "react"
-import { ArrowUp, History, Loader2, Plus, X } from "lucide-react"
+import { ArrowUp, Loader2, Plus, X } from "lucide-react"
 
 import type { AgentConversation, AgentForm, AgentMessage } from "@/components/agent/agent-context"
 import { uploadFileToStorage } from "@/lib/documents"
@@ -321,43 +321,7 @@ export function AgentChat({
   }
 
   return (
-    <div className={cn("dashboard-body flex min-h-0 flex-1 flex-col font-sans [&_*]:font-sans", compact ? "bg-background" : "agent-surface")}>
-      <div className={cn("shrink-0 border-b border-border", compact ? "px-4 py-3" : "px-4 py-4 sm:px-6")}>
-        <div className="flex items-center justify-between gap-3">
-          <button
-            type="button"
-            onClick={onNewChat}
-            disabled={sending}
-            className="text-xs font-medium underline-offset-4 hover:underline disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            New chat
-          </button>
-          {conversations.length > 0 && (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button
-                  type="button"
-                  aria-label="Chat history"
-                  className="flex size-7 items-center justify-center rounded-full text-muted-foreground outline-none transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
-                >
-                  <History className="size-4" aria-hidden="true" />
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="max-h-72 w-60 overflow-y-auto">
-                {conversations.map((conversation) => (
-                  <DropdownMenuItem
-                    key={conversation.id}
-                    onSelect={() => onSelectConversation(conversation.id)}
-                    className={cn("truncate", conversation.id === activeConversationId && "font-medium")}
-                  >
-                    {conversation.title}
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          )}
-        </div>
-      </div>
+    <div className={cn("dashboard-body flex h-full flex-col font-sans [&_*]:font-sans", compact ? "bg-background" : "agent-surface")}>
       {messages.length === 0 ? (
         <div className={cn("flex min-h-0 flex-1 items-center justify-center overflow-y-auto text-center", compact ? "px-4 py-6" : "px-4 pb-16 sm:px-6")}>
           <div className="flex max-w-lg flex-col items-center">

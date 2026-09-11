@@ -1,13 +1,14 @@
 "use client"
 
 import { useEffect, useState, type FormEvent, type ReactNode } from "react"
-import Image from "next/image"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { Bell, Briefcase, Building2, CircleHelp, Crown, FileText, ListTodo, Plus, Receipt, ScrollText } from "lucide-react"
 
 import { useAgent } from "@/components/agent/agent-context"
+import { AgentHeaderButton } from "@/components/agent/agent-header-button"
 import { AppSidebar, type NavLink } from "@/components/app-sidebar"
+import { NgaiSidePanel } from "@/components/agent/ngai-side-panel"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -74,7 +75,7 @@ export function DashboardShell({
   const isDocumentRoute = /^\/dashboard\/documents\/[^/]+/.test(pathname ?? "")
   const hideHeader = isDocumentRoute
   const [sidebarOpen, setSidebarOpen] = useState(!isDocumentRoute)
-  const { open: agentOpen, setOpen: setAgentOpen } = useAgent()
+  const { open: agentOpen } = useAgent()
   const [createItem, setCreateItem] = useState<(typeof QUICK_CREATE_LINKS)[number] | null>(null)
   const [createName, setCreateName] = useState("")
 
@@ -102,7 +103,7 @@ export function DashboardShell({
     <div className="dashboard-body flex h-svh flex-col overflow-hidden font-sans [&_*]:font-sans">
       {banner && <div className="z-50 h-10 shrink-0">{banner}</div>}
       <SidebarProvider
-        open={sidebarOpen}
+        open={agentOpen ? false : sidebarOpen}
         onOpenChange={setSidebarOpen}
         className={cn(
           "min-h-0 flex-1",
@@ -154,19 +155,12 @@ export function DashboardShell({
               <Button type="button" variant="ghost" size="icon" aria-label="Notifications">
                 <Bell className="size-4" aria-hidden="true" />
               </Button>
-          <button
-            type="button"
-            onClick={() => setAgentOpen(true)}
-            aria-label="Open Ngai"
-            aria-expanded={agentOpen}
-            className="rounded-full outline-none transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-          >
-            <Image src="/ngai-logo.png" alt="Ngai" width={30} height={30} className="block rounded-full" />
-          </button>
+          <AgentHeaderButton className="ml-0" />
             </div>
           </header>
           {children}
         </SidebarInset>
+        <NgaiSidePanel />
       </SidebarProvider>
 
       <Dialog

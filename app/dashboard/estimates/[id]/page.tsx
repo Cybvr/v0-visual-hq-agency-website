@@ -9,8 +9,10 @@ import { useAuth } from "@/components/auth-provider"
 import { DocumentActions } from "@/components/dashboard/document-actions"
 import { EstimateDocument } from "@/components/dashboard/estimate-document"
 import { Button } from "@/components/ui/button"
+import { ContextualEmailButton } from "@/components/dashboard/contextual-email-button"
 import { getBusinessProfile, type BusinessProfile } from "@/lib/business-profile"
 import { getEstimate, type Estimate } from "@/lib/billing"
+import { portalDocumentPath } from "@/lib/portal-model"
 
 export default function EstimateDetailPage() {
   const { id = "" } = useParams<{ id: string }>()
@@ -49,6 +51,7 @@ export default function EstimateDetailPage() {
         <Link href="/dashboard/estimates" className="inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"><ArrowLeft className="size-4" aria-hidden="true" />Back to estimates</Link>
         <div className="flex items-center gap-2">
           {adminView && <Button asChild variant="outline" size="sm"><Link href={`/dashboard/estimates/${estimate.id}/edit`}><Pencil className="size-3.5" aria-hidden="true" />Edit estimate</Link></Button>}
+          {adminView && <ContextualEmailButton label="Send estimate" context={{ companyId: estimate.companyId, companyName: estimate.client, recipientEmail: estimate.preparedFor?.email, recipientName: estimate.preparedFor?.name, projectId: estimate.projectId, projectName: estimate.project, documentType: "estimate", documentId: estimate.id, documentTitle: estimate.title || estimate.estimateNumber, subject: `Estimate ${estimate.estimateNumber}`, ctaText: "Review estimate", ctaUrl: portalDocumentPath(estimate.companyId, "estimate", estimate.id) }} />}
           <DocumentActions />
         </div>
       </div>

@@ -7,9 +7,11 @@ import { ArrowLeft, Loader2 } from "lucide-react"
 
 import { useAuth } from "@/components/auth-provider"
 import { ContractDocument } from "@/components/dashboard/contract-document"
+import { ContextualEmailButton } from "@/components/dashboard/contextual-email-button"
 import { DocumentActions } from "@/components/dashboard/document-actions"
 import { getBusinessProfile, type BusinessProfile } from "@/lib/business-profile"
 import { getContract, type Contract } from "@/lib/billing"
+import { portalDocumentPath } from "@/lib/portal-model"
 
 export default function ContractDetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -61,7 +63,10 @@ export default function ContractDetailPage() {
     <main className="mx-auto w-full max-w-4xl px-4 py-8 sm:px-6 sm:py-10">
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3 print:hidden">
         <Link href="/dashboard/contracts" className="inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"><ArrowLeft className="size-4" />Back to contracts</Link>
-        <DocumentActions url={contract.url} />
+        <div className="flex items-center gap-2">
+          {isAdmin && !isImpersonating && <ContextualEmailButton label="Send contract" context={{ companyId: contract.companyId, companyName: contract.client, projectId: contract.projectId, projectName: contract.project, documentType: "contract", documentId: contract.id, documentTitle: contract.title, subject: contract.title, ctaText: "Review contract", ctaUrl: portalDocumentPath(contract.companyId, "contract", contract.id) }} />}
+          <DocumentActions url={contract.url} />
+        </div>
       </div>
 
       <ContractDocument contract={contract} issuer={issuer ?? undefined} />

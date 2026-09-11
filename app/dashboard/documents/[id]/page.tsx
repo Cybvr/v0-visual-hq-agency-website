@@ -7,9 +7,11 @@ import { ArrowLeft, Loader2, Pencil } from "lucide-react"
 
 import { useAuth } from "@/components/auth-provider"
 import { CompanyDocumentView } from "@/components/dashboard/company-document-view"
+import { ContextualEmailButton } from "@/components/dashboard/contextual-email-button"
 import { DocumentActions } from "@/components/dashboard/document-actions"
 import { getBusinessProfile, type BusinessProfile } from "@/lib/business-profile"
 import { getCompanyDocument, type CompanyDocument } from "@/lib/company-documents"
+import { portalDocumentPath } from "@/lib/portal-model"
 
 export default function DocumentDetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -70,6 +72,7 @@ export default function DocumentDetailPage() {
               <Pencil className="size-4" aria-hidden="true" />Edit
             </Link>
           )}
+          {adminView && <ContextualEmailButton label="Send for review" context={{ companyId: record.companyId, companyName: record.client, projectId: record.projectId, projectName: record.project, documentType: "companyDocument", documentId: record.id, documentTitle: record.title, subject: `${record.title} is ready for review`, ctaText: "Review document", ctaUrl: portalDocumentPath(record.companyId, "document", record.id) }} />}
           <DocumentActions title={record.title} />
         </div>
       </div>

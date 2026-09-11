@@ -1,4 +1,5 @@
 import Link from "next/link"
+import { FaLinkedinIn, FaXTwitter } from "react-icons/fa6"
 import { BrandLockup } from "@/components/brand-lockup"
 
 const footerGroups = [
@@ -53,9 +54,8 @@ const offices = [
 ]
 
 const socialLinks = [
-  { name: "X", href: "https://x.com/visualhq" },
-  { name: "GH", href: "https://github.com/visualhq" },
-  { name: "LI", href: "https://www.linkedin.com/company/visualhq" },
+  { name: "X", href: "https://x.com/visualcns", icon: FaXTwitter },
+  { name: "LinkedIn", href: "https://www.linkedin.com/company/visualng", icon: FaLinkedinIn },
 ]
 
 export function Footer() {
@@ -147,9 +147,10 @@ export function Footer() {
                 href={item.href}
                 target="_blank"
                 rel="noreferrer"
-                className="transition-colors hover:text-accent"
+                className="inline-flex size-10 items-center justify-center rounded-full border border-primary-foreground/20 transition-colors hover:border-accent hover:text-accent"
+                aria-label={`VisualCNS on ${item.name}`}
               >
-                {item.name}
+                <item.icon className="size-4" aria-hidden="true" />
               </a>
             ))}
           </div>

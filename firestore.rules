@@ -84,6 +84,34 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    match /emailMessages/{id} {
+      allow read: if isAdmin() || owns(resource.data);
+      allow create: if isAdmin() || (owns(request.resource.data)
+        && request.resource.data.createdBy == request.auth.uid
+        && request.resource.data.keys().hasOnly([
+          'id', 'companyId', 'createdBy', 'providerId', 'to', 'subject',
+          'createdAt', 'from', 'replyTo', 'bodyHtml', 'bodyText', 'recipients',
+          'projectId', 'projectName', 'documentType', 'documentId', 'documentTitle',
+          'companyName', 'messageKind', 'status'
+        ])
+        && request.resource.data.id == id
+        && request.resource.data.providerId is string
+        && request.resource.data.to is string
+        && request.resource.data.subject is string
+        && request.resource.data.createdAt is string);
+      allow update, delete: if isAdmin();
+    }
+
+    match /emailLists/{id} {
+      allow read, write: if isAdmin();
+    }
+
+    // Marketing unsubscribe records are written and read only by server routes
+    // using the Firebase Admin SDK. No browser client can alter suppression.
+    match /emailUnsubscriptions/{id} {
+      allow read, write: if false;
+    }
+
     // Keep legacy single-document links. Anonymous collection browsing is closed.
     match /invoices/{id} {
       allow get: if isAdmin() || resource.data.status != 'draft';

@@ -5,6 +5,7 @@ import { ArrowLeft, Pencil } from "lucide-react"
 
 import { CaseStudyForm } from "@/components/dashboard/case-study-form"
 import { CaseStudyOverview } from "@/components/dashboard/case-study-overview"
+import { ContextualEmailButton } from "@/components/dashboard/contextual-email-button"
 import { ProjectShareButton } from "@/components/dashboard/project-share-button"
 import { TasksView } from "@/components/dashboard/tasks-view"
 import { ProjectCover } from "@/components/project-card"
@@ -12,6 +13,7 @@ import { Button } from "@/components/ui/button"
 import { deleteProjectWithTasks, projectStatusMeta, type Project } from "@/lib/projects"
 import { deleteTask, getTasksByCompanyId, tsToMillis, updateTask, type Task } from "@/lib/tasks"
 import { cn } from "@/lib/utils"
+import { portalPath } from "@/lib/portal-model"
 
 interface ProjectDetailProps {
   project: Project
@@ -140,6 +142,22 @@ export function ProjectDetail({
             >
               <Pencil className="size-4" aria-hidden="true" />
             </Button>
+          )}
+          {isAdmin && (
+            <ContextualEmailButton
+              label="Send project update"
+              context={{
+                companyId: project.companyId || companyId,
+                companyName: project.client || clientName,
+                projectId: project.id,
+                projectName: project.title,
+                documentType: "project",
+                documentId: project.id,
+                subject: `${project.title} update`,
+                ctaText: "Open project workspace",
+                ctaUrl: `${portalPath(project.companyId || companyId)}/projects/${encodeURIComponent(project.slug || project.id)}`,
+              }}
+            />
           )}
           {!publicView && <ProjectShareButton project={project} stepCount={tasks.length} onChanged={fetchTasks} />}
         </div>

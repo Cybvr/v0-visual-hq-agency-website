@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, type ComponentType, type FormEvent, type ReactNode } from "react"
+import { useEffect, useRef, useState, type ComponentType, type FormEvent, type ReactNode } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { useParams, usePathname, useRouter, useSearchParams } from "next/navigation"
@@ -9,6 +9,8 @@ import { useAuth } from "@/components/auth-provider"
 import { AgentChat } from "@/components/agent/agent-chat"
 import { AgentDock } from "@/components/agent/agent-dock"
 import { useAgent } from "@/components/agent/agent-context"
+import { AgentHeaderButton } from "@/components/agent/agent-header-button"
+import { NgaiSidePanel } from "@/components/agent/ngai-side-panel"
 import { DOC_BADGE, DocTile } from "@/components/company/document-tile"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
@@ -266,22 +268,12 @@ function PortalTabNav({ company, activeTab }: { company: string; activeTab?: str
   )
 }
 
-/** Header "Ask Ngai" button, web only - opens the floating dock. */
+/** Header "Ask Ngai" button, shared with the dashboard. */
 function PortalNgaiButton() {
-  const { setOpen } = useAgent()
-  return (
-    <button
-      type="button"
-      onClick={() => setOpen(true)}
-      className="ml-auto hidden items-center gap-2 rounded-full border border-border px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-muted md:inline-flex"
-    >
-      <Image src="/ngai-logo.png" alt="" width={16} height={16} className="rounded-full" />
-      Ask Ngai
-    </button>
-  )
+  return <AgentHeaderButton className="ml-auto" />
 }
 
-/** Sticky mobile composer. Sending fires the message and jumps to the Ngai tab to continue there. */
+/** Viewport-pinned composer. Sending fires the message and jumps to the Ngai tab to continue there. */
 function PortalNgaiMobileBar({ company, activeTab }: { company: string; activeTab?: string }) {
   const { send } = useAgent()
   const router = useRouter()
@@ -296,18 +288,20 @@ function PortalNgaiMobileBar({ company, activeTab }: { company: string; activeTa
     router.push(`${portalPath(company)}?tab=ngai`)
   }
   return (
-    <form onSubmit={submit} className="sticky bottom-8 z-40 mx-auto flex w-[min(calc(100%-2rem),36rem)] items-center gap-2 rounded-full px-3 py-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] shadow-[0_8px_24px_rgba(15,23,42,0.08)]">
-      <Image src="/ngai-logo.png" alt="" width={20} height={20} className="shrink-0 rounded-full" />
-      <input
-        value={text}
-        onChange={(event) => setText(event.target.value)}
-        aria-label="Ask Ngai"
-        className="h-9 min-w-0 flex-1 rounded-full border-0 bg-background px-4 text-sm outline-none focus-visible:ring-0"
-      />
-      <Button type="submit" size="icon" aria-label="Send to Ngai" disabled={!text.trim()} className="size-9 shrink-0 rounded-full bg-accent text-accent-foreground hover:bg-accent/90">
-        <ArrowUp className="size-4" aria-hidden="true" />
-      </Button>
-    </form>
+    <div className="portal-ngai-bar pointer-events-none">
+      <form onSubmit={submit} className="pointer-events-auto mx-auto flex w-full max-w-xl items-center gap-2 rounded-full border border-border bg-card px-3 py-2 shadow-[0_8px_24px_rgba(15,23,42,0.08)]">
+        <Image src="/ngai-logo.png" alt="" width={20} height={20} className="shrink-0 rounded-full" />
+        <input
+          value={text}
+          onChange={(event) => setText(event.target.value)}
+          aria-label="Ask Ngai"
+          className="h-9 min-w-0 flex-1 rounded-full border-0 bg-background px-4 text-sm outline-none focus-visible:ring-0"
+        />
+        <Button type="submit" size="icon" aria-label="Send to Ngai" disabled={!text.trim()} className="size-9 shrink-0 rounded-full bg-accent text-accent-foreground hover:bg-accent/90">
+          <ArrowUp className="size-4" aria-hidden="true" />
+        </Button>
+      </form>
+    </div>
   )
 }
 
@@ -331,8 +325,26 @@ function PortalNgai() {
 }
 
 /** The portal chrome: collapsible company sidebar + dashboard-style header, wrapping any page's content. */
-export function PortalShellLayout({ company, organization, activeTab, title, children }: { company: string; organization: Organization; activeTab?: string; title?: ReactNode; children: ReactNode }) {
-  return <SidebarProvider>
+function PortalShellContents({ company, organization, activeTab, title, children }: { company: string; organization: Organization; activeTab?: string; title?: ReactNode; children: ReactNode }) {
+  const { open: agentOpen } = useAgent()
+  const { open: sidebarOpen, setOpen: setSidebarOpen } = useSidebar()
+  const sidebarStateBeforeAgent = useRef<boolean | null>(null)
+
+  useEffect(() => {
+    if (agentOpen) {
+      if (sidebarStateBeforeAgent.current === null) sidebarStateBeforeAgent.current = sidebarOpen
+      if (sidebarOpen) setSidebarOpen(false)
+      return
+    }
+
+    if (sidebarStateBeforeAgent.current !== null) {
+      const previousState = sidebarStateBeforeAgent.current
+      sidebarStateBeforeAgent.current = null
+      if (sidebarOpen !== previousState) setSidebarOpen(previousState)
+    }
+  }, [agentOpen, setSidebarOpen, sidebarOpen])
+
+  return <>
     <Sidebar collapsible="icon" className="bg-background text-muted-foreground group-data-[side=left]:border-r-0 [&_[data-slot=sidebar-inner]]:bg-background">
       <div className="group/sidebar m-2 flex min-h-0 flex-1 flex-col overflow-hidden rounded-[16px] bg-card text-[13px] font-medium text-muted-foreground group-data-[collapsible=icon]:m-1 group-data-[collapsible=icon]:rounded-[12px]">
         <SidebarHeader className="group-data-[collapsible=icon]:p-1">
@@ -361,7 +373,11 @@ export function PortalShellLayout({ company, organization, activeTab, title, chi
       </div>
       <SidebarRail />
     </Sidebar>
-    <SidebarInset>
+    <SidebarInset
+      className="portal-content-area"
+      data-agent-open={agentOpen ? "true" : "false"}
+      data-ngai-open={agentOpen && activeTab !== "ngai" ? "true" : "false"}
+    >
       <header className="sticky top-0 z-40 flex h-14 shrink-0 items-center gap-2 bg-background px-4 text-[13px] font-medium text-muted-foreground max-md:text-sm">
         <div className="flex shrink-0 items-center gap-2 md:hidden">
           <SidebarTrigger className="-ml-1" />
@@ -370,10 +386,17 @@ export function PortalShellLayout({ company, organization, activeTab, title, chi
         <h1 className="min-w-0 truncate capitalize text-[13px] font-medium text-muted-foreground max-md:text-sm">{title}</h1>
         <PortalNgaiButton />
       </header>
-      <div className={cn("px-4 py-5 sm:px-6", activeTab !== "ngai" && "max-md:pb-24")}>{children}</div>
+      <div className={cn("px-4 py-5 sm:px-6", activeTab !== "ngai" && "pb-28")}>{children}</div>
       <PortalNgaiMobileBar company={company} activeTab={activeTab} />
     </SidebarInset>
+    <NgaiSidePanel />
     <AgentDock />
+  </>
+}
+
+export function PortalShellLayout(props: { company: string; organization: Organization; activeTab?: string; title?: ReactNode; children: ReactNode }) {
+  return <SidebarProvider>
+    <PortalShellContents {...props} />
   </SidebarProvider>
 }
 

@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useMemo, useState, type FormEvent } from "react"
+import { useSearchParams } from "next/navigation"
 import {
   ArrowLeft,
   CheckCircle2,
@@ -13,48 +14,66 @@ import {
   Send,
   Trash2,
 } from "lucide-react"
+import { FaLinkedinIn, FaXTwitter } from "react-icons/fa6"
 
 import { useAuth } from "@/components/auth-provider"
 import { RichTextEditor } from "@/components/dashboard/rich-text-editor"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { FilterBar, useFilterBar, type SortOption } from "@/components/dashboard/filter-bar"
 import { DEFAULT_EMAIL_TEMPLATES, type EmailTemplateSeed } from "@/lib/email-templates"
+import { deleteEmailList, getEmailLists, saveEmailList, type EmailContactList } from "@/lib/email-lists"
+import { getAllEmailMessages, getEmailMessages, saveEmailMessage, type EmailMessageRecord, type EmailRecipient } from "@/lib/email-messages"
+import { contextualEmailBody, readEmailComposeContext, type EmailComposeContext } from "@/lib/email-composer"
+import { getBusinessProfile, type BusinessProfile } from "@/lib/business-profile"
 import { markdownToHtml } from "@/lib/markdown"
 import { getUsers } from "@/lib/users"
 import { cn } from "@/lib/utils"
 import { useIsMobile } from "@/hooks/use-mobile"
 
 type EmailTab = "templates" | "messages" | "lists"
+type EmailMessageKind = "transactional" | "marketing"
 
 type EmailTemplate = EmailTemplateSeed & { updatedAt: string }
 
-type SentMessage = {
-  id: string
-  providerId: string
-  to: string
-  subject: string
-  createdAt: string
+type SentMessage = Omit<EmailMessageRecord, "companyId" | "createdBy"> & { companyId?: string }
+
+const TEMPLATE_CTA: Record<string, { text: string; url: string }> = {
+  "introducing-ngai": { text: "Ask Ngai", url: "/portal" },
+  "introducing-client-portal": { text: "Open your client portal", url: "/portal" },
+  "project-progress-update": { text: "View project progress", url: "/portal" },
+  "document-ready": { text: "Review document", url: "/portal" },
+  "task-assigned": { text: "View assigned task", url: "/portal" },
+  "invoice-available": { text: "View invoice", url: "/portal" },
+  "estimate-for-approval": { text: "Review estimate", url: "/portal" },
+  "contract-ready": { text: "Review contract", url: "/portal" },
+  "project-kickoff": { text: "Open project workspace", url: "/portal" },
+  "portal-tip": { text: "Open client portal", url: "/portal" },
+  "service-update": { text: "View your client portal", url: "/portal" },
+  "feedback-request": { text: "Send feedback", url: "/portal" },
+}
+
+function getTemplateCta(template?: EmailTemplate | EmailTemplateSeed | null) {
+  return template ? TEMPLATE_CTA[template.id] || { text: "Open your client portal", url: "/portal" } : null
 }
 
 type EmailContact = {
   email: string
   label: string
   name: string
+  companyId?: string
 }
 
-type ContactList = {
-  id: string
-  name: string
-  contactEmails: string[]
-  updatedAt: string
-}
+type ContactList = Omit<EmailContactList, "companyId" | "createdBy">
 
 type Notice = {
   tone: "success" | "error"
   text: string
 } | null
+
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 const MESSAGE_SORTS: SortOption<SentMessage>[] = [
   { value: "createdAt", label: "Last sent", get: (message) => message.createdAt, ascLabel: "Oldest", descLabel: "Newest" },
@@ -63,7 +82,7 @@ const MESSAGE_SORTS: SortOption<SentMessage>[] = [
 ]
 
 function searchMessage(message: SentMessage) {
-  return [message.to, message.subject]
+  return [message.to, message.subject, message.companyName, message.projectName, message.documentTitle, message.documentType, message.from, message.status]
 }
 
 const LIST_SORTS: SortOption<ContactList>[] = [
@@ -126,6 +145,14 @@ function formatTemplateDate(value: string) {
   }
 }
 
+function cleanSenderDisplay(value: string) {
+  return value
+    .replace(/(?:&nbsp;|&#(?:x0*a0|160|x0*20|32);)/gi, " ")
+    .replace(/[\u00a0\u2007\u202f]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+}
+
 function htmlToText(value: string) {
   if (!value.includes("<")) return value
   return value
@@ -150,13 +177,33 @@ function escapeHtmlAttribute(value: string) {
   })[character] as string)
 }
 
+function escapeHtml(value: string) {
+  return value.replace(/[&<>"']/g, (character) => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;",
+  })[character] as string)
+}
+
+function sentMessagePreview(message: SentMessage) {
+  const content = message.bodyHtml || `<p>${escapeHtml(message.bodyText || "").replaceAll("\n", "<br />")}</p>`
+  return `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>html{color-scheme:light}body{box-sizing:border-box;margin:0;padding:24px;color:#20232d;background:#fff;font:15px/1.65 Arial,sans-serif;overflow-wrap:anywhere}img{display:block;max-width:100%;height:auto}p{margin:0 0 1em}ul,ol{padding-left:1.5rem}a{color:#1649d8}</style></head><body>${content}</body></html>`
+}
+
 function withMessageImage(value: string, imageUrl?: string, imageAlt?: string) {
-  const content = value.includes("<") ? value : markdownToHtml(value)
+  const content = formatTemplateBody(value)
   if (!imageUrl) return content
   const existingImage = content.match(/<img[^>]*>/i)?.[0]
   const withoutImage = existingImage ? content.replace(existingImage, "").replaceAll("<p></p>", "") : content
-  const image = `<p><img src="${escapeHtmlAttribute(imageUrl)}" alt="${escapeHtmlAttribute(imageAlt || "Message image")}" /></p>`
+  const image = `<p><img src="${escapeHtmlAttribute(imageUrl)}" alt="${escapeHtmlAttribute(imageAlt || "Message image")}" style="display:block;width:100%;max-width:100%;height:auto;border:0;border-radius:12px;" /></p>`
   return `${image}${withoutImage}`
+}
+
+function formatTemplateBody(value: string) {
+  const content = value.includes("<") ? value : markdownToHtml(value)
+  return content.replace(/Best regards,\s*VisualCNS Team/gi, "Best regards,<br />VisualCNS Team")
 }
 
 function personalizeGreeting(value: string, name?: string) {
@@ -165,14 +212,20 @@ function personalizeGreeting(value: string, name?: string) {
   return value.replace(/(^|>|\n)(\s*Dear\s+)(?:\[Customer Name\]|Customer)(\s*,?)/i, `$1$2${trimmedName}$3`)
 }
 
+function recipientEmail(value: string) {
+  return value.match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i)?.[0].toLowerCase() || value.trim().toLowerCase()
+}
+
 export default function EmailPage() {
   const { user, appUser, isAdmin, isImpersonating } = useAuth()
+  const searchParams = useSearchParams()
   const isMobile = useIsMobile()
   // An admin "viewing as" a client sees exactly what that client sees.
   const showOpsDetail = isAdmin && !isImpersonating
   const workspaceId = appUser?.companyId || user?.uid || "workspace"
   const templateStorageKey = `visualcns-email-templates:${workspaceId}`
   const messageStorageKey = `visualcns-email-messages:${workspaceId}`
+  const listStorageKey = `visualcns-email-lists:${workspaceId}`
 
   const [tab, setTab] = useState<EmailTab>("messages")
   const [templates, setTemplates] = useState<EmailTemplate[]>([])
@@ -180,15 +233,23 @@ export default function EmailPage() {
   const [loadedWorkspace, setLoadedWorkspace] = useState<string | null>(null)
   const [senderConfigured, setSenderConfigured] = useState<boolean | null>(null)
   const [senderAddress, setSenderAddress] = useState<string | null>(null)
+  const [replyToAddress, setReplyToAddress] = useState<string | null>(null)
   const [contacts, setContacts] = useState<EmailContact[]>([])
   const [lists, setLists] = useState<ContactList[]>([])
+  const [businessProfile, setBusinessProfile] = useState<BusinessProfile | null>(null)
 
   const [to, setTo] = useState("")
+  const [selectedListId, setSelectedListId] = useState("")
   const [subject, setSubject] = useState("")
   const [body, setBody] = useState("")
+  const [messageKind, setMessageKind] = useState<EmailMessageKind>("transactional")
+  const [composeContext, setComposeContext] = useState<EmailComposeContext | null>(null)
   const [selectedTemplateId, setSelectedTemplateId] = useState("")
   const [sending, setSending] = useState(false)
   const [sendNotice, setSendNotice] = useState<Notice>(null)
+  const [selectedMessageId, setSelectedMessageId] = useState<string | null>(null)
+  const [loadingMessageId, setLoadingMessageId] = useState<string | null>(null)
+  const [messageViewError, setMessageViewError] = useState("")
 
   const [editingTemplateId, setEditingTemplateId] = useState<string | null>(null)
   const [templateName, setTemplateName] = useState("")
@@ -203,8 +264,26 @@ export default function EmailPage() {
   const [listContactEmails, setListContactEmails] = useState<string[]>([])
   const [editingListId, setEditingListId] = useState<string | null>(null)
   const [listNotice, setListNotice] = useState<Notice>(null)
+  const [messageCompanyFilter, setMessageCompanyFilter] = useState("all")
+  const [messageProjectFilter, setMessageProjectFilter] = useState("all")
+  const [messageDocumentFilter, setMessageDocumentFilter] = useState("all")
+  const [messageSenderFilter, setMessageSenderFilter] = useState("all")
+  const [messageStatusFilter, setMessageStatusFilter] = useState("all")
+  const messageFilterOptions = useMemo(() => ({
+    companies: Array.from(new Map(messages.filter((message) => message.companyId).map((message) => [message.companyId, message.companyName || message.companyId])).entries()),
+    projects: Array.from(new Map(messages.filter((message) => message.projectId).map((message) => [message.projectId, message.projectName || message.projectId])).entries()),
+    documents: Array.from(new Map(messages.filter((message) => message.documentType).map((message) => [message.documentType, message.documentTitle || message.documentType])).entries()),
+    senders: Array.from(new Set(messages.map((message) => cleanSenderDisplay(message.from || "VisualCNS")).filter(Boolean))),
+  }), [messages])
+  const filteredMessages = useMemo(() => messages.filter((message) => (
+    (messageCompanyFilter === "all" || message.companyId === messageCompanyFilter)
+    && (messageProjectFilter === "all" || message.projectId === messageProjectFilter)
+    && (messageDocumentFilter === "all" || message.documentType === messageDocumentFilter)
+    && (messageSenderFilter === "all" || cleanSenderDisplay(message.from || "VisualCNS") === messageSenderFilter)
+    && (messageStatusFilter === "all" || (message.status || "sent") === messageStatusFilter)
+  )), [messageCompanyFilter, messageDocumentFilter, messageProjectFilter, messageSenderFilter, messageStatusFilter, messages])
   const { results: visibleMessages, bar: messageFilterBar } = useFilterBar({
-    items: messages,
+    items: filteredMessages,
     search: searchMessage,
     sorts: MESSAGE_SORTS,
     defaultSort: "createdAt",
@@ -226,7 +305,8 @@ export default function EmailPage() {
   })
 
   const activeFilterBar = tab === "messages" ? messageFilterBar : tab === "templates" ? templateFilterBar : listFilterBar
-  const selectedContactName = contacts.find((contact) => contact.email.toLowerCase() === to.trim().toLowerCase())?.name
+  const selectedContactName = contacts.find((contact) => recipientEmail(contact.email) === recipientEmail(to))?.name
+  const composeRecipientName = selectedContactName || composeContext?.recipientName
 
   useEffect(() => {
     setLoadedWorkspace(null)
@@ -241,23 +321,30 @@ export default function EmailPage() {
     const updatedStoredTemplates = storedTemplates.map((stored) => {
       const defaultTemplate = defaultTemplates.find((template) => template.id === stored.id)
       const subject = stored.subject.replaceAll("Falcon Energy", "VisualCNS")
-      const body = (stored.body.includes("<") ? stored.body : markdownToHtml(stored.body))
+      const shouldRefreshNgaiTemplate = stored.id === "introducing-ngai" && stored.body.includes("Meet Ngai, your new AI teammate inside VisualCNS.")
+      const body = shouldRefreshNgaiTemplate && defaultTemplate
+        ? defaultTemplate.body
+        : formatTemplateBody(stored.body)
         .replaceAll("Falcon Energy", "VisualCNS")
         .replaceAll("[Agency Name] Team", "VisualCNS Team")
-      const needsImageMigration = defaultTemplate?.imageUrl && stored.imageUrl === "/ngai-feature-announcement.png"
-      if (subject === stored.subject && body === stored.body && !needsImageMigration) return stored
+      const needsImageMigration = defaultTemplate?.imageUrl &&
+        (stored.imageUrl === "/ngai-feature-announcement.svg" || stored.imageUrl === "/ngai-feature-announcement.png")
+      const needsImageRestore = stored.id === "introducing-ngai" && Boolean(defaultTemplate?.imageUrl) && !stored.imageUrl
+      if (subject === stored.subject && body === stored.body && !needsImageMigration && !needsImageRestore) return stored
       return {
         ...stored,
         subject,
         body,
-        ...(needsImageMigration ? { imageUrl: defaultTemplate?.imageUrl, imageAlt: defaultTemplate?.imageAlt } : {}),
+        ...(needsImageMigration || needsImageRestore
+          ? { imageUrl: defaultTemplate?.imageUrl, imageAlt: defaultTemplate?.imageAlt }
+          : {}),
       }
     })
     setTemplates(
       storedTemplates.length > 0 ? [...updatedStoredTemplates, ...missingDefaults] : defaultTemplates,
     )
-    setMessages(readStoredList<SentMessage>(messageStorageKey))
-    setLists(readStoredList<ContactList>(`visualcns-email-lists:${workspaceId}`))
+    setMessages([])
+    setLists([])
     setLoadedWorkspace(workspaceId)
   }, [workspaceId, templateStorageKey, messageStorageKey])
 
@@ -267,14 +354,65 @@ export default function EmailPage() {
   }, [loadedWorkspace, workspaceId, templateStorageKey, templates])
 
   useEffect(() => {
-    if (loadedWorkspace !== workspaceId) return
-    localStorage.setItem(messageStorageKey, JSON.stringify(messages))
-  }, [loadedWorkspace, workspaceId, messageStorageKey, messages])
+    if (!user?.uid || !workspaceId) return
+    let active = true
+    const legacyMessages = readStoredList<SentMessage>(messageStorageKey)
+
+    void (showOpsDetail ? getAllEmailMessages() : getEmailMessages(workspaceId))
+      .then(async (storedMessages) => {
+        const storedProviderIds = new Set(storedMessages.map((message) => message.providerId))
+        const messagesToMigrate = legacyMessages.filter((message) => !storedProviderIds.has(message.providerId))
+
+        if (messagesToMigrate.length > 0) {
+          await Promise.all(messagesToMigrate.map((message) => saveEmailMessage({
+            ...message,
+            companyId: workspaceId,
+            createdBy: user.uid,
+          })))
+        }
+
+        if (!active) return
+        setMessages([...storedMessages, ...messagesToMigrate].sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt)))
+        localStorage.removeItem(messageStorageKey)
+      })
+      .catch(() => {
+        if (active) setMessages(legacyMessages)
+      })
+
+    return () => {
+      active = false
+    }
+  }, [messageStorageKey, showOpsDetail, user?.uid, workspaceId])
 
   useEffect(() => {
-    if (loadedWorkspace !== workspaceId) return
-    localStorage.setItem(`visualcns-email-lists:${workspaceId}`, JSON.stringify(lists))
-  }, [loadedWorkspace, workspaceId, lists])
+    if (!user?.uid || !workspaceId) return
+    let active = true
+    const legacyLists = readStoredList<ContactList>(listStorageKey)
+
+    void getEmailLists(workspaceId)
+      .then(async (storedLists) => {
+        let nextLists: EmailContactList[] = storedLists
+        if (storedLists.length === 0 && legacyLists.length > 0) {
+          nextLists = legacyLists.map((list) => ({
+            ...list,
+            companyId: workspaceId,
+            createdBy: user.uid,
+          }))
+          await Promise.all(nextLists.map((list) => saveEmailList(list)))
+        }
+
+        if (!active) return
+        setLists(nextLists)
+        localStorage.removeItem(listStorageKey)
+      })
+      .catch(() => {
+        if (active) setLists(legacyLists)
+      })
+
+    return () => {
+      active = false
+    }
+  }, [listStorageKey, user?.uid, workspaceId])
 
   useEffect(() => {
     if (!showOpsDetail) {
@@ -292,7 +430,11 @@ export default function EmailPage() {
           .map((contact) => ({
             email: contact.email.trim(),
             label: [contact.company, contact.displayName].filter(Boolean).join(" · ") || contact.email.trim(),
-            name: contact.displayName?.trim() || contact.email.trim().split("@")[0],
+            name:
+              contact.displayName?.trim() ||
+              contact.company?.trim() ||
+              contact.email.trim().split("@")[0],
+            companyId: contact.companyId || contact.uid,
           }))
           .filter((contact) => {
             const key = contact.email.toLowerCase()
@@ -312,14 +454,31 @@ export default function EmailPage() {
   }, [showOpsDetail])
 
   useEffect(() => {
+    const nextContext = readEmailComposeContext(searchParams)
+    if (!nextContext) return
+    setComposeContext(nextContext)
+    setTab("messages")
+    setMobileMessageView("composer")
+    setSelectedMessageId(null)
+    setTo(nextContext.recipientEmail || "")
+    setSelectedListId("")
+    setSubject(nextContext.subject || "")
+    setBody(nextContext.body || contextualEmailBody(nextContext))
+    setMessageKind(nextContext.messageKind === "marketing" ? "marketing" : "transactional")
+    setSelectedTemplateId("")
+    setSendNotice(null)
+  }, [searchParams])
+
+  useEffect(() => {
     let active = true
 
     fetch("/api/email/send", { cache: "no-store" })
       .then(async (response) => {
-        const result = (await response.json()) as { configured?: boolean; from?: string | null }
+        const result = (await response.json()) as { configured?: boolean; from?: string | null; replyTo?: string | null }
         if (!active) return
         setSenderConfigured(Boolean(result.configured))
         setSenderAddress(result.from || null)
+        setReplyToAddress(result.replyTo || result.from || null)
       })
       .catch(() => {
         if (active) setSenderConfigured(false)
@@ -330,9 +489,31 @@ export default function EmailPage() {
     }
   }, [])
 
+  useEffect(() => {
+    let active = true
+    void getBusinessProfile().then((profile) => {
+      if (active) setBusinessProfile(profile)
+    })
+    return () => {
+      active = false
+    }
+  }, [])
+
   const selectedTemplate = useMemo(
     () => templates.find((template) => template.id === selectedTemplateId),
     [selectedTemplateId, templates],
+  )
+  const selectedList = useMemo(
+    () => lists.find((list) => list.id === selectedListId),
+    [selectedListId, lists],
+  )
+  const selectedMessage = useMemo(
+    () => messages.find((message) => message.id === selectedMessageId) || null,
+    [messages, selectedMessageId],
+  )
+  const editingTemplate = useMemo(
+    () => templates.find((template) => template.id === editingTemplateId),
+    [editingTemplateId, templates],
   )
 
   function applyTemplate(templateId: string) {
@@ -340,33 +521,110 @@ export default function EmailPage() {
     const template = templates.find((item) => item.id === templateId)
     if (!template) return
     setSubject(template.subject)
-    setBody(personalizeGreeting(withMessageImage(template.body, template.imageUrl, template.imageAlt), selectedContactName))
+    setBody(personalizeGreeting(withMessageImage(template.body, template.imageUrl, template.imageAlt), composeRecipientName))
     setSendNotice(null)
   }
 
   function handleRecipientChange(value: string) {
     setTo(value)
-    const contact = contacts.find((item) => item.email.toLowerCase() === value.trim().toLowerCase())
+    const contact = contacts.find((item) => recipientEmail(item.email) === recipientEmail(value))
     if (contact) setBody((current) => personalizeGreeting(current, contact.name))
   }
 
   function clearComposer() {
+    setSelectedMessageId(null)
+    setLoadingMessageId(null)
+    setMessageViewError("")
     setTo("")
+    setSelectedListId("")
     setSubject("")
     setBody("")
+    setMessageKind("transactional")
+    setComposeContext(null)
     setSelectedTemplateId("")
     setSendNotice(null)
+  }
+
+  async function openSentMessage(message: SentMessage) {
+    setSelectedMessageId(message.id)
+    setMobileMessageView("composer")
+    setMessageViewError("")
+    if (message.bodyHtml || message.bodyText || !user) return
+
+    setLoadingMessageId(message.id)
+    try {
+      const idToken = await user.getIdToken()
+      const response = await fetch(`/api/email/send?id=${encodeURIComponent(message.providerId)}`, {
+        headers: { Authorization: `Bearer ${idToken}` },
+        cache: "no-store",
+      })
+      const result = (await response.json()) as {
+        error?: string
+        to?: string[]
+        from?: string | null
+        replyTo?: string | null
+        subject?: string
+        createdAt?: string | null
+        html?: string | null
+        text?: string | null
+      }
+      if (!response.ok) throw new Error(result.error || "The sent email could not be loaded.")
+
+      const hydratedMessage: SentMessage = {
+        ...message,
+        to: result.to?.join(", ") || message.to,
+        from: result.from || message.from,
+        replyTo: result.replyTo || message.replyTo,
+        subject: result.subject || message.subject,
+        createdAt: result.createdAt || message.createdAt,
+        bodyHtml: result.html || undefined,
+        bodyText: result.text || undefined,
+      }
+      setMessages((current) => current.map((item) => item.id === message.id ? hydratedMessage : item))
+      try {
+        await saveEmailMessage({
+          ...hydratedMessage,
+          companyId: workspaceId,
+          createdBy: user.uid,
+        })
+      } catch {
+        // The Resend copy can still be viewed even if refreshing the database record fails.
+      }
+    } catch (error) {
+      setMessageViewError(error instanceof Error ? error.message : "The sent email could not be loaded.")
+    } finally {
+      setLoadingMessageId(null)
+    }
   }
 
   async function sendEmail(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (!user || sending || !senderConfigured) return
 
-    setSending(true)
     setSendNotice(null)
 
+    const trimmedSubject = subject.trim()
+    const recipientEmails = selectedList ? selectedList.contactEmails : [to.trim()]
+    if (EMAIL_PATTERN.test(trimmedSubject) || recipientEmails.some((email) => email.toLowerCase() === trimmedSubject.toLowerCase())) {
+      setSendNotice({ tone: "error", text: "Add a message subject—the recipient email cannot be used as the subject." })
+      return
+    }
+
+    setSending(true)
+
     try {
-      const textBody = htmlToText(body).trim()
+      const sentBody = personalizeGreeting(body, composeRecipientName)
+      const textBody = htmlToText(sentBody).trim()
+      const bodyHtml = sentBody.includes("<") ? sentBody : markdownToHtml(sentBody)
+      const recipientRecords: EmailRecipient[] = recipientEmails.map((email) => {
+        const contact = contacts.find((item) => recipientEmail(item.email) === recipientEmail(email))
+        return {
+          email: recipientEmail(email),
+          name: contact?.name || (recipientEmails.length === 1 ? composeRecipientName : undefined),
+          companyId: contact?.companyId || composeContext?.companyId,
+        }
+      })
+      const savedCompanyId = composeContext?.companyId || workspaceId
       const idToken = await user.getIdToken()
       const response = await fetch("/api/email/send", {
         method: "POST",
@@ -375,33 +633,71 @@ export default function EmailPage() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          to,
-          subject,
+          to: selectedList ? selectedList.contactEmails : to,
+          type: messageKind,
+          subject: trimmedSubject,
           text: textBody,
-          html: body.includes("<") ? body : undefined,
+          html: bodyHtml,
+          brand: businessProfile,
+          cta: composeContext?.ctaUrl
+            ? { text: composeContext.ctaText || "Open your client portal", url: composeContext.ctaUrl }
+            : getTemplateCta(selectedTemplate),
+          companyId: composeContext?.companyId,
+          projectId: composeContext?.projectId,
+          documentType: composeContext?.documentType,
+          documentId: composeContext?.documentId,
         }),
       })
-      const result = (await response.json()) as { id?: string; error?: string }
+      const result = (await response.json()) as { id?: string; html?: string; text?: string; replyTo?: string | null; suppressedCount?: number; error?: string }
 
       if (!response.ok || !result.id) {
         throw new Error(result.error || "The message could not be sent.")
       }
 
-      setMessages((current) => [
-        {
-          id: makeId(),
-          providerId: result.id as string,
-          to: to.trim(),
-          subject: subject.trim(),
-          createdAt: new Date().toISOString(),
-        },
-        ...current,
-      ])
+      const sentMessage: SentMessage = {
+        id: result.id as string,
+        providerId: result.id as string,
+        to: selectedList ? `${selectedList.name} (${selectedList.contactEmails.length})` : to.trim(),
+        subject: trimmedSubject,
+        createdAt: new Date().toISOString(),
+        from: senderAddress || undefined,
+        replyTo: result.replyTo || replyToAddress || senderAddress || undefined,
+        bodyHtml: result.html || bodyHtml,
+        bodyText: result.text || textBody,
+        recipients: recipientRecords,
+        companyName: composeContext?.companyName,
+        projectId: composeContext?.projectId,
+        projectName: composeContext?.projectName,
+        documentType: composeContext?.documentType,
+        documentId: composeContext?.documentId,
+        documentTitle: composeContext?.documentTitle,
+        messageKind,
+        status: "sent",
+      }
+      let historySaved = true
+      try {
+        await saveEmailMessage({
+          ...sentMessage,
+          companyId: savedCompanyId,
+          createdBy: user.uid,
+        })
+      } catch {
+        historySaved = false
+      }
+      setMessages((current) => [sentMessage, ...current])
+      setSelectedMessageId(sentMessage.id)
+      setMobileMessageView("composer")
       setTo("")
+      setSelectedListId("")
       setSubject("")
       setBody("")
+      setMessageKind("transactional")
+      setComposeContext(null)
       setSelectedTemplateId("")
-      setSendNotice({ tone: "success", text: "Message sent." })
+      const suppressionNotice = result.suppressedCount ? ` ${result.suppressedCount} unsubscribed contact${result.suppressedCount === 1 ? "" : "s"} skipped.` : ""
+      setSendNotice(historySaved
+        ? { tone: "success", text: `Message sent.${suppressionNotice}` }
+        : { tone: "error", text: "Message sent, but its shared history could not be saved." })
     } catch (error) {
       setSendNotice({
         tone: "error",
@@ -498,7 +794,7 @@ export default function EmailPage() {
     setListNotice(null)
   }
 
-  function saveList(event: FormEvent<HTMLFormElement>) {
+  async function saveList(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     const name = listName.trim()
     if (!name) {
@@ -507,26 +803,51 @@ export default function EmailPage() {
     }
 
     const now = new Date().toISOString()
+    const list: ContactList = {
+      id: editingListId || makeId(),
+      name,
+      contactEmails: Array.from(new Set(listContactEmails.map((email) => email.trim().toLowerCase()).filter(Boolean))),
+      updatedAt: now,
+    }
+
     if (editingListId) {
-      setLists((current) => current.map((list) => list.id === editingListId ? { ...list, name, contactEmails: listContactEmails, updatedAt: now } : list))
+      const updatedList = { ...list, id: editingListId }
+      setLists((current) => current.map((item) => item.id === editingListId ? updatedList : item))
+      try {
+        await saveEmailList({ ...updatedList, companyId: workspaceId, createdBy: user?.uid || "" })
+      } catch {
+        setListNotice({ tone: "error", text: "The list could not be saved to the workspace." })
+        return
+      }
       setListNotice({ tone: "success", text: "List updated." })
       return
     }
 
-    const newList: ContactList = { id: makeId(), name, contactEmails: listContactEmails, updatedAt: now }
-    setLists((current) => [newList, ...current])
-    setEditingListId(newList.id)
+    setLists((current) => [list, ...current])
+    try {
+      await saveEmailList({ ...list, companyId: workspaceId, createdBy: user?.uid || "" })
+    } catch {
+      setLists((current) => current.filter((item) => item.id !== list.id))
+      setListNotice({ tone: "error", text: "The list could not be saved to the workspace." })
+      return
+    }
+    setEditingListId(list.id)
     setListNotice({ tone: "success", text: "List created." })
   }
 
-  function deleteList(listId: string) {
+  async function deleteList(listId: string) {
     setLists((current) => current.filter((list) => list.id !== listId))
-    if (editingListId === listId) resetListEditor()
+    try {
+      await deleteEmailList(listId)
+      if (editingListId === listId) resetListEditor()
+    } catch {
+      setListNotice({ tone: "error", text: "The list could not be deleted from the workspace." })
+    }
   }
 
   return (
-    <main className="mx-auto flex min-h-0 w-full max-w-5xl flex-1 flex-col overflow-visible px-3 pt-3 pb-5 sm:px-6 sm:pt-4 sm:pb-6 lg:overflow-hidden">
-      <div className="flex min-h-0 w-full flex-1 flex-col">
+    <main className="mx-auto flex min-h-0 w-full max-w-5xl flex-1 flex-col overflow-visible px-3 pt-3 pb-5 sm:px-6 sm:pt-4 sm:pb-6 lg:h-[calc(100svh-3.5rem)] lg:max-h-[calc(100svh-3.5rem)] lg:flex-none lg:overflow-hidden">
+      <div className="flex h-full min-h-0 w-full flex-1 flex-col">
         <FilterBar
           {...activeFilterBar}
           className="mb-2"
@@ -564,6 +885,56 @@ export default function EmailPage() {
             </>
           }
         />
+        {tab === "messages" && showOpsDetail && (
+          <div className="mb-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-5">
+            <Select value={messageCompanyFilter} onValueChange={setMessageCompanyFilter}>
+              <SelectTrigger aria-label="Filter by company" className="h-9 w-full text-xs">
+                <SelectValue placeholder="All companies" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All companies</SelectItem>
+                {messageFilterOptions.companies.map(([value, label]) => <SelectItem key={value} value={value}>{label}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            <Select value={messageProjectFilter} onValueChange={setMessageProjectFilter}>
+              <SelectTrigger aria-label="Filter by project" className="h-9 w-full text-xs">
+                <SelectValue placeholder="All projects" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All projects</SelectItem>
+                {messageFilterOptions.projects.map(([value, label]) => <SelectItem key={value} value={value}>{label}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            <Select value={messageDocumentFilter} onValueChange={setMessageDocumentFilter}>
+              <SelectTrigger aria-label="Filter by object type" className="h-9 w-full text-xs">
+                <SelectValue placeholder="All object types" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All object types</SelectItem>
+                {messageFilterOptions.documents.map(([value, label]) => <SelectItem key={value} value={value}>{label}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            <Select value={messageSenderFilter} onValueChange={setMessageSenderFilter}>
+              <SelectTrigger aria-label="Filter by sender" className="h-9 w-full text-xs">
+                <SelectValue placeholder="All senders" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All senders</SelectItem>
+                {messageFilterOptions.senders.map((value) => <SelectItem key={value} value={value}>{value}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            <Select value={messageStatusFilter} onValueChange={setMessageStatusFilter}>
+              <SelectTrigger aria-label="Filter by status" className="h-9 w-full text-xs">
+                <SelectValue placeholder="All statuses" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All statuses</SelectItem>
+                <SelectItem value="sent">Sent</SelectItem>
+                <SelectItem value="failed">Failed</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        )}
         <div className="mb-2 flex w-full items-center gap-1 rounded-md bg-muted/50 p-0.5 sm:hidden" role="tablist" aria-label="Email">
           {(["messages", "templates", "lists"] as const).map((item) => (
             <button
@@ -590,9 +961,9 @@ export default function EmailPage() {
         </div>
 
         {tab === "messages" && (
-          <section className="flex min-h-0 flex-1 flex-col gap-4 lg:grid lg:grid-cols-[18rem_minmax(0,1fr)] lg:gap-6" role="tabpanel">
+          <section className="flex min-h-0 flex-1 flex-col gap-4 lg:grid lg:grid-cols-[18rem_minmax(0,1fr)] lg:grid-rows-[minmax(0,1fr)] lg:gap-6 lg:overflow-hidden" role="tabpanel">
             <aside className={cn(
-              "shrink-0 overflow-hidden rounded-[14px] border border-border bg-card lg:min-h-[38rem]",
+              "min-h-0 shrink-0 overflow-hidden rounded-[14px] border border-border bg-card",
               mobileMessageView === "list" || !isMobile ? "block" : "hidden",
             )}>
               <div className="flex items-center justify-between gap-3 border-b border-border px-3.5 py-3 sm:px-4 sm:py-3.5">
@@ -617,25 +988,34 @@ export default function EmailPage() {
               ) : (
                 <div className="divide-y divide-border">
                   {visibleMessages.map((message) => (
-                    <div key={message.id} className="space-y-1 px-3.5 py-3 sm:px-4">
+                    <button
+                      key={message.id}
+                      type="button"
+                      onClick={() => void openSentMessage(message)}
+                      className={cn(
+                        "block w-full space-y-1 px-3.5 py-3 text-left transition-colors hover:bg-muted/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset sm:px-4",
+                        selectedMessageId === message.id && "bg-muted",
+                      )}
+                      aria-label={`View sent email: ${message.subject}`}
+                    >
                       <div className="flex items-center justify-between gap-3">
                         <span className="min-w-0 truncate text-xs font-medium">{message.to}</span>
                         <time dateTime={message.createdAt} className="max-w-[42%] shrink-0 truncate text-right text-[11px] text-muted-foreground">
                           {formatMessageDate(message.createdAt)}
                         </time>
                       </div>
-                      <p className="truncate text-sm">{message.subject}</p>
+                      <p className="truncate text-sm font-semibold">{message.subject}</p>
                       <span className="inline-flex items-center gap-1 text-[11px] text-emerald-700 dark:text-emerald-300">
-                        <CheckCircle2 className="size-3" aria-hidden="true" />Accepted
+                        <CheckCircle2 className="size-3" aria-hidden="true" />Sent
                       </span>
-                    </div>
+                    </button>
                   ))}
                 </div>
               )}
             </aside>
 
             <div className={cn(
-              "min-h-0 lg:overflow-y-auto",
+              "min-h-0 lg:h-full lg:overflow-hidden",
               mobileMessageView === "composer" || !isMobile ? "block" : "hidden",
             )}>
             <div className="mb-3 flex items-center gap-2 lg:hidden">
@@ -643,61 +1023,168 @@ export default function EmailPage() {
                 <ArrowLeft aria-hidden="true" />
               </Button>
               <div className="min-w-0">
-                <p className="truncate text-sm font-semibold">New mail</p>
+                <p className="truncate text-sm font-semibold">{selectedMessage ? "Sent email" : "New mail"}</p>
                 <p className="text-xs text-muted-foreground">Back to sent messages</p>
               </div>
             </div>
-            <form onSubmit={sendEmail} className="rounded-[14px] border border-border bg-card">
-              <div className="grid gap-px bg-border sm:grid-cols-2">
-                <div className="bg-card px-4 py-3.5 sm:px-5">
-                  <span className="text-xs font-medium text-muted-foreground">From</span>
-                  <p className="mt-1 truncate text-sm">{senderAddress || (showOpsDetail ? "Not configured" : "Not available yet")}</p>
+            {selectedMessage ? (
+              <article className="flex min-h-[32rem] flex-col overflow-hidden rounded-[14px] border border-border bg-card lg:grid lg:h-full lg:min-h-0 lg:grid-rows-[auto_minmax(0,1fr)_auto]">
+                <header className="flex shrink-0 items-start justify-between gap-4 border-b border-border px-4 py-3.5">
+                  <div className="min-w-0">
+                    <h2 className="truncate text-base font-semibold">{selectedMessage.subject}</h2>
+                    <dl className="mt-2 grid gap-1 text-xs text-muted-foreground">
+                      <div className="flex min-w-0 gap-2">
+                        <dt className="shrink-0 font-medium text-foreground">To</dt>
+                        <dd className="truncate">{selectedMessage.to}</dd>
+                      </div>
+                      <div className="flex min-w-0 gap-2">
+                        <dt className="shrink-0 font-medium text-foreground">From</dt>
+                        <dd className="truncate">{cleanSenderDisplay(selectedMessage.from || senderAddress || "VisualCNS")}</dd>
+                      </div>
+                      <div className="flex min-w-0 gap-2">
+                        <dt className="shrink-0 font-medium text-foreground">Sent</dt>
+                        <dd>{formatMessageDate(selectedMessage.createdAt)}</dd>
+                      </div>
+                      {(selectedMessage.companyName || selectedMessage.projectName || selectedMessage.documentTitle) && (
+                        <div className="flex min-w-0 gap-2">
+                          <dt className="shrink-0 font-medium text-foreground">Context</dt>
+                          <dd className="truncate">{[selectedMessage.companyName, selectedMessage.projectName, selectedMessage.documentTitle].filter(Boolean).join(" · ")}</dd>
+                        </div>
+                      )}
+                    </dl>
+                  </div>
+                  <Button type="button" variant="outline" size="sm" className="shrink-0" onClick={clearComposer}>
+                    <Mail aria-hidden="true" />New mail
+                  </Button>
+                </header>
+                <div className="min-h-0 bg-white">
+                  {loadingMessageId === selectedMessage.id ? (
+                    <div className="flex h-full min-h-72 items-center justify-center gap-2 text-sm text-muted-foreground">
+                      <Loader2 className="size-4 animate-spin" aria-hidden="true" />Loading sent email
+                    </div>
+                  ) : selectedMessage.bodyHtml || selectedMessage.bodyText ? (
+                    <iframe
+                      title={`Sent email: ${selectedMessage.subject}`}
+                      sandbox=""
+                      srcDoc={sentMessagePreview(selectedMessage)}
+                      className="h-[32rem] w-full border-0 bg-white lg:h-full"
+                    />
+                  ) : messageViewError ? (
+                    <div className="flex h-full min-h-72 items-center justify-center px-6 text-center">
+                      <div>
+                        <p className="text-sm font-medium text-destructive">Couldn’t load this email</p>
+                        <p className="mt-1 max-w-sm text-xs leading-5 text-muted-foreground">{messageViewError}</p>
+                        <Button type="button" variant="outline" size="sm" className="mt-4" onClick={() => void openSentMessage(selectedMessage)}>Try again</Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex h-full min-h-72 items-center justify-center px-6 text-center">
+                      <div>
+                        <Mail className="mx-auto size-5 text-muted-foreground" aria-hidden="true" />
+                        <p className="mt-3 text-sm font-medium">Message body unavailable</p>
+                        <p className="mt-1 max-w-sm text-xs leading-5 text-muted-foreground">This email was sent before message previews were saved. New sent emails will include their complete content here.</p>
+                      </div>
+                    </div>
+                  )}
                 </div>
-                <div className="bg-card px-4 py-3.5 sm:px-5">
+                <footer className="flex shrink-0 items-center justify-between gap-3 border-t border-border bg-card px-4 py-2.5">
+                  <span className="inline-flex items-center gap-1 text-xs text-emerald-700 dark:text-emerald-300">
+                    <CheckCircle2 className="size-3.5" aria-hidden="true" />Sent successfully
+                  </span>
+                  <span className="hidden max-w-[50%] truncate text-xs text-muted-foreground sm:block">ID: {selectedMessage.providerId}</span>
+                </footer>
+              </article>
+            ) : (
+            <form autoComplete="off" onSubmit={sendEmail} className="flex min-h-0 flex-col rounded-[14px] border border-border bg-card lg:grid lg:h-full lg:grid-rows-[auto_minmax(0,1fr)_auto] lg:overflow-hidden">
+              <div className="grid shrink-0 gap-px bg-border sm:grid-cols-4">
+                      <div className="bg-card px-3 py-2.5 sm:px-4">
+                  <span className="text-xs font-medium text-muted-foreground">From</span>
+                  <p className="mt-1 truncate text-sm">{cleanSenderDisplay(senderAddress || (showOpsDetail ? "Not configured" : "Not available yet"))}</p>
+                </div>
+                <div className="bg-card px-3 py-2.5 sm:px-4">
                   <Label htmlFor="email-template" className="text-xs text-muted-foreground">Template</Label>
-                  <select
-                    id="email-template"
-                    value={selectedTemplateId}
-                    onChange={(event) => applyTemplate(event.target.value)}
-                    className="mt-1 h-7 w-full bg-transparent text-sm outline-none"
+                  <Select
+                    value={selectedTemplateId || "none"}
+                    onValueChange={(value) => applyTemplate(value === "none" ? "" : value)}
                   >
-                    <option value="">Start without a template</option>
+                    <SelectTrigger id="email-template" className="mt-1 h-7 w-full border-0 bg-transparent px-0 shadow-none hover:bg-transparent data-[state=open]:bg-transparent">
+                      <SelectValue placeholder="Start without a template" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">Start without a template</SelectItem>
                     {templates.map((template) => (
-                      <option key={template.id} value={template.id}>{template.name}</option>
+                        <SelectItem key={template.id} value={template.id}>{template.name}</SelectItem>
                     ))}
-                  </select>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="bg-card px-3 py-2.5 sm:px-4">
+                  <Label htmlFor="email-message-kind" className="text-xs text-muted-foreground">Message type</Label>
+                  <Select value={messageKind} onValueChange={(value) => setMessageKind(value as EmailMessageKind)}>
+                    <SelectTrigger id="email-message-kind" className="mt-1 h-7 w-full border-0 bg-transparent px-0 shadow-none hover:bg-transparent data-[state=open]:bg-transparent">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="transactional">Service message</SelectItem>
+                      <SelectItem value="marketing">Marketing email</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="bg-card px-3 py-2.5 sm:px-4">
+                  <Label htmlFor="email-list" className="text-xs text-muted-foreground">Send to list</Label>
+                  <Select
+                    value={selectedListId || "none"}
+                    onValueChange={(value) => {
+                      setSelectedListId(value === "none" ? "" : value)
+                      if (value !== "none") setTo("")
+                    }}
+                  >
+                    <SelectTrigger id="email-list" className="mt-1 h-7 w-full border-0 bg-transparent px-0 shadow-none hover:bg-transparent data-[state=open]:bg-transparent">
+                      <SelectValue placeholder="One contact" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">One contact</SelectItem>
+                    {lists.map((list) => (
+                        <SelectItem key={list.id} value={list.id}>{list.name} ({list.contactEmails.length})</SelectItem>
+                    ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
 
-              <div className="space-y-5 px-4 py-5 sm:px-5 sm:py-6">
-                <div className="space-y-2">
-                  <Label htmlFor="email-to">To</Label>
-                  <Input
-                    id="email-to"
-                    type="email"
-                    autoComplete="email"
-                    list="email-contacts"
-                    value={to}
-                    onChange={(event) => handleRecipientChange(event.target.value)}
-                    placeholder="client@example.com"
-                    required
-                  />
-                  <datalist id="email-contacts">
-                    {contacts.map((contact) => (
-                      <option key={contact.email} value={contact.email} label={contact.label} />
-                    ))}
-                  </datalist>
-                  {showOpsDetail && contacts.length > 0 && (
-                    <p className="text-xs text-muted-foreground">Start typing to choose a saved client contact.</p>
+              <div className="min-h-0 space-y-3 overflow-visible px-3 py-3 sm:px-4 sm:py-4 lg:grid lg:grid-rows-[auto_auto_minmax(0,1fr)] lg:gap-3 lg:space-y-0 lg:overflow-hidden">
+                <div className="flex min-h-0 flex-col gap-1.5">
+                  <Select
+                    value={to || "none"}
+                    onValueChange={(value) => handleRecipientChange(value === "none" ? "" : value)}
+                    disabled={Boolean(selectedListId)}
+                  >
+                    <SelectTrigger id="email-to" aria-label="To">
+                      <SelectValue placeholder={selectedList ? `Sending to ${selectedList.contactEmails.length} contacts` : "Select a client contact"} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">Select a client contact</SelectItem>
+                      {contacts.map((contact) => (
+                        <SelectItem key={contact.email} value={contact.email}>
+                          {contact.name} · {contact.email}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {contacts.length === 0 && !selectedList && (
+                    <p className="text-xs text-muted-foreground">No saved client contacts available.</p>
                   )}
-                  {selectedContactName && (
-                    <p className="text-xs text-emerald-700 dark:text-emerald-300">Personalized for {selectedContactName}</p>
+                  {selectedList && (
+                    <p className="text-xs text-muted-foreground">This message will be sent to {selectedList.contactEmails.length} contacts in {selectedList.name}.</p>
                   )}
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="email-subject">Subject</Label>
+                <div className="space-y-1.5">
                   <Input
                     id="email-subject"
+                    name="message-subject"
+                    aria-label="Subject"
+                    autoComplete="off"
+                    inputMode="text"
                     value={subject}
                     onChange={(event) => setSubject(event.target.value)}
                     maxLength={200}
@@ -705,7 +1192,10 @@ export default function EmailPage() {
                     required
                   />
                 </div>
-                <div className="space-y-2">
+                {messageKind === "marketing" && (
+                  <p className="text-xs leading-5 text-muted-foreground">Only subscribed client and portal contacts will receive this email. An unsubscribe link will be added automatically.</p>
+                )}
+                <div className="flex min-h-0 flex-col gap-1.5">
                   <div className="flex items-center justify-between gap-4">
                     <span className="text-xs tabular-nums text-muted-foreground">{htmlToText(body).length.toLocaleString()} / 20,000</span>
                   </div>
@@ -713,27 +1203,26 @@ export default function EmailPage() {
                     value={body}
                     onChange={setBody}
                     placeholder="Write your message"
+                    scrollable
                     compact
+                    className="min-h-64 lg:min-h-0 lg:flex-1"
                   />
                 </div>
               </div>
 
-              <div className="sticky bottom-0 z-10 flex flex-col gap-3 border-t border-border bg-card px-4 py-3.5 pb-4 sm:flex-row sm:items-center sm:justify-between sm:px-5 lg:static lg:bg-transparent lg:pb-3.5">
+              <div className="sticky bottom-0 z-20 flex shrink-0 flex-col gap-2 border-t border-border bg-card px-3 py-2.5 pb-3 sm:flex-row sm:items-center sm:justify-between sm:px-4 lg:static lg:pb-2.5">
                 <div aria-live="polite" className="min-h-5 text-sm">
                   {sendNotice && (
                     <span className={sendNotice.tone === "success" ? "text-emerald-700 dark:text-emerald-300" : "text-destructive"}>
                       {sendNotice.text}
                     </span>
                   )}
-                  {!sendNotice && selectedTemplate && (
-                    <span className="text-muted-foreground">Using {selectedTemplate.name}</span>
-                  )}
                 </div>
                 <div className="flex items-center justify-end gap-2">
                   <Button type="button" variant="ghost" onClick={clearComposer}>Clear</Button>
                   <Button
                     type="submit"
-                    disabled={!senderConfigured || sending || !to.trim() || !subject.trim() || !htmlToText(body).trim()}
+                    disabled={!senderConfigured || sending || (!selectedListId && !to.trim()) || (selectedListId && !selectedList?.contactEmails.length) || !subject.trim() || !htmlToText(body).trim()}
                   >
                     {sending ? <Loader2 className="animate-spin" aria-hidden="true" /> : <Send aria-hidden="true" />}
                     {sending ? "Sending" : "Send email"}
@@ -741,6 +1230,7 @@ export default function EmailPage() {
                 </div>
               </div>
             </form>
+            )}
             </div>
           </section>
         )}
@@ -842,7 +1332,7 @@ export default function EmailPage() {
               </div>
 
               <div className="flex flex-none flex-col gap-3 lg:min-h-0 lg:flex-1">
-                <div className="grid gap-3 sm:grid-cols-2">
+                <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-2">
                     <Input id="template-name" aria-label="Template name" value={templateName} onChange={(event) => setTemplateName(event.target.value)} maxLength={80} placeholder="Template name" required />
                   </div>
@@ -857,6 +1347,43 @@ export default function EmailPage() {
                     placeholder="Write the reusable message"
                     scrollable
                     className="min-h-64 lg:min-h-0 lg:flex-1"
+                    contentHeader={(
+                      <div className="bg-white px-4 py-5 sm:px-6">
+                        <img
+                          src="/visualcns-email-logo.png"
+                          alt={businessProfile?.name || "VisualCNS"}
+                          className="h-auto w-56 max-w-full object-contain object-left"
+                        />
+                      </div>
+                    )}
+                    contentFooter={(
+                      <>
+                        <div className="bg-white px-4 pb-5 pt-2 text-left sm:px-6">
+                          {getTemplateCta(editingTemplate) && (
+                            <a href={getTemplateCta(editingTemplate)?.url} className="inline-flex min-h-10 items-center justify-center rounded-full bg-neutral-950 px-5 py-2.5 text-sm font-semibold text-white no-underline">
+                              {getTemplateCta(editingTemplate)?.text}
+                            </a>
+                          )}
+                        </div>
+                        <div className="flex items-start justify-between gap-4 border-t border-border bg-neutral-50 px-4 py-4 text-xs leading-5 text-neutral-500 sm:px-6">
+                          <div className="min-w-0 text-left">
+                            <p className="font-semibold text-neutral-700">{businessProfile?.name || "VisualCNS"}</p>
+                            <p>{businessProfile?.address || "Lagos, Nigeria"}</p>
+                            <a href={businessProfile?.website?.startsWith("http") ? businessProfile.website : `https://${businessProfile?.website || "visualcns.com"}`} target="_blank" rel="noreferrer" className="underline underline-offset-2">
+                              {businessProfile?.website || "visualcns.com"}
+                            </a>
+                          </div>
+                          <div className="flex shrink-0 items-center gap-3 pt-0.5">
+                            <a href="https://x.com/visualcns" target="_blank" rel="noreferrer" aria-label="VisualCNS on X" className="text-neutral-700 hover:text-neutral-950">
+                              <FaXTwitter className="size-3.5" aria-hidden="true" />
+                            </a>
+                            <a href="https://www.linkedin.com/company/visualng" target="_blank" rel="noreferrer" aria-label="VisualCNS on LinkedIn" className="text-neutral-700 hover:text-neutral-950">
+                              <FaLinkedinIn className="size-3.5" aria-hidden="true" />
+                            </a>
+                          </div>
+                        </div>
+                      </>
+                    )}
                   />
                 </div>
               </div>

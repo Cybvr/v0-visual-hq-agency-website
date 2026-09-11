@@ -4,13 +4,13 @@ import { safeReturnTo, legacyCompanyDestination, legacyDashboardDestination, bil
 
 test('old company document selection survives migration', () => {
   assert.equal(legacyCompanyDestination('falcon', '?tab=documents&doc=invoice:inv-1'), '/portal/falcon/documents/invoice/inv-1')
-  assert.equal(legacyCompanyDestination('falcon', '?tab=media'), '/portal/falcon?tab=files')
-  assert.equal(legacyCompanyDestination('falcon', '?tab=documents'), '/portal/falcon?tab=billing')
+  assert.equal(legacyCompanyDestination('falcon', '?tab=media'), '/portal/falcon/media')
+  assert.equal(legacyCompanyDestination('falcon', '?tab=documents'), '/portal/falcon/documents')
 })
 test('old client dashboard details reach the matching resource', () => {
   assert.equal(legacyDashboardDestination('falcon','/dashboard/invoices/inv-1/edit'), '/portal/falcon/documents/invoice/inv-1')
   assert.equal(legacyDashboardDestination('falcon','/dashboard/projects/my-project'), '/portal/falcon/projects/my-project')
-  assert.equal(legacyDashboardDestination('falcon','/dashboard/tasks'), '/portal/falcon?tab=tasks')
+  assert.equal(legacyDashboardDestination('falcon','/dashboard/tasks'), '/portal/falcon/tasks')
   assert.equal(legacyDashboardDestination('falcon','/dashboard/projects/%ZZ'), '/portal/falcon')
 })
 test('login accepts local deep links but rejects external destinations and auth loops', () => {

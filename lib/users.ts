@@ -28,6 +28,9 @@ export interface AppUser {
   companyId?: string
   /** Set once we've seeded a client's starter tasks, so we never re-seed. */
   tasksSeeded?: boolean
+  /** Set on public signup until the one-time welcome email is delivered. */
+  welcomeEmailPending?: boolean
+  welcomeEmailSentAt?: string
   createdAt?: Timestamp
   updatedAt?: Timestamp
   // Preserve any other fields that exist on the doc so edits don't drop them
@@ -187,6 +190,7 @@ export async function upsertUserOnLogin(profile: {
     // Only set on create so a return login never demotes an admin.
     base.role = "client"
     base.createdAt = Timestamp.now()
+    base.welcomeEmailPending = true
   }
   // Every user needs a companyId to have a workspace: it's what tasks/projects
   // are scoped by and what the Firestore rules match on (myCompanyId()). Default

@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef } from "react"
+import { useEffect, useRef, type ReactNode } from "react"
 import { EditorContent, useEditor, type Editor } from "@tiptap/react"
 import { Image } from "@tiptap/extension-image"
 import StarterKit from "@tiptap/starter-kit"
@@ -106,6 +106,8 @@ export function RichTextEditor({
   className,
   scrollable = false,
   compact = false,
+  contentHeader,
+  contentFooter,
 }: {
   value: string
   onChange: (html: string) => void
@@ -113,6 +115,8 @@ export function RichTextEditor({
   className?: string
   scrollable?: boolean
   compact?: boolean
+  contentHeader?: ReactNode
+  contentFooter?: ReactNode
 }) {
   // Referenced inside handlePaste, which runs long after the editor is built.
   const editorRef = useRef<Editor | null>(null)
@@ -191,7 +195,9 @@ export function RichTextEditor({
         ))}
       </div>
       <div className={cn("min-h-0 overflow-x-auto", scrollable && "flex-1 overflow-y-auto")}>
+        {contentHeader}
         <EditorContent editor={editor} />
+        {contentFooter}
       </div>
     </div>
   )

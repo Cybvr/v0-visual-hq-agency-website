@@ -29,7 +29,7 @@ export default function PortalDocumentPage() {
   // Written documents sit under their own tab; the priced ones live in the overview's billing section.
   const backTab = kind === "document" ? "documents" : "overview"
   const backLabel = kind === "document" ? "Back to documents" : "Back to overview"
-  const backHref = backTab === "overview" ? portalPath(companySlug) : `${portalPath(companySlug)}?tab=${backTab}`
+  const backHref = backTab === "overview" ? portalPath(companySlug) : `${portalPath(companySlug)}/${backTab}`
   if (!invoice && !contract && !estimate && !written) return <PortalNotice title="Document unavailable">This document hasn’t been issued to your company, or is no longer available. <Link href={backHref} className="underline">{backLabel}</Link></PortalNotice>
   const url = safeExternalUrl(invoice?.url || contract?.url) || undefined
   const title = invoice ? `Invoice ${invoice.invoiceNumber}` : contract?.title || estimate?.title || written?.title || "Document"

@@ -18,6 +18,7 @@ import { CheckCircle2, Columns3, List, ListTodo, Loader2, Pencil, Plus, Trash2 }
 
 // ... keep existing imports ...
 import { Button } from "@/components/ui/button"
+import { ContextualEmailButton } from "@/components/dashboard/contextual-email-button"
 import { Card, CardContent } from "@/components/ui/card"
 import {
   Table,
@@ -43,6 +44,7 @@ import { Badge, InlineDate, InlineProject, InlineSelect, InlineText } from "@/co
 import { taskPriorityMeta, taskStatusMeta, type Task, type TaskPriority, type TaskStatus } from "@/lib/tasks"
 import { type Project } from "@/lib/projects"
 import { cn } from "@/lib/utils"
+import { portalPath } from "@/lib/portal-model"
 
 const STATUS_ORDER: TaskStatus[] = ["todo", "in-progress", "review", "done"]
 const STATUS_OPTIONS = STATUS_ORDER
@@ -53,14 +55,37 @@ function RowActions({
   onEdit,
   onDelete,
   deleting,
+  companyId,
+  clientName,
 }: {
   task: Task
   onEdit: () => void
   onDelete: () => void
   deleting: boolean
+  companyId: string
+  clientName: string
 }) {
   return (
     <div className="flex shrink-0 items-center gap-0.5">
+      <ContextualEmailButton
+        label="Notify client"
+        icon={false}
+        variant="ghost"
+        size="icon"
+        className="h-7 w-7 text-muted-foreground hover:bg-muted/80 hover:text-foreground"
+        context={{
+          companyId,
+          companyName: clientName,
+          projectId: task.projectId,
+          projectName: task.project,
+          documentType: "task",
+          documentId: task.id,
+          documentTitle: task.name,
+          subject: `Task update: ${task.name}`,
+          ctaText: "View tasks",
+          ctaUrl: `${portalPath(companyId)}/tasks`,
+        }}
+      />
       <Button
         variant="ghost"
         size="icon"
@@ -428,6 +453,8 @@ export function TasksView({
                             onEdit={() => openEdit(t.id)}
                             onDelete={() => onDelete(t.id)}
                             deleting={deleting === t.id}
+                            companyId={companyId}
+                            clientName={clientName}
                           />
                         </div>
                       </TableCell>

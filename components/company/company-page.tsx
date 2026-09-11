@@ -18,6 +18,7 @@ import { InvoiceDocument } from "@/components/dashboard/invoice-document"
 import { NewPersonDialog } from "@/components/dashboard/new-person-dialog"
 import { NewProjectDialog } from "@/components/dashboard/new-project-dialog"
 import { ProjectDetail } from "@/components/dashboard/project-detail"
+import { ContextualEmailButton } from "@/components/dashboard/contextual-email-button"
 import { UserEditorSheet } from "@/components/dashboard/user-editor-sheet"
 import { ProjectCard } from "@/components/project-card"
 import {
@@ -189,6 +190,9 @@ export function CompanyPage({
   const absoluteUrl = (path: string) =>
     typeof window !== "undefined" ? `${window.location.origin}${path}` : path
 
+  const primaryContact = people.find((person) => person.adminUser?.uid === company.primaryContactId)
+    || people.find((person) => person.adminUser?.email)
+
   async function handleRemovePerson() {
     if (!admin || !pendingRemove || removing) return
     setRemoving(true)
@@ -240,12 +244,27 @@ export function CompanyPage({
                   onNewProject: () => setCreatingProject(true),
                   onShare: () => setShareOpen(true),
                   extraAction: (
-                    <Button asChild size="sm" variant="secondary" className="rounded-full">
-                      <Link href={admin.sharePath} target="_blank" rel="noreferrer">
-                        <Eye className="size-4" aria-hidden="true" />
-                        View
-                      </Link>
-                    </Button>
+                    <>
+                      <ContextualEmailButton
+                        label="Email contact"
+                        variant="secondary"
+                        className="rounded-full"
+                        context={{
+                          companyId: company.id,
+                          companyName: company.name,
+                          recipientEmail: primaryContact?.adminUser?.email,
+                          recipientName: primaryContact?.adminUser?.displayName || primaryContact?.name,
+                          ctaText: "Open your client portal",
+                          ctaUrl: admin.sharePath,
+                        }}
+                      />
+                      <Button asChild size="sm" variant="secondary" className="rounded-full">
+                        <Link href={admin.sharePath} target="_blank" rel="noreferrer">
+                          <Eye className="size-4" aria-hidden="true" />
+                          View
+                        </Link>
+                      </Button>
+                    </>
                   ),
                 }
               : undefined
