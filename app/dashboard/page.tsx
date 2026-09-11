@@ -5,13 +5,27 @@ import Image from "next/image"
 import { Loader2 } from "lucide-react"
 
 import { useAuth } from "@/components/auth-provider"
+import { ActivityFeed } from "@/components/dashboard/activity-feed"
 import { HomeBanner } from "@/components/dashboard/home-banner"
 import { HomeTaskList } from "@/components/dashboard/home-task-list"
 import { ProjectsView } from "@/components/dashboard/projects-view"
 import { TemplatesView } from "@/components/dashboard/templates-view"
+import { getCompanyActivity, type ActivityItem } from "@/lib/activity"
 import { getProjectsByCompanyId, type Project } from "@/lib/projects"
 import { getTasksByCompanyId, seedDefaultTasks, tsToMillis, type Task } from "@/lib/tasks"
 import { updateUser } from "@/lib/users"
+
+/** Where a home-page activity row jumps to in the agency workspace. */
+function activityHref(item: ActivityItem): string | undefined {
+  switch (item.kind) {
+    case "invoice": return `/dashboard/invoices/${item.refId}`
+    case "estimate": return `/dashboard/estimates/${item.refId}`
+    case "contract": return `/dashboard/contracts/${item.refId}`
+    case "project": return "/dashboard/projects"
+    case "task": return "/dashboard/tasks"
+    default: return undefined
+  }
+}
 
 export default function DashboardPage() {
   const { user, appUser } = useAuth()
@@ -22,6 +36,7 @@ export default function DashboardPage() {
 
   const [projects, setProjects] = useState<Project[]>([])
   const [tasks, setTasks] = useState<Task[]>([])
+  const [activity, setActivity] = useState<ActivityItem[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const seedingRef = useRef(false)
@@ -35,11 +50,13 @@ export default function DashboardPage() {
     setError(null)
 
     try {
-      const [nextProjects, nextTasks] = await Promise.all([
+      const [nextProjects, nextTasks, nextActivity] = await Promise.all([
         getProjectsByCompanyId(companyId),
         getTasksByCompanyId(companyId),
+        getCompanyActivity(companyId),
       ])
       setProjects(nextProjects)
+      setActivity(nextActivity)
 
       let taskList = nextTasks
 
@@ -96,15 +113,16 @@ export default function DashboardPage() {
               onSaved={fetchData}
               className="mt-0"
             />
-            <div className="overflow-hidden rounded-lg bg-card">
-              <Image
-                src="/images/visualcns-blue-campaign-ad-v4.png"
-                alt="VisualCNS campaign artwork: Do something awesome for your brand"
-                width={1536}
-                height={1057}
-                className="h-auto w-full"
-              />
-            </div>
+            <ActivityFeed items={activity} hrefFor={activityHref} className="mt-0" />
+          </div>
+          <div className="mt-6 overflow-hidden rounded-lg bg-card">
+            <Image
+              src="/images/visualcns-blue-campaign-ad-v4.png"
+              alt="VisualCNS campaign artwork: Do something awesome for your brand"
+              width={1536}
+              height={1057}
+              className="h-auto w-full"
+            />
           </div>
         </>
       )}
