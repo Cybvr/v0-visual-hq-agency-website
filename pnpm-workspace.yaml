@@ -3,3 +3,9 @@ allowBuilds:
   '@tailwindcss/oxide': set this to true or false
   protobufjs: set this to true or false
   sharp: set this to true or false
+
+# firebase-admin@14 pulls jwks-rsa@4, which currently loads jose with
+# require(). Keep that transitive dependency on the CommonJS-compatible line
+# so the Vercel serverless function can verify Firebase ID tokens.
+overrides:
+  'jwks-rsa>jose': 4.15.9
