@@ -1,11 +1,9 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import Link from "next/link"
-import { ExternalLink, Eye, Loader2 } from "lucide-react"
+import { Loader2 } from "lucide-react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Switch } from "@/components/ui/switch"
@@ -57,8 +55,12 @@ function ProjectSharing({ project, initial, people, files, onChanged }: { projec
   </div>
 }
 
-export function PortalPublishing({ companyId, portalHref, projects, people }: { companyId: string; portalHref: string; projects: Project[]; people: CompanyPagePerson[] }) {
-  const [open, setOpen] = useState(false)
+/**
+ * The client-portal publishing controls: pick a project, choose what the client
+ * sees, share tasks and files. Rendered inside the company's Share dialog.
+ * `active` gates the load so it only fetches while the dialog is open.
+ */
+export function PortalPublishingPanel({ companyId, projects, people, active }: { companyId: string; projects: Project[]; people: CompanyPagePerson[]; active: boolean }) {
   const [selected, setSelected] = useState(projects[0]?.id || "")
   const [published, setPublished] = useState<PortalProject[]>([])
   const [files, setFiles] = useState<SharedDocument[]>([])
@@ -66,12 +68,12 @@ export function PortalPublishing({ companyId, portalHref, projects, people }: { 
   const [error, setError] = useState("")
   const [revision, setRevision] = useState(0)
   useEffect(() => {
-    if (!open) return
-    let active = true
+    if (!active) return
+    let live = true
     setLoading(true); setError("")
-    Promise.all([getPortalProjects(companyId), getDocumentsForClient(companyId, "__agency_preview__")]).then(([items, docs]) => { if (active) { setPublished(items); setFiles(docs.filter(item => item.companyId === companyId)) } }).catch(() => { if (active) setError("Couldn’t load sharing settings. Close and reopen to retry.") }).finally(() => { if (active) setLoading(false) })
-    return () => { active = false }
-  }, [open, companyId, revision])
+    Promise.all([getPortalProjects(companyId), getDocumentsForClient(companyId, "__agency_preview__")]).then(([items, docs]) => { if (live) { setPublished(items); setFiles(docs.filter(item => item.companyId === companyId)) } }).catch(() => { if (live) setError("Couldn’t load sharing settings. Close and reopen to retry.") }).finally(() => { if (live) setLoading(false) })
+    return () => { live = false }
+  }, [active, companyId, revision])
   const project = projects.find(item => item.id === selected)
-  return <Dialog open={open} onOpenChange={setOpen}><DialogTrigger asChild><Button size="sm" variant="secondary" className="rounded-full"><Eye className="size-4" aria-hidden="true" />View</Button></DialogTrigger><DialogContent className="max-h-[85vh] max-w-2xl overflow-y-auto"><DialogHeader><DialogTitle>Client portal</DialogTitle><DialogDescription>Control what this company sees after signing in.</DialogDescription></DialogHeader><Link href={portalHref} target="_blank" className="inline-flex items-center gap-2 text-sm font-medium underline underline-offset-4">Preview portal<ExternalLink className="size-3.5" /></Link>{error ? <p role="alert" className="text-sm text-destructive">{error}</p> : loading ? <Loader2 className="size-5 animate-spin" /> : <><Label htmlFor="portal-project">Project</Label><select id="portal-project" value={selected} onChange={e => setSelected(e.target.value)} className="h-10 rounded-md border border-input bg-background px-3 text-sm"><option value="">Choose a project</option>{projects.map(item => <option key={item.id} value={item.id}>{item.title}{published.some(p => p.id === item.id) ? " · Shared" : ""}</option>)}</select>{project ? <ProjectSharing key={`${project.id}:${revision}`} project={project} initial={published.find(item => item.id === project.id)} people={people} files={files} onChanged={() => setRevision(n => n + 1)} /> : <p className="text-sm text-muted-foreground">Choose a project to share, or create one in the agency workspace.</p>}</>}</DialogContent></Dialog>
+  return <div className="space-y-4">{error ? <p role="alert" className="text-sm text-destructive">{error}</p> : loading ? <Loader2 className="size-5 animate-spin" /> : <><div className="grid gap-2"><Label htmlFor="portal-project">Project</Label><select id="portal-project" value={selected} onChange={e => setSelected(e.target.value)} className="h-10 rounded-md border border-input bg-background px-3 text-sm"><option value="">Choose a project</option>{projects.map(item => <option key={item.id} value={item.id}>{item.title}{published.some(p => p.id === item.id) ? " · Shared" : ""}</option>)}</select></div>{project ? <ProjectSharing key={`${project.id}:${revision}`} project={project} initial={published.find(item => item.id === project.id)} people={people} files={files} onChanged={() => setRevision(n => n + 1)} /> : <p className="text-sm text-muted-foreground">Choose a project to share, or create one in the agency workspace.</p>}</>}</div>
 }

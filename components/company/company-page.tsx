@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
-import { ArrowLeft, Plus, User as UserIcon } from "lucide-react"
+import { ArrowLeft, Eye, Plus, User as UserIcon } from "lucide-react"
 import { toast } from "sonner"
 
 import { CompanyDocuments, type CompanyDocumentKind } from "@/components/company/company-documents"
@@ -40,7 +40,7 @@ import type { CompanyDocument } from "@/lib/company-documents"
 import { projectStatusMeta, type Project } from "@/lib/projects"
 import { deleteUser, type AppUser } from "@/lib/users"
 import { cn } from "@/lib/utils"
-import { PortalPublishing } from "@/components/portal/portal-publishing"
+import { PortalPublishingPanel } from "@/components/portal/portal-publishing"
 
 const SECTIONS = [
   { key: "overview", label: "Overview" },
@@ -240,7 +240,12 @@ export function CompanyPage({
                   onNewProject: () => setCreatingProject(true),
                   onShare: () => setShareOpen(true),
                   extraAction: (
-                    <PortalPublishing companyId={company.id} portalHref={admin.sharePath} projects={projects} people={people} />
+                    <Button asChild size="sm" variant="secondary" className="rounded-full">
+                      <Link href={admin.sharePath} target="_blank" rel="noreferrer">
+                        <Eye className="size-4" aria-hidden="true" />
+                        View
+                      </Link>
+                    </Button>
                   ),
                 }
               : undefined
@@ -583,13 +588,16 @@ export function CompanyPage({
           />
 
           <Dialog open={shareOpen} onOpenChange={setShareOpen}>
-            <DialogContent className="max-w-md">
+            <DialogContent className="max-h-[85vh] max-w-2xl overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>Share client portal</DialogTitle>
-                <DialogDescription>Clients sign in with their invited account to access {company.name}&apos;s workspace.</DialogDescription>
+                <DialogDescription>Control what {company.name} sees after signing in, then share their workspace link.</DialogDescription>
               </DialogHeader>
               <ShareLink value={absoluteUrl(admin.sharePath)} label="Workspace link" />
-              <p className="text-xs text-muted-foreground">Previously shared company links continue to open this portal.</p>
+              <p className="text-xs text-muted-foreground">Clients sign in with their invited account. Previously shared company links continue to open this portal.</p>
+              <div className="border-t border-border pt-4">
+                <PortalPublishingPanel companyId={company.id} projects={projects} people={people} active={shareOpen} />
+              </div>
             </DialogContent>
           </Dialog>
         </>
