@@ -24,7 +24,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { FilterBar, useFilterBar, type SortOption } from "@/components/dashboard/filter-bar"
-import { DEFAULT_EMAIL_TEMPLATES, type EmailTemplateSeed } from "@/lib/email-templates"
+import type { EmailTemplateRecord } from "@/lib/email-templates-store"
 import { deleteEmailList, getEmailLists, saveEmailList, type EmailContactList } from "@/lib/email-lists"
 import { getAllEmailMessages, getEmailMessages, saveEmailMessage, type EmailMessageRecord, type EmailRecipient } from "@/lib/email-messages"
 import { contextualEmailBody, readEmailComposeContext, type EmailComposeContext } from "@/lib/email-composer"
@@ -38,7 +38,7 @@ import { useIsMobile } from "@/hooks/use-mobile"
 type EmailTab = "templates" | "messages" | "lists"
 type EmailMessageKind = "transactional" | "marketing"
 
-type EmailTemplate = EmailTemplateSeed & { updatedAt: string }
+type EmailTemplate = Omit<EmailTemplateRecord, "companyId" | "createdBy">
 
 type SentMessage = Omit<EmailMessageRecord, "companyId" | "createdBy"> & { companyId?: string }
 
@@ -57,7 +57,7 @@ const TEMPLATE_CTA: Record<string, { text: string; url: string }> = {
   "feedback-request": { text: "Send feedback", url: "/portal" },
 }
 
-function getTemplateCta(template?: EmailTemplate | EmailTemplateSeed | null) {
+function getTemplateCta(template?: EmailTemplate | null) {
   return template ? TEMPLATE_CTA[template.id] || { text: "Open your client portal", url: "/portal" } : null
 }
 
@@ -319,57 +319,19 @@ export default function EmailPage() {
     if (!user?.uid) return
 
     let active = true
-    const legacyTemplates = readStoredList<EmailTemplate>(templateStorageKey)
-    const defaultTemplates = DEFAULT_EMAIL_TEMPLATES.map((template) => ({
-      ...template,
-      updatedAt: new Date().toISOString(),
-    }))
     setMessages([])
     setLists([])
 
     void getEmailTemplates(workspaceId)
-      .then(async (storedTemplates) => {
-        const baseTemplates = storedTemplates.length > 0 ? storedTemplates : legacyTemplates
-        const missingDefaults = defaultTemplates.filter(
-          (template) => !baseTemplates.some((stored) => stored.id === template.id),
-        )
-        const updatedStoredTemplates = baseTemplates.map((stored) => {
-          const defaultTemplate = defaultTemplates.find((template) => template.id === stored.id)
-          const subject = stored.subject.replaceAll("Falcon Energy", "VisualCNS")
-          const shouldRefreshNgaiTemplate = stored.id === "introducing-ngai" && stored.body.includes("Meet Ngai, your new AI teammate inside VisualCNS.")
-          const body = shouldRefreshNgaiTemplate && defaultTemplate
-            ? defaultTemplate.body
-            : formatTemplateBody(stored.body)
-              .replaceAll("Falcon Energy", "VisualCNS")
-              .replaceAll("[Agency Name] Team", "VisualCNS Team")
-          const needsImageMigration = defaultTemplate?.imageUrl &&
-            (stored.imageUrl === "/ngai-feature-announcement.svg" || stored.imageUrl === "/ngai-feature-announcement.png")
-          const needsImageRestore = Boolean(defaultTemplate?.imageUrl) && !stored.imageUrl
-          if (subject === stored.subject && body === stored.body && !needsImageMigration && !needsImageRestore) return stored
-          return {
-            ...stored,
-            subject,
-            body,
-            ...(needsImageMigration || needsImageRestore
-              ? { imageUrl: defaultTemplate?.imageUrl, imageAlt: defaultTemplate?.imageAlt }
-              : {}),
-          }
-        })
-        const nextTemplates: EmailTemplate[] = [...updatedStoredTemplates, ...missingDefaults]
-
-        await Promise.all(nextTemplates.map((template) => saveEmailTemplate({
-          ...template,
-          companyId: workspaceId,
-          createdBy: user.uid,
-        })))
-
+      .then((storedTemplates) => {
         if (!active) return
-        setTemplates(nextTemplates)
+        setTemplates(storedTemplates)
         localStorage.removeItem(templateStorageKey)
       })
       .catch(() => {
         if (!active) return
-        setTemplates(legacyTemplates.length > 0 ? legacyTemplates : defaultTemplates)
+        setTemplates([])
+        setTemplateNotice({ tone: "error", text: "Templates could not be loaded from Firebase." })
       })
 
     return () => {

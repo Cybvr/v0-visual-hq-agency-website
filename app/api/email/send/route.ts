@@ -3,6 +3,7 @@ import { FieldValue } from "firebase-admin/firestore"
 
 import { adminServices } from "@/lib/firebase-admin"
 import { normalizeSubscriptionEmail, subscriptionDocumentId, unsubscribeUrl } from "@/lib/email-unsubscribe"
+import { markdownToHtml } from "@/lib/markdown"
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const SITE_ORIGIN = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") || "https://www.visualcns.com"
@@ -333,7 +334,7 @@ export async function POST(request: Request) {
     )
   }
 
-  let payload: { to?: unknown; subject?: unknown; text?: unknown; html?: unknown; imageUrl?: unknown; brand?: unknown; cta?: unknown; type?: unknown; welcome?: unknown; companyId?: unknown; projectId?: unknown; documentType?: unknown; documentId?: unknown }
+  let payload: { to?: unknown; subject?: unknown; text?: unknown; html?: unknown; imageUrl?: unknown; brand?: unknown; cta?: unknown; type?: unknown; welcome?: unknown; templateId?: unknown; companyId?: unknown; projectId?: unknown; documentType?: unknown; documentId?: unknown }
   try {
     payload = (await request.json()) as typeof payload
   } catch {
@@ -344,12 +345,15 @@ export async function POST(request: Request) {
     .filter((value): value is string => typeof value === "string")
     .map((value) => value.trim())
     .filter(Boolean)
-  const subject = typeof payload.subject === "string" ? payload.subject.trim() : ""
-  const text = typeof payload.text === "string" ? payload.text.trim() : ""
-  const requestedHtml = typeof payload.html === "string" ? payload.html.trim() : ""
+  let subject = typeof payload.subject === "string" ? payload.subject.trim() : ""
+  let text = typeof payload.text === "string" ? payload.text.trim() : ""
+  let requestedHtml = typeof payload.html === "string" ? payload.html.trim() : ""
   const imagePath = typeof payload.imageUrl === "string" && payload.imageUrl.startsWith("/") ? payload.imageUrl : ""
   const messageKind: EmailMessageKind = payload.type === "marketing" ? "marketing" : "transactional"
   const isWelcome = payload.welcome === true
+  const templateId = typeof payload.templateId === "string" && payload.templateId.trim()
+    ? payload.templateId.trim()
+    : "welcome-client-portal"
   const context: EmailContext = {
     companyId: typeof payload.companyId === "string" ? payload.companyId.trim() : undefined,
     projectId: typeof payload.projectId === "string" ? payload.projectId.trim() : undefined,
@@ -366,6 +370,29 @@ export async function POST(request: Request) {
   if (isWelcome && (messageKind !== "transactional" || recipients.length !== 1)) {
     return NextResponse.json({ error: "A welcome email must be a single transactional message." }, { status: 400 })
   }
+
+  let suppressedRecipients: string[] = []
+  const caller = (messageKind === "marketing" || context.documentId || isWelcome) ? await getAdminCaller(idToken) : null
+  let welcomeClaim: WelcomeClaim | null = null
+  if (isWelcome) {
+    if (!caller) return NextResponse.json({ error: "Your session has expired. Sign in again and retry." }, { status: 401 })
+    const companyId = String(caller.data.companyId || caller.uid)
+    const templateSnapshot = await caller.db.collection("emailTemplates").doc(`${companyId}__${templateId}`).get()
+    if (!templateSnapshot.exists) {
+      return NextResponse.json({ error: "The welcome email template is not available." }, { status: 503 })
+    }
+    const template = templateSnapshot.data() || {}
+    const customerName = String(caller.data.displayName || recipients[0].split("@")[0]).trim()
+    subject = String(template.subject || "").replaceAll("[Customer Name]", customerName).trim()
+    text = String(template.body || "").replaceAll("[Customer Name]", customerName).trim()
+    const templateImageUrl = typeof template.imageUrl === "string" ? template.imageUrl.trim() : ""
+    requestedHtml = markdownToHtml(text)
+    if (templateImageUrl) {
+      requestedHtml += `<p><img src="${escapeHtml(templateImageUrl)}" alt="${escapeHtml(String(template.imageAlt || "Message image"))}" style="display:block;width:100%;max-width:720px;height:auto;border-radius:12px;margin-top:24px;" /></p>`
+    }
+    welcomeClaim = await claimWelcomeEmail(caller, recipients[0])
+    if (!welcomeClaim) return NextResponse.json({ error: "This welcome email has already been sent or is already being delivered." }, { status: 409 })
+  }
   if (!subject || subject.length > 200) {
     return NextResponse.json({ error: "Add a subject no longer than 200 characters." }, { status: 400 })
   }
@@ -377,15 +404,6 @@ export async function POST(request: Request) {
   }
   if (!text || text.length > 20_000) {
     return NextResponse.json({ error: "Add a message no longer than 20,000 characters." }, { status: 400 })
-  }
-
-  let suppressedRecipients: string[] = []
-  const caller = (messageKind === "marketing" || context.documentId || isWelcome) ? await getAdminCaller(idToken) : null
-  let welcomeClaim: WelcomeClaim | null = null
-  if (isWelcome) {
-    if (!caller) return NextResponse.json({ error: "Your session has expired. Sign in again and retry." }, { status: 401 })
-    welcomeClaim = await claimWelcomeEmail(caller, recipients[0])
-    if (!welcomeClaim) return NextResponse.json({ error: "This welcome email has already been sent or is already being delivered." }, { status: 409 })
   }
   if (context.documentId && (!caller || caller.data.role !== "admin")) {
     return NextResponse.json({ error: "Only an agency admin can send contextual client communication." }, { status: 403 })
