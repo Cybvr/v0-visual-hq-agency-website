@@ -4,7 +4,7 @@ import { useEffect, useState, type FormEvent } from "react"
 import { Loader2 } from "lucide-react"
 
 import { useAuth } from "@/components/auth-provider"
-import { AccountHeader, AccountNav } from "@/components/account/account-nav"
+import { AccountNav } from "@/components/account/account-nav"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -77,16 +77,18 @@ export default function ProfilePage() {
     <main className="mx-auto w-full max-w-3xl px-4 py-9 sm:px-6">
       <AccountNav />
 
-      <AccountHeader title="Profile" description="How your name and picture appear across the dashboard." />
+      <header className="mt-7">
+        <h1 className="text-lg font-semibold">Profile</h1>
+      </header>
 
-      <form onSubmit={save} className="mt-5 rounded-[14px] border border-border bg-card p-5">
+      <form onSubmit={save} className="mt-6 space-y-5">
         <div className="flex items-center gap-4">
           <Avatar className="size-14 rounded-full">
             {photoURL && <AvatarImage src={photoURL} alt={name} referrerPolicy="no-referrer" />}
             <AvatarFallback className="rounded-full text-base">{initials}</AvatarFallback>
           </Avatar>
           <div className="min-w-0 flex-1">
-            <Label htmlFor="photo-url" className="text-xs text-muted-foreground">
+            <Label htmlFor="photo-url">
               Picture URL
             </Label>
             <Input
@@ -94,50 +96,47 @@ export default function ProfilePage() {
               value={photoURL}
               onChange={(event) => setPhotoURL(event.target.value)}
               placeholder="https://"
-              className="mt-1"
             />
           </div>
         </div>
 
-        <div className="mt-5 grid gap-5 sm:grid-cols-2">
-          <div>
-            <Label htmlFor="display-name" className="text-xs text-muted-foreground">
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div className="space-y-1.5">
+            <Label htmlFor="display-name">
               Name
             </Label>
             <Input
               id="display-name"
               value={displayName}
               onChange={(event) => setDisplayName(event.target.value)}
-              className="mt-1"
             />
           </div>
-          <div>
-            <Label htmlFor="company" className="text-xs text-muted-foreground">
+          <div className="space-y-1.5">
+            <Label htmlFor="company">
               Workspace
             </Label>
             <Input
               id="company"
               value={company}
               onChange={(event) => setCompany(event.target.value)}
-              className="mt-1"
             />
           </div>
         </div>
 
-        <div className="mt-5">
-          <Label htmlFor="slug" className="text-xs text-muted-foreground">
+        <div className="space-y-1.5">
+          <Label htmlFor="slug">
             Dashboard address
           </Label>
-          <div className="mt-1 flex items-center gap-2">
+          <div className="flex items-center gap-2">
             <span className="shrink-0 text-sm text-muted-foreground">/dashboard/</span>
             <Input id="slug" value={slug} onChange={(event) => setSlug(event.target.value)} className="flex-1" />
           </div>
-          <p className="mt-1.5 text-xs text-muted-foreground">
+          <p className="text-xs text-muted-foreground">
             Where signing in takes you. Letters, numbers and hyphens.
           </p>
         </div>
 
-        <div className="mt-6 flex items-center gap-3">
+        <div className="flex items-center gap-3 pt-2">
           <Button type="submit" disabled={saving}>
             {saving && <Loader2 className="mr-2 size-4 animate-spin" />}
             Save changes
