@@ -203,6 +203,17 @@ function withMessageImage(value: string, imageUrl?: string, imageAlt?: string) {
   return `${image}${withoutImage}`
 }
 
+function firstImageAttributes(value: string) {
+  const image = value.match(/<img\b[^>]*>/i)?.[0]
+  if (!image) return null
+  const src = image.match(/\bsrc=["']([^"']+)["']/i)?.[1]
+  if (!src) return null
+  return {
+    src,
+    alt: image.match(/\balt=["']([^"']*)["']/i)?.[1] || undefined,
+  }
+}
+
 function formatTemplateBody(value: string) {
   const content = value.includes("<") ? value : markdownToHtml(value)
   return content.replace(/Best regards,\s*VisualCNS Team/gi, "Best regards,<br />VisualCNS Team")
@@ -256,8 +267,6 @@ export default function EmailPage() {
   const [templateName, setTemplateName] = useState("")
   const [templateSubject, setTemplateSubject] = useState("")
   const [templateBody, setTemplateBody] = useState("")
-  const [templateImageUrl, setTemplateImageUrl] = useState("")
-  const [templateImageAlt, setTemplateImageAlt] = useState("")
   const [templateNotice, setTemplateNotice] = useState<Notice>(null)
   const [mobileMessageView, setMobileMessageView] = useState<"list" | "composer">("list")
   const [mobileTemplateView, setMobileTemplateView] = useState<"list" | "editor">("list")
@@ -719,6 +728,7 @@ export default function EmailPage() {
     const name = templateName.trim()
     const savedSubject = templateSubject.trim()
     const savedBody = templateBody.trim()
+    const embeddedImage = firstImageAttributes(savedBody)
 
     if (!name || !savedSubject || !savedBody) {
       setTemplateNotice({ tone: "error", text: "Add a name, subject, and message before saving." })
@@ -738,8 +748,8 @@ export default function EmailPage() {
       name,
       subject: savedSubject,
       body: savedBody,
-      imageUrl: templateImageUrl || undefined,
-      imageAlt: templateImageAlt.trim() || undefined,
+      imageUrl: embeddedImage?.src,
+      imageAlt: embeddedImage?.alt || undefined,
       updatedAt: now,
     }
 

@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef, type ReactNode } from "react"
+import { useEffect, useRef, useState, type ChangeEvent, type ReactNode } from "react"
 import { EditorContent, useEditor, type Editor } from "@tiptap/react"
 import { Image } from "@tiptap/extension-image"
 import StarterKit from "@tiptap/starter-kit"
@@ -12,6 +12,7 @@ import {
   Heading2,
   Heading3,
   Italic,
+  ImagePlus,
   List,
   ListOrdered,
   Quote,
@@ -22,6 +23,7 @@ import {
 } from "lucide-react"
 
 import { cn } from "@/lib/utils"
+import { uploadFileToStorage } from "@/lib/documents"
 
 type ToolbarButton = {
   label: string
@@ -120,6 +122,10 @@ export function RichTextEditor({
 }) {
   // Referenced inside handlePaste, which runs long after the editor is built.
   const editorRef = useRef<Editor | null>(null)
+  const imageInputRef = useRef<HTMLInputElement>(null)
+  const [imageSelected, setImageSelected] = useState(false)
+  const [imageUploading, setImageUploading] = useState(false)
+  const [imageError, setImageError] = useState("")
 
   const editor = useEditor({
     extensions: [StarterKit, Image, TableKit.configure({ table: { resizable: true } })],
@@ -143,13 +149,16 @@ export function RichTextEditor({
           "break-words px-4 py-3 text-sm outline-none",
           "cursor-text",
           "[&_h2]:mt-5 [&_h2]:text-lg [&_h2]:font-semibold [&_h3]:mt-4 [&_h3]:text-base [&_h3]:font-semibold [&_p]:my-2 [&_p]:leading-7 [&_ul]:my-2 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:my-2 [&_ol]:list-decimal [&_ol]:pl-5 [&_li]:my-1 [&_strong]:font-semibold [&_blockquote]:my-3 [&_blockquote]:border-l-2 [&_blockquote]:pl-3 [&_blockquote]:italic [&_blockquote]:border-border",
-          "[&_a]:break-all [&_img]:max-w-full [&_table]:my-3 [&_table]:w-full [&_table]:table-fixed [&_table]:border-collapse [&_td]:border [&_td]:border-border [&_td]:p-2 [&_td]:align-top [&_th]:border [&_th]:border-border [&_th]:bg-muted [&_th]:p-2 [&_th]:text-left [&_th]:font-semibold [&_.selectedCell]:bg-muted/60",
+          "[&_a]:break-all [&_img]:max-w-full [&_table]:my-3 [&_table]:w-full [&_table]:table-fixed [&_table]:border-collapse [&_td]:border [&_td]:border-border [&_td]:p-2 [&_td]:align-top [&_th]:border [&_th]:border-border [&_th]:bg-muted [&_th]:p-2 [&_th]:text-left [&_th]:font-semibold [&_.selectedCell]:bg-muted/60 [&_.ProseMirror-selectednode]:outline [&_.ProseMirror-selectednode]:outline-2 [&_.ProseMirror-selectednode]:outline-ring",
         ),
         "aria-label": placeholder || "Message",
         ...(placeholder ? { "data-placeholder": placeholder } : {}),
       },
     },
     onUpdate: ({ editor: current }) => onChange(current.getHTML()),
+    onSelectionUpdate: ({ editor: current }) => {
+      setImageSelected(current.state.selection.node?.type.name === "image")
+    },
   })
 
   editorRef.current = editor
@@ -163,6 +172,33 @@ export function RichTextEditor({
 
   if (!editor) {
     return <div className={cn("min-h-72 rounded-[10px] border border-input", className)} />
+  }
+
+  async function handleImageChange(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0]
+    event.target.value = ""
+    if (!file) return
+
+    setImageError("")
+    setImageUploading(true)
+    try {
+      const src = await uploadFileToStorage(file)
+      const selection = editor.state.selection
+      if (selection.node?.type.name === "image") {
+        editor.view.dispatch(editor.state.tr.setNodeMarkup(selection.from, undefined, {
+          ...selection.node.attrs,
+          src,
+          alt: file.name,
+        }))
+      } else {
+        editor.chain().focus().setImage({ src, alt: file.name }).run()
+      }
+      onChange(editor.getHTML())
+    } catch {
+      setImageError("The image could not be uploaded. Try again.")
+    } finally {
+      setImageUploading(false)
+    }
   }
 
   return (
@@ -193,7 +229,24 @@ export function RichTextEditor({
             })}
           </div>
         ))}
+        <div className="flex items-center gap-1 border-l border-input pl-1">
+          <input ref={imageInputRef} type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
+          <button
+            type="button"
+            onClick={() => imageInputRef.current?.click()}
+            aria-label={imageSelected ? "Replace image" : "Insert image"}
+            title={imageSelected ? "Replace image" : "Insert image"}
+            disabled={imageUploading}
+            className={cn(
+              "inline-flex size-8 items-center justify-center rounded-md outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50",
+              imageSelected ? "bg-muted text-foreground" : "text-muted-foreground hover:bg-muted hover:text-foreground",
+            )}
+          >
+            {imageUploading ? <span className="size-4 animate-pulse rounded-sm bg-current" aria-hidden="true" /> : <ImagePlus className="size-4" aria-hidden="true" />}
+          </button>
+        </div>
       </div>
+      {imageError && <p role="alert" className="border-b border-destructive/20 bg-destructive/5 px-3 py-2 text-xs text-destructive">{imageError}</p>}
       <div className={cn("min-h-0 overflow-x-auto", scrollable && "flex-1 overflow-y-auto")}>
         {contentHeader}
         <EditorContent editor={editor} />
