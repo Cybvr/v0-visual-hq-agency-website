@@ -2,10 +2,12 @@
 
 import { useEffect, useMemo, useState, type FormEvent } from "react"
 import {
+  ArrowLeft,
   CheckCircle2,
   FileText,
   Inbox,
   Loader2,
+  List,
   Mail,
   Plus,
   Send,
@@ -13,16 +15,18 @@ import {
 } from "lucide-react"
 
 import { useAuth } from "@/components/auth-provider"
+import { RichTextEditor } from "@/components/dashboard/rich-text-editor"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
 import { FilterBar, useFilterBar, type SortOption } from "@/components/dashboard/filter-bar"
 import { DEFAULT_EMAIL_TEMPLATES, type EmailTemplateSeed } from "@/lib/email-templates"
+import { markdownToHtml } from "@/lib/markdown"
 import { getUsers } from "@/lib/users"
 import { cn } from "@/lib/utils"
+import { useIsMobile } from "@/hooks/use-mobile"
 
-type EmailTab = "templates" | "messages"
+type EmailTab = "templates" | "messages" | "lists"
 
 type EmailTemplate = EmailTemplateSeed & { updatedAt: string }
 
@@ -32,6 +36,19 @@ type SentMessage = {
   to: string
   subject: string
   createdAt: string
+}
+
+type EmailContact = {
+  email: string
+  label: string
+  name: string
+}
+
+type ContactList = {
+  id: string
+  name: string
+  contactEmails: string[]
+  updatedAt: string
 }
 
 type Notice = {
@@ -47,6 +64,15 @@ const MESSAGE_SORTS: SortOption<SentMessage>[] = [
 
 function searchMessage(message: SentMessage) {
   return [message.to, message.subject]
+}
+
+const LIST_SORTS: SortOption<ContactList>[] = [
+  { value: "updatedAt", label: "Last updated", get: (list) => list.updatedAt, ascLabel: "Oldest", descLabel: "Newest" },
+  { value: "name", label: "Name", get: (list) => list.name, ascLabel: "A–Z", descLabel: "Z–A" },
+]
+
+function searchList(list: ContactList) {
+  return [list.name, list.contactEmails.length]
 }
 
 const TEMPLATE_SORTS: SortOption<EmailTemplate>[] = [
@@ -84,8 +110,64 @@ function formatMessageDate(value: string) {
   }
 }
 
+function formatTemplateDate(value: string) {
+  try {
+    const date = new Date(value)
+    const now = new Date()
+    const dayStart = (input: Date) => new Date(input.getFullYear(), input.getMonth(), input.getDate()).getTime()
+    const daysAgo = Math.round((dayStart(now) - dayStart(date)) / 86_400_000)
+
+    if (daysAgo === 0) return new Intl.DateTimeFormat(undefined, { hour: "numeric", minute: "2-digit" }).format(date)
+    if (daysAgo === 1) return "Yesterday"
+    if (daysAgo > 1 && daysAgo < 7) return new Intl.DateTimeFormat(undefined, { weekday: "long" }).format(date)
+    return new Intl.DateTimeFormat(undefined, { day: "2-digit", month: "2-digit", year: "2-digit" }).format(date)
+  } catch {
+    return "Unknown date"
+  }
+}
+
+function htmlToText(value: string) {
+  if (!value.includes("<")) return value
+  return value
+    .replace(/<br\s*\/?>/gi, "\n")
+    .replace(/<\/(p|li|h[1-6])>/gi, "\n")
+    .replace(/<[^>]+>/g, "")
+    .replace(/&nbsp;/gi, " ")
+    .replace(/&amp;/gi, "&")
+    .replace(/&lt;/gi, "<")
+    .replace(/&gt;/gi, ">")
+    .replace(/&quot;/gi, '"')
+    .replace(/&#39;/gi, "'")
+}
+
+function escapeHtmlAttribute(value: string) {
+  return value.replace(/[&<>"']/g, (character) => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;",
+  })[character] as string)
+}
+
+function withMessageImage(value: string, imageUrl?: string, imageAlt?: string) {
+  const content = value.includes("<") ? value : markdownToHtml(value)
+  if (!imageUrl) return content
+  const existingImage = content.match(/<img[^>]*>/i)?.[0]
+  const withoutImage = existingImage ? content.replace(existingImage, "").replaceAll("<p></p>", "") : content
+  const image = `<p><img src="${escapeHtmlAttribute(imageUrl)}" alt="${escapeHtmlAttribute(imageAlt || "Message image")}" /></p>`
+  return `${image}${withoutImage}`
+}
+
+function personalizeGreeting(value: string, name?: string) {
+  const trimmedName = name?.trim()
+  if (!trimmedName) return value
+  return value.replace(/(^|>|\n)(\s*Dear\s+)(?:\[Customer Name\]|Customer)(\s*,?)/i, `$1$2${trimmedName}$3`)
+}
+
 export default function EmailPage() {
   const { user, appUser, isAdmin, isImpersonating } = useAuth()
+  const isMobile = useIsMobile()
   // An admin "viewing as" a client sees exactly what that client sees.
   const showOpsDetail = isAdmin && !isImpersonating
   const workspaceId = appUser?.companyId || user?.uid || "workspace"
@@ -98,7 +180,8 @@ export default function EmailPage() {
   const [loadedWorkspace, setLoadedWorkspace] = useState<string | null>(null)
   const [senderConfigured, setSenderConfigured] = useState<boolean | null>(null)
   const [senderAddress, setSenderAddress] = useState<string | null>(null)
-  const [contacts, setContacts] = useState<Array<{ email: string; label: string }>>([])
+  const [contacts, setContacts] = useState<EmailContact[]>([])
+  const [lists, setLists] = useState<ContactList[]>([])
 
   const [to, setTo] = useState("")
   const [subject, setSubject] = useState("")
@@ -111,7 +194,15 @@ export default function EmailPage() {
   const [templateName, setTemplateName] = useState("")
   const [templateSubject, setTemplateSubject] = useState("")
   const [templateBody, setTemplateBody] = useState("")
+  const [templateImageUrl, setTemplateImageUrl] = useState("")
+  const [templateImageAlt, setTemplateImageAlt] = useState("")
   const [templateNotice, setTemplateNotice] = useState<Notice>(null)
+  const [mobileMessageView, setMobileMessageView] = useState<"list" | "composer">("list")
+  const [mobileTemplateView, setMobileTemplateView] = useState<"list" | "editor">("list")
+  const [listName, setListName] = useState("")
+  const [listContactEmails, setListContactEmails] = useState<string[]>([])
+  const [editingListId, setEditingListId] = useState<string | null>(null)
+  const [listNotice, setListNotice] = useState<Notice>(null)
   const { results: visibleMessages, bar: messageFilterBar } = useFilterBar({
     items: messages,
     search: searchMessage,
@@ -126,21 +217,47 @@ export default function EmailPage() {
     defaultSort: "updatedAt",
     defaultDirection: "desc",
   })
+  const { results: visibleLists, bar: listFilterBar } = useFilterBar({
+    items: lists,
+    search: searchList,
+    sorts: LIST_SORTS,
+    defaultSort: "updatedAt",
+    defaultDirection: "desc",
+  })
 
-  const activeFilterBar = tab === "messages" ? messageFilterBar : templateFilterBar
+  const activeFilterBar = tab === "messages" ? messageFilterBar : tab === "templates" ? templateFilterBar : listFilterBar
+  const selectedContactName = contacts.find((contact) => contact.email.toLowerCase() === to.trim().toLowerCase())?.name
 
   useEffect(() => {
     setLoadedWorkspace(null)
     const storedTemplates = readStoredList<EmailTemplate>(templateStorageKey)
+    const defaultTemplates = DEFAULT_EMAIL_TEMPLATES.map((template) => ({
+      ...template,
+      updatedAt: new Date().toISOString(),
+    }))
+    const missingDefaults = defaultTemplates.filter(
+      (template) => !storedTemplates.some((stored) => stored.id === template.id),
+    )
+    const updatedStoredTemplates = storedTemplates.map((stored) => {
+      const defaultTemplate = defaultTemplates.find((template) => template.id === stored.id)
+      const subject = stored.subject.replaceAll("Falcon Energy", "VisualCNS")
+      const body = (stored.body.includes("<") ? stored.body : markdownToHtml(stored.body))
+        .replaceAll("Falcon Energy", "VisualCNS")
+        .replaceAll("[Agency Name] Team", "VisualCNS Team")
+      const needsImageMigration = defaultTemplate?.imageUrl && stored.imageUrl === "/ngai-feature-announcement.png"
+      if (subject === stored.subject && body === stored.body && !needsImageMigration) return stored
+      return {
+        ...stored,
+        subject,
+        body,
+        ...(needsImageMigration ? { imageUrl: defaultTemplate?.imageUrl, imageAlt: defaultTemplate?.imageAlt } : {}),
+      }
+    })
     setTemplates(
-      storedTemplates.length > 0
-        ? storedTemplates
-        : DEFAULT_EMAIL_TEMPLATES.map((template) => ({
-            ...template,
-            updatedAt: new Date().toISOString(),
-          })),
+      storedTemplates.length > 0 ? [...updatedStoredTemplates, ...missingDefaults] : defaultTemplates,
     )
     setMessages(readStoredList<SentMessage>(messageStorageKey))
+    setLists(readStoredList<ContactList>(`visualcns-email-lists:${workspaceId}`))
     setLoadedWorkspace(workspaceId)
   }, [workspaceId, templateStorageKey, messageStorageKey])
 
@@ -153,6 +270,11 @@ export default function EmailPage() {
     if (loadedWorkspace !== workspaceId) return
     localStorage.setItem(messageStorageKey, JSON.stringify(messages))
   }, [loadedWorkspace, workspaceId, messageStorageKey, messages])
+
+  useEffect(() => {
+    if (loadedWorkspace !== workspaceId) return
+    localStorage.setItem(`visualcns-email-lists:${workspaceId}`, JSON.stringify(lists))
+  }, [loadedWorkspace, workspaceId, lists])
 
   useEffect(() => {
     if (!showOpsDetail) {
@@ -170,6 +292,7 @@ export default function EmailPage() {
           .map((contact) => ({
             email: contact.email.trim(),
             label: [contact.company, contact.displayName].filter(Boolean).join(" · ") || contact.email.trim(),
+            name: contact.displayName?.trim() || contact.email.trim().split("@")[0],
           }))
           .filter((contact) => {
             const key = contact.email.toLowerCase()
@@ -217,8 +340,14 @@ export default function EmailPage() {
     const template = templates.find((item) => item.id === templateId)
     if (!template) return
     setSubject(template.subject)
-    setBody(template.body)
+    setBody(personalizeGreeting(withMessageImage(template.body, template.imageUrl, template.imageAlt), selectedContactName))
     setSendNotice(null)
+  }
+
+  function handleRecipientChange(value: string) {
+    setTo(value)
+    const contact = contacts.find((item) => item.email.toLowerCase() === value.trim().toLowerCase())
+    if (contact) setBody((current) => personalizeGreeting(current, contact.name))
   }
 
   function clearComposer() {
@@ -237,6 +366,7 @@ export default function EmailPage() {
     setSendNotice(null)
 
     try {
+      const textBody = htmlToText(body).trim()
       const idToken = await user.getIdToken()
       const response = await fetch("/api/email/send", {
         method: "POST",
@@ -244,7 +374,12 @@ export default function EmailPage() {
           Authorization: `Bearer ${idToken}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ to, subject, text: body }),
+        body: JSON.stringify({
+          to,
+          subject,
+          text: textBody,
+          html: body.includes("<") ? body : undefined,
+        }),
       })
       const result = (await response.json()) as { id?: string; error?: string }
 
@@ -282,6 +417,8 @@ export default function EmailPage() {
     setTemplateName("")
     setTemplateSubject("")
     setTemplateBody("")
+    setTemplateImageUrl("")
+    setTemplateImageAlt("")
     setTemplateNotice(null)
   }
 
@@ -289,7 +426,9 @@ export default function EmailPage() {
     setEditingTemplateId(template.id)
     setTemplateName(template.name)
     setTemplateSubject(template.subject)
-    setTemplateBody(template.body)
+    setTemplateBody(withMessageImage(template.body, template.imageUrl, template.imageAlt))
+    setTemplateImageUrl(template.imageUrl || "")
+    setTemplateImageAlt(template.imageAlt || "")
     setTemplateNotice(null)
   }
 
@@ -308,8 +447,16 @@ export default function EmailPage() {
     if (editingTemplateId) {
       setTemplates((current) =>
         current.map((template) =>
-          template.id === editingTemplateId
-            ? { ...template, name, subject: savedSubject, body: savedBody, updatedAt: now }
+            template.id === editingTemplateId
+            ? {
+                ...template,
+                name,
+                subject: savedSubject,
+                body: savedBody,
+                imageUrl: templateImageUrl || undefined,
+                imageAlt: templateImageAlt.trim() || undefined,
+                updatedAt: now,
+              }
             : template,
         ),
       )
@@ -322,6 +469,8 @@ export default function EmailPage() {
       name,
       subject: savedSubject,
       body: savedBody,
+      imageUrl: templateImageUrl || undefined,
+      imageAlt: templateImageAlt.trim() || undefined,
       updatedAt: now,
     }
     setTemplates((current) => [newTemplate, ...current])
@@ -335,41 +484,125 @@ export default function EmailPage() {
     if (editingTemplateId === templateId) resetTemplateEditor()
   }
 
+  function resetListEditor() {
+    setEditingListId(null)
+    setListName("")
+    setListContactEmails([])
+    setListNotice(null)
+  }
+
+  function editList(list: ContactList) {
+    setEditingListId(list.id)
+    setListName(list.name)
+    setListContactEmails(list.contactEmails)
+    setListNotice(null)
+  }
+
+  function saveList(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    const name = listName.trim()
+    if (!name) {
+      setListNotice({ tone: "error", text: "Add a name for this list." })
+      return
+    }
+
+    const now = new Date().toISOString()
+    if (editingListId) {
+      setLists((current) => current.map((list) => list.id === editingListId ? { ...list, name, contactEmails: listContactEmails, updatedAt: now } : list))
+      setListNotice({ tone: "success", text: "List updated." })
+      return
+    }
+
+    const newList: ContactList = { id: makeId(), name, contactEmails: listContactEmails, updatedAt: now }
+    setLists((current) => [newList, ...current])
+    setEditingListId(newList.id)
+    setListNotice({ tone: "success", text: "List created." })
+  }
+
+  function deleteList(listId: string) {
+    setLists((current) => current.filter((list) => list.id !== listId))
+    if (editingListId === listId) resetListEditor()
+  }
+
   return (
-    <main className="mx-auto w-full max-w-5xl px-4 pt-4 pb-12 sm:px-6">
-      <div className="w-full">
+    <main className="mx-auto flex min-h-0 w-full max-w-5xl flex-1 flex-col overflow-visible px-3 pt-3 pb-5 sm:px-6 sm:pt-4 sm:pb-6 lg:overflow-hidden">
+      <div className="flex min-h-0 w-full flex-1 flex-col">
         <FilterBar
           {...activeFilterBar}
-          placeholder={tab === "messages" ? "Search messages" : "Search templates"}
+          className="mb-2"
+          placeholder={tab === "messages" ? "Search messages" : tab === "templates" ? "Search templates" : "Search lists"}
           actions={
             <>
               <Button
                 type="button"
-                variant={tab === "messages" ? "default" : "outline"}
+                variant="outline"
+                className="hidden sm:inline-flex"
                 onClick={() => {
                   setTab("messages")
                   clearComposer()
+                  setMobileMessageView("composer")
                 }}
               >
                 <Mail aria-hidden="true" />New mail
               </Button>
               <Button
                 type="button"
-                variant={tab === "templates" ? "default" : "outline"}
+                variant="outline"
+                className="hidden sm:inline-flex"
                 onClick={() => setTab("templates")}
               >
                 <FileText aria-hidden="true" />Templates
               </Button>
+              <Button
+                type="button"
+                variant="outline"
+                className="hidden sm:inline-flex"
+                onClick={() => setTab("lists")}
+              >
+                <List aria-hidden="true" />Lists
+              </Button>
             </>
           }
         />
+        <div className="mb-2 flex w-full items-center gap-1 rounded-md bg-muted/50 p-0.5 sm:hidden" role="tablist" aria-label="Email">
+          {(["messages", "templates", "lists"] as const).map((item) => (
+            <button
+              key={item}
+              type="button"
+              role="tab"
+              aria-selected={tab === item}
+              onClick={() => {
+                setTab(item)
+                if (item === "messages") {
+                  clearComposer()
+                  setMobileMessageView("list")
+                }
+                if (item === "templates") setMobileTemplateView("list")
+              }}
+              className={cn(
+                "flex-1 rounded-md px-2 py-1.5 text-xs font-medium capitalize transition-colors",
+                tab === item ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground",
+              )}
+            >
+              {item}
+            </button>
+          ))}
+        </div>
 
         {tab === "messages" && (
-          <section className="grid gap-6 lg:grid-cols-[18rem_minmax(0,1fr)]" role="tabpanel">
-            <aside className="overflow-hidden rounded-[14px] border border-border bg-card lg:min-h-[38rem]">
-              <div className="flex items-center justify-between gap-3 border-b border-border px-4 py-3.5">
+          <section className="flex min-h-0 flex-1 flex-col gap-4 lg:grid lg:grid-cols-[18rem_minmax(0,1fr)] lg:gap-6" role="tabpanel">
+            <aside className={cn(
+              "shrink-0 overflow-hidden rounded-[14px] border border-border bg-card lg:min-h-[38rem]",
+              mobileMessageView === "list" || !isMobile ? "block" : "hidden",
+            )}>
+              <div className="flex items-center justify-between gap-3 border-b border-border px-3.5 py-3 sm:px-4 sm:py-3.5">
                 <h2 className="text-sm font-semibold">Sent messages</h2>
-                <span className="text-xs tabular-nums text-muted-foreground">{messages.length}</span>
+                <div className="flex items-center gap-2">
+                  <Button type="button" variant="ghost" size="sm" className="h-8 px-2 lg:hidden" onClick={() => { clearComposer(); setMobileMessageView("composer") }}>
+                    <Plus aria-hidden="true" />New mail
+                  </Button>
+                  <span className="text-xs tabular-nums text-muted-foreground">{messages.length}</span>
+                </div>
               </div>
               {messages.length === 0 ? (
                 <div className="px-4 py-10 text-center">
@@ -384,10 +617,12 @@ export default function EmailPage() {
               ) : (
                 <div className="divide-y divide-border">
                   {visibleMessages.map((message) => (
-                    <div key={message.id} className="space-y-1 px-4 py-3">
+                    <div key={message.id} className="space-y-1 px-3.5 py-3 sm:px-4">
                       <div className="flex items-center justify-between gap-3">
-                        <span className="truncate text-xs font-medium">{message.to}</span>
-                        <span className="shrink-0 text-[11px] text-muted-foreground">{formatMessageDate(message.createdAt)}</span>
+                        <span className="min-w-0 truncate text-xs font-medium">{message.to}</span>
+                        <time dateTime={message.createdAt} className="max-w-[42%] shrink-0 truncate text-right text-[11px] text-muted-foreground">
+                          {formatMessageDate(message.createdAt)}
+                        </time>
                       </div>
                       <p className="truncate text-sm">{message.subject}</p>
                       <span className="inline-flex items-center gap-1 text-[11px] text-emerald-700 dark:text-emerald-300">
@@ -399,16 +634,20 @@ export default function EmailPage() {
               )}
             </aside>
 
-            <div>
-            {!senderConfigured && senderConfigured !== null && (
-              <div className="mb-5 rounded-[12px] bg-amber-500/10 px-4 py-3 text-sm leading-6 text-amber-900 dark:text-amber-200">
-                {showOpsDetail
-                  ? "Sending is turned off until a sending address is connected for this workspace. You can still write and save templates."
-                  : "Sending isn't available on your workspace yet. You can still write and save templates."}
+            <div className={cn(
+              "min-h-0 lg:overflow-y-auto",
+              mobileMessageView === "composer" || !isMobile ? "block" : "hidden",
+            )}>
+            <div className="mb-3 flex items-center gap-2 lg:hidden">
+              <Button type="button" variant="ghost" size="icon" onClick={() => setMobileMessageView("list")} aria-label="Back to sent messages">
+                <ArrowLeft aria-hidden="true" />
+              </Button>
+              <div className="min-w-0">
+                <p className="truncate text-sm font-semibold">New mail</p>
+                <p className="text-xs text-muted-foreground">Back to sent messages</p>
               </div>
-            )}
-
-            <form onSubmit={sendEmail} className="overflow-hidden rounded-[14px] border border-border bg-card">
+            </div>
+            <form onSubmit={sendEmail} className="rounded-[14px] border border-border bg-card">
               <div className="grid gap-px bg-border sm:grid-cols-2">
                 <div className="bg-card px-4 py-3.5 sm:px-5">
                   <span className="text-xs font-medium text-muted-foreground">From</span>
@@ -439,7 +678,7 @@ export default function EmailPage() {
                     autoComplete="email"
                     list="email-contacts"
                     value={to}
-                    onChange={(event) => setTo(event.target.value)}
+                    onChange={(event) => handleRecipientChange(event.target.value)}
                     placeholder="client@example.com"
                     required
                   />
@@ -450,6 +689,9 @@ export default function EmailPage() {
                   </datalist>
                   {showOpsDetail && contacts.length > 0 && (
                     <p className="text-xs text-muted-foreground">Start typing to choose a saved client contact.</p>
+                  )}
+                  {selectedContactName && (
+                    <p className="text-xs text-emerald-700 dark:text-emerald-300">Personalized for {selectedContactName}</p>
                   )}
                 </div>
                 <div className="space-y-2">
@@ -465,22 +707,18 @@ export default function EmailPage() {
                 </div>
                 <div className="space-y-2">
                   <div className="flex items-center justify-between gap-4">
-                    <Label htmlFor="email-body">Message</Label>
-                    <span className="text-xs tabular-nums text-muted-foreground">{body.length.toLocaleString()} / 20,000</span>
+                    <span className="text-xs tabular-nums text-muted-foreground">{htmlToText(body).length.toLocaleString()} / 20,000</span>
                   </div>
-                  <Textarea
-                    id="email-body"
+                  <RichTextEditor
                     value={body}
-                    onChange={(event) => setBody(event.target.value)}
-                    maxLength={20_000}
+                    onChange={setBody}
                     placeholder="Write your message"
-                    required
-                    className="min-h-64 resize-y leading-6"
+                    compact
                   />
                 </div>
               </div>
 
-              <div className="flex flex-col gap-3 border-t border-border px-4 py-3.5 sm:flex-row sm:items-center sm:justify-between sm:px-5">
+              <div className="sticky bottom-0 z-10 flex flex-col gap-3 border-t border-border bg-card px-4 py-3.5 pb-4 sm:flex-row sm:items-center sm:justify-between sm:px-5 lg:static lg:bg-transparent lg:pb-3.5">
                 <div aria-live="polite" className="min-h-5 text-sm">
                   {sendNotice && (
                     <span className={sendNotice.tone === "success" ? "text-emerald-700 dark:text-emerald-300" : "text-destructive"}>
@@ -495,7 +733,7 @@ export default function EmailPage() {
                   <Button type="button" variant="ghost" onClick={clearComposer}>Clear</Button>
                   <Button
                     type="submit"
-                    disabled={!senderConfigured || sending || !to.trim() || !subject.trim() || !body.trim()}
+                    disabled={!senderConfigured || sending || !to.trim() || !subject.trim() || !htmlToText(body).trim()}
                   >
                     {sending ? <Loader2 className="animate-spin" aria-hidden="true" /> : <Send aria-hidden="true" />}
                     {sending ? "Sending" : "Send email"}
@@ -507,37 +745,123 @@ export default function EmailPage() {
           </section>
         )}
 
-        {tab === "templates" && (
-          <section className="grid gap-6 pt-7 lg:grid-cols-[18rem_minmax(0,1fr)]" role="tabpanel">
-            <form onSubmit={saveTemplate} className="rounded-[14px] border border-border bg-card p-4 sm:p-6 lg:order-2">
+        {tab === "lists" && (
+          <section className="grid min-h-0 flex-1 gap-4 overflow-visible pt-2 lg:grid-cols-[18rem_minmax(0,1fr)] lg:gap-6 lg:overflow-hidden" role="tabpanel">
+            <div className="min-h-0 overflow-visible rounded-[14px] border border-border bg-card lg:overflow-y-auto">
+              <div className="flex items-center justify-between gap-3 border-b border-border px-3.5 py-3 sm:px-4 sm:py-3.5">
+                <h2 className="text-sm font-semibold">Contact lists <span className="font-normal tabular-nums text-muted-foreground">({lists.length})</span></h2>
+                <Button type="button" variant="ghost" size="icon" onClick={resetListEditor} aria-label="New contact list" title="New contact list">
+                  <Plus aria-hidden="true" />
+                </Button>
+              </div>
+              {visibleLists.length === 0 ? (
+                <div className="px-4 py-10 text-center">
+                  <List className="mx-auto size-5 text-muted-foreground" aria-hidden="true" />
+                  <p className="mt-3 text-sm font-medium">No lists yet</p>
+                  <p className="mt-1 text-xs leading-5 text-muted-foreground">Create a list to group contacts for sending.</p>
+                </div>
+              ) : (
+                <div className="divide-y divide-border">
+                  {visibleLists.map((list) => (
+                    <div key={list.id} className={cn("flex items-start gap-2 px-3.5 py-3", editingListId === list.id && "bg-sidebar-accent text-sidebar-accent-foreground")}>
+                      <button type="button" onClick={() => editList(list)} className="min-w-0 flex-1 text-left outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                        <span className="block truncate text-sm font-medium">{list.name}</span>
+                        <span className={cn("mt-1 block text-xs text-muted-foreground", editingListId === list.id && "text-sidebar-accent-foreground/70")}>{list.contactEmails.length} contact{list.contactEmails.length === 1 ? "" : "s"}</span>
+                      </button>
+                      <button type="button" onClick={() => deleteList(list.id)} aria-label={`Delete ${list.name}`} className="flex size-8 shrink-0 items-center justify-center rounded-sm text-muted-foreground hover:bg-destructive/10 hover:text-destructive focus-visible:ring-2 focus-visible:ring-ring">
+                        <Trash2 className="size-4" aria-hidden="true" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <form onSubmit={saveList} className="min-h-0 rounded-[14px] border border-border bg-card p-4 sm:p-5">
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <h2 className="font-semibold">{editingTemplateId ? "Edit template" : "New template"}</h2>
-                  <p className="mt-1 text-sm leading-6 text-muted-foreground">Save message copy you send often.</p>
+                  <h2 className="font-semibold">{editingListId ? "Edit list" : "New list"}</h2>
+                  <p className="mt-1 text-sm text-muted-foreground">Choose the contacts you want to group together.</p>
                 </div>
-                {editingTemplateId && (
-                  <Button type="button" variant="ghost" size="sm" onClick={resetTemplateEditor}>
-                    <Plus aria-hidden="true" />New
-                  </Button>
-                )}
+                {editingListId && <Button type="button" variant="ghost" size="sm" onClick={resetListEditor}>New</Button>}
               </div>
 
-              <div className="mt-6 space-y-5">
-                <div className="space-y-2">
-                  <Label htmlFor="template-name">Template name</Label>
-                  <Input id="template-name" value={templateName} onChange={(event) => setTemplateName(event.target.value)} maxLength={80} placeholder="Project update" required />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="template-subject">Subject</Label>
-                  <Input id="template-subject" value={templateSubject} onChange={(event) => setTemplateSubject(event.target.value)} maxLength={200} placeholder="Your project update" required />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="template-body">Message</Label>
-                  <Textarea id="template-body" value={templateBody} onChange={(event) => setTemplateBody(event.target.value)} maxLength={20_000} placeholder="Write the reusable message" required className="min-h-56 resize-y leading-6" />
+              <div className="mt-4 space-y-4">
+                <Input value={listName} onChange={(event) => setListName(event.target.value)} maxLength={80} placeholder="List name" aria-label="List name" required />
+                <div className="rounded-md border border-border">
+                  <div className="border-b border-border px-3 py-2 text-xs font-medium text-muted-foreground">Contacts</div>
+                  {contacts.length === 0 ? (
+                    <p className="px-3 py-4 text-sm text-muted-foreground">No client contacts available.</p>
+                  ) : (
+                    <div className="max-h-72 overflow-y-auto">
+                      {contacts.map((contact) => (
+                        <label key={contact.email} className="flex cursor-pointer items-center gap-3 border-b border-border px-3 py-2.5 last:border-b-0">
+                          <input
+                            type="checkbox"
+                            checked={listContactEmails.includes(contact.email)}
+                            onChange={(event) => setListContactEmails((current) => event.target.checked ? [...current, contact.email] : current.filter((email) => email !== contact.email))}
+                            className="size-4 accent-primary"
+                          />
+                          <span className="min-w-0">
+                            <span className="block truncate text-sm font-medium">{contact.name}</span>
+                            <span className="block truncate text-xs text-muted-foreground">{contact.email}</span>
+                          </span>
+                        </label>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
 
               <div className="mt-5 flex flex-col gap-3 border-t border-border pt-4 sm:flex-row sm:items-center sm:justify-between">
+                <div aria-live="polite" className="min-h-5 text-sm">
+                  {listNotice && <span className={listNotice.tone === "success" ? "text-emerald-700 dark:text-emerald-300" : "text-destructive"}>{listNotice.text}</span>}
+                </div>
+                <Button type="submit">{editingListId ? "Save changes" : "Create list"}</Button>
+              </div>
+            </form>
+          </section>
+        )}
+
+        {tab === "templates" && (
+          <section className="flex min-h-0 flex-1 flex-col gap-3 overflow-visible pt-2 lg:grid lg:grid-cols-[18rem_minmax(0,1fr)] lg:gap-6 lg:overflow-hidden" role="tabpanel">
+            <form
+              onSubmit={saveTemplate}
+              className={cn(
+                "order-2 flex-none flex-col lg:order-2 lg:min-h-0 lg:flex-1",
+                mobileTemplateView === "editor" || !isMobile ? "flex" : "hidden",
+              )}
+            >
+              <div className="mb-1 flex items-center gap-2 lg:hidden">
+                <Button type="button" variant="ghost" size="icon" onClick={() => setMobileTemplateView("list")} aria-label="Back to templates">
+                  <ArrowLeft aria-hidden="true" />
+                </Button>
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-semibold">{editingTemplateId ? "Edit" : "New template"}</p>
+                </div>
+              </div>
+
+              <div className="flex flex-none flex-col gap-3 lg:min-h-0 lg:flex-1">
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <Input id="template-name" aria-label="Template name" value={templateName} onChange={(event) => setTemplateName(event.target.value)} maxLength={80} placeholder="Template name" required />
+                  </div>
+                  <div className="space-y-2">
+                    <Input id="template-subject" aria-label="Subject" value={templateSubject} onChange={(event) => setTemplateSubject(event.target.value)} maxLength={200} placeholder="Subject" required />
+                  </div>
+                </div>
+                <div className="flex min-h-0 flex-1 flex-col gap-2">
+                  <RichTextEditor
+                    value={templateBody}
+                    onChange={setTemplateBody}
+                    placeholder="Write the reusable message"
+                    scrollable
+                    className="min-h-64 lg:min-h-0 lg:flex-1"
+                  />
+                </div>
+              </div>
+
+              <div className="sticky bottom-0 z-10 mt-5 flex shrink-0 flex-col gap-3 border-t border-border bg-background pt-3 pb-4 sm:flex-row sm:items-center sm:justify-between lg:static lg:bg-transparent lg:pt-4 lg:pb-0">
                 <div aria-live="polite" className="min-h-5 text-sm">
                   {templateNotice && (
                     <span className={templateNotice.tone === "success" ? "text-emerald-700 dark:text-emerald-300" : "text-destructive"}>
@@ -549,10 +873,15 @@ export default function EmailPage() {
               </div>
             </form>
 
-            <div className="lg:order-1">
+            <div className={cn(
+              "order-1 min-h-0 overflow-visible pr-1 lg:order-1 lg:overflow-y-auto",
+              mobileTemplateView === "list" || !isMobile ? "block" : "hidden",
+            )}>
               <div className="flex items-center justify-between gap-3">
-                <h2 className="font-semibold">Saved templates</h2>
-                <span className="text-xs tabular-nums text-muted-foreground">{templates.length}</span>
+                <h2 className="font-semibold">Saved templates <span className="text-sm font-normal tabular-nums text-muted-foreground">({templates.length})</span></h2>
+                <Button type="button" variant="ghost" size="icon" onClick={() => { resetTemplateEditor(); setMobileTemplateView("editor") }} aria-label="New template" title="New template">
+                  <Plus aria-hidden="true" />
+                </Button>
               </div>
               {templates.length === 0 ? (
                 <div className="mt-3 rounded-[12px] border border-dashed border-border px-4 py-8 text-center">
@@ -565,16 +894,22 @@ export default function EmailPage() {
                   No templates match your search.
                 </div>
               ) : (
-                <div className="mt-3 divide-y divide-border overflow-hidden rounded-[12px] border border-border bg-card">
+                <div className="mt-3">
                   {visibleTemplates.map((template) => (
-                    <div key={template.id} className={cn("group flex items-start gap-2 p-3", editingTemplateId === template.id && "bg-muted/60")}>
-                      <button type="button" onClick={() => editTemplate(template)} className="min-w-0 flex-1 text-left outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                    <div key={template.id} className={cn("group flex items-start gap-2 rounded-md border-b border-border px-2.5 py-3.5 first:pt-3 last:border-b-0", editingTemplateId === template.id && "bg-sidebar-accent text-sidebar-accent-foreground")}>
+                      <div className={cn("flex size-10 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground", editingTemplateId === template.id && "bg-sidebar-accent-foreground/10 text-sidebar-accent-foreground")} aria-hidden="true">
+                        <Mail className="size-4" />
+                      </div>
+                      <button type="button" onClick={() => { editTemplate(template); setMobileTemplateView("editor") }} className="min-w-0 flex-1 text-left outline-none focus-visible:ring-2 focus-visible:ring-ring">
                         <span className="block truncate text-sm font-medium">{template.name}</span>
-                        <span className="mt-1 block truncate text-xs text-muted-foreground">{template.subject}</span>
+                        <span className={cn("mt-1 block truncate text-xs text-muted-foreground", editingTemplateId === template.id && "text-sidebar-accent-foreground/70")}>{template.subject}</span>
                       </button>
-                      <button type="button" onClick={() => deleteTemplate(template.id)} aria-label={`Delete ${template.name}`} className="flex size-8 shrink-0 items-center justify-center rounded-sm text-muted-foreground opacity-70 outline-none transition-colors hover:bg-destructive/10 hover:text-destructive focus-visible:ring-2 focus-visible:ring-ring sm:opacity-0 sm:group-hover:opacity-100 sm:focus-visible:opacity-100">
-                        <Trash2 className="size-4" aria-hidden="true" />
-                      </button>
+                      <div className="flex shrink-0 flex-col items-end gap-1">
+                        <time dateTime={template.updatedAt} className={cn("text-[11px] text-muted-foreground", editingTemplateId === template.id && "text-sidebar-accent-foreground/70")}>{formatTemplateDate(template.updatedAt)}</time>
+                        <button type="button" onClick={() => deleteTemplate(template.id)} aria-label={`Delete ${template.name}`} className="flex size-8 items-center justify-center rounded-sm text-muted-foreground opacity-70 outline-none transition-colors hover:bg-destructive/10 hover:text-destructive focus-visible:ring-2 focus-visible:ring-ring sm:opacity-0 sm:group-hover:opacity-100 sm:focus-visible:opacity-100">
+                          <Trash2 className="size-4" aria-hidden="true" />
+                        </button>
+                      </div>
                     </div>
                   ))}
                 </div>

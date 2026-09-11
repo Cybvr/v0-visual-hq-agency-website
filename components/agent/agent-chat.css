@@ -4,18 +4,7 @@
  * Namespaced (agent-*); the site's globals.css is consumed as-is.
  */
 
-/*
- * Soft blue radial glow behind the full-page agent surface. Only applied to the
- * full route, not the docked compact panel, which keeps the plain background.
- */
+/* The full-page portal chat stays on the portal's own surface. */
 .agent-surface {
-  background:
-    radial-gradient(
-      62% 55% at 50% 40%,
-      rgba(150, 190, 246, 0.55) 0%,
-      rgba(197, 219, 249, 0.32) 42%,
-      rgba(233, 241, 251, 0.12) 68%,
-      rgba(245, 248, 252, 0) 100%
-    ),
-    #f5f8fc;
+  background: transparent;
 }

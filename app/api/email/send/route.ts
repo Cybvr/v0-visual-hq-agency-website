@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+const SITE_ORIGIN = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") || "https://www.visualcns.com"
 
 type FirebaseLookupResponse = {
   users?: Array<{ localId?: string }>
@@ -10,6 +11,16 @@ type ResendResponse = {
   id?: string
   message?: string
   error?: { message?: string }
+}
+
+function escapeHtml(value: string) {
+  return value.replace(/[&<>"']/g, (character) => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;",
+  })[character] as string)
 }
 
 async function hasValidFirebaseSession(idToken: string) {
@@ -60,7 +71,7 @@ export async function POST(request: Request) {
     )
   }
 
-  let payload: { to?: unknown; subject?: unknown; text?: unknown }
+  let payload: { to?: unknown; subject?: unknown; text?: unknown; html?: unknown; imageUrl?: unknown }
   try {
     payload = (await request.json()) as typeof payload
   } catch {
@@ -70,6 +81,8 @@ export async function POST(request: Request) {
   const to = typeof payload.to === "string" ? payload.to.trim() : ""
   const subject = typeof payload.subject === "string" ? payload.subject.trim() : ""
   const text = typeof payload.text === "string" ? payload.text.trim() : ""
+  const requestedHtml = typeof payload.html === "string" ? payload.html.trim() : ""
+  const imagePath = typeof payload.imageUrl === "string" && payload.imageUrl.startsWith("/") ? payload.imageUrl : ""
 
   if (!EMAIL_PATTERN.test(to)) {
     return NextResponse.json({ error: "Enter a valid recipient email address." }, { status: 400 })
@@ -81,6 +94,14 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Add a message no longer than 20,000 characters." }, { status: 400 })
   }
 
+  const richHtml = requestedHtml.replace(/(src=["'])\/([^"']*)/gi, `$1${SITE_ORIGIN}/$2`)
+  const html = [
+    richHtml || text.split(/\n\s*\n/).map((paragraph) => `<p>${escapeHtml(paragraph).replace(/\n/g, "<br />")}</p>`).join(""),
+    imagePath && !requestedHtml
+      ? `<p><img src="${escapeHtml(`${SITE_ORIGIN}${imagePath}`)}" alt="Ngai AI assistant" style="display:block;width:100%;max-width:720px;height:auto;border-radius:12px;margin-top:24px;" /></p>`
+      : "",
+  ].join("")
+
   const resendResponse = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: {
@@ -89,7 +110,7 @@ export async function POST(request: Request) {
       "Idempotency-Key": crypto.randomUUID(),
       "User-Agent": "VisualCNS Dashboard/1.0",
     },
-    body: JSON.stringify({ from, to: [to], subject, text }),
+    body: JSON.stringify({ from, to: [to], subject, text, html }),
     cache: "no-store",
   })
 

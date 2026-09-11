@@ -1,7 +1,9 @@
 "use client"
 
 import Image from "next/image"
-import { RotateCcw, X } from "lucide-react"
+import { usePathname } from "next/navigation"
+import { useState, type FormEvent } from "react"
+import { ArrowUp, RotateCcw, X } from "lucide-react"
 
 import { AgentChat } from "@/components/agent/agent-chat"
 import { useAgent } from "@/components/agent/agent-context"
@@ -38,6 +40,38 @@ function DockHeader({ onReset, onClose, showReset }: { onReset: () => void; onCl
   )
 }
 
+function DashboardPromptBar() {
+  const pathname = usePathname()
+  const { send } = useAgent()
+  const [text, setText] = useState("")
+
+  if (pathname.startsWith("/portal") || pathname === "/dashboard/email") return null
+
+  function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    const content = text.trim()
+    if (!content) return
+    send(content)
+    setText("")
+  }
+
+  return (
+    <form onSubmit={submit} className="fixed bottom-8 left-1/2 z-40 flex w-[min(calc(100vw-2rem),36rem)] -translate-x-1/2 items-center gap-2 rounded-full px-3 py-2 shadow-[0_8px_24px_rgba(15,23,42,0.08)]">
+      <Image src="/ngai-logo.png" alt="" width={20} height={20} className="shrink-0 rounded-full" />
+      <input
+        value={text}
+        onChange={(event) => setText(event.target.value)}
+        placeholder="Ask Ngai about your work…"
+        aria-label="Ask Ngai"
+        className="h-9 min-w-0 flex-1 rounded-full border-0 bg-background px-4 text-sm outline-none focus-visible:ring-0"
+      />
+      <button type="submit" aria-label="Send to Ngai" disabled={!text.trim()} className="flex size-9 shrink-0 items-center justify-center rounded-full bg-accent text-accent-foreground transition-opacity hover:bg-accent/90 disabled:cursor-not-allowed disabled:opacity-50">
+        <ArrowUp className="size-4" aria-hidden="true" />
+      </button>
+    </form>
+  )
+}
+
 /**
  * The dashboard-wide assistant surface: a floating widget on desktop and a
  * full-screen sheet on mobile, both driven by the shared AgentProvider.
@@ -46,18 +80,17 @@ export function AgentDock() {
   const { open, setOpen, messages, conversations, activeConversationId, sending, firstName, send, reset, selectConversation } = useAgent()
   const hasMessages = messages.length > 0
 
-  if (!open) return null
-
   return (
     <>
+      {!open && <DashboardPromptBar />}
       {/* Desktop: floating widget that leaves the dashboard layout unchanged. */}
-      <aside
+      {open && <aside
         aria-label="Ngai"
         className="fixed bottom-5 right-5 z-50 hidden h-[40rem] max-h-[calc(100svh-7rem)] w-[26rem] flex-col overflow-hidden rounded-2xl border border-border bg-background shadow-xl lg:flex"
       >
         <DockHeader onReset={reset} onClose={() => setOpen(false)} showReset={hasMessages} />
         <AgentChat messages={messages} conversations={conversations} activeConversationId={activeConversationId} sending={sending} firstName={firstName} onSend={send} onSelectConversation={selectConversation} onNewChat={reset} compact />
-      </aside>
+      </aside>}
 
       {/* Mobile: full-screen sheet. */}
       {open && (

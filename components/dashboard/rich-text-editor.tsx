@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react"
 import { EditorContent, useEditor, type Editor } from "@tiptap/react"
+import { Image } from "@tiptap/extension-image"
 import StarterKit from "@tiptap/starter-kit"
 import { TableKit } from "@tiptap/extension-table"
 
@@ -103,17 +104,21 @@ export function RichTextEditor({
   onChange,
   placeholder,
   className,
+  scrollable = false,
+  compact = false,
 }: {
   value: string
   onChange: (html: string) => void
   placeholder?: string
   className?: string
+  scrollable?: boolean
+  compact?: boolean
 }) {
   // Referenced inside handlePaste, which runs long after the editor is built.
   const editorRef = useRef<Editor | null>(null)
 
   const editor = useEditor({
-    extensions: [StarterKit, TableKit.configure({ table: { resizable: true } })],
+    extensions: [StarterKit, Image, TableKit.configure({ table: { resizable: true } })],
     content: value,
     // Next renders this on the server first, and tiptap needs the DOM.
     immediatelyRender: false,
@@ -130,10 +135,13 @@ export function RichTextEditor({
       },
       attributes: {
         class: cn(
-          "min-h-64 px-4 py-3 text-sm outline-none",
+          compact ? "min-h-48 sm:min-h-64" : "min-h-64",
+          "break-words px-4 py-3 text-sm outline-none",
+          "cursor-text",
           "[&_h2]:mt-5 [&_h2]:text-lg [&_h2]:font-semibold [&_h3]:mt-4 [&_h3]:text-base [&_h3]:font-semibold [&_p]:my-2 [&_p]:leading-7 [&_ul]:my-2 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:my-2 [&_ol]:list-decimal [&_ol]:pl-5 [&_li]:my-1 [&_strong]:font-semibold [&_blockquote]:my-3 [&_blockquote]:border-l-2 [&_blockquote]:pl-3 [&_blockquote]:italic [&_blockquote]:border-border",
-          "[&_table]:my-3 [&_table]:w-full [&_table]:table-fixed [&_table]:border-collapse [&_td]:border [&_td]:border-border [&_td]:p-2 [&_td]:align-top [&_th]:border [&_th]:border-border [&_th]:bg-muted [&_th]:p-2 [&_th]:text-left [&_th]:font-semibold [&_.selectedCell]:bg-muted/60",
+          "[&_a]:break-all [&_img]:max-w-full [&_table]:my-3 [&_table]:w-full [&_table]:table-fixed [&_table]:border-collapse [&_td]:border [&_td]:border-border [&_td]:p-2 [&_td]:align-top [&_th]:border [&_th]:border-border [&_th]:bg-muted [&_th]:p-2 [&_th]:text-left [&_th]:font-semibold [&_.selectedCell]:bg-muted/60",
         ),
+        "aria-label": placeholder || "Message",
         ...(placeholder ? { "data-placeholder": placeholder } : {}),
       },
     },
@@ -154,7 +162,7 @@ export function RichTextEditor({
   }
 
   return (
-    <div className={cn("overflow-hidden rounded-[10px] border border-input bg-background", className)}>
+    <div className={cn("flex min-h-0 flex-col overflow-hidden rounded-[10px] border border-input bg-background", className)}>
       <div className="flex flex-wrap items-center gap-1 border-b border-input px-2 py-1.5">
         {BUTTONS.map((group, index) => (
           <div key={index} className="flex items-center gap-1 [&:not(:last-child)]:mr-1">
@@ -182,7 +190,9 @@ export function RichTextEditor({
           </div>
         ))}
       </div>
-      <EditorContent editor={editor} />
+      <div className={cn("min-h-0 overflow-x-auto", scrollable && "flex-1 overflow-y-auto")}>
+        <EditorContent editor={editor} />
+      </div>
     </div>
   )
 }

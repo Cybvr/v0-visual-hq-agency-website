@@ -102,6 +102,19 @@ function AgentMarkdown({ content }: { content: string }) {
   }
 
   for (const line of content.split("\n")) {
+    const heading = /^(#{1,6})\s+(.*)$/.exec(line.trim())
+    if (heading) {
+      flushBullets()
+      flushNumbers()
+      const level = Math.min(6, heading[1].length)
+      const Heading = level === 1 ? "h1" : level === 2 ? "h2" : level === 3 ? "h3" : level === 4 ? "h4" : level === 5 ? "h5" : "h6"
+      blocks.push(
+        <Heading key={`heading-${blocks.length}`} className={cn("font-semibold tracking-tight", level <= 2 ? "text-lg" : "text-base")}>
+          {formatInline(heading[2], `heading-${blocks.length}`)}
+        </Heading>,
+      )
+      continue
+    }
     const bullet = /^\s*[-*]\s+(.*)$/.exec(line)
     const numbered = /^\s*\d+\.\s+(.*)$/.exec(line)
     if (bullet) {
@@ -426,12 +439,14 @@ export function AgentChat({
         </div>
       )}
 
-      <div className={cn("shrink-0", compact ? "bg-background px-4 pb-4 pt-2" : "px-4 pb-5 pt-3 sm:px-6 sm:pb-7")}>
+      <div className={cn("shrink-0", compact ? "bg-transparent px-4 pb-4 pt-2" : "px-4 pb-5 pt-3 sm:px-6 sm:pb-7")}>
         <form
           onSubmit={submit}
           className={cn(
-            "mx-auto flex w-full flex-col gap-2 rounded-[16px] border border-border bg-background p-2.5 focus-within:border-ring",
-            compact ? "" : "max-w-3xl",
+            "mx-auto flex w-full flex-col gap-2",
+            compact
+              ? "rounded-full border-0 bg-background p-1.5 shadow-[0_8px_24px_rgba(15,23,42,0.08)]"
+              : "max-w-3xl rounded-[16px] border border-border bg-background p-2.5 focus-within:border-ring",
           )}
         >
           {(attachments.length > 0 || uploading) && (
@@ -477,7 +492,7 @@ export function AgentChat({
               rows={1}
               placeholder="Ask Ngai"
               aria-label="Message Ngai"
-              className="max-h-40 min-h-11 resize-none border-0 bg-transparent px-2 py-2.5 shadow-none focus-visible:border-transparent focus-visible:ring-0"
+              className="max-h-40 min-h-11 resize-none rounded-full border-0 bg-transparent px-2 py-2.5 shadow-none focus-visible:border-transparent focus-visible:ring-0"
             />
             <Button
               type="submit"

@@ -285,7 +285,7 @@ function PortalNgaiButton() {
 function PortalNgaiMobileBar({ company, activeTab }: { company: string; activeTab?: string }) {
   const { send } = useAgent()
   const router = useRouter()
-  const [text, setText] = useState("")
+  const [text, setText] = useState("Hi Ngai, show me my project updates")
   if (activeTab === "ngai") return null
   function submit(event: FormEvent) {
     event.preventDefault()
@@ -296,14 +296,13 @@ function PortalNgaiMobileBar({ company, activeTab }: { company: string; activeTa
     router.push(`${portalPath(company)}?tab=ngai`)
   }
   return (
-    <form onSubmit={submit} className="fixed inset-x-0 bottom-0 z-40 flex items-center gap-2 border-t border-border bg-background/95 px-3 py-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] backdrop-blur md:hidden">
+    <form onSubmit={submit} className="sticky bottom-8 z-40 mx-auto flex w-[min(calc(100%-2rem),36rem)] items-center gap-2 rounded-full px-3 py-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] shadow-[0_8px_24px_rgba(15,23,42,0.08)]">
       <Image src="/ngai-logo.png" alt="" width={20} height={20} className="shrink-0 rounded-full" />
       <input
         value={text}
         onChange={(event) => setText(event.target.value)}
-        placeholder="Ask Ngai…"
         aria-label="Ask Ngai"
-        className="h-9 min-w-0 flex-1 rounded-full border border-input bg-background px-4 text-sm outline-none focus-visible:border-ring"
+        className="h-9 min-w-0 flex-1 rounded-full border-0 bg-background px-4 text-sm outline-none focus-visible:ring-0"
       />
       <Button type="submit" size="icon" aria-label="Send to Ngai" disabled={!text.trim()} className="size-9 shrink-0 rounded-full bg-accent text-accent-foreground hover:bg-accent/90">
         <ArrowUp className="size-4" aria-hidden="true" />
@@ -372,9 +371,9 @@ export function PortalShellLayout({ company, organization, activeTab, title, chi
         <PortalNgaiButton />
       </header>
       <div className={cn("px-4 py-5 sm:px-6", activeTab !== "ngai" && "max-md:pb-24")}>{children}</div>
+      <PortalNgaiMobileBar company={company} activeTab={activeTab} />
     </SidebarInset>
     <AgentDock />
-    <PortalNgaiMobileBar company={company} activeTab={activeTab} />
   </SidebarProvider>
 }
 

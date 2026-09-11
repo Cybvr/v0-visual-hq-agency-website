@@ -1,0 +1,27 @@
+<svg width="1200" height="675" viewBox="0 0 1200 675" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">Meet Ngai</title>
+  <desc id="desc">A simple blue VisualCNS artwork for the Ngai AI teammate announcement.</desc>
+  <defs>
+    <linearGradient id="blue" x1="700" y1="90" x2="1080" y2="600" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#2856D9"/>
+      <stop offset="1" stop-color="#8EB7FF"/>
+    </linearGradient>
+    <linearGradient id="light" x1="700" y1="120" x2="920" y2="420" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFFFF" stop-opacity="0.5"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1200" height="675" rx="28" fill="white"/>
+  <path d="M650 0H1200V675H650C784 584 858 484 858 339C858 191 784 91 650 0Z" fill="#F2F6FF"/>
+  <path d="M742 0H1200V675H742C887 567 972 472 972 337C972 203 887 108 742 0Z" fill="url(#blue)"/>
+  <path d="M833 0H1200V675H833C960 558 1034 462 1034 337C1034 213 960 117 833 0Z" fill="url(#light)"/>
+  <path d="M742 337C742 217 839 120 959 120C1079 120 1176 217 1176 337C1176 457 1079 554 959 554C839 554 742 457 742 337Z" stroke="white" stroke-opacity="0.58" stroke-width="2"/>
+  <path d="M802 337C802 250 872 180 959 180C1046 180 1116 250 1116 337C1116 424 1046 494 959 494C872 494 802 424 802 337Z" stroke="white" stroke-opacity="0.3" stroke-width="2"/>
+
+  <text x="94" y="257" fill="#101A3A" font-family="Inter, Arial, sans-serif" font-size="64" font-weight="700" letter-spacing="-2.5">Meet Ngai</text>
+  <text x="98" y="310" fill="#5E6880" font-family="Inter, Arial, sans-serif" font-size="24">Your AI teammate inside VisualCNS.</text>
+  <rect x="98" y="360" width="82" height="6" rx="3" fill="#2856D9"/>
+  <text x="98" y="417" fill="#5E6880" font-family="Inter, Arial, sans-serif" font-size="20">Find information.</text>
+  <text x="98" y="449" fill="#5E6880" font-family="Inter, Arial, sans-serif" font-size="20">Move work forward.</text>
+</svg>

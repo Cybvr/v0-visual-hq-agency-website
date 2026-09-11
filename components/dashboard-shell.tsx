@@ -161,7 +161,7 @@ export function DashboardShell({
             aria-expanded={agentOpen}
             className="rounded-full outline-none transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
           >
-            <Image src="/ngai-logo.png" alt="Ngai" width={36} height={36} className="block rounded-full" />
+            <Image src="/ngai-logo.png" alt="Ngai" width={30} height={30} className="block rounded-full" />
           </button>
             </div>
           </header>
