@@ -175,8 +175,9 @@ export function RichTextEditor({
   }
 
   function handleImageSelected({ src, alt }: { src: string; alt: string }) {
-    const selection = editor.state.selection
-    if (selection.node?.type.name === "image") {
+    if (!editor) return
+    const { selection } = editor.state
+    if (selection instanceof NodeSelection && selection.node.type.name === "image") {
       editor.view.dispatch(editor.state.tr.setNodeMarkup(selection.from, undefined, {
         ...selection.node.attrs,
         src,
