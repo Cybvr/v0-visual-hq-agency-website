@@ -254,7 +254,7 @@ function PortalTabNav({ company, activeTab }: { company: string; activeTab?: str
               className="capitalize max-md:h-12 max-md:gap-3 max-md:px-3 max-md:text-base max-md:[&>svg]:size-5"
             >
               <Link
-                href={item === "overview" ? portalPath(company) : `${portalPath(company)}?tab=${item}`}
+                href={item === "overview" ? portalPath(company) : `${portalPath(company)}/${item}`}
                 onClick={() => { if (isMobile) setOpenMobile(false) }}
               >
                 <Icon className="h-4 w-4" />
