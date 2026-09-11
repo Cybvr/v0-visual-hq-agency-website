@@ -327,10 +327,10 @@ export function AgentChat({
           <div className="flex max-w-lg flex-col items-center">
             <Image src="/ngai-logo.png" alt="Ngai" width={compact ? 36 : 48} height={compact ? 36 : 48} priority />
             <h1 className={cn("mt-6 font-sans tracking-[-0.02em]", compact ? "text-xl" : "text-2xl sm:text-3xl")}>
-              Hello {firstName}
+              Welcome to Ngai, {firstName}
             </h1>
             <p className={cn("mt-2 text-muted-foreground", compact ? "text-sm" : "text-base sm:text-lg")}>
-              What would you like to do?
+              Ask about your projects, tasks, files, or billing—and take action when you’re ready.
             </p>
             <div className={cn("mt-6 flex flex-wrap justify-center gap-2", compact ? "max-w-[18rem]" : "max-w-xl")}>
               {startingOptions.map((option) => (

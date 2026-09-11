@@ -247,8 +247,9 @@ export function AgentProvider({ children }: { children: ReactNode }) {
   )
 
   const reset = useCallback(() => {
-    const id = messageId(nextId)
-    setActiveConversationId(id)
+    // A new chat is only persisted once the user sends the first message.
+    // Keeping the id empty preserves the welcome state without creating a blank record.
+    setActiveConversationId("")
     setMessages([])
   }, [])
   const selectConversation = useCallback((id: string) => {
