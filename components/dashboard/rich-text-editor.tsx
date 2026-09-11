@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef, useState, type ChangeEvent, type ReactNode } from "react"
+import { useEffect, useRef, useState, type ReactNode } from "react"
 import { EditorContent, useEditor, type Editor } from "@tiptap/react"
 import { Image } from "@tiptap/extension-image"
 import StarterKit from "@tiptap/starter-kit"
@@ -23,7 +23,7 @@ import {
 } from "lucide-react"
 
 import { cn } from "@/lib/utils"
-import { uploadFileToStorage } from "@/lib/documents"
+import { ImagePickerDialog } from "@/components/dashboard/image-picker-dialog"
 
 type ToolbarButton = {
   label: string
@@ -122,10 +122,8 @@ export function RichTextEditor({
 }) {
   // Referenced inside handlePaste, which runs long after the editor is built.
   const editorRef = useRef<Editor | null>(null)
-  const imageInputRef = useRef<HTMLInputElement>(null)
   const [imageSelected, setImageSelected] = useState(false)
-  const [imageUploading, setImageUploading] = useState(false)
-  const [imageError, setImageError] = useState("")
+  const [imageDialogOpen, setImageDialogOpen] = useState(false)
 
   const editor = useEditor({
     extensions: [StarterKit, Image, TableKit.configure({ table: { resizable: true } })],
@@ -174,31 +172,18 @@ export function RichTextEditor({
     return <div className={cn("min-h-72 rounded-[10px] border border-input", className)} />
   }
 
-  async function handleImageChange(event: ChangeEvent<HTMLInputElement>) {
-    const file = event.target.files?.[0]
-    event.target.value = ""
-    if (!file) return
-
-    setImageError("")
-    setImageUploading(true)
-    try {
-      const src = await uploadFileToStorage(file)
-      const selection = editor.state.selection
-      if (selection.node?.type.name === "image") {
-        editor.view.dispatch(editor.state.tr.setNodeMarkup(selection.from, undefined, {
-          ...selection.node.attrs,
-          src,
-          alt: file.name,
-        }))
-      } else {
-        editor.chain().focus().setImage({ src, alt: file.name }).run()
-      }
-      onChange(editor.getHTML())
-    } catch {
-      setImageError("The image could not be uploaded. Try again.")
-    } finally {
-      setImageUploading(false)
+  function handleImageSelected({ src, alt }: { src: string; alt: string }) {
+    const selection = editor.state.selection
+    if (selection.node?.type.name === "image") {
+      editor.view.dispatch(editor.state.tr.setNodeMarkup(selection.from, undefined, {
+        ...selection.node.attrs,
+        src,
+        alt,
+      }))
+    } else {
+      editor.chain().focus().setImage({ src, alt }).run()
     }
+    onChange(editor.getHTML())
   }
 
   return (
@@ -230,23 +215,25 @@ export function RichTextEditor({
           </div>
         ))}
         <div className="flex items-center gap-1 border-l border-input pl-1">
-          <input ref={imageInputRef} type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
           <button
             type="button"
-            onClick={() => imageInputRef.current?.click()}
+            onClick={() => setImageDialogOpen(true)}
             aria-label={imageSelected ? "Replace image" : "Insert image"}
             title={imageSelected ? "Replace image" : "Insert image"}
-            disabled={imageUploading}
             className={cn(
-              "inline-flex size-8 items-center justify-center rounded-md outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50",
+              "inline-flex size-8 items-center justify-center rounded-md outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring",
               imageSelected ? "bg-muted text-foreground" : "text-muted-foreground hover:bg-muted hover:text-foreground",
             )}
           >
-            {imageUploading ? <span className="size-4 animate-pulse rounded-sm bg-current" aria-hidden="true" /> : <ImagePlus className="size-4" aria-hidden="true" />}
+            <ImagePlus className="size-4" aria-hidden="true" />
           </button>
         </div>
       </div>
-      {imageError && <p role="alert" className="border-b border-destructive/20 bg-destructive/5 px-3 py-2 text-xs text-destructive">{imageError}</p>}
+      <ImagePickerDialog
+        open={imageDialogOpen}
+        onOpenChange={setImageDialogOpen}
+        onSelect={handleImageSelected}
+      />
       <div className={cn("min-h-0 overflow-x-auto", scrollable && "flex-1 overflow-y-auto")}>
         {contentHeader}
         <EditorContent editor={editor} />

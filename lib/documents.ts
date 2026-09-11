@@ -12,6 +12,7 @@ import {
 import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage"
 import { db, storage } from "./firebase"
 import type { Contract } from "./billing"
+import { prepareImageForUpload } from "./image-upload"
 
 export interface SharedDocument {
   id: string
@@ -32,10 +33,11 @@ export async function uploadFileToStorage(
   file: File,
   onProgress?: (pct: number) => void,
 ): Promise<string> {
-  const path = `documents/${Date.now()}_${file.name}`
+  const preparedFile = await prepareImageForUpload(file)
+  const path = `documents/${Date.now()}_${preparedFile.name}`
   const storageRef = ref(storage, path)
   return new Promise((resolve, reject) => {
-    const task = uploadBytesResumable(storageRef, file)
+    const task = uploadBytesResumable(storageRef, preparedFile)
     task.on(
       "state_changed",
       (snap) => onProgress?.(Math.round((snap.bytesTransferred / snap.totalBytes) * 100)),
