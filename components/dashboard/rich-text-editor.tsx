@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, type ReactNode } from "react"
 import { EditorContent, useEditor, type Editor } from "@tiptap/react"
+import { NodeSelection } from "@tiptap/pm/state"
 import { Image } from "@tiptap/extension-image"
 import StarterKit from "@tiptap/starter-kit"
 import { TableKit } from "@tiptap/extension-table"
@@ -155,7 +156,8 @@ export function RichTextEditor({
     },
     onUpdate: ({ editor: current }) => onChange(current.getHTML()),
     onSelectionUpdate: ({ editor: current }) => {
-      setImageSelected(current.state.selection.node?.type.name === "image")
+      const { selection } = current.state
+      setImageSelected(selection instanceof NodeSelection && selection.node.type.name === "image")
     },
   })
 
