@@ -1,0 +1,41 @@
+<svg width="1200" height="675" viewBox="0 0 1200 675" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="t d">
+  <title id="t">A new task for you</title>
+  <desc id="d">A task list in the VisualCNS portal with a newly assigned task highlighted at the top.</desc>
+
+  <rect width="1200" height="675" rx="28" fill="#EAE8E3"/>
+
+  <rect x="140" y="140" width="920" height="470" rx="22" fill="#000000" opacity="0.05"/>
+  <rect x="140" y="130" width="920" height="470" rx="22" fill="#FFFFFF"/>
+
+  <text x="184" y="198" fill="#0F1A3A" font-family="Inter, Arial, sans-serif" font-size="28" font-weight="700" letter-spacing="-0.6">Tasks</text>
+  <text x="184" y="226" fill="#9AA1AE" font-family="Inter, Arial, sans-serif" font-size="15">Assigned to you</text>
+
+  <!-- highlighted new task -->
+  <rect x="184" y="250" width="832" height="76" rx="14" fill="#F4F7FF" stroke="#DBE6FF" stroke-width="1.5"/>
+  <rect x="208" y="278" width="22" height="22" rx="6" fill="#FFFFFF" stroke="#B9C6E8" stroke-width="1.6"/>
+  <text x="248" y="284" fill="#0F1A3A" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="600">Review brand guidelines draft</text>
+  <text x="248" y="308" fill="#6B7280" font-family="Inter, Arial, sans-serif" font-size="13">Due Sep 18  ·  Consulting Project</text>
+  <rect x="912" y="277" width="60" height="24" rx="12" fill="#2856D9"/>
+  <text x="926" y="293" fill="#FFFFFF" font-family="Inter, Arial, sans-serif" font-size="12" font-weight="600">New</text>
+
+  <!-- task rows -->
+  <rect x="208" y="366" width="22" height="22" rx="6" fill="#2856D9"/>
+  <path d="M213 377l4 4 7-8" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="248" y="382" fill="#9AA1AE" font-family="Inter, Arial, sans-serif" font-size="15" text-decoration="line-through">Share reference materials</text>
+  <text x="912" y="382" fill="#9AA1AE" font-family="Inter, Arial, sans-serif" font-size="13">Done</text>
+  <line x1="208" y1="408" x2="1016" y2="408" stroke="#F2F3F5" stroke-width="1"/>
+
+  <rect x="208" y="428" width="22" height="22" rx="6" fill="#FFFFFF" stroke="#D9DEE8" stroke-width="1.6"/>
+  <text x="248" y="444" fill="#0F1A3A" font-family="Inter, Arial, sans-serif" font-size="15">Approve homepage layout</text>
+  <text x="912" y="444" fill="#6B7280" font-family="Inter, Arial, sans-serif" font-size="13">Due Sep 22</text>
+  <line x1="208" y1="470" x2="1016" y2="470" stroke="#F2F3F5" stroke-width="1"/>
+
+  <rect x="208" y="490" width="22" height="22" rx="6" fill="#FFFFFF" stroke="#D9DEE8" stroke-width="1.6"/>
+  <text x="248" y="506" fill="#0F1A3A" font-family="Inter, Arial, sans-serif" font-size="15">Confirm launch date</text>
+  <text x="912" y="506" fill="#6B7280" font-family="Inter, Arial, sans-serif" font-size="13">Due Sep 25</text>
+  <line x1="208" y1="532" x2="1016" y2="532" stroke="#F2F3F5" stroke-width="1"/>
+
+  <rect x="208" y="552" width="22" height="22" rx="6" fill="#FFFFFF" stroke="#D9DEE8" stroke-width="1.6"/>
+  <text x="248" y="568" fill="#0F1A3A" font-family="Inter, Arial, sans-serif" font-size="15">Provide final copy</text>
+  <text x="912" y="568" fill="#6B7280" font-family="Inter, Arial, sans-serif" font-size="13">Due Sep 29</text>
+</svg>

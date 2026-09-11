@@ -1,0 +1,64 @@
+<svg width="1200" height="675" viewBox="0 0 1200 675" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="t d">
+  <title id="t">Your project progress</title>
+  <desc id="d">A projects list showing progress bars and status for each project in the VisualCNS portal.</desc>
+
+  <rect width="1200" height="675" rx="28" fill="#EAE8E3"/>
+
+  <rect x="140" y="140" width="920" height="470" rx="22" fill="#000000" opacity="0.05"/>
+  <rect x="140" y="130" width="920" height="470" rx="22" fill="#FFFFFF"/>
+
+  <text x="184" y="198" fill="#0F1A3A" font-family="Inter, Arial, sans-serif" font-size="28" font-weight="700" letter-spacing="-0.6">Projects</text>
+
+  <!-- search -->
+  <rect x="184" y="220" width="832" height="42" rx="11" fill="#F6F7F9"/>
+  <circle cx="212" cy="241" r="6.5" stroke="#9AA1AE" stroke-width="2" fill="none"/>
+  <line x1="217" y1="246" x2="222" y2="251" stroke="#9AA1AE" stroke-width="2" stroke-linecap="round"/>
+  <text x="234" y="246" fill="#9AA1AE" font-family="Inter, Arial, sans-serif" font-size="14">Find a project</text>
+
+  <!-- headers -->
+  <text x="184" y="302" fill="#9AA1AE" font-family="Inter, Arial, sans-serif" font-size="13" font-weight="600">PROJECT</text>
+  <text x="560" y="302" fill="#9AA1AE" font-family="Inter, Arial, sans-serif" font-size="13" font-weight="600">PROGRESS</text>
+  <text x="920" y="302" fill="#9AA1AE" font-family="Inter, Arial, sans-serif" font-size="13" font-weight="600">STATUS</text>
+  <line x1="184" y1="316" x2="1016" y2="316" stroke="#EEF0F4" stroke-width="1"/>
+
+  <!-- rows -->
+  <!-- r1 -->
+  <text x="184" y="352" fill="#0F1A3A" font-family="Inter, Arial, sans-serif" font-size="15">Marketing Retainer</text>
+  <rect x="560" y="343" width="300" height="7" rx="3.5" fill="#EDEFF3"/>
+  <rect x="560" y="343" width="168" height="7" rx="3.5" fill="#2856D9"/>
+  <text x="872" y="352" fill="#6B7280" font-family="Inter, Arial, sans-serif" font-size="13">56%</text>
+  <rect x="920" y="338" width="96" height="24" rx="12" fill="#EAF0FF"/>
+  <text x="934" y="354" fill="#2856D9" font-family="Inter, Arial, sans-serif" font-size="12" font-weight="600">In progress</text>
+
+  <!-- r2 -->
+  <text x="184" y="404" fill="#0F1A3A" font-family="Inter, Arial, sans-serif" font-size="15">Brand Guidelines</text>
+  <rect x="560" y="395" width="300" height="7" rx="3.5" fill="#EDEFF3"/>
+  <rect x="560" y="395" width="210" height="7" rx="3.5" fill="#2856D9"/>
+  <text x="872" y="404" fill="#6B7280" font-family="Inter, Arial, sans-serif" font-size="13">70%</text>
+  <rect x="920" y="390" width="80" height="24" rx="12" fill="#F2F3F5"/>
+  <text x="934" y="406" fill="#6B7280" font-family="Inter, Arial, sans-serif" font-size="12" font-weight="600">Review</text>
+
+  <!-- r3 -->
+  <text x="184" y="456" fill="#0F1A3A" font-family="Inter, Arial, sans-serif" font-size="15">Consulting Project</text>
+  <rect x="560" y="447" width="300" height="7" rx="3.5" fill="#EDEFF3"/>
+  <rect x="560" y="447" width="234" height="7" rx="3.5" fill="#2856D9"/>
+  <text x="872" y="456" fill="#6B7280" font-family="Inter, Arial, sans-serif" font-size="13">78%</text>
+  <rect x="920" y="442" width="96" height="24" rx="12" fill="#EAF0FF"/>
+  <text x="934" y="458" fill="#2856D9" font-family="Inter, Arial, sans-serif" font-size="12" font-weight="600">In progress</text>
+
+  <!-- r4 -->
+  <text x="184" y="508" fill="#0F1A3A" font-family="Inter, Arial, sans-serif" font-size="15">Website Maintenance</text>
+  <rect x="560" y="499" width="300" height="7" rx="3.5" fill="#EDEFF3"/>
+  <rect x="560" y="499" width="24" height="7" rx="3.5" fill="#2856D9"/>
+  <text x="872" y="508" fill="#6B7280" font-family="Inter, Arial, sans-serif" font-size="13">7%</text>
+  <rect x="920" y="494" width="96" height="24" rx="12" fill="#EAF0FF"/>
+  <text x="934" y="510" fill="#2856D9" font-family="Inter, Arial, sans-serif" font-size="12" font-weight="600">In progress</text>
+
+  <!-- r5 -->
+  <text x="184" y="560" fill="#0F1A3A" font-family="Inter, Arial, sans-serif" font-size="15">Sales Training Workshop</text>
+  <rect x="560" y="551" width="300" height="7" rx="3.5" fill="#EDEFF3"/>
+  <rect x="560" y="551" width="201" height="7" rx="3.5" fill="#2856D9"/>
+  <text x="872" y="560" fill="#6B7280" font-family="Inter, Arial, sans-serif" font-size="13">67%</text>
+  <rect x="920" y="546" width="80" height="24" rx="12" fill="#F2F3F5"/>
+  <text x="934" y="562" fill="#6B7280" font-family="Inter, Arial, sans-serif" font-size="12" font-weight="600">Review</text>
+</svg>

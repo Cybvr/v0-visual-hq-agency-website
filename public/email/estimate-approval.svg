@@ -1,0 +1,38 @@
+<svg width="1200" height="675" viewBox="0 0 1200 675" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="t d">
+  <title id="t">An estimate ready for approval</title>
+  <desc id="d">An estimate in the VisualCNS portal showing proposed work, a total, and approve and question buttons.</desc>
+
+  <rect width="1200" height="675" rx="28" fill="#EAE8E3"/>
+
+  <rect x="140" y="140" width="920" height="470" rx="22" fill="#000000" opacity="0.05"/>
+  <rect x="140" y="130" width="920" height="470" rx="22" fill="#FFFFFF"/>
+
+  <text x="184" y="196" fill="#0F1A3A" font-family="Inter, Arial, sans-serif" font-size="28" font-weight="700" letter-spacing="-0.6">Estimate</text>
+  <text x="184" y="224" fill="#9AA1AE" font-family="Inter, Arial, sans-serif" font-size="15">Consulting engagement  ·  Prepared for Smith Co.</text>
+  <rect x="884" y="176" width="132" height="26" rx="13" fill="#EAF0FF"/>
+  <circle cx="902" cy="189" r="4" fill="#2856D9"/>
+  <text x="914" y="193" fill="#2856D9" font-family="Inter, Arial, sans-serif" font-size="13" font-weight="600">Awaiting you</text>
+
+  <line x1="184" y1="248" x2="1016" y2="248" stroke="#EEF0F4" stroke-width="1"/>
+
+  <text x="184" y="288" fill="#0F1A3A" font-family="Inter, Arial, sans-serif" font-size="15">Discovery &amp; strategy workshop</text>
+  <text x="1016" y="288" fill="#0F1A3A" font-family="Inter, Arial, sans-serif" font-size="15" text-anchor="end">$1,200.00</text>
+  <line x1="184" y1="310" x2="1016" y2="310" stroke="#F2F3F5" stroke-width="1"/>
+
+  <text x="184" y="348" fill="#0F1A3A" font-family="Inter, Arial, sans-serif" font-size="15">Implementation  ·  12 hours</text>
+  <text x="1016" y="348" fill="#0F1A3A" font-family="Inter, Arial, sans-serif" font-size="15" text-anchor="end">$2,400.00</text>
+  <line x1="184" y1="370" x2="1016" y2="370" stroke="#F2F3F5" stroke-width="1"/>
+
+  <text x="184" y="408" fill="#0F1A3A" font-family="Inter, Arial, sans-serif" font-size="15">Review &amp; handover</text>
+  <text x="1016" y="408" fill="#0F1A3A" font-family="Inter, Arial, sans-serif" font-size="15" text-anchor="end">$600.00</text>
+  <line x1="184" y1="430" x2="1016" y2="430" stroke="#F2F3F5" stroke-width="1"/>
+
+  <text x="184" y="470" fill="#6B7280" font-family="Inter, Arial, sans-serif" font-size="14">Estimated total</text>
+  <text x="1016" y="474" fill="#0F1A3A" font-family="Inter, Arial, sans-serif" font-size="30" font-weight="700" text-anchor="end" letter-spacing="-0.6">$4,200.00</text>
+
+  <rect x="184" y="520" width="200" height="52" rx="12" fill="#2856D9"/>
+  <path d="M212 546l8 8 14-16" stroke="#FFFFFF" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="300" y="552" fill="#FFFFFF" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="600" text-anchor="middle">Approve</text>
+  <rect x="400" y="520" width="220" height="52" rx="12" fill="#FFFFFF" stroke="#E1E4EA" stroke-width="1.5"/>
+  <text x="510" y="552" fill="#0F1A3A" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="600" text-anchor="middle">Ask a question</text>
+</svg>

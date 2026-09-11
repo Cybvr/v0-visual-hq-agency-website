@@ -1,0 +1,39 @@
+<svg width="1200" height="675" viewBox="0 0 1200 675" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="t d">
+  <title id="t">Your invoice is available</title>
+  <desc id="d">A billing screen in the VisualCNS portal showing an invoice, amount due and a pay button.</desc>
+
+  <rect width="1200" height="675" rx="28" fill="#EAE8E3"/>
+
+  <rect x="140" y="140" width="920" height="470" rx="22" fill="#000000" opacity="0.05"/>
+  <rect x="140" y="130" width="920" height="470" rx="22" fill="#FFFFFF"/>
+
+  <text x="184" y="198" fill="#0F1A3A" font-family="Inter, Arial, sans-serif" font-size="28" font-weight="700" letter-spacing="-0.6">Billing</text>
+
+  <!-- invoice header -->
+  <text x="184" y="252" fill="#0F1A3A" font-family="Inter, Arial, sans-serif" font-size="17" font-weight="700">Invoice #1042</text>
+  <text x="184" y="278" fill="#9AA1AE" font-family="Inter, Arial, sans-serif" font-size="14">Issued Sep 1  ·  Due Sep 30</text>
+  <rect x="890" y="234" width="126" height="26" rx="13" fill="#EAF0FF"/>
+  <circle cx="908" cy="247" r="4" fill="#2856D9"/>
+  <text x="920" y="251" fill="#2856D9" font-family="Inter, Arial, sans-serif" font-size="13" font-weight="600">Awaiting</text>
+
+  <line x1="184" y1="300" x2="1016" y2="300" stroke="#EEF0F4" stroke-width="1"/>
+
+  <!-- line items -->
+  <text x="184" y="338" fill="#0F1A3A" font-family="Inter, Arial, sans-serif" font-size="15">Consulting  ·  September</text>
+  <text x="1016" y="338" fill="#0F1A3A" font-family="Inter, Arial, sans-serif" font-size="15" text-anchor="end">$1,800.00</text>
+  <line x1="184" y1="360" x2="1016" y2="360" stroke="#F2F3F5" stroke-width="1"/>
+
+  <text x="184" y="398" fill="#0F1A3A" font-family="Inter, Arial, sans-serif" font-size="15">Additional design hours</text>
+  <text x="1016" y="398" fill="#0F1A3A" font-family="Inter, Arial, sans-serif" font-size="15" text-anchor="end">$499.00</text>
+  <line x1="184" y1="420" x2="1016" y2="420" stroke="#F2F3F5" stroke-width="1"/>
+
+  <!-- total -->
+  <text x="184" y="462" fill="#6B7280" font-family="Inter, Arial, sans-serif" font-size="14">Amount due</text>
+  <text x="1016" y="466" fill="#0F1A3A" font-family="Inter, Arial, sans-serif" font-size="30" font-weight="700" text-anchor="end" letter-spacing="-0.6">$2,299.00</text>
+
+  <!-- buttons -->
+  <rect x="184" y="512" width="200" height="52" rx="12" fill="#2856D9"/>
+  <text x="284" y="544" fill="#FFFFFF" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="600" text-anchor="middle">View invoice</text>
+  <rect x="400" y="512" width="200" height="52" rx="12" fill="#FFFFFF" stroke="#E1E4EA" stroke-width="1.5"/>
+  <text x="500" y="544" fill="#0F1A3A" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="600" text-anchor="middle">Download PDF</text>
+</svg>
