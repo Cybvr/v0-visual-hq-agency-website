@@ -106,6 +106,13 @@ service cloud.firestore {
       allow read, write: if isAdmin();
     }
 
+    // Agency email templates are shared across the admin team and scoped by companyId.
+    match /emailTemplates/{id} {
+      allow read: if isAdmin() && resource.data.companyId == companyId();
+      allow create, update: if isAdmin() && request.resource.data.companyId == companyId();
+      allow delete: if isAdmin() && resource.data.companyId == companyId();
+    }
+
     // Marketing unsubscribe records are written and read only by server routes
     // using the Firebase Admin SDK. No browser client can alter suppression.
     match /emailUnsubscriptions/{id} {

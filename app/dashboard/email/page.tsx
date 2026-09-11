@@ -29,6 +29,7 @@ import { deleteEmailList, getEmailLists, saveEmailList, type EmailContactList } 
 import { getAllEmailMessages, getEmailMessages, saveEmailMessage, type EmailMessageRecord, type EmailRecipient } from "@/lib/email-messages"
 import { contextualEmailBody, readEmailComposeContext, type EmailComposeContext } from "@/lib/email-composer"
 import { getBusinessProfile, type BusinessProfile } from "@/lib/business-profile"
+import { deleteEmailTemplate, getEmailTemplates, saveEmailTemplate } from "@/lib/email-templates-store"
 import { markdownToHtml } from "@/lib/markdown"
 import { getUsers } from "@/lib/users"
 import { cn } from "@/lib/utils"
@@ -231,7 +232,6 @@ export default function EmailPage() {
   const [tab, setTab] = useState<EmailTab>("messages")
   const [templates, setTemplates] = useState<EmailTemplate[]>([])
   const [messages, setMessages] = useState<SentMessage[]>([])
-  const [loadedWorkspace, setLoadedWorkspace] = useState<string | null>(null)
   const [senderConfigured, setSenderConfigured] = useState<boolean | null>(null)
   const [senderAddress, setSenderAddress] = useState<string | null>(null)
   const [replyToAddress, setReplyToAddress] = useState<string | null>(null)
@@ -316,49 +316,66 @@ export default function EmailPage() {
   const composeRecipientName = selectedContactName || composeContext?.recipientName
 
   useEffect(() => {
-    setLoadedWorkspace(null)
-    const storedTemplates = readStoredList<EmailTemplate>(templateStorageKey)
+    if (!user?.uid) return
+
+    let active = true
+    const legacyTemplates = readStoredList<EmailTemplate>(templateStorageKey)
     const defaultTemplates = DEFAULT_EMAIL_TEMPLATES.map((template) => ({
       ...template,
       updatedAt: new Date().toISOString(),
     }))
-    const missingDefaults = defaultTemplates.filter(
-      (template) => !storedTemplates.some((stored) => stored.id === template.id),
-    )
-    const updatedStoredTemplates = storedTemplates.map((stored) => {
-      const defaultTemplate = defaultTemplates.find((template) => template.id === stored.id)
-      const subject = stored.subject.replaceAll("Falcon Energy", "VisualCNS")
-      const shouldRefreshNgaiTemplate = stored.id === "introducing-ngai" && stored.body.includes("Meet Ngai, your new AI teammate inside VisualCNS.")
-      const body = shouldRefreshNgaiTemplate && defaultTemplate
-        ? defaultTemplate.body
-        : formatTemplateBody(stored.body)
-        .replaceAll("Falcon Energy", "VisualCNS")
-        .replaceAll("[Agency Name] Team", "VisualCNS Team")
-      const needsImageMigration = defaultTemplate?.imageUrl &&
-        (stored.imageUrl === "/ngai-feature-announcement.svg" || stored.imageUrl === "/ngai-feature-announcement.png")
-      const needsImageRestore = stored.id === "introducing-ngai" && Boolean(defaultTemplate?.imageUrl) && !stored.imageUrl
-      if (subject === stored.subject && body === stored.body && !needsImageMigration && !needsImageRestore) return stored
-      return {
-        ...stored,
-        subject,
-        body,
-        ...(needsImageMigration || needsImageRestore
-          ? { imageUrl: defaultTemplate?.imageUrl, imageAlt: defaultTemplate?.imageAlt }
-          : {}),
-      }
-    })
-    setTemplates(
-      storedTemplates.length > 0 ? [...updatedStoredTemplates, ...missingDefaults] : defaultTemplates,
-    )
     setMessages([])
     setLists([])
-    setLoadedWorkspace(workspaceId)
-  }, [workspaceId, templateStorageKey, messageStorageKey])
 
-  useEffect(() => {
-    if (loadedWorkspace !== workspaceId) return
-    localStorage.setItem(templateStorageKey, JSON.stringify(templates))
-  }, [loadedWorkspace, workspaceId, templateStorageKey, templates])
+    void getEmailTemplates(workspaceId)
+      .then(async (storedTemplates) => {
+        const baseTemplates = storedTemplates.length > 0 ? storedTemplates : legacyTemplates
+        const missingDefaults = defaultTemplates.filter(
+          (template) => !baseTemplates.some((stored) => stored.id === template.id),
+        )
+        const updatedStoredTemplates = baseTemplates.map((stored) => {
+          const defaultTemplate = defaultTemplates.find((template) => template.id === stored.id)
+          const subject = stored.subject.replaceAll("Falcon Energy", "VisualCNS")
+          const shouldRefreshNgaiTemplate = stored.id === "introducing-ngai" && stored.body.includes("Meet Ngai, your new AI teammate inside VisualCNS.")
+          const body = shouldRefreshNgaiTemplate && defaultTemplate
+            ? defaultTemplate.body
+            : formatTemplateBody(stored.body)
+              .replaceAll("Falcon Energy", "VisualCNS")
+              .replaceAll("[Agency Name] Team", "VisualCNS Team")
+          const needsImageMigration = defaultTemplate?.imageUrl &&
+            (stored.imageUrl === "/ngai-feature-announcement.svg" || stored.imageUrl === "/ngai-feature-announcement.png")
+          const needsImageRestore = Boolean(defaultTemplate?.imageUrl) && !stored.imageUrl
+          if (subject === stored.subject && body === stored.body && !needsImageMigration && !needsImageRestore) return stored
+          return {
+            ...stored,
+            subject,
+            body,
+            ...(needsImageMigration || needsImageRestore
+              ? { imageUrl: defaultTemplate?.imageUrl, imageAlt: defaultTemplate?.imageAlt }
+              : {}),
+          }
+        })
+        const nextTemplates: EmailTemplate[] = [...updatedStoredTemplates, ...missingDefaults]
+
+        await Promise.all(nextTemplates.map((template) => saveEmailTemplate({
+          ...template,
+          companyId: workspaceId,
+          createdBy: user.uid,
+        })))
+
+        if (!active) return
+        setTemplates(nextTemplates)
+        localStorage.removeItem(templateStorageKey)
+      })
+      .catch(() => {
+        if (!active) return
+        setTemplates(legacyTemplates.length > 0 ? legacyTemplates : defaultTemplates)
+      })
+
+    return () => {
+      active = false
+    }
+  }, [templateStorageKey, user?.uid, workspaceId])
 
   useEffect(() => {
     if (!user?.uid || !workspaceId) return
@@ -735,7 +752,7 @@ export default function EmailPage() {
     setTemplateNotice(null)
   }
 
-  function saveTemplate(event: FormEvent<HTMLFormElement>) {
+  async function saveTemplate(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     const name = templateName.trim()
     const savedSubject = templateSubject.trim()
@@ -746,29 +763,16 @@ export default function EmailPage() {
       return
     }
 
-    const now = new Date().toISOString()
-    if (editingTemplateId) {
-      setTemplates((current) =>
-        current.map((template) =>
-            template.id === editingTemplateId
-            ? {
-                ...template,
-                name,
-                subject: savedSubject,
-                body: savedBody,
-                imageUrl: templateImageUrl || undefined,
-                imageAlt: templateImageAlt.trim() || undefined,
-                updatedAt: now,
-              }
-            : template,
-        ),
-      )
-      setTemplateNotice({ tone: "success", text: "Template updated." })
+    if (!user?.uid) {
+      setTemplateNotice({ tone: "error", text: "Sign in before saving a template." })
       return
     }
 
-    const newTemplate: EmailTemplate = {
-      id: makeId(),
+    const now = new Date().toISOString()
+    const existingTemplate = editingTemplateId ? templates.find((template) => template.id === editingTemplateId) : undefined
+    const nextTemplate: EmailTemplate = {
+      ...(existingTemplate || {}),
+      id: editingTemplateId || makeId(),
       name,
       subject: savedSubject,
       body: savedBody,
@@ -776,15 +780,28 @@ export default function EmailPage() {
       imageAlt: templateImageAlt.trim() || undefined,
       updatedAt: now,
     }
-    setTemplates((current) => [newTemplate, ...current])
-    setEditingTemplateId(newTemplate.id)
-    setTemplateNotice({ tone: "success", text: "Template saved." })
+
+    try {
+      await saveEmailTemplate({ ...nextTemplate, companyId: workspaceId, createdBy: user.uid })
+      setTemplates((current) => editingTemplateId
+        ? current.map((template) => template.id === editingTemplateId ? nextTemplate : template)
+        : [nextTemplate, ...current])
+      setEditingTemplateId(nextTemplate.id)
+      setTemplateNotice({ tone: "success", text: editingTemplateId ? "Template updated." : "Template saved." })
+    } catch {
+      setTemplateNotice({ tone: "error", text: "The template could not be saved. Try again." })
+    }
   }
 
-  function deleteTemplate(templateId: string) {
-    setTemplates((current) => current.filter((template) => template.id !== templateId))
-    if (selectedTemplateId === templateId) setSelectedTemplateId("")
-    if (editingTemplateId === templateId) resetTemplateEditor()
+  async function deleteTemplate(templateId: string) {
+    try {
+      await deleteEmailTemplate(templateId, workspaceId)
+      setTemplates((current) => current.filter((template) => template.id !== templateId))
+      if (selectedTemplateId === templateId) setSelectedTemplateId("")
+      if (editingTemplateId === templateId) resetTemplateEditor()
+    } catch {
+      setTemplateNotice({ tone: "error", text: "The template could not be deleted. Try again." })
+    }
   }
 
   function resetListEditor() {

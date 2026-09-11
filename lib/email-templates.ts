@@ -22,7 +22,7 @@ Open your portal to see what’s happening, review what needs your attention, an
 
 Best regards,
 VisualCNS Team`,
-    imageUrl: "/email/client-portal-blue-print.png",
+    imageUrl: "https://firebasestorage.googleapis.com/v0/b/visualhqportfolio.firebasestorage.app/o/documents%2F1789157062319_client-portal-blue-print.png?alt=media&token=c1cde7db-624b-4259-8e41-4933d6480e9e",
     imageAlt: "A Nigerian client manager in a blue African-print suit promoting the VisualCNS client portal",
   },
   {
@@ -39,7 +39,7 @@ Open your portal whenever it suits you and keep your project moving with our tea
 
 Best regards,
 VisualCNS Team`,
-    imageUrl: "/email/client-portal-manager.png",
+    imageUrl: "https://firebasestorage.googleapis.com/v0/b/visualhqportfolio.firebasestorage.app/o/documents%2F1789157066549_client-portal-manager.png?alt=media&token=5e60c3c3-0242-4851-95b2-27481ba6c1c1",
     imageAlt: "A Nigerian client manager in a tailored navy suit promoting the VisualCNS client portal",
   },
   {
