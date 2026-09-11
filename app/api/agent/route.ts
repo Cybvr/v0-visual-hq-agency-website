@@ -88,7 +88,13 @@ You can read this customer's own records with the query_workspace tool: their co
 tasks, invoices, estimates, contracts, written company documents and uploaded files. It is automatically restricted to their own
 company, so use it freely for any factual question about their account, including counts, lists and
 status. Never say you cannot see the data without calling the tool first. Never invent details.
-You cannot change any data, only read it.`
+
+You can also take three actions on the customer's behalf, and only these:
+- complete_task: mark one of their assigned tasks done (or reopen it) when they say it's finished.
+- accept_estimate: accept an estimate the agency shared, when they say to go ahead.
+- submit_task_feedback: post a comment or question from them onto one of their tasks.
+Find the id with query_workspace first, never ask the customer for it. Confirm briefly what you did
+in one short line. You cannot change anything else - for other changes, tell them to ask their agency.`
 
 const AGENT_TOOLS = [
   {
@@ -335,9 +341,53 @@ const AGENT_TOOLS = [
       additionalProperties: false,
     },
   },
+  {
+    type: "function",
+    name: "complete_task",
+    description:
+      "Mark one of the client's shared tasks as done, or reopen it. Only works on a task shared with, and assigned to, this client.",
+    parameters: {
+      type: "object",
+      properties: {
+        taskId: { type: "string", description: "Document id of the task, from query_workspace." },
+        done: { type: ["boolean", "null"], description: "true to complete (default), false to reopen." },
+      },
+      required: ["taskId"],
+      additionalProperties: false,
+    },
+  },
+  {
+    type: "function",
+    name: "accept_estimate",
+    description: "Accept an estimate the agency shared with the client. Only works on the client's own, non-draft estimate.",
+    parameters: {
+      type: "object",
+      properties: {
+        estimateId: { type: "string", description: "Document id of the estimate, from query_workspace." },
+      },
+      required: ["estimateId"],
+      additionalProperties: false,
+    },
+  },
+  {
+    type: "function",
+    name: "submit_task_feedback",
+    description: "Post a feedback comment or question from the client on one of their shared tasks. The agency sees it against that task.",
+    parameters: {
+      type: "object",
+      properties: {
+        taskId: { type: "string", description: "Document id of the task, from query_workspace." },
+        message: { type: "string", description: "The client's feedback or question." },
+      },
+      required: ["taskId", "message"],
+      additionalProperties: false,
+    },
+  },
 ] as const
 
-const PORTAL_TOOLS = AGENT_TOOLS.filter((tool) => tool.name === "query_workspace")
+/** Read-only lookups plus the few writes a client is allowed to make in the portal. */
+const CLIENT_ACTION_TOOLS = ["complete_task", "accept_estimate", "submit_task_feedback"]
+const PORTAL_TOOLS = AGENT_TOOLS.filter((tool) => tool.name === "query_workspace" || CLIENT_ACTION_TOOLS.includes(tool.name))
 
 /** Separates the assistant's text from a trailing inline form spec. */
 export const FORM_MARKER = "\n␞::ngai-form::"
@@ -452,6 +502,65 @@ async function runAgentTool(name: string, rawArgs: string, uid: string) {
       scope: isAdmin ? "agency workspace" : "your company",
       records,
     }
+  }
+
+  // Actions a client is allowed to take on their own portal records. Ownership
+  // is re-checked here against the caller's company (and, for tasks, their
+  // assignment) - the model's word is never trusted for that.
+  const callerCompanyId = typeof userData?.companyId === "string" ? userData.companyId : ""
+
+  if (name === "complete_task") {
+    const actionArgs = JSON.parse(rawArgs) as Record<string, unknown>
+    const id = requireText(actionArgs, "taskId")
+    const done = actionArgs.done !== false
+    const portalRef = db.collection("portalTasks").doc(id)
+    const taskRef = db.collection("tasks").doc(id)
+    const [portalSnap, taskSnap] = await Promise.all([portalRef.get(), taskRef.get()])
+    if (!portalSnap.exists) throw new Error("That task isn't shared with you.")
+    const portal = portalSnap.data() as FirebaseFirestore.DocumentData
+    if (!isAdmin) {
+      if (portal.companyId !== callerCompanyId) throw new Error("You can only update your own tasks.")
+      if (portal.assigneeUid && portal.assigneeUid !== uid) throw new Error("That task is assigned to someone else.")
+    }
+    const status = done ? "done" : "todo"
+    const stamp = FieldValue.serverTimestamp()
+    const batch = db.batch()
+    batch.set(portalRef, { status, updatedAt: stamp }, { merge: true })
+    if (taskSnap.exists) batch.set(taskRef, { status, updatedAt: stamp }, { merge: true })
+    await batch.commit()
+    return { type: "task_updated", id, status }
+  }
+
+  if (name === "accept_estimate") {
+    const actionArgs = JSON.parse(rawArgs) as Record<string, unknown>
+    const id = requireText(actionArgs, "estimateId")
+    const ref = db.collection("estimates").doc(id)
+    const snap = await ref.get()
+    if (!snap.exists) throw new Error("That estimate no longer exists.")
+    const estimate = snap.data() as FirebaseFirestore.DocumentData
+    if (!isAdmin && estimate.companyId !== callerCompanyId) throw new Error("You can only accept your own estimates.")
+    if (estimate.status === "draft") throw new Error("That estimate isn't available to accept yet.")
+    await ref.set({ status: "accepted", acceptedAt: FieldValue.serverTimestamp(), updatedAt: FieldValue.serverTimestamp() }, { merge: true })
+    return { type: "estimate_accepted", id }
+  }
+
+  if (name === "submit_task_feedback") {
+    const actionArgs = JSON.parse(rawArgs) as Record<string, unknown>
+    const id = requireText(actionArgs, "taskId")
+    const message = requireText(actionArgs, "message")
+    const portalSnap = await db.collection("portalTasks").doc(id).get()
+    if (!portalSnap.exists) throw new Error("That task isn't shared with you.")
+    const portal = portalSnap.data() as FirebaseFirestore.DocumentData
+    if (!isAdmin && portal.companyId !== callerCompanyId) throw new Error("You can only comment on your own tasks.")
+    await db.collection("portalComments").add({
+      companyId: portal.companyId ?? callerCompanyId,
+      taskId: id,
+      authorUid: uid,
+      authorName: userData?.displayName || "Client",
+      body: message,
+      createdAt: FieldValue.serverTimestamp(),
+    })
+    return { type: "feedback_sent", taskId: id }
   }
 
   if (!isAdmin) {

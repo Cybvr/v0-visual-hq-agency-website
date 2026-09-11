@@ -1,11 +1,16 @@
 "use client"
 
-import { useState, type ComponentType, type ReactNode } from "react"
+import { useState, type ComponentType, type FormEvent, type ReactNode } from "react"
+import Image from "next/image"
 import Link from "next/link"
 import { useParams, usePathname, useRouter, useSearchParams } from "next/navigation"
-import { ArrowLeft, ArrowUpRight, CalendarDays, Check, ChevronsUpDown, ClipboardList, FileSignature, FileText, FolderOpen, ImageIcon, LayoutDashboard, ListTodo, LogOut, MessageSquare, Receipt, Settings, Users } from "lucide-react"
+import { ArrowLeft, ArrowUp, ArrowUpRight, CalendarDays, Check, ChevronsUpDown, ClipboardList, FileSignature, FileText, FolderOpen, ImageIcon, LayoutDashboard, ListTodo, LogOut, MessageSquare, Receipt, Settings, Sparkles, Users } from "lucide-react"
 import { useAuth } from "@/components/auth-provider"
+import { AgentChat } from "@/components/agent/agent-chat"
+import { AgentDock } from "@/components/agent/agent-dock"
+import { useAgent } from "@/components/agent/agent-context"
 import { DOC_BADGE, DocTile } from "@/components/company/document-tile"
+import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import {
   DropdownMenu,
@@ -55,9 +60,10 @@ const TAB_ICONS: Record<string, ComponentType<{ className?: string }>> = {
   tasks: ListTodo,
   documents: FileText,
   media: ImageIcon,
+  ngai: Sparkles,
 }
 
-const COMPANY_TABS = ["overview", "projects", "contacts", "tasks", "documents", "media"]
+const COMPANY_TABS = ["overview", "projects", "contacts", "tasks", "documents", "media", "ngai"]
 
 function shortDate(value: string) {
   if (!value) return ""
@@ -260,6 +266,71 @@ function PortalTabNav({ company, activeTab }: { company: string; activeTab?: str
   )
 }
 
+/** Header "Ask Ngai" button, web only - opens the floating dock. */
+function PortalNgaiButton() {
+  const { setOpen } = useAgent()
+  return (
+    <button
+      type="button"
+      onClick={() => setOpen(true)}
+      className="ml-auto hidden items-center gap-2 rounded-full border border-border px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-muted md:inline-flex"
+    >
+      <Image src="/ngai-logo.png" alt="" width={16} height={16} className="rounded-full" />
+      Ask Ngai
+    </button>
+  )
+}
+
+/** Sticky mobile composer. Sending fires the message and jumps to the Ngai tab to continue there. */
+function PortalNgaiMobileBar({ company, activeTab }: { company: string; activeTab?: string }) {
+  const { send } = useAgent()
+  const router = useRouter()
+  const [text, setText] = useState("")
+  if (activeTab === "ngai") return null
+  function submit(event: FormEvent) {
+    event.preventDefault()
+    const content = text.trim()
+    if (!content) return
+    send(content)
+    setText("")
+    router.push(`${portalPath(company)}?tab=ngai`)
+  }
+  return (
+    <form onSubmit={submit} className="fixed inset-x-0 bottom-0 z-40 flex items-center gap-2 border-t border-border bg-background/95 px-3 py-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] backdrop-blur md:hidden">
+      <Image src="/ngai-logo.png" alt="" width={20} height={20} className="shrink-0 rounded-full" />
+      <input
+        value={text}
+        onChange={(event) => setText(event.target.value)}
+        placeholder="Ask Ngai…"
+        aria-label="Ask Ngai"
+        className="h-9 min-w-0 flex-1 rounded-full border border-input bg-background px-4 text-sm outline-none focus-visible:border-ring"
+      />
+      <Button type="submit" size="icon" aria-label="Send to Ngai" disabled={!text.trim()} className="size-9 shrink-0 rounded-full bg-accent text-accent-foreground hover:bg-accent/90">
+        <ArrowUp className="size-4" aria-hidden="true" />
+      </Button>
+    </form>
+  )
+}
+
+/** The full-page Ngai chat, shown on the portal's Ngai tab. */
+function PortalNgai() {
+  const { messages, conversations, activeConversationId, sending, firstName, send, reset, selectConversation } = useAgent()
+  return (
+    <div className="-mx-4 -my-5 flex h-[calc(100svh-3.5rem)] min-h-0 flex-col sm:-mx-6">
+      <AgentChat
+        messages={messages}
+        conversations={conversations}
+        activeConversationId={activeConversationId}
+        sending={sending}
+        firstName={firstName}
+        onSend={send}
+        onSelectConversation={selectConversation}
+        onNewChat={reset}
+      />
+    </div>
+  )
+}
+
 /** The portal chrome: collapsible company sidebar + dashboard-style header, wrapping any page's content. */
 export function PortalShellLayout({ company, organization, activeTab, title, children }: { company: string; organization: Organization; activeTab?: string; title?: ReactNode; children: ReactNode }) {
   return <SidebarProvider>
@@ -298,9 +369,12 @@ export function PortalShellLayout({ company, organization, activeTab, title, chi
           <Separator orientation="vertical" className="data-[orientation=vertical]:h-4" />
         </div>
         <h1 className="min-w-0 truncate capitalize text-[13px] font-medium text-muted-foreground max-md:text-sm">{title}</h1>
+        <PortalNgaiButton />
       </header>
-      <div className="px-4 py-5 sm:px-6">{children}</div>
+      <div className={cn("px-4 py-5 sm:px-6", activeTab !== "ngai" && "max-md:pb-24")}>{children}</div>
     </SidebarInset>
+    <AgentDock />
+    <PortalNgaiMobileBar company={company} activeTab={activeTab} />
   </SidebarProvider>
 }
 
@@ -349,6 +423,7 @@ export function PortalWorkspaceView({ data, project, company, uid, canAct, tab, 
     {tab === "tasks" && <Tasks tasks={tasks} uid={uid} canAct={canAct} onChanged={onChanged} all />}
     {tab === "documents" && <div className="space-y-6"><CompanyDocuments company={company} documents={documents} /><Files files={files} /></div>}
     {tab === "media" && <CompanyMedia logoUrl={data.organization.logoUrl} projects={data.projects as unknown as Project[]} uploaded={data.organization.media ?? []} />}
+    {tab === "ngai" && <PortalNgai />}
     {tab === "account" && <About organization={data.organization} />}
   </PortalShellLayout>
 }
@@ -361,7 +436,7 @@ export function PortalWorkspace({ projectMode = false }: { projectMode?: boolean
   const search = useSearchParams()
   const router = useRouter()
   const project = projectMode ? data.projects.find(item => item.id === projectId || item.legacySlug === projectId) : undefined
-  const available = projectMode ? ["overview", "tasks", "documents"] : ["overview", "projects", "contacts", "tasks", "documents", "media", "account"]
+  const available = projectMode ? ["overview", "tasks", "documents"] : ["overview", "projects", "contacts", "tasks", "documents", "media", "ngai", "account"]
   const raw = search.get("tab") || "overview"
   const tab = available.includes(raw) ? raw : "overview"
   if (projectMode && !project) return <PortalNotice title="This project isn’t available">It may not have been shared with your company yet. <Link className="underline" href={portalPath(companySlug)}>Back to your company</Link></PortalNotice>
