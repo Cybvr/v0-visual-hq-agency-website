@@ -19,6 +19,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import {
+  ChevronLeft,
+  ChevronRight,
   Copy,
   Download,
   File,
@@ -321,6 +323,24 @@ export default function DrivePage() {
     defaultSort: "title",
   })
 
+  // Preview navigation moves through the same list the grid shows, so the
+  // arrows respect the current search and sort.
+  const previewIndex = previewDocument ? visibleDocuments.findIndex((d) => d.id === previewDocument.id) : -1
+  const hasPrevPreview = previewIndex > 0
+  const hasNextPreview = previewIndex >= 0 && previewIndex < visibleDocuments.length - 1
+  const showPrevPreview = () => { if (hasPrevPreview) setPreviewDocument(visibleDocuments[previewIndex - 1]) }
+  const showNextPreview = () => { if (hasNextPreview) setPreviewDocument(visibleDocuments[previewIndex + 1]) }
+
+  useEffect(() => {
+    if (previewIndex < 0) return
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "ArrowLeft" && previewIndex > 0) setPreviewDocument(visibleDocuments[previewIndex - 1])
+      if (e.key === "ArrowRight" && previewIndex < visibleDocuments.length - 1) setPreviewDocument(visibleDocuments[previewIndex + 1])
+    }
+    window.addEventListener("keydown", onKey)
+    return () => window.removeEventListener("keydown", onKey)
+  }, [previewIndex, visibleDocuments])
+
   return (
     <main className="relative mx-auto w-full max-w-6xl px-4 pt-4 pb-12 sm:px-6">
       {dragging && (
@@ -617,14 +637,38 @@ export default function DrivePage() {
           <DialogHeader className="border-b px-6 py-4 pr-14">
             <div className="min-w-0">
               <DialogTitle className="truncate">{previewDocument?.title}</DialogTitle>
-              <DialogDescription>File preview</DialogDescription>
+              <DialogDescription>
+                {previewIndex >= 0 ? `File ${previewIndex + 1} of ${visibleDocuments.length}` : "File preview"}
+              </DialogDescription>
             </div>
           </DialogHeader>
-          <div className="min-h-0 flex-1 bg-muted/50 p-4">
+          <div className="relative min-h-0 flex-1 bg-muted/50 p-4">
             {previewDocument && (
               previewDocument.type === "image" || /\.(png|jpe?g|gif|webp)(\?|$)/i.test(previewDocument.url)
                 ? <img src={previewDocument.url} alt={previewDocument.title} className="h-full w-full object-contain" />
                 : <iframe src={previewDocument.url} title={previewDocument.title} className="h-full w-full rounded-lg border bg-background" />
+            )}
+            {hasPrevPreview && (
+              <Button
+                variant="secondary"
+                size="icon"
+                onClick={showPrevPreview}
+                aria-label="Previous file"
+                className="absolute left-3 top-1/2 h-10 w-10 -translate-y-1/2 rounded-full shadow-md"
+              >
+                <ChevronLeft className="h-5 w-5" />
+              </Button>
+            )}
+            {hasNextPreview && (
+              <Button
+                variant="secondary"
+                size="icon"
+                onClick={showNextPreview}
+                aria-label="Next file"
+                className="absolute right-3 top-1/2 h-10 w-10 -translate-y-1/2 rounded-full shadow-md"
+              >
+                <ChevronRight className="h-5 w-5" />
+              </Button>
             )}
           </div>
         </DialogContent>

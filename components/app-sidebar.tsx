@@ -33,7 +33,7 @@ import {
 // On mobile the sidebar is a slide-over sheet, so nav rows need finger-sized
 // hit areas. max-md: keeps the desktop rail untouched.
 const mobileNavButton =
-  "text-[13px] font-medium max-md:h-12 max-md:gap-3 max-md:px-3 max-md:text-sm [&>svg]:max-md:size-5"
+  "h-7 text-[13px] font-medium max-md:h-12 max-md:gap-3 max-md:px-3 max-md:text-sm [&>svg]:max-md:size-5"
 const mobileNavSubButton =
   "text-[13px] font-medium max-md:h-11 max-md:gap-3 max-md:px-3 max-md:text-sm [&>svg]:max-md:size-5"
 
@@ -109,12 +109,12 @@ export function AppSidebar({
         </SidebarHeader>
         <SidebarContent>
           <SidebarGroup className="group-data-[collapsible=icon]:p-1">
-            <SidebarMenu>
+            <SidebarMenu className="gap-0.5">
               {navLinks.map((link) => (
                 <React.Fragment key={link.href}>
                   {link.sectionLabel && (
                     <SidebarMenuItem className="group-data-[collapsible=icon]:hidden">
-                      <p className="px-2 pb-1 pt-4 text-xs font-medium text-muted-foreground">{link.sectionLabel}</p>
+                      <p className="px-2 pb-0.5 pt-2.5 text-xs font-medium text-muted-foreground">{link.sectionLabel}</p>
                     </SidebarMenuItem>
                   )}
                 {link.items ? (

@@ -5,7 +5,7 @@ import { Loader2 } from "lucide-react"
 
 import { useAuth } from "@/components/auth-provider"
 import { AccountNav } from "@/components/account/account-nav"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { ImageDropzone } from "@/components/image-dropzone"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -29,15 +29,6 @@ export default function ProfilePage() {
   }, [appUser?.displayName, appUser?.company, appUser?.photoURL, appUser?.slug])
 
   if (!user) return null
-
-  const name = displayName || appUser?.company || "Account"
-  const initials =
-    name
-      .split(" ")
-      .map((part) => part[0])
-      .join("")
-      .slice(0, 2)
-      .toUpperCase() || "U"
 
   async function save(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -82,23 +73,7 @@ export default function ProfilePage() {
       </header>
 
       <form onSubmit={save} className="mt-6 space-y-5">
-        <div className="flex items-center gap-4">
-          <Avatar className="size-14 rounded-full">
-            {photoURL && <AvatarImage src={photoURL} alt={name} referrerPolicy="no-referrer" />}
-            <AvatarFallback className="rounded-full text-base">{initials}</AvatarFallback>
-          </Avatar>
-          <div className="min-w-0 flex-1">
-            <Label htmlFor="photo-url">
-              Picture URL
-            </Label>
-            <Input
-              id="photo-url"
-              value={photoURL}
-              onChange={(event) => setPhotoURL(event.target.value)}
-              placeholder="https://"
-            />
-          </div>
-        </div>
+        <ImageDropzone compact label="Profile photo" value={photoURL} onChange={setPhotoURL} />
 
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-1.5">

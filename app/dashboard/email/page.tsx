@@ -1,10 +1,13 @@
 "use client"
 
-import { useEffect, useMemo, useState, type FormEvent } from "react"
+import { useEffect, useMemo, useRef, useState, type FormEvent } from "react"
 import { useSearchParams } from "next/navigation"
 import {
   ArrowLeft,
   CheckCircle2,
+  ChevronLeft,
+  ChevronRight,
+  Eye,
   FileText,
   Inbox,
   Loader2,
@@ -15,6 +18,7 @@ import {
   Send,
   Trash2,
   Twitter,
+  X,
 } from "lucide-react"
 
 import { useAuth } from "@/components/auth-provider"
@@ -194,6 +198,15 @@ function sentMessagePreview(message: SentMessage) {
   return `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>html{color-scheme:light}body{box-sizing:border-box;margin:0;padding:24px;color:#20232d;background:#fff;font:15px/1.65 Arial,sans-serif;overflow-wrap:anywhere}img{display:block;max-width:100%;height:auto}p{margin:0 0 1em}ul,ol{padding-left:1.5rem}a{color:#1649d8}</style></head><body>${content}</body></html>`
 }
 
+function templatePreview(template: EmailTemplate) {
+  const cta = getTemplateCta(template)
+  const content = withMessageImage(template.body, template.imageUrl, template.imageAlt)
+  const button = cta
+    ? `<p style="margin:1.75em 0 0"><a href="${escapeHtmlAttribute(cta.url)}" style="display:inline-block;background:#2856d9;color:#fff!important;text-decoration:none;font-weight:600;padding:12px 22px;border-radius:10px">${escapeHtml(cta.text)}</a></p>`
+    : ""
+  return `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>html{color-scheme:light}body{box-sizing:border-box;margin:0 auto;max-width:640px;padding:32px 28px;color:#20232d;background:#fff;font:15px/1.65 Arial,sans-serif;overflow-wrap:anywhere}img{display:block;max-width:100%;height:auto}p{margin:0 0 1em}ul,ol{padding-left:1.5rem}a{color:#1649d8}</style></head><body>${content}${button}</body></html>`
+}
+
 function withMessageImage(value: string, imageUrl?: string, imageAlt?: string) {
   const content = formatTemplateBody(value)
   if (!imageUrl) return content
@@ -263,6 +276,10 @@ export default function EmailPage() {
   const [loadingMessageId, setLoadingMessageId] = useState<string | null>(null)
   const [messageViewError, setMessageViewError] = useState("")
 
+  const [previewTemplateId, setPreviewTemplateId] = useState<string | null>(null)
+  const [previewHeight, setPreviewHeight] = useState<number | null>(null)
+  const [previewStage, setPreviewStage] = useState<{ w: number; h: number } | null>(null)
+  const previewStageRef = useRef<HTMLDivElement>(null)
   const [editingTemplateId, setEditingTemplateId] = useState<string | null>(null)
   const [templateName, setTemplateName] = useState("")
   const [templateSubject, setTemplateSubject] = useState("")
@@ -312,6 +329,50 @@ export default function EmailPage() {
     defaultSort: "updatedAt",
     defaultDirection: "desc",
   })
+
+  // The lightbox steps through the same list the sidebar shows, so back and
+  // forth respect the current search and sort.
+  const previewIndex = previewTemplateId ? visibleTemplates.findIndex((template) => template.id === previewTemplateId) : -1
+  const previewTemplate = previewIndex >= 0 ? visibleTemplates[previewIndex] : null
+  const hasPrevPreview = previewIndex > 0
+  const hasNextPreview = previewIndex >= 0 && previewIndex < visibleTemplates.length - 1
+  const showPrevPreview = () => { if (hasPrevPreview) setPreviewTemplateId(visibleTemplates[previewIndex - 1].id) }
+  const showNextPreview = () => { if (hasNextPreview) setPreviewTemplateId(visibleTemplates[previewIndex + 1].id) }
+
+  // Render the email at a fixed natural width, then scale it down so the whole
+  // thing fits the available box in both directions (never scaled up).
+  const PREVIEW_WIDTH = 640
+  const previewScale = previewHeight && previewStage
+    ? Math.min(previewStage.w / PREVIEW_WIDTH, previewStage.h / previewHeight, 1)
+    : 1
+
+  // A new template remounts the iframe, so drop the old measured height until
+  // the new one reports its own on load.
+  useEffect(() => { setPreviewHeight(null) }, [previewTemplateId])
+
+  // Track the space available for the preview so the content can be scaled to
+  // fit it with no inner scroll.
+  useEffect(() => {
+    if (!previewTemplateId) return
+    const measure = () => {
+      const el = previewStageRef.current
+      if (el) setPreviewStage({ w: el.clientWidth, h: el.clientHeight })
+    }
+    measure()
+    window.addEventListener("resize", measure)
+    return () => window.removeEventListener("resize", measure)
+  }, [previewTemplateId])
+
+  useEffect(() => {
+    if (previewIndex < 0) return
+    function onKey(event: KeyboardEvent) {
+      if (event.key === "Escape") setPreviewTemplateId(null)
+      if (event.key === "ArrowLeft" && previewIndex > 0) setPreviewTemplateId(visibleTemplates[previewIndex - 1].id)
+      if (event.key === "ArrowRight" && previewIndex < visibleTemplates.length - 1) setPreviewTemplateId(visibleTemplates[previewIndex + 1].id)
+    }
+    window.addEventListener("keydown", onKey)
+    return () => window.removeEventListener("keydown", onKey)
+  }, [previewIndex, visibleTemplates])
   const { results: visibleLists, bar: listFilterBar } = useFilterBar({
     items: lists,
     search: searchList,
@@ -1425,9 +1486,14 @@ export default function EmailPage() {
                       </button>
                       <div className="flex shrink-0 flex-col items-end gap-1">
                         <time dateTime={template.updatedAt} className={cn("text-[11px] text-muted-foreground", editingTemplateId === template.id && "text-sidebar-accent-foreground/70")}>{formatTemplateDate(template.updatedAt)}</time>
-                        <button type="button" onClick={() => deleteTemplate(template.id)} aria-label={`Delete ${template.name}`} className="flex size-8 items-center justify-center rounded-sm text-muted-foreground opacity-70 outline-none transition-colors hover:bg-destructive/10 hover:text-destructive focus-visible:ring-2 focus-visible:ring-ring sm:opacity-0 sm:group-hover:opacity-100 sm:focus-visible:opacity-100">
-                          <Trash2 className="size-4" aria-hidden="true" />
-                        </button>
+                        <div className="flex items-center gap-1">
+                          <button type="button" onClick={() => setPreviewTemplateId(template.id)} aria-label={`Preview ${template.name}`} className="flex size-8 items-center justify-center rounded-sm text-muted-foreground opacity-70 outline-none transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring sm:opacity-0 sm:group-hover:opacity-100 sm:focus-visible:opacity-100">
+                            <Eye className="size-4" aria-hidden="true" />
+                          </button>
+                          <button type="button" onClick={() => deleteTemplate(template.id)} aria-label={`Delete ${template.name}`} className="flex size-8 items-center justify-center rounded-sm text-muted-foreground opacity-70 outline-none transition-colors hover:bg-destructive/10 hover:text-destructive focus-visible:ring-2 focus-visible:ring-ring sm:opacity-0 sm:group-hover:opacity-100 sm:focus-visible:opacity-100">
+                            <Trash2 className="size-4" aria-hidden="true" />
+                          </button>
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -1438,6 +1504,59 @@ export default function EmailPage() {
         )}
 
       </div>
+
+      {previewTemplate && (
+        <div
+          className="fixed inset-0 z-50 flex flex-col bg-black/70 backdrop-blur-sm"
+          role="dialog"
+          aria-modal="true"
+          aria-label={`Preview: ${previewTemplate.name}`}
+          onClick={() => setPreviewTemplateId(null)}
+        >
+          <div className="flex shrink-0 items-center gap-3 px-4 py-3 text-white sm:px-6" onClick={(event) => event.stopPropagation()}>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-semibold">{previewTemplate.name}</p>
+              <p className="truncate text-xs text-white/70">{previewTemplate.subject} · {previewIndex + 1} of {visibleTemplates.length}</p>
+            </div>
+            <button type="button" onClick={() => setPreviewTemplateId(null)} aria-label="Close preview" className="flex size-9 items-center justify-center rounded-full text-white/80 outline-none transition-colors hover:bg-white/15 hover:text-white focus-visible:ring-2 focus-visible:ring-white/60">
+              <X className="size-5" aria-hidden="true" />
+            </button>
+          </div>
+          <div className="flex min-h-0 flex-1 items-center justify-center gap-2 px-2 pb-6 sm:gap-4 sm:px-6" onClick={(event) => event.stopPropagation()}>
+            <button type="button" onClick={showPrevPreview} disabled={!hasPrevPreview} aria-label="Previous template" className="flex size-11 shrink-0 items-center justify-center rounded-full bg-white/10 text-white outline-none transition-colors hover:bg-white/20 focus-visible:ring-2 focus-visible:ring-white/60 disabled:pointer-events-none disabled:opacity-30">
+              <ChevronLeft className="size-6" aria-hidden="true" />
+            </button>
+            <div ref={previewStageRef} className="flex h-full min-w-0 flex-1 items-center justify-center overflow-hidden">
+              <div
+                className="relative overflow-hidden rounded-xl bg-white shadow-2xl"
+                style={{ width: PREVIEW_WIDTH * previewScale, height: (previewHeight ?? 0) * previewScale }}
+              >
+                <iframe
+                  key={previewTemplate.id}
+                  title={`Template preview: ${previewTemplate.name}`}
+                  sandbox="allow-same-origin"
+                  scrolling="no"
+                  srcDoc={templatePreview(previewTemplate)}
+                  onLoad={(event) => {
+                    const doc = event.currentTarget.contentDocument
+                    if (doc?.body) setPreviewHeight(doc.body.scrollHeight)
+                  }}
+                  style={{
+                    width: PREVIEW_WIDTH,
+                    height: previewHeight ?? "100%",
+                    transform: `scale(${previewScale})`,
+                    transformOrigin: "top left",
+                  }}
+                  className="absolute left-0 top-0 border-0 bg-white"
+                />
+              </div>
+            </div>
+            <button type="button" onClick={showNextPreview} disabled={!hasNextPreview} aria-label="Next template" className="flex size-11 shrink-0 items-center justify-center rounded-full bg-white/10 text-white outline-none transition-colors hover:bg-white/20 focus-visible:ring-2 focus-visible:ring-white/60 disabled:pointer-events-none disabled:opacity-30">
+              <ChevronRight className="size-6" aria-hidden="true" />
+            </button>
+          </div>
+        </div>
+      )}
     </main>
   )
 }

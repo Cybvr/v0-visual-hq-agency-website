@@ -8,3 +8,6 @@ scripts/*.local.mjs
 dist
 build
 .vercel
+
+# pnpm content-addressable store
+.pnpm-store/
