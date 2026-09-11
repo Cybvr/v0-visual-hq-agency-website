@@ -12,6 +12,7 @@ import {
   Timestamp,
 } from "firebase/firestore"
 import { db } from "./firebase"
+import { ensureBillingTask } from "./tasks"
 
 export type InvoiceStatus = "draft" | "sent" | "paid" | "overdue" | "void"
 export type ContractStatus = "draft" | "sent" | "signed" | "expired"
@@ -277,6 +278,40 @@ function toInvoice(id: string, data: object): Invoice {
   return row
 }
 
+/**
+ * Mirror an issued billing document onto the project board as a client-visible
+ * task. Kept non-fatal: a task-sync hiccup must never block saving the document.
+ */
+async function syncInvoiceTask(invoice: Invoice): Promise<void> {
+  try {
+    await ensureBillingTask({
+      kind: "invoice", sourceId: invoice.id, companyId: invoice.companyId, client: invoice.client,
+      projectId: invoice.projectId || "", project: invoice.project || "",
+      title: `Invoice ${invoice.invoiceNumber}`, isDraft: invoice.status === "draft", dueDate: invoice.dueOn,
+    })
+  } catch (err) { console.error("Couldn't sync invoice task:", err) }
+}
+
+async function syncEstimateTask(estimate: Estimate): Promise<void> {
+  try {
+    await ensureBillingTask({
+      kind: "estimate", sourceId: estimate.id, companyId: estimate.companyId, client: estimate.client,
+      projectId: estimate.projectId || "", project: estimate.project || "",
+      title: estimate.title || `Estimate ${estimate.estimateNumber}`, isDraft: estimate.status === "draft", dueDate: estimate.validUntil,
+    })
+  } catch (err) { console.error("Couldn't sync estimate task:", err) }
+}
+
+async function syncContractTask(contract: Contract): Promise<void> {
+  try {
+    await ensureBillingTask({
+      kind: "contract", sourceId: contract.id, companyId: contract.companyId, client: contract.client,
+      projectId: contract.projectId || "", project: contract.project || "",
+      title: contract.title, isDraft: contract.status === "draft", dueDate: contract.endsOn,
+    })
+  } catch (err) { console.error("Couldn't sync contract task:", err) }
+}
+
 export async function getInvoices(): Promise<Invoice[]> {
   const snapshot = await getDocs(collection(db, INVOICES))
   return byNewest(snapshot.docs.map((d) => toInvoice(d.id, d.data() as object)))
@@ -321,11 +356,14 @@ export async function createInvoice(data: Omit<Invoice, "id" | "createdAt" | "up
     createdAt: Timestamp.now(),
     updatedAt: Timestamp.now(),
   })
+  await syncInvoiceTask({ ...(data as Invoice), id: ref.id })
   return ref.id
 }
 
 export async function updateInvoice(id: string, data: Partial<Omit<Invoice, "id" | "createdAt">>): Promise<void> {
   await updateDoc(doc(db, INVOICES, id), { ...data, updatedAt: Timestamp.now() })
+  const fresh = await getInvoice(id)
+  if (fresh) await syncInvoiceTask(fresh)
 }
 
 export async function deleteInvoice(id: string): Promise<void> {
@@ -358,11 +396,14 @@ export async function createContract(data: Omit<Contract, "id" | "createdAt" | "
     createdAt: Timestamp.now(),
     updatedAt: Timestamp.now(),
   })
+  await syncContractTask({ ...(data as Contract), id: ref.id })
   return ref.id
 }
 
 export async function updateContract(id: string, data: Partial<Omit<Contract, "id" | "createdAt">>): Promise<void> {
   await updateDoc(doc(db, CONTRACTS, id), { ...data, updatedAt: Timestamp.now() })
+  const fresh = await getContract(id)
+  if (fresh) await syncContractTask(fresh)
 }
 
 export async function deleteContract(id: string): Promise<void> {
@@ -424,11 +465,14 @@ export async function createEstimate(data: Omit<Estimate, "id" | "createdAt" | "
     createdAt: Timestamp.now(),
     updatedAt: Timestamp.now(),
   })
+  await syncEstimateTask({ ...(data as Estimate), id: ref.id })
   return ref.id
 }
 
 export async function updateEstimate(id: string, data: Partial<Omit<Estimate, "id" | "createdAt">>): Promise<void> {
   await updateDoc(doc(db, ESTIMATES, id), { ...data, updatedAt: Timestamp.now() })
+  const fresh = await getEstimate(id)
+  if (fresh) await syncEstimateTask(fresh)
 }
 
 /** Accept a shared estimate without collecting a redundant signature form. */

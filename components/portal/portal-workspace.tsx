@@ -37,6 +37,7 @@ import { taskStatusMeta, type TaskStatus } from "@/lib/tasks"
 import { cn } from "@/lib/utils"
 import type { SharedDocument } from "@/lib/documents"
 import { billingTotals, invoiceBalance, portalDocumentPath, portalPath, safeExternalUrl, type PortalProject, type PortalTab, type PortalTask } from "@/lib/portal-model"
+import { buildActivity, type ActivityItem } from "@/lib/activity"
 import { completePortalTask } from "@/lib/portal-data"
 import type { Project } from "@/lib/projects"
 import type { Organization, PublicTeamMember } from "@/lib/organizations"
@@ -179,6 +180,16 @@ function BillingDocuments({ company, invoices, contracts, estimates }: { company
   return <Panel title="Billing documents" count={rows.length}>{rows.length ? <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">{rows.map(row => <DocTile key={`${row.kind}:${row.id}`} icon={row.icon} badgeClass={row.badge} title={row.title} subtitle={row.subtitle} href={portalDocumentPath(company, row.kind, row.id)} />)}</div> : <Empty>Issued invoices, estimates and contracts will appear here.</Empty>}</Panel>
 }
 
+/** Newest-first log of what the agency has shared. Hidden entirely when empty. */
+function ActivityPanel({ items, hrefFor }: { items: ActivityItem[]; hrefFor: (item: ActivityItem) => string | undefined }) {
+  if (!items.length) return null
+  return <Panel title="Recent activity" count={items.length}><ul className="divide-y divide-border">{items.map(item => {
+    const href = hrefFor(item)
+    const body = <><p className="truncate text-sm font-medium">{item.title}</p><p className="mt-0.5 truncate text-xs text-muted-foreground">{item.subtitle}</p></>
+    return <li key={item.id} className="py-3 first:pt-0 last:pb-0">{href ? <Link href={href} className="block rounded-sm underline-offset-4 hover:underline focus-visible:outline focus-visible:outline-2">{body}</Link> : body}</li>
+  })}</ul></Panel>
+}
+
 /** Footer account chip, styled like the dashboard's NavUser but with portal-only actions. */
 function PortalNavUser() {
   const { isMobile } = useSidebar()
@@ -277,6 +288,12 @@ export function PortalWorkspaceView({ data, project, company, uid, canAct, tab, 
   const pendingContracts = contracts.filter(item => item.status === "sent")
   const pendingDocuments = documents.filter(item => item.status === "sent")
   const count = pendingInvoices.length + pendingEstimates.length + pendingContracts.length + pendingDocuments.length
+  const myTasks = tasks.filter(item => item.assigneeUid === uid)
+  const billingCount = invoices.length + estimates.length + contracts.length
+  // Portal mirror rows (projects, tasks) carry no createdAt, so the feed is
+  // built from the billing documents and files that do.
+  const activity = buildActivity({ invoices, estimates, contracts, documents, files })
+  const activityHref = (item: ActivityItem) => item.kind === "file" ? undefined : portalDocumentPath(company, item.kind === "document" ? "document" : item.kind as "invoice" | "estimate" | "contract", item.refId)
   const status = project ? projectStatusMeta[project.status] : null
   const projectTabs = ["overview", "tasks", "documents"]
   const actionLink = (kind: "invoice" | "estimate" | "contract" | "document", id: string, label: string) => <Link href={portalDocumentPath(company, kind, id)} className="shrink-0 rounded-md bg-foreground px-3 py-2 text-xs font-medium text-background hover:opacity-80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2">{label}</Link>
@@ -298,7 +315,7 @@ export function PortalWorkspaceView({ data, project, company, uid, canAct, tab, 
       {pendingEstimates.map(item => <li key={item.id} className="flex flex-wrap items-center gap-3 py-4 first:pt-0 last:pb-0"><FileText className="size-4 shrink-0 text-muted-foreground" /><div className="min-w-0 flex-1"><p className="text-sm font-medium">Review {item.title || item.estimateNumber}</p><p className="mt-1 text-xs text-muted-foreground">Estimate awaiting your response</p></div>{actionLink("estimate", item.id, "View estimate")}</li>)}
       {pendingContracts.map(item => <li key={item.id} className="flex flex-wrap items-center gap-3 py-4 first:pt-0 last:pb-0"><FileText className="size-4 shrink-0 text-muted-foreground" /><div className="min-w-0 flex-1"><p className="text-sm font-medium">Review {item.title}</p><p className="mt-1 text-xs text-muted-foreground">Contract awaiting signature</p></div>{actionLink("contract", item.id, "View contract")}</li>)}
       {pendingDocuments.map(item => <li key={item.id} className="flex flex-wrap items-center gap-3 py-4 first:pt-0 last:pb-0"><FileText className="size-4 shrink-0 text-muted-foreground" /><div className="min-w-0 flex-1"><p className="text-sm font-medium">Read {item.title}</p><p className="mt-1 text-xs text-muted-foreground">{companyDocumentKindMeta[item.kind]?.label ?? "Document"} shared with you</p></div>{actionLink("document", item.id, "View document")}</li>)}
-    </ul> : <div className="flex items-center gap-3 py-4 text-sm text-muted-foreground"><Check className="size-4 text-emerald-700" />You’re all caught up on documents.</div>}</Panel>{!project && projectList}<Tasks tasks={tasks} uid={uid} canAct={canAct} onChanged={onChanged} /><BillingSummary invoices={invoices} onView={() => window.document.getElementById("portal-documents")?.scrollIntoView({ behavior: "smooth" })} /><div id="portal-documents"><BillingDocuments company={company} invoices={invoices} contracts={contracts} estimates={estimates} /></div></div><div className="space-y-6"><Files files={files} /></div></div>}
+    </ul> : <div className="flex items-center gap-3 py-4 text-sm text-muted-foreground"><Check className="size-4 text-emerald-700" />You’re all caught up on documents.</div>}</Panel>{!project && data.projects.length > 0 && projectList}{myTasks.length > 0 && <Tasks tasks={tasks} uid={uid} canAct={canAct} onChanged={onChanged} />}{invoices.length > 0 && <BillingSummary invoices={invoices} onView={() => window.document.getElementById("portal-documents")?.scrollIntoView({ behavior: "smooth" })} />}{billingCount > 0 && <div id="portal-documents"><BillingDocuments company={company} invoices={invoices} contracts={contracts} estimates={estimates} /></div>}</div><div className="space-y-6"><ActivityPanel items={activity} hrefFor={activityHref} />{files.length > 0 && <Files files={files} />}</div></div>}
     {tab === "projects" && projectList}
     {tab === "contacts" && <Contacts people={data.organization.publicTeam ?? []} />}
     {tab === "tasks" && <Tasks tasks={tasks} uid={uid} canAct={canAct} onChanged={onChanged} all />}

@@ -37,6 +37,10 @@ export interface Task {
    * anyone so the public templates page can list the steps of the workflow.
    */
   isPublic?: boolean
+  /** Set when the task was auto-created to track a billing document. */
+  sourceKind?: "invoice" | "estimate" | "contract"
+  /** Firestore id of the billing document this task tracks. */
+  sourceId?: string
   createdAt?: Timestamp
   updatedAt?: Timestamp
 }
@@ -164,6 +168,42 @@ export async function updateTask(id: string, data: Partial<Omit<Task, "id" | "cr
 
 export async function deleteTask(id: string): Promise<void> {
   await deleteAgencyRecord("tasks", id)
+}
+
+/**
+ * Auto-creates a client-visible task that tracks a billing document (invoice,
+ * estimate or contract) so it lands on the project board and in the client
+ * portal. No-ops while the document is a draft, isn't tied to a project, or
+ * already has a task - so editing or re-saving never spawns duplicates.
+ */
+export async function ensureBillingTask(params: {
+  kind: "invoice" | "estimate" | "contract"
+  sourceId: string
+  companyId: string
+  client: string
+  projectId: string
+  project: string
+  title: string
+  isDraft: boolean
+  dueDate?: string
+}): Promise<void> {
+  const { kind, sourceId, companyId, client, projectId, project, title, isDraft, dueDate } = params
+  if (isDraft || !projectId || !companyId || !sourceId) return
+  const existing = await getDocs(query(collection(db, COLLECTION_NAME), where("sourceId", "==", sourceId)))
+  if (existing.docs.some((d) => (d.data() as Task).sourceKind === kind)) return
+  await createTask({
+    name: title,
+    companyId,
+    client,
+    projectId,
+    project,
+    status: "todo",
+    priority: "medium",
+    dueDate: dueDate || "",
+    content: `Tracking ${title}.`,
+    sourceKind: kind,
+    sourceId,
+  })
 }
 
 // Starter tasks seeded for a brand-new client so their board isn't empty and
