@@ -30,9 +30,10 @@ interface ImageDropzoneProps {
   value: string
   onChange: (url: string) => void
   label?: string
+  compact?: boolean
 }
 
-export function ImageDropzone({ value, onChange, label }: ImageDropzoneProps) {
+export function ImageDropzone({ value, onChange, label, compact = false }: ImageDropzoneProps) {
   const [uploading, setUploading] = useState(false)
   const [dragging, setDragging] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
@@ -55,6 +56,68 @@ export function ImageDropzone({ value, onChange, label }: ImageDropzoneProps) {
     setDragging(false)
     const file = e.dataTransfer.files[0]
     if (file) handleFile(file)
+  }
+
+  if (compact) {
+    return (
+      <div className="space-y-2">
+        {label && <p className="text-sm font-medium leading-none">{label}</p>}
+        <div className="flex items-center gap-3">
+          <div
+            className={cn(
+              "group relative size-16 shrink-0 cursor-pointer overflow-hidden rounded-full border border-border bg-muted transition-colors",
+              dragging && "ring-2 ring-accent",
+            )}
+            onClick={() => !uploading && inputRef.current?.click()}
+            onDragOver={(e) => { e.preventDefault(); setDragging(true) }}
+            onDragLeave={() => setDragging(false)}
+            onDrop={onDrop}
+          >
+            {uploading ? (
+              <div className="flex size-full items-center justify-center text-muted-foreground">
+                <Loader2 className="size-5 animate-spin" />
+              </div>
+            ) : value ? (
+              <img src={value} alt="" className="size-full object-cover" />
+            ) : (
+              <div className="flex size-full items-center justify-center text-muted-foreground">
+                <Upload className="size-5" />
+              </div>
+            )}
+            {value && !uploading && (
+              <div className="absolute inset-0 flex items-center justify-center bg-black/45 opacity-0 transition-opacity group-hover:opacity-100">
+                <span className="text-[10px] font-medium text-white">Change</span>
+              </div>
+            )}
+            {value && (
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); onChange("") }}
+                aria-label="Remove logo"
+                className="absolute right-0.5 top-0.5 flex size-5 items-center justify-center rounded-full bg-destructive text-destructive-foreground shadow"
+              >
+                <X className="size-3" />
+              </button>
+            )}
+            <input
+              ref={inputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={(e) => {
+                const file = e.target.files?.[0]
+                if (file) handleFile(file)
+                e.target.value = ""
+              }}
+            />
+          </div>
+          <div>
+            <p className="text-sm font-medium">{value ? "Change logo" : "Add logo"}</p>
+            <p className="mt-1 text-xs text-muted-foreground">Square image recommended</p>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (

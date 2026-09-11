@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation"
 import { Loader2 } from "lucide-react"
 
 import { useAuth } from "@/components/auth-provider"
-import { AccountHeader, AccountNav } from "@/components/account/account-nav"
+import { AccountNav } from "@/components/account/account-nav"
 import { ImageDropzone } from "@/components/image-dropzone"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -85,14 +85,9 @@ export default function AccountBusinessPage() {
     <main className="mx-auto w-full max-w-3xl px-4 py-9 sm:px-6">
       <AccountNav />
 
-      <AccountHeader
-        title="Business profile"
-        description="Your organization details, shown on public company pages and the “Prepared by” block of every invoice, estimate, and contract."
-      />
-
-      <p className="mt-2 text-xs text-muted-foreground">
-        Business identity and contact fields are public. Do not enter a private personal address or phone number.
-      </p>
+      <header className="mt-7">
+        <h1 className="text-lg font-semibold">Business profile</h1>
+      </header>
 
       {loading ? (
         <div className="flex items-center justify-center py-20">
@@ -100,7 +95,7 @@ export default function AccountBusinessPage() {
         </div>
       ) : (
         <form onSubmit={handleSubmit} className="mt-6 space-y-5">
-          <ImageDropzone label="Logo" value={form.logoUrl} onChange={(url) => set("logoUrl", url)} />
+          <ImageDropzone compact label="Logo" value={form.logoUrl} onChange={(url) => set("logoUrl", url)} />
 
           <div className="space-y-1.5">
             <Label htmlFor="name">Business name</Label>
