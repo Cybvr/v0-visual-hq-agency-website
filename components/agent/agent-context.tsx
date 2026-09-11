@@ -139,11 +139,6 @@ export function AgentProvider({ children }: { children: ReactNode }) {
 
         if (!active) return
         setConversations(restored)
-        const first = restored[0]
-        if (first) {
-          setActiveConversationId(first.id)
-          setMessages(first.messages)
-        }
       })
       .catch((error) => console.error("Agent history load failed", error))
 
