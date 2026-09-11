@@ -230,6 +230,36 @@ function PortalNavUser() {
   )
 }
 
+/** The main portal navigation. Items are larger on mobile, and tapping one closes the mobile drawer. */
+function PortalTabNav({ company, activeTab }: { company: string; activeTab?: string }) {
+  const { isMobile, setOpenMobile } = useSidebar()
+  return (
+    <SidebarMenu>
+      {COMPANY_TABS.map(item => {
+        const Icon = TAB_ICONS[item] ?? LayoutDashboard
+        return (
+          <SidebarMenuItem key={item}>
+            <SidebarMenuButton
+              isActive={activeTab === item}
+              tooltip={item}
+              asChild
+              className="capitalize max-md:h-12 max-md:gap-3 max-md:px-3 max-md:text-base max-md:[&>svg]:size-5"
+            >
+              <Link
+                href={item === "overview" ? portalPath(company) : `${portalPath(company)}?tab=${item}`}
+                onClick={() => { if (isMobile) setOpenMobile(false) }}
+              >
+                <Icon className="h-4 w-4" />
+                <span>{item}</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        )
+      })}
+    </SidebarMenu>
+  )
+}
+
 /** The portal chrome: collapsible company sidebar + dashboard-style header, wrapping any page's content. */
 export function PortalShellLayout({ company, organization, activeTab, title, children }: { company: string; organization: Organization; activeTab?: string; title?: ReactNode; children: ReactNode }) {
   return <SidebarProvider>
@@ -252,9 +282,7 @@ export function PortalShellLayout({ company, organization, activeTab, title, chi
         </SidebarHeader>
         <SidebarContent>
           <SidebarGroup className="group-data-[collapsible=icon]:p-1">
-            <SidebarMenu>
-              {COMPANY_TABS.map(item => { const Icon = TAB_ICONS[item] ?? LayoutDashboard; return <SidebarMenuItem key={item}><SidebarMenuButton isActive={activeTab === item} tooltip={item} asChild className="capitalize"><Link href={item === "overview" ? portalPath(company) : `${portalPath(company)}?tab=${item}`}><Icon className="h-4 w-4" /><span>{item}</span></Link></SidebarMenuButton></SidebarMenuItem> })}
-            </SidebarMenu>
+            <PortalTabNav company={company} activeTab={activeTab} />
           </SidebarGroup>
         </SidebarContent>
         <SidebarFooter className="group-data-[collapsible=icon]:p-1">
