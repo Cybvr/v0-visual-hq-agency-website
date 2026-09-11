@@ -16,7 +16,8 @@ const DASHBOARD_NAV: NavLink[] = [
   { label: "Companies", href: "/dashboard/companies", icon: Building2, adminOnly: true },
   { label: "Contacts", href: "/dashboard/users", icon: Users, adminOnly: true },
   { label: "Email", href: "/dashboard/email", icon: Mail },
-  { label: "Ngai", href: "/dashboard/agent", icon: Bot },
+  { label: "Ngai", href: "/dashboard/agent", icon: Bot, opensAgent: true },
+  { label: "Drive", href: "/dashboard/drive", icon: HardDrive },
   {
     sectionLabel: "Workspace",
     label: "Operations",

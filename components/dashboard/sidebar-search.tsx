@@ -4,6 +4,7 @@ import { useRef, useState, type FormEvent } from "react"
 import { useRouter } from "next/navigation"
 import { Search } from "lucide-react"
 import { useAuth } from "@/components/auth-provider"
+import { useAgent } from "@/components/agent/agent-context"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from "@/components/ui/sidebar"
@@ -13,6 +14,7 @@ export function SidebarSearch() {
   const inputRef = useRef<HTMLInputElement>(null)
   const router = useRouter()
   const { isAdmin, isImpersonating, stopViewingAs } = useAuth()
+  const { setOpen: setAgentOpen } = useAgent()
   const { setOpen, isMobile, setOpenMobile } = useSidebar()
 
   function handleSearch(event: FormEvent<HTMLFormElement>) {
@@ -50,7 +52,8 @@ export function SidebarSearch() {
     if (isImpersonating && (match?.href === "/dashboard/companies" || match?.href === "/dashboard/users")) {
       stopViewingAs()
     }
-    router.push(match?.href ?? "/dashboard")
+    if (match?.href === "/dashboard/agent") setAgentOpen(true)
+    else router.push(match?.href ?? "/dashboard")
     if (isMobile) setOpenMobile(false)
   }
 

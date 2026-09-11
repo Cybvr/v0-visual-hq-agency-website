@@ -7,6 +7,7 @@ import { ChevronRight } from "lucide-react"
 import type { ComponentType, ReactNode } from "react"
 
 import { useAuth } from "@/components/auth-provider"
+import { useAgent } from "@/components/agent/agent-context"
 import { BrandLockup } from "@/components/brand-lockup"
 import { SidebarSearch } from "@/components/dashboard/sidebar-search"
 import { NavUser } from "@/components/nav-user"
@@ -44,6 +45,8 @@ export type NavLink = {
   icon: ComponentType<{ className?: string }>
   /** Admin destinations remain visible to admins while previewing another account. */
   adminOnly?: boolean
+  /** Opens the shared Ngai panel instead of navigating to a duplicate page. */
+  opensAgent?: boolean
   /** When present the item is a collapsible dropdown and href is only its default destination. */
   items?: Array<{ label: string; href: string; icon: ComponentType<{ className?: string }>; adminOnly?: boolean }>
 }
@@ -67,12 +70,14 @@ export function AppSidebar({
 }) {
   const pathname = usePathname()
   const { isImpersonating, stopViewingAs } = useAuth()
+  const { open: agentOpen, setOpen: setAgentOpen } = useAgent()
   const { isMobile, setOpenMobile } = useSidebar()
 
   // Tapping a destination on mobile should dismiss the slide-over sheet.
-  function handleNavigate(adminOnly = false) {
+  function handleNavigate(adminOnly = false, opensAgent = false) {
     // Admin tools open in the signed-in account; client pages keep the preview.
     if (adminOnly && isImpersonating) stopViewingAs()
+    if (opensAgent) setAgentOpen(true)
     if (isMobile) setOpenMobile(false)
   }
 
@@ -145,12 +150,25 @@ export function AppSidebar({
                   </Collapsible>
                 ) : (
                   <SidebarMenuItem key={link.href}>
-                    <SidebarMenuButton asChild isActive={isActive(pathname, link.href, rootHref)} tooltip={link.label} className={mobileNavButton}>
-                      <Link href={link.href} onClick={() => handleNavigate(link.adminOnly)}>
+                    {link.opensAgent ? (
+                      <SidebarMenuButton
+                        type="button"
+                        isActive={agentOpen}
+                        tooltip={link.label}
+                        className={mobileNavButton}
+                        onClick={() => handleNavigate(link.adminOnly, true)}
+                      >
                         <link.icon className="h-4 w-4" />
                         <span>{link.label}</span>
-                      </Link>
-                    </SidebarMenuButton>
+                      </SidebarMenuButton>
+                    ) : (
+                      <SidebarMenuButton asChild isActive={isActive(pathname, link.href, rootHref)} tooltip={link.label} className={mobileNavButton}>
+                        <Link href={link.href} onClick={() => handleNavigate(link.adminOnly)}>
+                          <link.icon className="h-4 w-4" />
+                          <span>{link.label}</span>
+                        </Link>
+                      </SidebarMenuButton>
+                    )}
                   </SidebarMenuItem>
                 )}
                 </React.Fragment>
