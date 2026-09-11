@@ -708,8 +708,6 @@ export default function EmailPage() {
     setTemplateName("")
     setTemplateSubject("")
     setTemplateBody("")
-    setTemplateImageUrl("")
-    setTemplateImageAlt("")
     setTemplateNotice(null)
   }
 
@@ -718,8 +716,6 @@ export default function EmailPage() {
     setTemplateName(template.name)
     setTemplateSubject(template.subject)
     setTemplateBody(withMessageImage(template.body, template.imageUrl, template.imageAlt))
-    setTemplateImageUrl(template.imageUrl || "")
-    setTemplateImageAlt(template.imageAlt || "")
     setTemplateNotice(null)
   }
 
