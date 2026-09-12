@@ -302,6 +302,8 @@ export default function EmailPage() {
   const [listContactEmails, setListContactEmails] = useState<string[]>([])
   const [editingListId, setEditingListId] = useState<string | null>(null)
   const [listNotice, setListNotice] = useState<Notice>(null)
+  const [listContactQuery, setListContactQuery] = useState("")
+  const [listShowSelectedOnly, setListShowSelectedOnly] = useState(false)
   const [messageCompanyFilter, setMessageCompanyFilter] = useState("all")
   const [messageProjectFilter, setMessageProjectFilter] = useState("all")
   const [messageDocumentFilter, setMessageDocumentFilter] = useState("all")
@@ -574,6 +576,15 @@ export default function EmailPage() {
     () => lists.find((list) => list.id === selectedListId),
     [selectedListId, lists],
   )
+
+  const visibleListContacts = useMemo(() => {
+    const query = listContactQuery.trim().toLowerCase()
+    return contacts.filter((contact) => {
+      if (listShowSelectedOnly && !listContactEmails.includes(contact.email)) return false
+      if (!query) return true
+      return `${contact.name} ${contact.email}`.toLowerCase().includes(query)
+    })
+  }, [contacts, listContactQuery, listShowSelectedOnly, listContactEmails])
   const selectedMessage = useMemo(
     () => messages.find((message) => message.id === selectedMessageId) || null,
     [messages, selectedMessageId],
@@ -870,6 +881,8 @@ export default function EmailPage() {
     setListName("")
     setListContactEmails([])
     setListNotice(null)
+    setListContactQuery("")
+    setListShowSelectedOnly(false)
   }
 
   function editList(list: ContactList) {
@@ -877,6 +890,9 @@ export default function EmailPage() {
     setListName(list.name)
     setListContactEmails(list.contactEmails)
     setListNotice(null)
+    setListContactQuery("")
+    // Open straight into the list's members so you can see who's in it.
+    setListShowSelectedOnly(true)
   }
 
   async function saveList(event: FormEvent<HTMLFormElement>) {
@@ -1395,26 +1411,53 @@ export default function EmailPage() {
               <div className="mt-4 space-y-4">
                 <Input value={listName} onChange={(event) => setListName(event.target.value)} maxLength={80} placeholder="List name" aria-label="List name" required />
                 <div className="rounded-md border border-border">
-                  <div className="border-b border-border px-3 py-2 text-xs font-medium text-muted-foreground">Contacts</div>
+                  <div className="flex items-center justify-between gap-3 border-b border-border px-3 py-2">
+                    <span className="text-xs font-medium text-muted-foreground">Contacts</span>
+                    <button
+                      type="button"
+                      onClick={() => setListShowSelectedOnly((value) => !value)}
+                      className={cn("text-xs font-medium outline-none transition-colors hover:text-foreground", listShowSelectedOnly ? "text-foreground" : "text-muted-foreground")}
+                      aria-pressed={listShowSelectedOnly}
+                    >
+                      {listShowSelectedOnly ? "Show all" : `In list (${listContactEmails.length})`}
+                    </button>
+                  </div>
                   {contacts.length === 0 ? (
                     <p className="px-3 py-4 text-sm text-muted-foreground">No client contacts available.</p>
                   ) : (
-                    <div className="max-h-72 overflow-y-auto">
-                      {contacts.map((contact) => (
-                        <label key={contact.email} className="flex cursor-pointer items-center gap-3 border-b border-border px-3 py-2.5 last:border-b-0">
-                          <input
-                            type="checkbox"
-                            checked={listContactEmails.includes(contact.email)}
-                            onChange={(event) => setListContactEmails((current) => event.target.checked ? [...current, contact.email] : current.filter((email) => email !== contact.email))}
-                            className="size-4 accent-primary"
-                          />
-                          <span className="min-w-0">
-                            <span className="block truncate text-sm font-medium">{contact.name}</span>
-                            <span className="block truncate text-xs text-muted-foreground">{contact.email}</span>
-                          </span>
-                        </label>
-                      ))}
-                    </div>
+                    <>
+                      <div className="border-b border-border p-2">
+                        <Input
+                          value={listContactQuery}
+                          onChange={(event) => setListContactQuery(event.target.value)}
+                          placeholder="Search contacts"
+                          aria-label="Search contacts"
+                          className="h-8 text-sm"
+                        />
+                      </div>
+                      <div className="max-h-72 overflow-y-auto">
+                        {visibleListContacts.length === 0 ? (
+                          <p className="px-3 py-4 text-sm text-muted-foreground">
+                            {listShowSelectedOnly ? "No contacts in this list yet." : "No contacts match your search."}
+                          </p>
+                        ) : (
+                          visibleListContacts.map((contact) => (
+                            <label key={contact.email} className="flex cursor-pointer items-center gap-3 border-b border-border px-3 py-2.5 last:border-b-0">
+                              <input
+                                type="checkbox"
+                                checked={listContactEmails.includes(contact.email)}
+                                onChange={(event) => setListContactEmails((current) => event.target.checked ? [...current, contact.email] : current.filter((email) => email !== contact.email))}
+                                className="size-4 accent-primary"
+                              />
+                              <span className="min-w-0">
+                                <span className="block truncate text-sm font-medium">{contact.name}</span>
+                                <span className="block truncate text-xs text-muted-foreground">{contact.email}</span>
+                              </span>
+                            </label>
+                          ))
+                        )}
+                      </div>
+                    </>
                   )}
                 </div>
               </div>

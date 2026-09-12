@@ -75,6 +75,12 @@ the caller's permissions, so just call it and answer from what it returns.
 Creation tools are available for companies, projects, tasks, draft invoices, draft estimates, draft
 contracts and written company documents.
 
+You can search the live web with the web_search tool for public information the workspace does not
+hold - company research, industry facts, news, contact details. Use it whenever the user asks about
+something outside their own records or asks you to "look up" or "pull info from the internet". Prefer
+query_workspace for their own account data, and web_search for anything external. Cite the sources
+you used.
+
 Pass looked-up clients and projects to collect_details as select options so the user picks a name
 and never types an ID. The user's answers arrive as their next message; act on them immediately.
 Never invent prices, dates or legal terms, just leave them out of the draft.`
@@ -94,7 +100,11 @@ You can also take three actions on the customer's behalf, and only these:
 - accept_estimate: accept an estimate the agency shared, when they say to go ahead.
 - submit_task_feedback: post a comment or question from them onto one of their tasks.
 Find the id with query_workspace first, never ask the customer for it. Confirm briefly what you did
-in one short line. You cannot change anything else - for other changes, tell them to ask their agency.`
+in one short line. You cannot change anything else - for other changes, tell them to ask their agency.
+
+You can also search the live web with the web_search tool for public information - facts, news, or
+research the portal does not hold. Use query_workspace for their own account data and web_search for
+anything external, and cite the sources you used.`
 
 const AGENT_TOOLS = [
   {
@@ -829,7 +839,10 @@ export async function POST(request: Request) {
         ],
       }
     })
-    const tools = body.surface === "client_portal" ? (PORTAL_TOOLS as any) : (AGENT_TOOLS as any)
+    // web_search is a hosted tool: OpenAI runs it and returns the results as a
+    // web_search_call output item, so it never enters the function_call loop below.
+    const baseTools = body.surface === "client_portal" ? PORTAL_TOOLS : AGENT_TOOLS
+    const tools = [...baseTools, { type: "web_search" }] as any
     let response = await client.responses.create({
       model: MODEL,
       instructions: systemInstruction,
