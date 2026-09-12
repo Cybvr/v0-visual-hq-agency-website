@@ -1,6 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useRef, useState } from "react"
+import { toast } from "sonner"
 import { useAuth } from "@/components/auth-provider"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
@@ -178,6 +179,9 @@ function FileIcon({ doc }: { doc: SharedDocument }) {
   )
 }
 
+const MAX_VIDEO_MB = 100
+const MAX_VIDEO_BYTES = MAX_VIDEO_MB * 1024 * 1024
+
 type UploadingCard = { id: string; name: string; progress: number }
 
 /**
@@ -243,6 +247,10 @@ export default function DrivePage() {
 
   async function uploadFiles(files: File[]) {
     for (const file of files) {
+      if (file.type.startsWith("video/") && file.size > MAX_VIDEO_BYTES) {
+        toast.error(`"${file.name}" is larger than ${MAX_VIDEO_MB} MB. Compress it or upload a smaller file.`)
+        continue
+      }
       const uploadId = `${Date.now()}_${file.name}`
       setUploading((prev) => [...prev, { id: uploadId, name: file.name, progress: 0 }])
       try {
