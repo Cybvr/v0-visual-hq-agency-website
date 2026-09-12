@@ -2,12 +2,11 @@
 
 import { useEffect, useMemo, useState } from "react"
 import { useRouter } from "next/navigation"
-import { Building2, Plus } from "lucide-react"
+import { Building2, Eye, Pencil, Plus, Trash2, Loader2 } from "lucide-react"
 import type { Timestamp } from "firebase/firestore"
 
 import { useAuth } from "@/components/auth-provider"
 import { CompanyCreateSheet } from "@/components/dashboard/company-create-sheet"
-import { ProjectCard } from "@/components/project-card"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -20,20 +19,30 @@ import {
 } from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { DropdownMenuItem } from "@/components/ui/dropdown-menu"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
 import { Skeleton } from "@/components/ui/skeleton"
 import { FilterBar, useFilterBar, type SortOption } from "@/components/dashboard/filter-bar"
+import { TableBulkBar } from "@/components/dashboard/table-bulk-bar"
+import { Checkbox } from "@/components/ui/checkbox"
+import { useRowSelection } from "@/hooks/use-row-selection"
 import { deleteOrganization, getOrganizations, type Organization } from "@/lib/organizations"
 import { formatTimestamp, tsToMillis } from "@/lib/tasks"
 import { getProjects, type Project } from "@/lib/projects"
 import { deleteUser, getUsers, userRef, type AppUser } from "@/lib/users"
 
 /**
- * A company as this page shows it: one card per real company, sourced from the
+ * A company as this page shows it: one row per real company, sourced from the
  * organizations collection and joined to the client account only for the
  * actions that still need one (open the workspace, remove it). Rows are folded
  * by name so companies that were saved twice before the name check existed
- * collapse into a single card.
+ * collapse into a single row.
  */
 type CompanyRow = {
   /** The workspace id: the organization doc id, and the client user's companyId. */
@@ -61,6 +70,7 @@ export default function CompaniesPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [deleting, setDeleting] = useState<string | null>(null)
+  const [bulkDeleting, setBulkDeleting] = useState(false)
   const [pendingDelete, setPendingDelete] = useState<CompanyRow | null>(null)
   const [creating, setCreating] = useState(false)
 
@@ -158,6 +168,8 @@ export default function CompaniesPage() {
     defaultSort: "name",
   })
 
+  const selection = useRowSelection(visibleCompanies, (row) => row.id)
+
   async function handleDelete(row: CompanyRow) {
     if (deleting) return
     setDeleting(row.id)
@@ -172,6 +184,31 @@ export default function CompaniesPage() {
       setError(deleteError instanceof Error ? deleteError.message : "The company could not be removed. Try again.")
     } finally {
       setDeleting(null)
+    }
+  }
+
+  async function handleBulkDelete() {
+    const ids = selection.selectedIds
+    if (ids.length === 0 || bulkDeleting) return
+    setBulkDeleting(true)
+    setError(null)
+    try {
+      const byId = new Map(companies.map((row) => [row.id, row]))
+      await Promise.all(
+        ids.map(async (id) => {
+          const row = byId.get(id)
+          if (!row) return
+          if (row.hasOrg) await deleteOrganization(row.id)
+          if (row.user) await deleteUser(row.user.uid)
+        }),
+      )
+      selection.clear()
+      await fetchCompanies()
+    } catch (deleteError) {
+      console.error("Error deleting companies:", deleteError)
+      setError(deleteError instanceof Error ? deleteError.message : "Some companies could not be removed. Try again.")
+    } finally {
+      setBulkDeleting(false)
     }
   }
 
@@ -207,9 +244,9 @@ export default function CompaniesPage() {
       )}
 
       {loading ? (
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 lg:grid-cols-4" aria-label="Loading companies">
+        <div className="space-y-2" aria-label="Loading companies">
           {Array.from({ length: 6 }, (_, index) => (
-            <Skeleton key={index} className="aspect-[4/3] rounded-[14px]" />
+            <Skeleton key={index} className="h-14 rounded-lg" />
           ))}
         </div>
       ) : companies.length === 0 ? (
@@ -235,55 +272,111 @@ export default function CompaniesPage() {
           </CardContent>
         </Card>
       ) : (
-        <ul className="grid grid-cols-1 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-          {visibleCompanies.map((row) => {
-            const cardProject: Project = {
-              id: row.id,
-              companyId: row.id,
-              client: row.name,
-              title: row.name,
-              service: row.label,
-              status: "in-progress",
-              progress: 0,
-              dueDate: "",
-              thumbnailUrl: row.logoUrl,
-            }
-
-            return (
-              <li key={row.id}>
-                <ProjectCard
-                  project={cardProject}
-                  href={companyHref(row)}
-                  subtitle={row.label || "No category yet"}
-                  footer={
-                    <span className="block truncate text-[11px] text-muted-foreground">
-                      Added {formatTimestamp(row.createdAt)}
-                    </span>
-                  }
-                  menuLabel={`Options for ${row.name}`}
-                  menu={
-                    <>
-                      <DropdownMenuItem onSelect={() => router.push(companyHref(row))}>
-                        Open company
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onSelect={() => router.push(`${companyHref(row)}/edit`)}>
-                        Edit company
-                      </DropdownMenuItem>
-                      {row.user && (
-                        <DropdownMenuItem onSelect={() => handleViewWorkspace(row)}>
-                          View workspace
-                        </DropdownMenuItem>
+        <div className="rounded-lg border border-border">
+          <TableBulkBar
+            count={selection.selectedCount}
+            noun="company"
+            nounPlural="companies"
+            deleting={bulkDeleting}
+            onClear={selection.clear}
+            onDelete={handleBulkDelete}
+          />
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-10">
+                  <Checkbox
+                    aria-label="Select all companies"
+                    checked={selection.allSelected}
+                    indeterminate={selection.someSelected}
+                    onChange={selection.toggleAll}
+                  />
+                </TableHead>
+                <TableHead>Company</TableHead>
+                <TableHead>Category</TableHead>
+                <TableHead>Projects</TableHead>
+                <TableHead>Date added</TableHead>
+                <TableHead>Workspace</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {visibleCompanies.map((row) => (
+                <TableRow
+                  key={row.id}
+                  className="cursor-pointer"
+                  onClick={() => router.push(companyHref(row))}
+                >
+                  <TableCell onClick={(e) => e.stopPropagation()}>
+                    <Checkbox
+                      aria-label={`Select ${row.name}`}
+                      checked={selection.isSelected(row.id)}
+                      onChange={() => selection.toggle(row.id)}
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-3">
+                      {row.logoUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={row.logoUrl}
+                          alt=""
+                          className="h-8 w-8 shrink-0 rounded-full object-cover"
+                          referrerPolicy="no-referrer"
+                        />
+                      ) : (
+                        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-muted">
+                          <Building2 className="h-4 w-4 text-muted-foreground" />
+                        </span>
                       )}
-                      <DropdownMenuItem variant="destructive" onSelect={() => setPendingDelete(row)}>
-                        Remove company
-                      </DropdownMenuItem>
-                    </>
-                  }
-                />
-              </li>
-            )
-          })}
-        </ul>
+                      <span className="font-medium">{row.name}</span>
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-muted-foreground">{row.label || "—"}</TableCell>
+                  <TableCell className="text-muted-foreground">{row.projectCount}</TableCell>
+                  <TableCell className="text-muted-foreground">{formatTimestamp(row.createdAt)}</TableCell>
+                  <TableCell onClick={(e) => e.stopPropagation()}>
+                    {row.user ? (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-8"
+                        onClick={() => handleViewWorkspace(row)}
+                      >
+                        <Eye className="mr-2 h-3.5 w-3.5" />
+                        View
+                      </Button>
+                    ) : (
+                      <span className="text-muted-foreground">—</span>
+                    )}
+                  </TableCell>
+                  <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
+                    <div className="flex justify-end gap-1">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                        onClick={() => router.push(`${companyHref(row)}/edit`)}
+                        aria-label="Edit company"
+                      >
+                        <Pencil className="h-3.5 w-3.5" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                        onClick={() => setPendingDelete(row)}
+                        aria-label="Remove company"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
       )}
 
       <AlertDialog open={Boolean(pendingDelete)} onOpenChange={(open) => !open && !deleting && setPendingDelete(null)}>

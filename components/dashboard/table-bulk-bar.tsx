@@ -22,19 +22,23 @@ import {
 export function TableBulkBar({
   count,
   noun = "item",
+  nounPlural,
   deleting = false,
   onClear,
   onDelete,
 }: {
   count: number
-  /** Singular label, e.g. "contact" — pluralised with a trailing "s". */
+  /** Singular label, e.g. "contact". */
   noun?: string
+  /** Plural label, e.g. "companies". Defaults to noun + "s". */
+  nounPlural?: string
   deleting?: boolean
   onClear: () => void
   onDelete: () => void
 }) {
   if (count === 0) return null
-  const label = `${count} ${noun}${count === 1 ? "" : "s"}`
+  const plural = nounPlural ?? `${noun}s`
+  const label = `${count} ${count === 1 ? noun : plural}`
   return (
     <div className="mb-3 flex items-center justify-between gap-3 rounded-lg border border-border bg-muted/40 px-3 py-2">
       <span className="text-sm font-medium">{count} selected</span>
