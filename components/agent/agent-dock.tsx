@@ -76,7 +76,7 @@ function DockHeader({ onReset, onClose, showReset, conversations, activeConversa
 
 function DashboardPromptBar() {
   const pathname = usePathname()
-  const { send } = useAgent()
+  const { send, setOpen } = useAgent()
   const [text, setText] = useState("")
 
   if (pathname.startsWith("/portal") || pathname === "/dashboard/email") return null
@@ -87,6 +87,7 @@ function DashboardPromptBar() {
     if (!content) return
     send(content)
     setText("")
+    setOpen(true)
   }
 
   return (

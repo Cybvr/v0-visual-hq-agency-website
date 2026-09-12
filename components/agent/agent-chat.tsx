@@ -409,7 +409,7 @@ export function AgentChat({
           className={cn(
             "mx-auto flex w-full flex-col gap-2",
             compact
-              ? "rounded-full border-0 bg-background p-1.5 shadow-[0_8px_24px_rgba(15,23,42,0.08)]"
+              ? "rounded-[16px] border border-border bg-background p-2 shadow-[0_8px_24px_rgba(15,23,42,0.08)]"
               : "max-w-3xl rounded-[16px] border border-border bg-background p-2.5 focus-within:border-ring",
           )}
         >
@@ -453,10 +453,10 @@ export function AgentChat({
               value={input}
               onChange={(event) => setInput(event.target.value)}
               onKeyDown={handleKeyDown}
-              rows={1}
+              rows={4}
               placeholder="Ask Ngai"
               aria-label="Message Ngai"
-              className="max-h-40 min-h-11 resize-none rounded-full border-0 bg-transparent px-2 py-2.5 shadow-none focus-visible:border-transparent focus-visible:ring-0"
+              className="max-h-56 min-h-24 resize-none rounded-lg border-0 bg-transparent px-2 py-2 shadow-none focus-visible:border-transparent focus-visible:ring-0"
             />
             <Button
               type="submit"
