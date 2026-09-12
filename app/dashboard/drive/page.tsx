@@ -179,7 +179,7 @@ function FileIcon({ doc }: { doc: SharedDocument }) {
   )
 }
 
-const MAX_VIDEO_MB = 100
+const MAX_VIDEO_MB = 20
 const MAX_VIDEO_BYTES = MAX_VIDEO_MB * 1024 * 1024
 
 type UploadingCard = { id: string; name: string; progress: number }
