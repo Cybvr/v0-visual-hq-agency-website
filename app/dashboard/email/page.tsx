@@ -1073,7 +1073,7 @@ export default function EmailPage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All companies</SelectItem>
-                {messageFilterOptions.companies.map(([value, label]) => <SelectItem key={value} value={value}>{label}</SelectItem>)}
+                {[...messageFilterOptions.companies].sort((a, b) => a[1].localeCompare(b[1], undefined, { sensitivity: "base" })).map(([value, label]) => <SelectItem key={value} value={value}>{label}</SelectItem>)}
               </SelectContent>
             </Select>
             <Select value={messageProjectFilter} onValueChange={setMessageProjectFilter}>
@@ -1082,7 +1082,7 @@ export default function EmailPage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All projects</SelectItem>
-                {messageFilterOptions.projects.map(([value, label]) => <SelectItem key={value} value={value}>{label}</SelectItem>)}
+                {[...messageFilterOptions.projects].sort((a, b) => a[1].localeCompare(b[1], undefined, { sensitivity: "base" })).map(([value, label]) => <SelectItem key={value} value={value}>{label}</SelectItem>)}
               </SelectContent>
             </Select>
             <Select value={messageDocumentFilter} onValueChange={setMessageDocumentFilter}>
@@ -1091,7 +1091,7 @@ export default function EmailPage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All object types</SelectItem>
-                {messageFilterOptions.documents.map(([value, label]) => <SelectItem key={value} value={value}>{label}</SelectItem>)}
+                {[...messageFilterOptions.documents].sort((a, b) => a[1].localeCompare(b[1], undefined, { sensitivity: "base" })).map(([value, label]) => <SelectItem key={value} value={value}>{label}</SelectItem>)}
               </SelectContent>
             </Select>
             <Select value={messageSenderFilter} onValueChange={setMessageSenderFilter}>
@@ -1100,7 +1100,7 @@ export default function EmailPage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All senders</SelectItem>
-                {messageFilterOptions.senders.map((value) => <SelectItem key={value} value={value}>{value}</SelectItem>)}
+                {[...messageFilterOptions.senders].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" })).map((value) => <SelectItem key={value} value={value}>{value}</SelectItem>)}
               </SelectContent>
             </Select>
             <Select value={messageStatusFilter} onValueChange={setMessageStatusFilter}>
@@ -1324,7 +1324,7 @@ export default function EmailPage() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="none">Start without a template</SelectItem>
-                    {templates.map((template) => (
+                    {[...templates].sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: "base" })).map((template) => (
                         <SelectItem key={template.id} value={template.id}>{template.name}</SelectItem>
                     ))}
                     </SelectContent>
@@ -1356,7 +1356,7 @@ export default function EmailPage() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="none">One contact</SelectItem>
-                    {lists.map((list) => (
+                    {[...lists].sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: "base" })).map((list) => (
                         <SelectItem key={list.id} value={list.id}>{list.name} ({list.contactEmails.length})</SelectItem>
                     ))}
                     </SelectContent>
@@ -1376,7 +1376,7 @@ export default function EmailPage() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="none">Select a client contact</SelectItem>
-                      {contacts.map((contact) => (
+                      {[...contacts].sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: "base" })).map((contact) => (
                         <SelectItem key={contact.email} value={contact.email}>
                           {contact.name} · {contact.email}
                         </SelectItem>

@@ -369,7 +369,7 @@ export function EstimateBuilder({ estimate }: { estimate?: Estimate | null }) {
                 <Select value={companyId} onValueChange={selectClient}>
                   <SelectTrigger id="estimate-client" className="mt-1"><SelectValue placeholder={optionsLoading ? "Loading…" : "Choose a client"} /></SelectTrigger>
                   <SelectContent>
-                    {clients.map((client) => <SelectItem key={client.uid} value={client.companyId as string}>{client.company || client.displayName || client.email}</SelectItem>)}
+                    {[...clients].sort((a, b) => (a.company || a.displayName || a.email || "").localeCompare(b.company || b.displayName || b.email || "", undefined, { sensitivity: "base" })).map((client) => <SelectItem key={client.uid} value={client.companyId as string}>{client.company || client.displayName || client.email}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
@@ -380,7 +380,7 @@ export function EstimateBuilder({ estimate }: { estimate?: Estimate | null }) {
                     <SelectValue className="min-w-0 flex-1 truncate" placeholder="Not tied to a project" />
                   </SelectTrigger>
                   <SelectContent>
-                    {projects.filter((project) => !companyId || project.companyId === companyId).map((project) => <SelectItem key={project.id} value={project.id}>{project.title}</SelectItem>)}
+                    {projects.filter((project) => !companyId || project.companyId === companyId).sort((a, b) => (a.title || "").localeCompare(b.title || "", undefined, { sensitivity: "base" })).map((project) => <SelectItem key={project.id} value={project.id}>{project.title}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>

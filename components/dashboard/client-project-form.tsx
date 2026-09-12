@@ -152,7 +152,7 @@ export function ClientProjectForm({ project, initialCompanyId, onSaved, onCancel
               <SelectValue placeholder={clientsLoading ? "Loading companies..." : "Select a company"} />
             </SelectTrigger>
             <SelectContent>
-              {companies.map((c) => (
+              {[...companies].sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: "base" })).map((c) => (
                 <SelectItem key={c.id} value={c.id}>
                   {c.name}
                 </SelectItem>

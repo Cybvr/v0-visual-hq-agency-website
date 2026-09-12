@@ -317,7 +317,7 @@ export function TaskForm({ task, fixedClient, defaults, onSaved, onCancel }: Tas
                 <SelectValue placeholder={optionsLoading ? "Loading..." : "Select a client"} />
               </SelectTrigger>
               <SelectContent>
-                {visibleClientOptions.map((c) => (
+                {[...visibleClientOptions].sort((a, b) => a.label.localeCompare(b.label, undefined, { sensitivity: "base" })).map((c) => (
                   <SelectItem key={c.companyId} value={c.companyId}>
                     {c.label}
                   </SelectItem>
@@ -379,7 +379,7 @@ export function TaskForm({ task, fixedClient, defaults, onSaved, onCancel }: Tas
                       </div>
                     </CommandEmpty>
                     <CommandGroup>
-                      {clientProjects.map((project) => (
+                      {[...clientProjects].sort((a, b) => (a.title || "").localeCompare(b.title || "", undefined, { sensitivity: "base" })).map((project) => (
                         <CommandItem
                           key={project.id}
                           value={project.title}

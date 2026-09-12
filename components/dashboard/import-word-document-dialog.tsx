@@ -88,14 +88,15 @@ export function ImportWordDocumentDialog({
     () => clients.map((client) => ({
       value: client.companyId as string,
       label: client.company || client.displayName || client.email || (client.companyId as string),
-    })),
+    })).sort((a, b) => a.label.localeCompare(b.label, undefined, { sensitivity: "base" })),
     [clients],
   )
 
   const projectOptions: ComboboxOption[] = useMemo(
     () => projects
       .filter((project) => !companyId || project.companyId === companyId)
-      .map((project) => ({ value: project.id, label: project.title })),
+      .map((project) => ({ value: project.id, label: project.title }))
+      .sort((a, b) => a.label.localeCompare(b.label, undefined, { sensitivity: "base" })),
     [companyId, projects],
   )
 

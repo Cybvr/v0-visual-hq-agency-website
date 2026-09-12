@@ -259,7 +259,7 @@ export function UserForm({ user, fixedRole, subjectNoun = "user", workspaceId, w
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="none">No company</SelectItem>
-                    {organizations.map((org) => (
+                    {[...organizations].sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: "base" })).map((org) => (
                       <SelectItem key={org.id} value={org.id}>{org.name}</SelectItem>
                     ))}
                   </SelectContent>

@@ -105,7 +105,7 @@ export function DuplicateDocumentDialog({
                   <SelectValue placeholder="Choose a client" />
                 </SelectTrigger>
                 <SelectContent>
-                  {clients.map((client) => (
+                  {[...clients].sort((a, b) => (a.company || a.displayName || a.email || "").localeCompare(b.company || b.displayName || b.email || "", undefined, { sensitivity: "base" })).map((client) => (
                     <SelectItem key={client.uid} value={client.companyId as string}>
                       {client.company || client.displayName || client.email}
                     </SelectItem>
@@ -122,6 +122,7 @@ export function DuplicateDocumentDialog({
                 <SelectContent>
                   {projects
                     .filter((project) => !companyId || project.companyId === companyId)
+                    .sort((a, b) => (a.title || "").localeCompare(b.title || "", undefined, { sensitivity: "base" }))
                     .map((project) => (
                       <SelectItem key={project.id} value={project.id}>
                         {project.title}

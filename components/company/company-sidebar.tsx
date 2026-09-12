@@ -385,7 +385,7 @@ export function CompanySidebar({
                         {filteredContacts.length === 0 ? (
                           <p className="px-2 py-1.5 text-sm text-muted-foreground">No matching contacts.</p>
                         ) : (
-                          filteredContacts.map((person) => (
+                          [...filteredContacts].sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: "base" })).map((person) => (
                             <button
                               key={person.id}
                               type="button"
