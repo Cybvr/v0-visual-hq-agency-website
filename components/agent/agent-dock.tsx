@@ -90,7 +90,7 @@ function DashboardPromptBar() {
   }
 
   return (
-    <form onSubmit={submit} className="fixed bottom-8 left-1/2 z-40 flex w-[min(calc(100vw-2rem),36rem)] -translate-x-1/2 items-center gap-2 rounded-full px-3 py-2 shadow-[0_8px_24px_rgba(15,23,42,0.08)]">
+    <form onSubmit={submit} className="fixed bottom-8 left-1/2 z-40 flex w-[min(calc(100vw-2rem),36rem)] -translate-x-1/2 items-center gap-2 rounded-full border border-border bg-background px-3 py-2 shadow-[0_8px_24px_rgba(15,23,42,0.08)]">
       <Image src="/ngai-logo.png" alt="" width={20} height={20} className="shrink-0 rounded-full" />
       <input
         value={text}
