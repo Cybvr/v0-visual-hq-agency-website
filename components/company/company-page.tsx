@@ -84,6 +84,8 @@ export interface CompanyPageAdmin {
   onViewWorkspace: (person: AppUser) => void
   onMediaChange?: (urls: string[]) => Promise<void>
   onUpdateCompany: (patch: CompanyDetailsPatch) => Promise<void>
+  /** Attach a contact to this company (if needed) and make them the primary contact. */
+  onSelectPrimaryContact?: (contactId: string) => Promise<void>
   reload: () => Promise<void>
 }
 
@@ -109,6 +111,7 @@ function personProject(person: CompanyPagePerson, company: CompanyPageCompany): 
 export function CompanyPage({
   company,
   people,
+  allContacts,
   projects,
   invoices,
   contracts,
@@ -119,6 +122,8 @@ export function CompanyPage({
 }: {
   company: CompanyPageCompany
   people: CompanyPagePerson[]
+  /** All contacts across the workspace, for choosing a primary contact. */
+  allContacts?: CompanyPagePerson[]
   projects: Project[]
   invoices: Invoice[]
   contracts: Contract[]
@@ -236,10 +241,12 @@ export function CompanyPage({
             primaryContactId: company.primaryContactId,
           }}
           people={people}
+          contacts={allContacts ?? people}
           admin={
             admin
               ? {
                   onSave: admin.onUpdateCompany,
+                  onSelectPrimaryContact: admin.onSelectPrimaryContact,
                   onAddPerson: () => setAddingPerson(true),
                   onNewProject: () => setCreatingProject(true),
                   onShare: () => setShareOpen(true),

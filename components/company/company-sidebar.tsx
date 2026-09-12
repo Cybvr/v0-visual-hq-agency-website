@@ -61,6 +61,8 @@ export interface CompanySidebarAdmin {
   onAddPerson: () => void
   onNewProject: () => void
   onShare: () => void
+  /** Pick a primary contact from the full contacts list; attaches them to this company if needed. */
+  onSelectPrimaryContact?: (contactId: string) => void | Promise<void>
   /** The single client-portal action, rendered between New and Share. */
   extraAction?: ReactNode
 }
@@ -108,19 +110,30 @@ function DetailsRow({ label, children }: { label: string; children: ReactNode })
 export function CompanySidebar({
   company,
   people,
+  contacts,
   admin,
 }: {
   company: CompanySidebarCompany
   people: CompanySidebarPerson[]
+  /** All contacts to choose a primary contact from; defaults to this company's people. */
+  contacts?: CompanySidebarPerson[]
   admin?: CompanySidebarAdmin
 }) {
   const [addingTag, setAddingTag] = useState(false)
   const [tagDraft, setTagDraft] = useState("")
   const [nameDraft, setNameDraft] = useState(company.name)
   const [uploadingLogo, setUploadingLogo] = useState(false)
+  const [contactQuery, setContactQuery] = useState("")
   const logoInputRef = useRef<HTMLInputElement>(null)
 
-  const primaryContact = people.find((person) => person.id === company.primaryContactId) ?? people[0]
+  const pickList = contacts ?? people
+  const primaryContact =
+    pickList.find((person) => person.id === company.primaryContactId) ?? people[0]
+  const filteredContacts = contactQuery.trim()
+    ? pickList.filter((person) =>
+        `${person.name} ${person.subtitle ?? ""}`.toLowerCase().includes(contactQuery.trim().toLowerCase()),
+      )
+    : pickList
 
   useEffect(() => {
     setNameDraft(company.name)
@@ -350,29 +363,51 @@ export function CompanySidebar({
                     <Plus className="size-4" aria-hidden="true" />
                   </button>
                 </PopoverTrigger>
-                <PopoverContent align="end" className="w-64 p-1">
-                  {people.length === 0 ? (
+                <PopoverContent align="end" className="w-72 p-1">
+                  {pickList.length === 0 ? (
                     <button
                       type="button"
                       onClick={() => admin.onAddPerson()}
                       className="w-full rounded-sm px-2 py-1.5 text-left text-sm outline-none hover:bg-accent"
                     >
-                      Add a person first
+                      Add a contact first
                     </button>
                   ) : (
-                    people.map((person) => (
-                      <button
-                        key={person.id}
-                        type="button"
-                        onClick={() => void admin.onSave({ primaryContactId: person.id })}
-                        className={cn(
-                          "flex w-full items-center gap-2 truncate rounded-sm px-2 py-1.5 text-left text-sm outline-none hover:bg-accent",
-                          person.id === primaryContact?.id && "font-medium",
+                    <>
+                      <Input
+                        autoFocus
+                        value={contactQuery}
+                        onChange={(event) => setContactQuery(event.target.value)}
+                        placeholder="Search contacts"
+                        className="mb-1 h-8 text-sm"
+                      />
+                      <div className="max-h-64 overflow-y-auto">
+                        {filteredContacts.length === 0 ? (
+                          <p className="px-2 py-1.5 text-sm text-muted-foreground">No matching contacts.</p>
+                        ) : (
+                          filteredContacts.map((person) => (
+                            <button
+                              key={person.id}
+                              type="button"
+                              onClick={() =>
+                                void (admin.onSelectPrimaryContact
+                                  ? admin.onSelectPrimaryContact(person.id)
+                                  : admin.onSave({ primaryContactId: person.id }))
+                              }
+                              className={cn(
+                                "flex w-full flex-col items-start rounded-sm px-2 py-1.5 text-left text-sm outline-none hover:bg-accent",
+                                person.id === primaryContact?.id && "font-medium",
+                              )}
+                            >
+                              <span className="w-full truncate">{person.name}</span>
+                              {person.subtitle && (
+                                <span className="w-full truncate text-xs text-muted-foreground">{person.subtitle}</span>
+                              )}
+                            </button>
+                          ))
                         )}
-                      >
-                        {person.name}
-                      </button>
-                    ))
+                      </div>
+                    </>
                   )}
                 </PopoverContent>
               </Popover>

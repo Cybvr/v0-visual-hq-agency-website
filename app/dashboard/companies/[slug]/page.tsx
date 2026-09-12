@@ -1,15 +1,23 @@
 "use client"
 
+import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 
 import { useAuth } from "@/components/auth-provider"
 import { CompanyPage } from "@/components/company/company-page"
 import { useCompany } from "@/components/dashboard/company-context"
 import { updateOrganization } from "@/lib/organizations"
+import { getUsers, updateUser, type AppUser } from "@/lib/users"
 
 export default function DashboardCompanyPage() {
   const router = useRouter()
   const { viewAsUser, isAdmin } = useAuth()
+  const [allContacts, setAllContacts] = useState<AppUser[]>([])
+
+  useEffect(() => {
+    if (!isAdmin) return
+    getUsers().then(setAllContacts).catch(() => setAllContacts([]))
+  }, [isAdmin])
   const {
     client,
     workspaceId,
@@ -51,6 +59,14 @@ export default function DashboardCompanyPage() {
         photoUrl: person.photoURL,
         adminUser: person,
       }))}
+      allContacts={allContacts.map((person) => ({
+        id: person.uid,
+        name: person.displayName || person.email || "Unnamed person",
+        subtitle: person.email || "No email address",
+        role: person.role || "client",
+        photoUrl: person.photoURL,
+        adminUser: person,
+      }))}
       projects={projects}
       invoices={invoices}
       contracts={contracts}
@@ -70,6 +86,15 @@ export default function DashboardCompanyPage() {
               },
               onUpdateCompany: async (patch) => {
                 await updateOrganization(workspaceId, patch)
+                await reload()
+              },
+              onSelectPrimaryContact: async (contactId) => {
+                const contact = allContacts.find((person) => person.uid === contactId)
+                // Attach the contact to this company if they aren't already, then set them primary.
+                if (contact && contact.companyId !== workspaceId) {
+                  await updateUser(contactId, { companyId: workspaceId })
+                }
+                await updateOrganization(workspaceId, { primaryContactId: contactId })
                 await reload()
               },
               reload,
