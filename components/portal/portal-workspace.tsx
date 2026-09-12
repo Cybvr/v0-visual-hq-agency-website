@@ -105,7 +105,7 @@ function About({ organization }: { organization: Organization }) {
 }
 
 function Contacts({ people }: { people: PublicTeamMember[] }) {
-  return <Panel title="Contacts" count={people.length}>{people.length ? <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">{people.map(person => <ProjectCard
+  return <Panel title="Contacts" count={people.length}>{people.length ? <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 lg:grid-cols-4">{people.map(person => <ProjectCard
     key={person.uid}
     project={{ id: person.uid, companyId: "", client: "", title: person.name, service: person.role || "Contact", status: "in-progress", progress: 0, dueDate: "", thumbnailUrl: person.photoUrl || "" }}
     subtitle={person.role || "Contact"}
@@ -169,7 +169,7 @@ function Tasks({ tasks, uid, canAct, onChanged, all = false }: { tasks: PortalTa
 
 /** The written documents: proposals, statements of work, briefs. */
 function CompanyDocuments({ company, documents }: { company: string; documents: CompanyDocument[] }) {
-  return <Panel title="Documents" count={documents.length}>{documents.length ? <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">{documents.map(row => <DocTile
+  return <Panel title="Documents" count={documents.length}>{documents.length ? <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 lg:grid-cols-4">{documents.map(row => <DocTile
     key={row.id}
     icon={FileText}
     badgeClass={DOC_BADGE.document}
@@ -185,7 +185,7 @@ function BillingDocuments({ company, invoices, contracts, estimates }: { company
     ...estimates.map(item => ({ id: item.id, kind: "estimate" as const, title: item.title || `Estimate ${item.estimateNumber}`, subtitle: `${formatMoney(item.amount, item.currency)} · ${item.status}`, icon: ClipboardList, badge: DOC_BADGE.estimate })),
     ...contracts.map(item => ({ id: item.id, kind: "contract" as const, title: item.title, subtitle: `Contract · ${item.status}`, icon: FileSignature, badge: DOC_BADGE.contract })),
   ]
-  return <Panel title="Billing documents" count={rows.length}>{rows.length ? <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">{rows.map(row => <DocTile key={`${row.kind}:${row.id}`} icon={row.icon} badgeClass={row.badge} title={row.title} subtitle={row.subtitle} href={portalDocumentPath(company, row.kind, row.id)} />)}</div> : <Empty>Issued invoices, estimates and contracts will appear here.</Empty>}</Panel>
+  return <Panel title="Billing documents" count={rows.length}>{rows.length ? <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 lg:grid-cols-4">{rows.map(row => <DocTile key={`${row.kind}:${row.id}`} icon={row.icon} badgeClass={row.badge} title={row.title} subtitle={row.subtitle} href={portalDocumentPath(company, row.kind, row.id)} />)}</div> : <Empty>Issued invoices, estimates and contracts will appear here.</Empty>}</Panel>
 }
 
 /** Newest-first log of what the agency has shared. Hidden entirely when empty. */
@@ -421,7 +421,7 @@ export function PortalWorkspaceView({ data, project, company, uid, canAct, tab, 
   const status = project ? projectStatusMeta[project.status] : null
   const projectTabs = ["overview", "tasks", "documents"]
   const actionLink = (kind: "invoice" | "estimate" | "contract" | "document", id: string, label: string) => <Link href={portalDocumentPath(company, kind, id)} className="shrink-0 rounded-md bg-foreground px-3 py-2 text-xs font-medium text-background hover:opacity-80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2">{label}</Link>
-  const projectList = <Panel title="Projects" count={data.projects.length}>{data.projects.length ? <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">{data.projects.map(item => { const meta = projectStatusMeta[item.status]; return <ProjectCard
+  const projectList = <Panel title="Projects" count={data.projects.length}>{data.projects.length ? <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 lg:grid-cols-4">{data.projects.map(item => { const meta = projectStatusMeta[item.status]; return <ProjectCard
     key={item.id}
     project={{ ...item, client: data.organization.name, service: meta?.label || item.status }}
     href={`${portalPath(company)}/projects/${encodeURIComponent(item.id)}`}

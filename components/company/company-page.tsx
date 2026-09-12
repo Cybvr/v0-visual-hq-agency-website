@@ -295,7 +295,7 @@ export function CompanyPage({
               {projects.length === 0 ? (
                 <p className="py-10 text-center text-sm text-muted-foreground">No projects started yet.</p>
               ) : (
-                <div className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-3">
+                <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
                   {projects.slice(0, 6).map((project) => (
                     <ProjectCard
                       key={project.id}
@@ -345,7 +345,7 @@ export function CompanyPage({
                   )}
                 </div>
               ) : (
-                <div className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-3">
+                <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
                   {people.map((person) => (
                     <ProjectCard
                       key={person.id}
@@ -428,7 +428,7 @@ export function CompanyPage({
                   {!admin && projects.length === 0 ? (
                     <p className="py-10 text-center text-sm text-muted-foreground">{emptyProjectsLabel}</p>
                   ) : (
-                    <div className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-3">
+                    <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
                       {projects.map((project) => {
                         const meta = projectStatusMeta[project.status] ?? projectStatusMeta["in-progress"]
                         return (

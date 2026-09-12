@@ -462,9 +462,9 @@ export default function DrivePage() {
                 onKeyDown={(event) => {
                   if (event.key === "Enter" || event.key === " ") setSelectedId((current) => current === d.id ? null : d.id)
                 }}
-                className={`group relative flex cursor-pointer flex-col overflow-hidden rounded-2xl border p-3 transition-colors ${selectedId === d.id ? "border-blue-500 bg-[#c2e7ff] dark:bg-blue-950/60" : "border-transparent bg-[#edf2f8] hover:bg-[#e4eaf1] dark:bg-muted dark:hover:bg-muted/80"}`}
+                className={`group relative flex cursor-pointer flex-row items-center gap-3 overflow-hidden rounded-2xl border p-3 transition-colors sm:flex-col sm:items-stretch sm:gap-0 ${selectedId === d.id ? "border-blue-500 bg-[#c2e7ff] dark:bg-blue-950/60" : "border-transparent bg-[#edf2f8] hover:bg-[#e4eaf1] dark:bg-muted dark:hover:bg-muted/80"}`}
               >
-                <div className="flex min-w-0 items-center gap-3 px-1 pb-3">
+                <div className="order-2 flex min-w-0 flex-1 items-center gap-3 px-1 pb-0 sm:order-none sm:flex-none sm:pb-3">
                   <FileText className="h-5 w-5 shrink-0 text-blue-600" />
                   <span className={`block min-w-0 flex-1 truncate text-sm font-medium ${selectedId === d.id ? "text-sky-900 dark:text-sky-100" : ""}`}>{d.title}</span>
                   {/* modal={false}: a Dialog opened from a menu item races the menu's
@@ -515,7 +515,7 @@ export default function DrivePage() {
                   </DropdownMenu>
                 </div>
                 <div
-                  className="aspect-[4/3] w-full shrink-0 cursor-zoom-in overflow-hidden rounded-xl bg-background"
+                  className="order-1 aspect-[4/3] w-24 shrink-0 cursor-zoom-in overflow-hidden rounded-xl bg-background sm:order-none sm:w-full"
                   onClick={(event) => {
                     event.stopPropagation()
                     setPreviewDocument(d)

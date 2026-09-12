@@ -45,7 +45,7 @@ export function CompanyDocuments({
           <p className="mt-1 text-sm text-muted-foreground">Proposals, invoices and contracts will appear here.</p>
         </div>
       ) : (
-        <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+        <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3 lg:grid-cols-4">
           {documents.map((document) => {
             const status = companyDocumentStatusMeta[document.status] ?? companyDocumentStatusMeta.draft
             const kind = companyDocumentKindMeta[document.kind]?.label ?? "Document"

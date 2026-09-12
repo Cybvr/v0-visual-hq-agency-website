@@ -158,7 +158,7 @@ export default function ProjectsAdminPage() {
           {visibleProjects.length === 0 ? (
             <EmptySearchState label="No projects match your search." />
           ) : view === "card" ? (
-            <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+            <ul className="grid grid-cols-1 gap-3 sm:grid-cols-3 lg:grid-cols-4">
               {visibleProjects.map((p) => {
                 const meta = projectStatusMeta[p.status] ?? projectStatusMeta["in-progress"]
                 return (

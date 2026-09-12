@@ -34,14 +34,14 @@ export function DocTile({
 }) {
   const BadgeIcon = Icon ?? File
   const className =
-    "group flex h-full flex-col overflow-hidden rounded-xl border border-border/60 bg-card text-left outline-none transition-colors hover:border-foreground/30 hover:shadow-sm focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+    "group flex h-full flex-row items-center overflow-hidden rounded-xl border border-border/60 bg-card text-left outline-none transition-colors hover:border-foreground/30 hover:shadow-sm focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 sm:flex-col sm:items-stretch"
 
   const inner = (
     <>
-      <div className="flex h-40 items-center justify-center border-b border-border bg-muted/40">
-        <File className="size-10 text-muted-foreground" aria-hidden="true" />
+      <div className="flex h-20 w-20 shrink-0 items-center justify-center border-r border-border bg-muted/40 sm:h-40 sm:w-full sm:border-b sm:border-r-0">
+        <File className="size-8 text-muted-foreground sm:size-10" aria-hidden="true" />
       </div>
-      <div className="flex items-center gap-3 p-3">
+      <div className="flex min-w-0 flex-1 items-center gap-3 p-3">
         <span className={cn("flex size-8 shrink-0 items-center justify-center rounded-md", badgeClass)}>
           <BadgeIcon className="size-4" aria-hidden="true" />
         </span>

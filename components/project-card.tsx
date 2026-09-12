@@ -78,7 +78,7 @@ export function ProjectCard({
   menu?: ReactNode
   menuLabel?: string
 }) {
-  const bodyClass = `flex w-full flex-col rounded-[14px] border border-border/60 bg-card p-2 text-left shadow-sm ${
+  const bodyClass = `flex w-full flex-row items-center gap-2 rounded-[14px] border border-border/60 bg-card p-2 text-left shadow-sm sm:flex-col sm:items-stretch sm:gap-0 ${
     href || onClick
       ? "outline-none transition-colors hover:border-foreground/30 hover:bg-muted/40 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
       : ""
@@ -86,10 +86,10 @@ export function ProjectCard({
 
   const body = (
     <>
-      <div className="aspect-[4/3] w-full overflow-hidden rounded-[10px]">
+      <div className="aspect-[4/3] w-24 shrink-0 overflow-hidden rounded-[10px] sm:w-full">
         <ProjectCover project={project} />
       </div>
-      <div className="flex min-w-0 flex-1 flex-col px-1.5 pb-1 pt-2.5">
+      <div className="flex min-w-0 flex-1 flex-col px-1.5 py-1 sm:pb-1 sm:pt-2.5">
         <span className="truncate text-sm font-medium text-foreground">{project.title}</span>
         <span className="mt-0.5 truncate text-xs text-muted-foreground">{subtitle ?? project.service}</span>
         {footer && <div className="mt-auto pt-2">{footer}</div>}

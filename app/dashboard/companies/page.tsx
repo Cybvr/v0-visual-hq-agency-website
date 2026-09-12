@@ -223,7 +223,7 @@ export default function CompaniesPage() {
       )}
 
       {loading ? (
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4" aria-label="Loading companies">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 lg:grid-cols-4" aria-label="Loading companies">
           {Array.from({ length: 6 }, (_, index) => (
             <Skeleton key={index} className="aspect-[4/3] rounded-[14px]" />
           ))}
@@ -251,7 +251,7 @@ export default function CompaniesPage() {
           </CardContent>
         </Card>
       ) : (
-        <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+        <ul className="grid grid-cols-1 gap-3 sm:grid-cols-3 lg:grid-cols-4">
           {visibleCompanies.map((row) => {
             const cardProject: Project = {
               id: row.id,
