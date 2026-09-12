@@ -334,7 +334,7 @@ export async function POST(request: Request) {
     )
   }
 
-  let payload: { to?: unknown; subject?: unknown; text?: unknown; html?: unknown; imageUrl?: unknown; brand?: unknown; cta?: unknown; type?: unknown; welcome?: unknown; templateId?: unknown; companyId?: unknown; projectId?: unknown; documentType?: unknown; documentId?: unknown }
+  let payload: { to?: unknown; subject?: unknown; text?: unknown; html?: unknown; imageUrl?: unknown; brand?: unknown; cta?: unknown; type?: unknown; welcome?: unknown; templateId?: unknown; companyId?: unknown; projectId?: unknown; documentType?: unknown; documentId?: unknown; scheduledAt?: unknown }
   try {
     payload = (await request.json()) as typeof payload
   } catch {
@@ -359,6 +359,21 @@ export async function POST(request: Request) {
     projectId: typeof payload.projectId === "string" ? payload.projectId.trim() : undefined,
     documentType: typeof payload.documentType === "string" ? payload.documentType.trim() : undefined,
     documentId: typeof payload.documentId === "string" ? payload.documentId.trim() : undefined,
+  }
+
+  let scheduledAtIso = ""
+  if (typeof payload.scheduledAt === "string" && payload.scheduledAt.trim()) {
+    const when = new Date(payload.scheduledAt.trim())
+    if (Number.isNaN(when.getTime())) {
+      return NextResponse.json({ error: "The scheduled time could not be read." }, { status: 400 })
+    }
+    if (when.getTime() < Date.now() + 60_000) {
+      return NextResponse.json({ error: "Pick a scheduled time at least a minute from now." }, { status: 400 })
+    }
+    if (when.getTime() > Date.now() + 30 * 24 * 60 * 60 * 1000) {
+      return NextResponse.json({ error: "Emails can be scheduled up to 30 days ahead." }, { status: 400 })
+    }
+    scheduledAtIso = when.toISOString()
   }
 
   if (recipients.length === 0 || recipients.some((recipient) => !EMAIL_PATTERN.test(recipient))) {
@@ -469,6 +484,7 @@ export async function POST(request: Request) {
         text: brandedText,
         html,
         reply_to: replyTo,
+        ...(scheduledAtIso ? { scheduled_at: scheduledAtIso } : {}),
         ...(unsubscribeLink
           ? { headers: { "List-Unsubscribe": `<${unsubscribeLink}>`, "List-Unsubscribe-Post": "List-Unsubscribe=One-Click" } }
           : {}),
@@ -495,7 +511,7 @@ export async function POST(request: Request) {
       }
       sent.push({ id: attempt.result.id, html: attempt.html, text: attempt.brandedText })
     }
-    if (caller && context.documentId) {
+    if (caller && context.documentId && !scheduledAtIso) {
       try { await markContextAsSent(caller.db, context) } catch { /* Sending remains successful if object sync is temporarily unavailable. */ }
     }
     return NextResponse.json({
@@ -505,6 +521,7 @@ export async function POST(request: Request) {
       text: sent[0].text,
       replyTo: replyTo || null,
       suppressedCount: suppressedRecipients.length,
+      scheduledAt: scheduledAtIso || null,
       context,
     })
   }
@@ -525,11 +542,11 @@ export async function POST(request: Request) {
     )
   }
 
-  if (caller && context.documentId) {
+  if (caller && context.documentId && !scheduledAtIso) {
     try { await markContextAsSent(caller.db, context) } catch { /* Sending remains successful if object sync is temporarily unavailable. */ }
   }
   if (welcomeClaim) {
     try { await completeWelcomeEmail(welcomeClaim) } catch { /* The claim expires and can be retried if persistence is temporarily unavailable. */ }
   }
-  return NextResponse.json({ id: attempt.result.id, html: attempt.html, text: attempt.brandedText, replyTo: replyTo || null, context })
+  return NextResponse.json({ id: attempt.result.id, html: attempt.html, text: attempt.brandedText, replyTo: replyTo || null, scheduledAt: scheduledAtIso || null, context })
 }

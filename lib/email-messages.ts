@@ -5,7 +5,7 @@ import { db } from "./firebase"
 const COLLECTION_NAME = "emailMessages"
 
 export type EmailMessageKind = "transactional" | "marketing"
-export type EmailMessageStatus = "sent" | "failed"
+export type EmailMessageStatus = "sent" | "failed" | "scheduled"
 export type EmailRecipient = {
   email: string
   name?: string
@@ -33,6 +33,8 @@ export type EmailMessageRecord = {
   companyName?: string
   messageKind?: EmailMessageKind
   status?: EmailMessageStatus
+  /** ISO time a scheduled email is queued to send. Set when status is "scheduled". */
+  scheduledAt?: string
 }
 
 export async function getEmailMessages(companyId: string): Promise<EmailMessageRecord[]> {

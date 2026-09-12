@@ -6,6 +6,7 @@ import {
   ArrowLeft,
   CheckCircle2,
   ChevronLeft,
+  Clock,
   ChevronRight,
   Eye,
   FileText,
@@ -133,6 +134,14 @@ function formatMessageDate(value: string) {
   } catch {
     return "Unknown date"
   }
+}
+
+/** Local time a few minutes ahead, formatted for a datetime-local input's min/value. */
+function datetimeLocalMin() {
+  const soon = new Date(Date.now() + 5 * 60_000)
+  soon.setSeconds(0, 0)
+  const pad = (n: number) => String(n).padStart(2, "0")
+  return `${soon.getFullYear()}-${pad(soon.getMonth() + 1)}-${pad(soon.getDate())}T${pad(soon.getHours())}:${pad(soon.getMinutes())}`
 }
 
 function formatTemplateDate(value: string) {
@@ -270,6 +279,8 @@ export default function EmailPage() {
   const [messageKind, setMessageKind] = useState<EmailMessageKind>("transactional")
   const [composeContext, setComposeContext] = useState<EmailComposeContext | null>(null)
   const [selectedTemplateId, setSelectedTemplateId] = useState("")
+  const [scheduleEnabled, setScheduleEnabled] = useState(false)
+  const [scheduleAt, setScheduleAt] = useState("")
   const [sending, setSending] = useState(false)
   const [sendNotice, setSendNotice] = useState<Notice>(null)
   const [selectedMessageId, setSelectedMessageId] = useState<string | null>(null)
@@ -598,6 +609,8 @@ export default function EmailPage() {
     setMessageKind("transactional")
     setComposeContext(null)
     setSelectedTemplateId("")
+    setScheduleEnabled(false)
+    setScheduleAt("")
     setSendNotice(null)
   }
 
@@ -666,6 +679,20 @@ export default function EmailPage() {
       return
     }
 
+    let scheduledAtIso = ""
+    if (scheduleEnabled) {
+      const when = new Date(scheduleAt)
+      if (!scheduleAt || Number.isNaN(when.getTime())) {
+        setSendNotice({ tone: "error", text: "Pick a date and time to schedule this email." })
+        return
+      }
+      if (when.getTime() < Date.now() + 60_000) {
+        setSendNotice({ tone: "error", text: "Pick a scheduled time at least a minute from now." })
+        return
+      }
+      scheduledAtIso = when.toISOString()
+    }
+
     setSending(true)
 
     try {
@@ -702,9 +729,10 @@ export default function EmailPage() {
           projectId: composeContext?.projectId,
           documentType: composeContext?.documentType,
           documentId: composeContext?.documentId,
+          scheduledAt: scheduledAtIso || undefined,
         }),
       })
-      const result = (await response.json()) as { id?: string; html?: string; text?: string; replyTo?: string | null; suppressedCount?: number; error?: string }
+      const result = (await response.json()) as { id?: string; html?: string; text?: string; replyTo?: string | null; suppressedCount?: number; scheduledAt?: string | null; error?: string }
 
       if (!response.ok || !result.id) {
         throw new Error(result.error || "The message could not be sent.")
@@ -728,7 +756,8 @@ export default function EmailPage() {
         documentId: composeContext?.documentId,
         documentTitle: composeContext?.documentTitle,
         messageKind,
-        status: "sent",
+        status: scheduledAtIso ? "scheduled" : "sent",
+        scheduledAt: scheduledAtIso || undefined,
       }
       let historySaved = true
       try {
@@ -750,10 +779,13 @@ export default function EmailPage() {
       setMessageKind("transactional")
       setComposeContext(null)
       setSelectedTemplateId("")
+      setScheduleEnabled(false)
+      setScheduleAt("")
       const suppressionNotice = result.suppressedCount ? ` ${result.suppressedCount} unsubscribed contact${result.suppressedCount === 1 ? "" : "s"} skipped.` : ""
+      const verb = scheduledAtIso ? `Scheduled for ${formatMessageDate(scheduledAtIso)}` : "Message sent"
       setSendNotice(historySaved
-        ? { tone: "success", text: `Message sent.${suppressionNotice}` }
-        : { tone: "error", text: "Message sent, but its shared history could not be saved." })
+        ? { tone: "success", text: `${verb}.${suppressionNotice}` }
+        : { tone: "error", text: `${verb}, but its shared history could not be saved.` })
     } catch (error) {
       setSendNotice({
         tone: "error",
@@ -983,6 +1015,7 @@ export default function EmailPage() {
               <SelectContent>
                 <SelectItem value="all">All statuses</SelectItem>
                 <SelectItem value="sent">Sent</SelectItem>
+                <SelectItem value="scheduled">Scheduled</SelectItem>
                 <SelectItem value="failed">Failed</SelectItem>
               </SelectContent>
             </Select>
@@ -1058,9 +1091,20 @@ export default function EmailPage() {
                         </time>
                       </div>
                       <p className="truncate text-sm font-semibold">{message.subject}</p>
-                      <span className="inline-flex items-center gap-1 text-[11px] text-emerald-700 dark:text-emerald-300">
-                        <CheckCircle2 className="size-3" aria-hidden="true" />Sent
-                      </span>
+                      {message.status === "scheduled" ? (
+                        <span className="inline-flex items-center gap-1 text-[11px] text-amber-700 dark:text-amber-300">
+                          <Clock className="size-3" aria-hidden="true" />
+                          {message.scheduledAt ? `Scheduled · ${formatMessageDate(message.scheduledAt)}` : "Scheduled"}
+                        </span>
+                      ) : message.status === "failed" ? (
+                        <span className="inline-flex items-center gap-1 text-[11px] text-destructive">
+                          <X className="size-3" aria-hidden="true" />Failed
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 text-[11px] text-emerald-700 dark:text-emerald-300">
+                          <CheckCircle2 className="size-3" aria-hidden="true" />Sent
+                        </span>
+                      )}
                     </button>
                   ))}
                 </div>
@@ -1095,8 +1139,8 @@ export default function EmailPage() {
                         <dd className="truncate">{cleanSenderDisplay(selectedMessage.from || senderAddress || "VisualCNS")}</dd>
                       </div>
                       <div className="flex min-w-0 gap-2">
-                        <dt className="shrink-0 font-medium text-foreground">Sent</dt>
-                        <dd>{formatMessageDate(selectedMessage.createdAt)}</dd>
+                        <dt className="shrink-0 font-medium text-foreground">{selectedMessage.status === "scheduled" ? "Scheduled" : "Sent"}</dt>
+                        <dd>{formatMessageDate(selectedMessage.status === "scheduled" && selectedMessage.scheduledAt ? selectedMessage.scheduledAt : selectedMessage.createdAt)}</dd>
                       </div>
                       {(selectedMessage.companyName || selectedMessage.projectName || selectedMessage.documentTitle) && (
                         <div className="flex min-w-0 gap-2">
@@ -1271,14 +1315,33 @@ export default function EmailPage() {
                     </span>
                   )}
                 </div>
-                <div className="flex items-center justify-end gap-2">
+                <div className="flex flex-wrap items-center justify-end gap-2">
+                  <Button
+                    type="button"
+                    variant={scheduleEnabled ? "secondary" : "ghost"}
+                    aria-pressed={scheduleEnabled}
+                    onClick={() => setScheduleEnabled((value) => !value)}
+                  >
+                    <Clock aria-hidden="true" />
+                    Send later
+                  </Button>
+                  {scheduleEnabled && (
+                    <Input
+                      type="datetime-local"
+                      aria-label="Schedule date and time"
+                      value={scheduleAt}
+                      min={datetimeLocalMin()}
+                      onChange={(event) => setScheduleAt(event.target.value)}
+                      className="h-9 w-auto"
+                    />
+                  )}
                   <Button type="button" variant="ghost" onClick={clearComposer}>Clear</Button>
                   <Button
                     type="submit"
-                    disabled={!senderConfigured || sending || (!selectedListId && !to.trim()) || (selectedListId && !selectedList?.contactEmails.length) || !subject.trim() || !htmlToText(body).trim()}
+                    disabled={!senderConfigured || sending || (!selectedListId && !to.trim()) || (selectedListId && !selectedList?.contactEmails.length) || !subject.trim() || !htmlToText(body).trim() || (scheduleEnabled && !scheduleAt)}
                   >
-                    {sending ? <Loader2 className="animate-spin" aria-hidden="true" /> : <Send aria-hidden="true" />}
-                    {sending ? "Sending" : "Send email"}
+                    {sending ? <Loader2 className="animate-spin" aria-hidden="true" /> : scheduleEnabled ? <Clock aria-hidden="true" /> : <Send aria-hidden="true" />}
+                    {sending ? (scheduleEnabled ? "Scheduling" : "Sending") : scheduleEnabled ? "Schedule email" : "Send email"}
                   </Button>
                 </div>
               </div>
