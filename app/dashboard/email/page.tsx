@@ -31,6 +31,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { FilterBar, useFilterBar, type SortOption } from "@/components/dashboard/filter-bar"
 import type { EmailTemplateRecord } from "@/lib/email-templates-store"
 import { deleteEmailList, getEmailLists, saveEmailList, type EmailContactList } from "@/lib/email-lists"
+import { deleteEmailDraft, getEmailDrafts, saveEmailDraft, type EmailDraftRecord } from "@/lib/email-drafts"
 import { getAllEmailMessages, getEmailMessages, saveEmailMessage, type EmailMessageRecord, type EmailRecipient } from "@/lib/email-messages"
 import { contextualEmailBody, readEmailComposeContext, type EmailComposeContext } from "@/lib/email-composer"
 import { getBusinessProfile, type BusinessProfile } from "@/lib/business-profile"
@@ -281,6 +282,9 @@ export default function EmailPage() {
   const [selectedTemplateId, setSelectedTemplateId] = useState("")
   const [scheduleEnabled, setScheduleEnabled] = useState(false)
   const [scheduleAt, setScheduleAt] = useState("")
+  const [drafts, setDrafts] = useState<EmailDraftRecord[]>([])
+  const [editingDraftId, setEditingDraftId] = useState<string | null>(null)
+  const [savingDraft, setSavingDraft] = useState(false)
   const [sending, setSending] = useState(false)
   const [sendNotice, setSendNotice] = useState<Notice>(null)
   const [selectedMessageId, setSelectedMessageId] = useState<string | null>(null)
@@ -456,6 +460,15 @@ export default function EmailPage() {
   useEffect(() => {
     if (!user?.uid || !workspaceId) return
     let active = true
+    void getEmailDrafts(workspaceId)
+      .then((storedDrafts) => { if (active) setDrafts(storedDrafts) })
+      .catch(() => { if (active) setDrafts([]) })
+    return () => { active = false }
+  }, [user?.uid, workspaceId])
+
+  useEffect(() => {
+    if (!user?.uid || !workspaceId) return
+    let active = true
     const legacyLists = readStoredList<ContactList>(listStorageKey)
 
     void getEmailLists(workspaceId)
@@ -622,7 +635,67 @@ export default function EmailPage() {
     setSelectedTemplateId("")
     setScheduleEnabled(false)
     setScheduleAt("")
+    setEditingDraftId(null)
     setSendNotice(null)
+  }
+
+  async function saveDraft() {
+    if (!user || savingDraft) return
+    if (!subject.trim() && !htmlToText(body).trim() && !to.trim() && !selectedListId) {
+      setSendNotice({ tone: "error", text: "Add a subject or message before saving a draft." })
+      return
+    }
+    setSavingDraft(true)
+    const id = editingDraftId || (typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : `${Date.now()}`)
+    const draft: EmailDraftRecord = {
+      id,
+      companyId: workspaceId,
+      createdBy: user.uid,
+      to: to.trim() || undefined,
+      listId: selectedListId || undefined,
+      subject: subject.trim() || undefined,
+      body: body || undefined,
+      messageKind,
+      context: composeContext ? { ...composeContext } : null,
+      updatedAt: new Date().toISOString(),
+    }
+    try {
+      await saveEmailDraft(draft)
+      setDrafts((current) => [draft, ...current.filter((item) => item.id !== id)])
+      setEditingDraftId(id)
+      setSendNotice({ tone: "success", text: "Draft saved." })
+    } catch {
+      setSendNotice({ tone: "error", text: "The draft could not be saved. Try again." })
+    } finally {
+      setSavingDraft(false)
+    }
+  }
+
+  function loadDraft(draft: EmailDraftRecord) {
+    setSelectedMessageId(null)
+    setMessageViewError("")
+    setTo(draft.to || "")
+    setSelectedListId(draft.listId || "")
+    setSubject(draft.subject || "")
+    setBody(draft.body || "")
+    setMessageKind(draft.messageKind === "marketing" ? "marketing" : "transactional")
+    setComposeContext((draft.context as EmailComposeContext | null) ?? null)
+    setSelectedTemplateId("")
+    setScheduleEnabled(false)
+    setScheduleAt("")
+    setEditingDraftId(draft.id)
+    setSendNotice(null)
+    setMobileMessageView("composer")
+  }
+
+  async function removeDraft(id: string) {
+    setDrafts((current) => current.filter((item) => item.id !== id))
+    if (editingDraftId === id) setEditingDraftId(null)
+    try {
+      await deleteEmailDraft(id)
+    } catch {
+      setSendNotice({ tone: "error", text: "The draft could not be deleted." })
+    }
   }
 
   async function openSentMessage(message: SentMessage) {
@@ -792,6 +865,12 @@ export default function EmailPage() {
       setSelectedTemplateId("")
       setScheduleEnabled(false)
       setScheduleAt("")
+      if (editingDraftId) {
+        const sentDraftId = editingDraftId
+        setDrafts((current) => current.filter((item) => item.id !== sentDraftId))
+        setEditingDraftId(null)
+        void deleteEmailDraft(sentDraftId).catch(() => undefined)
+      }
       const suppressionNotice = result.suppressedCount ? ` ${result.suppressedCount} unsubscribed contact${result.suppressedCount === 1 ? "" : "s"} skipped.` : ""
       const verb = scheduledAtIso ? `Scheduled for ${formatMessageDate(scheduledAtIso)}` : "Message sent"
       setSendNotice(historySaved
@@ -1077,6 +1156,26 @@ export default function EmailPage() {
                   <span className="text-xs tabular-nums text-muted-foreground">{messages.length}</span>
                 </div>
               </div>
+              {drafts.length > 0 && (
+                <div className="border-b border-border">
+                  <div className="px-3.5 py-2 text-xs font-medium text-muted-foreground sm:px-4">Drafts</div>
+                  <div className="divide-y divide-border">
+                    {drafts.map((draft) => (
+                      <div key={draft.id} className={cn("flex items-start gap-2 px-3.5 py-3 sm:px-4", editingDraftId === draft.id && "bg-muted")}>
+                        <button type="button" onClick={() => loadDraft(draft)} className="min-w-0 flex-1 space-y-1 text-left outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                          <p className="truncate text-sm font-semibold">{draft.subject?.trim() || "(No subject)"}</p>
+                          <span className="inline-flex items-center gap-1 text-[11px] text-amber-700 dark:text-amber-300">
+                            <FileText className="size-3" aria-hidden="true" />Draft · {formatMessageDate(draft.updatedAt)}
+                          </span>
+                        </button>
+                        <button type="button" onClick={() => void removeDraft(draft.id)} aria-label="Delete draft" className="flex size-8 shrink-0 items-center justify-center rounded-sm text-muted-foreground hover:bg-destructive/10 hover:text-destructive focus-visible:ring-2 focus-visible:ring-ring">
+                          <Trash2 className="size-4" aria-hidden="true" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
               {messages.length === 0 ? (
                 <div className="px-4 py-10 text-center">
                   <Inbox className="mx-auto size-5 text-muted-foreground" aria-hidden="true" />
@@ -1352,6 +1451,9 @@ export default function EmailPage() {
                     />
                   )}
                   <Button type="button" variant="ghost" onClick={clearComposer}>Clear</Button>
+                  <Button type="button" variant="secondary" onClick={() => void saveDraft()} disabled={savingDraft || sending}>
+                    {savingDraft ? "Saving" : editingDraftId ? "Update draft" : "Save draft"}
+                  </Button>
                   <Button
                     type="submit"
                     disabled={!senderConfigured || sending || (!selectedListId && !to.trim()) || (selectedListId && !selectedList?.contactEmails.length) || !subject.trim() || !htmlToText(body).trim() || (scheduleEnabled && !scheduleAt)}

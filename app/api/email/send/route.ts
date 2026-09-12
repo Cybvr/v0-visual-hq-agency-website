@@ -11,11 +11,17 @@ const X_URL = "https://x.com/visualcns"
 const LINKEDIN_URL = "https://www.linkedin.com/company/visualng"
 
 function normalizeEmailAddress(value: string) {
-  return value
+  const normalized = value
     .replace(/(?:&nbsp;|&#(?:x0*a0|160|x0*20|32);)/gi, " ")
     .replace(/[\u00a0\u2007\u202f]/g, " ")
     .replace(/\s+/g, " ")
     .trim()
+  // Strip a wrapping pair of quotes, e.g. EMAIL_FROM set as
+  // "VisualCNS <hello@mail.visualcns.com>" \u2014 Resend rejects the quoted whole.
+  if (normalized.length >= 2 && /^(["']).*\1$/.test(normalized)) {
+    return normalized.slice(1, -1).trim()
+  }
+  return normalized
 }
 
 function extractEmailAddress(value: string) {
