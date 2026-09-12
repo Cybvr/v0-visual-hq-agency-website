@@ -69,8 +69,11 @@ export async function getDocumentsForClient(companyId: string, userId: string): 
 }
 
 export async function createDocument(data: Omit<SharedDocument, "id" | "createdAt">): Promise<string> {
+  // Firestore rejects undefined field values, so drop any unset fields
+  // (e.g. thumbnailUrl on a non-image upload) before writing.
+  const cleaned = Object.fromEntries(Object.entries(data).filter(([, value]) => value !== undefined))
   const ref = await addDoc(collection(db, COLLECTION_NAME), {
-    ...data,
+    ...cleaned,
     createdAt: Timestamp.now(),
   })
   return ref.id
