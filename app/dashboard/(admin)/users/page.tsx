@@ -28,6 +28,9 @@ import { getUsers, deleteUser, type AppUser } from "@/lib/users"
 import { UserEditorSheet } from "@/components/dashboard/user-editor-sheet"
 import { useAuth } from "@/components/auth-provider"
 import { FilterBar, useFilterBar, type SortOption } from "@/components/dashboard/filter-bar"
+import { TableBulkBar } from "@/components/dashboard/table-bulk-bar"
+import { Checkbox } from "@/components/ui/checkbox"
+import { useRowSelection } from "@/hooks/use-row-selection"
 import { tsToMillis } from "@/lib/tasks"
 import { cn } from "@/lib/utils"
 
@@ -56,6 +59,7 @@ export default function UsersAdminPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [deleting, setDeleting] = useState<string | null>(null)
+  const [bulkDeleting, setBulkDeleting] = useState(false)
   const [selectedId, setSelectedId] = useState<string | "new" | null>(null)
 
   async function fetchUsers() {
@@ -105,6 +109,25 @@ export default function UsersAdminPage() {
     defaultSort: "name",
   })
 
+  const selection = useRowSelection(visibleUsers, (u) => u.uid)
+
+  async function handleBulkDelete() {
+    const ids = selection.selectedIds
+    if (ids.length === 0 || bulkDeleting) return
+    setBulkDeleting(true)
+    try {
+      await Promise.all(ids.map((uid) => deleteUser(uid)))
+      const removed = new Set(ids)
+      setUsers((prev) => prev.filter((u) => !removed.has(u.uid)))
+      if (selectedId && removed.has(selectedId)) setSelectedId(null)
+      selection.clear()
+    } catch (err) {
+      console.error("Error deleting contacts:", err)
+    } finally {
+      setBulkDeleting(false)
+    }
+  }
+
   const selectedUser =
     typeof selectedId === "string" && selectedId !== "new" ? users.find((u) => u.uid === selectedId) ?? null : null
 
@@ -146,9 +169,24 @@ export default function UsersAdminPage() {
             </Card>
           ) : (
             <div className="rounded-lg border border-border">
+              <TableBulkBar
+                count={selection.selectedCount}
+                noun="contact"
+                deleting={bulkDeleting}
+                onClear={selection.clear}
+                onDelete={handleBulkDelete}
+              />
               <Table>
                 <TableHeader>
                   <TableRow>
+                    <TableHead className="w-10">
+                      <Checkbox
+                        aria-label="Select all contacts"
+                        checked={selection.allSelected}
+                        indeterminate={selection.someSelected}
+                        onChange={selection.toggleAll}
+                      />
+                    </TableHead>
                     <TableHead>Contact</TableHead>
                     <TableHead>Email</TableHead>
                     <TableHead>Role</TableHead>
@@ -164,6 +202,13 @@ export default function UsersAdminPage() {
                       className="cursor-pointer"
                       onClick={() => setSelectedId(u.uid)}
                     >
+                      <TableCell onClick={(e) => e.stopPropagation()}>
+                        <Checkbox
+                          aria-label={`Select ${u.displayName || u.email || "contact"}`}
+                          checked={selection.isSelected(u.uid)}
+                          onChange={() => selection.toggle(u.uid)}
+                        />
+                      </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-3">
                           {u.photoURL ? (
