@@ -102,13 +102,12 @@ export default function CompaniesPage() {
     return meta
   }, [projects, organizations])
 
-  /** One row per company name, drawn from organizations first and legacy client accounts second. */
+  /** One row per organization. Contacts (users) are people, not companies, so they are never listed here. */
   const companies = useMemo(() => {
     const userByWorkspace = new Map<string, AppUser>()
     for (const user of users) {
       if (user.role === "client") userByWorkspace.set(user.companyId || user.uid, user)
     }
-    const orgWorkspaces = new Set(organizations.map((org) => org.id))
 
     const rows = new Map<string, CompanyRow>()
     const add = (row: CompanyRow) => {
@@ -135,21 +134,6 @@ export default function CompaniesPage() {
         createdAt: org.createdAt,
         user: userByWorkspace.get(org.id),
         hasOrg: true,
-      })
-    }
-    // Legacy client accounts that never got an organization doc.
-    for (const [workspace, user] of userByWorkspace) {
-      if (orgWorkspaces.has(workspace)) continue
-      const meta = metaByWorkspace.get(workspace)
-      add({
-        id: workspace,
-        name: user.company || user.displayName || user.email || "Unnamed company",
-        label: meta?.label ?? "",
-        projectCount: meta?.projectCount ?? 0,
-        logoUrl: user.photoURL,
-        createdAt: user.createdAt,
-        user,
-        hasOrg: false,
       })
     }
     return [...rows.values()]

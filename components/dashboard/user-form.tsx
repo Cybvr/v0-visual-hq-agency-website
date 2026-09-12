@@ -105,18 +105,20 @@ export function UserForm({ user, fixedRole, subjectNoun = "user", workspaceId, w
       // already exists.
       const uid = isEdit && user ? user.uid : crypto.randomUUID()
       const chosenCompanyId = form.companyId.trim()
-      // Resolve the workspace this person belongs to.
+      // Resolve the workspace this person belongs to, and whether to seed a
+      // company. Only naming a brand-new company creates an organization;
+      // a contact never does - it just links to a company or stands alone.
       let companyId: string
-      if (joiningExisting) {
+      let createOrg = false
+      if (subjectNoun === "company") {
+        companyId = (isEdit && user?.companyId) || uid
+        createOrg = !isEdit
+      } else if (joiningExisting) {
         companyId = workspaceId as string
-      } else if (pickCompany && chosenCompanyId) {
-        companyId = chosenCompanyId // joins the selected company's workspace
       } else {
-        companyId = (isEdit && user?.companyId) || uid // its own workspace
+        // user/client/contact: the chosen company, or empty for a standalone contact
+        companyId = chosenCompanyId
       }
-      // Only seed a fresh organization when this create makes its own workspace,
-      // not when joining an existing one or linking to a selected company.
-      const makesOwnWorkspace = !isEdit && !joiningExisting && !(pickCompany && chosenCompanyId)
       const payload = {
         email: form.email.trim(),
         displayName: form.displayName.trim(),
@@ -134,7 +136,7 @@ export function UserForm({ user, fixedRole, subjectNoun = "user", workspaceId, w
         onSaved(user.uid)
       } else {
         await createUser(uid, payload)
-        if (makesOwnWorkspace) {
+        if (createOrg) {
           // Brand-new workspace: seed its organization doc so it shows up
           // right away, without needing the companies-page migration button.
           await createOrganization(companyId, {
