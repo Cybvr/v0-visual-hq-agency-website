@@ -25,7 +25,7 @@ export interface SharedDocument {
   sharedWith?: string
   sharedWithUserIds?: string[]
   createdAt?: Timestamp
-  type?: "link" | "image" | "file" | "doc"
+  type?: "link" | "image" | "video" | "file" | "doc"
   thumbnailUrl?: string
 }
 

@@ -31,6 +31,7 @@ import {
   Link2,
   Loader2,
   MoreVertical,
+  Play,
   Plus,
   Share2,
   Trash2,
@@ -78,6 +79,18 @@ function FileIcon({ doc }: { doc: SharedDocument }) {
       <div className="relative h-full w-full overflow-hidden">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={doc.url} alt={doc.title} className="h-full w-full object-cover" />
+      </div>
+    )
+  }
+  if ((doc.type === "video" || /\.(mp4|webm|ogg|mov|m4v)(\?|$)/i.test(doc.url)) && doc.url) {
+    return (
+      <div className="relative h-full w-full overflow-hidden bg-black">
+        <video src={doc.url} muted playsInline preload="metadata" className="h-full w-full object-cover" />
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-black/55">
+            <Play className="h-5 w-5 text-white" />
+          </div>
+        </div>
       </div>
     )
   }
@@ -237,6 +250,7 @@ export default function DrivePage() {
           setUploading((prev) => prev.map((u) => (u.id === uploadId ? { ...u, progress: pct } : u)))
         })
         const isImage = file.type.startsWith("image/")
+        const isVideo = file.type.startsWith("video/")
         await createDocument({
           title: file.name.replace(/\.[^.]+$/, ""),
           url,
@@ -244,7 +258,7 @@ export default function DrivePage() {
           companyId: "",
           sharedWith: "Private",
           sharedWithUserIds: [],
-          type: isImage ? "image" : "file",
+          type: isImage ? "image" : isVideo ? "video" : "file",
           thumbnailUrl: isImage ? url : undefined,
         })
         setUploading((prev) => prev.filter((u) => u.id !== uploadId))
@@ -646,7 +660,9 @@ export default function DrivePage() {
             {previewDocument && (
               previewDocument.type === "image" || /\.(png|jpe?g|gif|webp)(\?|$)/i.test(previewDocument.url)
                 ? <img src={previewDocument.url} alt={previewDocument.title} className="h-full w-full object-contain" />
-                : <iframe src={previewDocument.url} title={previewDocument.title} className="h-full w-full rounded-lg border bg-background" />
+                : previewDocument.type === "video" || /\.(mp4|webm|ogg|mov|m4v)(\?|$)/i.test(previewDocument.url)
+                  ? <video src={previewDocument.url} controls autoPlay playsInline className="h-full w-full rounded-lg bg-black object-contain" />
+                  : <iframe src={previewDocument.url} title={previewDocument.title} className="h-full w-full rounded-lg border bg-background" />
             )}
             {hasPrevPreview && (
               <Button
