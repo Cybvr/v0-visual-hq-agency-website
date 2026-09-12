@@ -13,13 +13,14 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Camera, Loader2, User as UserIcon } from "lucide-react"
-import { createOrganization } from "@/lib/organizations"
+import { createOrganization, getOrganizations, type Organization } from "@/lib/organizations"
 import { createUser, updateUser, type AppUser, type UserRole } from "@/lib/users"
 
 type FormState = {
   email: string
   displayName: string
   company: string
+  companyId: string
   photoURL: string
   role: UserRole
 }
@@ -28,6 +29,7 @@ const EMPTY_FORM: FormState = {
   email: "",
   displayName: "",
   company: "",
+  companyId: "",
   photoURL: "",
   role: "client",
 }
@@ -55,6 +57,20 @@ export function UserForm({ user, fixedRole, subjectNoun = "user", workspaceId, w
   const [error, setError] = useState<string | null>(null)
   const [form, setForm] = useState<FormState>(EMPTY_FORM)
   const [editingPhoto, setEditingPhoto] = useState(false)
+  const [organizations, setOrganizations] = useState<Organization[]>([])
+
+  // A person joining a fixed workspace, or a company record itself, doesn't
+  // pick a company; everyone else (user/client/contact) chooses an existing one.
+  const pickCompany = !joiningExisting && subjectNoun !== "company"
+
+  useEffect(() => {
+    if (!pickCompany) return
+    let active = true
+    getOrganizations()
+      .then((orgs) => { if (active) setOrganizations(orgs) })
+      .catch(() => { if (active) setOrganizations([]) })
+    return () => { active = false }
+  }, [pickCompany])
 
   useEffect(() => {
     if (user) {
@@ -62,6 +78,7 @@ export function UserForm({ user, fixedRole, subjectNoun = "user", workspaceId, w
         email: user.email ?? "",
         displayName: user.displayName ?? "",
         company: user.company ?? "",
+        companyId: user.companyId ?? "",
         photoURL: user.photoURL ?? "",
         role: fixedRole ?? (user.role === "admin" ? "admin" : "client"),
       })
@@ -87,13 +104,25 @@ export function UserForm({ user, fixedRole, subjectNoun = "user", workspaceId, w
       // gets its own space automatically, unless it's joining one that
       // already exists.
       const uid = isEdit && user ? user.uid : crypto.randomUUID()
-      const companyId = (isEdit && user?.companyId) || workspaceId || uid
+      const chosenCompanyId = form.companyId.trim()
+      // Resolve the workspace this person belongs to.
+      let companyId: string
+      if (joiningExisting) {
+        companyId = workspaceId as string
+      } else if (pickCompany && chosenCompanyId) {
+        companyId = chosenCompanyId // joins the selected company's workspace
+      } else {
+        companyId = (isEdit && user?.companyId) || uid // its own workspace
+      }
+      // Only seed a fresh organization when this create makes its own workspace,
+      // not when joining an existing one or linking to a selected company.
+      const makesOwnWorkspace = !isEdit && !joiningExisting && !(pickCompany && chosenCompanyId)
       const payload = {
         email: form.email.trim(),
         displayName: form.displayName.trim(),
-        // A person joining an existing company doesn't carry its name
-        // themselves; that lives on the organization doc.
-        company: joiningExisting ? "" : form.company.trim(),
+        // A person linked to a company doesn't carry its name themselves;
+        // that lives on the organization doc.
+        company: subjectNoun === "company" ? form.company.trim() : "",
         companyId,
         photoURL: form.photoURL.trim(),
         role: fixedRole ?? form.role,
@@ -105,7 +134,7 @@ export function UserForm({ user, fixedRole, subjectNoun = "user", workspaceId, w
         onSaved(user.uid)
       } else {
         await createUser(uid, payload)
-        if (!joiningExisting) {
+        if (makesOwnWorkspace) {
           // Brand-new workspace: seed its organization doc so it shows up
           // right away, without needing the companies-page migration button.
           await createOrganization(companyId, {
@@ -209,15 +238,32 @@ export function UserForm({ user, fixedRole, subjectNoun = "user", workspaceId, w
                 </Select>
               </div>
             )}
-            <div className="space-y-1.5">
-              <Label htmlFor="company">Company</Label>
-              <Input
-                id="company"
-                value={form.company}
-                onChange={(e) => set("company", e.target.value)}
-                placeholder="For client accounts"
-              />
-            </div>
+            {subjectNoun === "company" ? (
+              <div className="space-y-1.5">
+                <Label htmlFor="company">Company name</Label>
+                <Input
+                  id="company"
+                  value={form.company}
+                  onChange={(e) => set("company", e.target.value)}
+                  placeholder="Acme Inc."
+                />
+              </div>
+            ) : (
+              <div className="space-y-1.5">
+                <Label htmlFor="company">Company</Label>
+                <Select value={form.companyId || "none"} onValueChange={(v) => set("companyId", v === "none" ? "" : v)}>
+                  <SelectTrigger id="company" className="w-full">
+                    <SelectValue placeholder="Select a company" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">No company</SelectItem>
+                    {organizations.map((org) => (
+                      <SelectItem key={org.id} value={org.id}>{org.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
           </div>
         )}
 
