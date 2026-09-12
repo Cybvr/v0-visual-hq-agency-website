@@ -10,7 +10,10 @@ import { useAuth } from "@/components/auth-provider"
 import { DuplicateDocumentDialog, type DuplicateSelection } from "@/components/dashboard/duplicate-document-dialog"
 import { EmptySearchState, FirstRunState } from "@/components/dashboard/empty-state"
 import { FilterBar, useFilterBar, type SortOption } from "@/components/dashboard/filter-bar"
+import { TableBulkBar } from "@/components/dashboard/table-bulk-bar"
 import { UserEditorSheet } from "@/components/dashboard/user-editor-sheet"
+import { Checkbox } from "@/components/ui/checkbox"
+import { useRowSelection } from "@/hooks/use-row-selection"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -61,6 +64,7 @@ export default function EstimatesPage() {
   const [confirmDelete, setConfirmDelete] = useState<Estimate | null>(null)
   const [clientSheet, setClientSheet] = useState<string | null>(null)
   const [deleting, setDeleting] = useState(false)
+  const [bulkDeleting, setBulkDeleting] = useState(false)
   const [duplicateTarget, setDuplicateTarget] = useState<Estimate | null>(null)
   const [duplicating, setDuplicating] = useState(false)
 
@@ -132,6 +136,25 @@ export default function EstimatesPage() {
     defaultDirection: "desc",
   })
 
+  const selection = useRowSelection(visibleEstimates, (estimate) => estimate.id)
+
+  async function handleBulkDelete() {
+    const ids = selection.selectedIds
+    if (ids.length === 0 || bulkDeleting) return
+    setBulkDeleting(true)
+    try {
+      await Promise.all(ids.map((id) => deleteEstimate(id)))
+      const removed = new Set(ids)
+      setEstimates((current) => current.filter((row) => !removed.has(row.id)))
+      if (confirmDelete && removed.has(confirmDelete.id)) setConfirmDelete(null)
+      selection.clear()
+    } catch (deleteError) {
+      console.error("Error deleting estimates:", deleteError)
+    } finally {
+      setBulkDeleting(false)
+    }
+  }
+
   if (!user) return null
   const awaiting = estimates.filter((estimate) => estimate.status === "sent").length
 
@@ -165,9 +188,29 @@ export default function EstimatesPage() {
           {awaiting > 0 && <p className="mt-6 rounded-[12px] bg-amber-500/10 px-4 py-3 text-sm leading-6 text-amber-900 dark:text-amber-200">{awaiting} estimate{awaiting === 1 ? "" : "s"} awaiting a response.</p>}
           <div className="mt-6">
             {visibleEstimates.length === 0 ? <EmptySearchState label="No estimates match your search." /> : (
+              <>
+              {adminView && (
+                <TableBulkBar
+                  count={selection.selectedCount}
+                  noun="estimate"
+                  deleting={bulkDeleting}
+                  onClear={selection.clear}
+                  onDelete={handleBulkDelete}
+                />
+              )}
               <Table>
                 <TableHeader>
                   <TableRow>
+                    {adminView && (
+                      <TableHead className="w-10">
+                        <Checkbox
+                          aria-label="Select all estimates"
+                          checked={selection.allSelected}
+                          indeterminate={selection.someSelected}
+                          onChange={selection.toggleAll}
+                        />
+                      </TableHead>
+                    )}
                     <TableHead>Estimate no.</TableHead>
                     <TableHead>Title</TableHead>
                     {adminView && <TableHead>Client</TableHead>}
@@ -182,6 +225,15 @@ export default function EstimatesPage() {
                     const meta = estimateStatusMeta[estimate.status] ?? estimateStatusMeta.draft
                     return (
                       <TableRow key={estimate.id}>
+                        {adminView && (
+                          <TableCell onClick={(e) => e.stopPropagation()}>
+                            <Checkbox
+                              aria-label={`Select estimate ${estimate.estimateNumber}`}
+                              checked={selection.isSelected(estimate.id)}
+                              onChange={() => selection.toggle(estimate.id)}
+                            />
+                          </TableCell>
+                        )}
                         <TableCell className="font-medium"><Link href={`/dashboard/estimates/${estimate.id}`} className="rounded-sm outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring">{estimate.estimateNumber}</Link></TableCell>
                         <TableCell>{estimate.title}</TableCell>
                         {adminView && <TableCell>{estimate.companyId ? <button type="button" onClick={() => setClientSheet(estimate.companyId)} className="rounded-sm text-left outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring">{estimate.client || "Client"}</button> : "—"}</TableCell>}
@@ -203,6 +255,7 @@ export default function EstimatesPage() {
                   })}
                 </TableBody>
               </Table>
+              </>
             )}
           </div>
         </>

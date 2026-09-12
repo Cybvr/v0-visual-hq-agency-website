@@ -47,6 +47,9 @@ import { Badge, InlineDate, InlineProject, InlineSelect, InlineText } from "@/co
 import { TaskForm } from "@/components/dashboard/task-form"
 import { EmptySearchState, FirstRunState } from "@/components/dashboard/empty-state"
 import { FilterBar, useFilterBar, type SortOption } from "@/components/dashboard/filter-bar"
+import { TableBulkBar } from "@/components/dashboard/table-bulk-bar"
+import { Checkbox } from "@/components/ui/checkbox"
+import { useRowSelection } from "@/hooks/use-row-selection"
 
 const STATUS_OPTIONS: TaskStatus[] = ["todo", "in-progress", "review", "done"]
 const PRIORITY_OPTIONS: TaskPriority[] = ["low", "medium", "high"]
@@ -86,6 +89,7 @@ export default function TasksAdminPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [deleting, setDeleting] = useState<string | null>(null)
+  const [bulkDeleting, setBulkDeleting] = useState(false)
   const [selectedId, setSelectedId] = useState<string | "new" | null>(null)
 
   async function fetchData() {
@@ -145,6 +149,25 @@ export default function TasksAdminPage() {
     defaultDirection: "desc",
   })
 
+  const selection = useRowSelection(visibleTasks, (t) => t.id)
+
+  async function handleBulkDelete() {
+    const ids = selection.selectedIds
+    if (ids.length === 0 || bulkDeleting) return
+    setBulkDeleting(true)
+    try {
+      await Promise.all(ids.map((id) => deleteTask(id)))
+      const removed = new Set(ids)
+      setTasks((prev) => prev.filter((t) => !removed.has(t.id)))
+      if (selectedId && removed.has(selectedId)) setSelectedId(null)
+      selection.clear()
+    } catch (err) {
+      console.error("Error deleting tasks:", err)
+    } finally {
+      setBulkDeleting(false)
+    }
+  }
+
   const selectedTask =
     typeof selectedId === "string" && selectedId !== "new" ? tasks.find((t) => t.id === selectedId) ?? null : null
 
@@ -179,9 +202,24 @@ export default function TasksAdminPage() {
             <EmptySearchState label="No tasks match your search." />
           ) : (
             <div className="rounded-lg border border-border">
+              <TableBulkBar
+                count={selection.selectedCount}
+                noun="task"
+                deleting={bulkDeleting}
+                onClear={selection.clear}
+                onDelete={handleBulkDelete}
+              />
               <Table>
                 <TableHeader>
                   <TableRow>
+                    <TableHead className="w-10">
+                      <Checkbox
+                        aria-label="Select all tasks"
+                        checked={selection.allSelected}
+                        indeterminate={selection.someSelected}
+                        onChange={selection.toggleAll}
+                      />
+                    </TableHead>
                     <TableHead>Task</TableHead>
                     <TableHead>Client</TableHead>
                     <TableHead>Project</TableHead>
@@ -195,6 +233,13 @@ export default function TasksAdminPage() {
                 <TableBody>
                   {visibleTasks.map((t) => (
                     <TableRow key={t.id}>
+                      <TableCell onClick={(e) => e.stopPropagation()}>
+                        <Checkbox
+                          aria-label={`Select ${t.name || "task"}`}
+                          checked={selection.isSelected(t.id)}
+                          onChange={() => selection.toggle(t.id)}
+                        />
+                      </TableCell>
                       <TableCell className="font-medium">
                         <InlineText value={t.name} onCommit={(name) => handlePatch(t.id, { name })} />
                       </TableCell>

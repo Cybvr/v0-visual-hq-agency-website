@@ -41,6 +41,9 @@ import {
   type Invoice,
 } from "@/lib/billing"
 import { FilterBar, useFilterBar, type SortOption } from "@/components/dashboard/filter-bar"
+import { TableBulkBar } from "@/components/dashboard/table-bulk-bar"
+import { Checkbox } from "@/components/ui/checkbox"
+import { useRowSelection } from "@/hooks/use-row-selection"
 import { cn } from "@/lib/utils"
 
 const INVOICE_SORTS: SortOption<Invoice>[] = [
@@ -74,6 +77,7 @@ export default function InvoicesPage() {
   const [confirmDelete, setConfirmDelete] = useState<Invoice | null>(null)
   const [clientSheet, setClientSheet] = useState<string | null>(null)
   const [deleting, setDeleting] = useState(false)
+  const [bulkDeleting, setBulkDeleting] = useState(false)
   const [duplicateTarget, setDuplicateTarget] = useState<Invoice | null>(null)
   const [duplicating, setDuplicating] = useState(false)
 
@@ -145,6 +149,25 @@ export default function InvoicesPage() {
     defaultDirection: "desc",
   })
 
+  const selection = useRowSelection(visibleInvoices, (invoice) => invoice.id)
+
+  async function handleBulkDelete() {
+    const ids = selection.selectedIds
+    if (ids.length === 0 || bulkDeleting) return
+    setBulkDeleting(true)
+    try {
+      await Promise.all(ids.map((id) => deleteInvoice(id)))
+      const removed = new Set(ids)
+      setInvoices((current) => current.filter((row) => !removed.has(row.id)))
+      if (confirmDelete && removed.has(confirmDelete.id)) setConfirmDelete(null)
+      selection.clear()
+    } catch (err) {
+      console.error("Error deleting invoices:", err)
+    } finally {
+      setBulkDeleting(false)
+    }
+  }
+
   if (!user) return null
 
   const unpaid = invoices.filter((invoice) => invoice.status === "sent" || invoice.status === "overdue")
@@ -198,9 +221,29 @@ export default function InvoicesPage() {
             {visibleInvoices.length === 0 ? (
               <EmptySearchState label="No invoices match your search." />
             ) : (
-              <Table>
+              <>
+                {adminView && (
+                  <TableBulkBar
+                    count={selection.selectedCount}
+                    noun="invoice"
+                    deleting={bulkDeleting}
+                    onClear={selection.clear}
+                    onDelete={handleBulkDelete}
+                  />
+                )}
+                <Table>
                 <TableHeader>
                   <TableRow>
+                    {adminView && (
+                      <TableHead className="w-10">
+                        <Checkbox
+                          aria-label="Select all invoices"
+                          checked={selection.allSelected}
+                          indeterminate={selection.someSelected}
+                          onChange={selection.toggleAll}
+                        />
+                      </TableHead>
+                    )}
                     <TableHead>Invoice no.</TableHead>
                     {adminView && <TableHead>Client</TableHead>}
                     <TableHead>Project</TableHead>
@@ -218,6 +261,15 @@ export default function InvoicesPage() {
                     const meta = invoiceStatusMeta[invoice.status] ?? invoiceStatusMeta.draft
                     return (
                       <TableRow key={invoice.id}>
+                        {adminView && (
+                          <TableCell onClick={(e) => e.stopPropagation()}>
+                            <Checkbox
+                              aria-label={`Select invoice ${invoice.invoiceNumber}`}
+                              checked={selection.isSelected(invoice.id)}
+                              onChange={() => selection.toggle(invoice.id)}
+                            />
+                          </TableCell>
+                        )}
                         <TableCell className="font-medium">
                           <Link
                             href={
@@ -310,6 +362,7 @@ export default function InvoicesPage() {
                   })}
                 </TableBody>
               </Table>
+              </>
             )}
           </div>
         </>

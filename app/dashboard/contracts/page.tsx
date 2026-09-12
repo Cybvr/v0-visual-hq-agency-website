@@ -39,6 +39,9 @@ import {
   type Contract,
 } from "@/lib/billing"
 import { FilterBar, useFilterBar, type SortOption } from "@/components/dashboard/filter-bar"
+import { TableBulkBar } from "@/components/dashboard/table-bulk-bar"
+import { Checkbox } from "@/components/ui/checkbox"
+import { useRowSelection } from "@/hooks/use-row-selection"
 import { tsToMillis } from "@/lib/tasks"
 import { cn } from "@/lib/utils"
 
@@ -79,6 +82,7 @@ export default function ContractsPage() {
   const [confirmDelete, setConfirmDelete] = useState<Contract | null>(null)
   const [clientSheet, setClientSheet] = useState<string | null>(null)
   const [deleting, setDeleting] = useState(false)
+  const [bulkDeleting, setBulkDeleting] = useState(false)
   const [duplicateTarget, setDuplicateTarget] = useState<Contract | null>(null)
   const [duplicating, setDuplicating] = useState(false)
 
@@ -151,6 +155,25 @@ export default function ContractsPage() {
     defaultDirection: "desc",
   })
 
+  const selection = useRowSelection(visibleContracts, (contract) => contract.id)
+
+  async function handleBulkDelete() {
+    const ids = selection.selectedIds
+    if (ids.length === 0 || bulkDeleting) return
+    setBulkDeleting(true)
+    try {
+      await Promise.all(ids.map((id) => deleteContract(id)))
+      const removed = new Set(ids)
+      setContracts((current) => current.filter((row) => !removed.has(row.id)))
+      if (confirmDelete && removed.has(confirmDelete.id)) setConfirmDelete(null)
+      selection.clear()
+    } catch (err) {
+      console.error("Error deleting contracts:", err)
+    } finally {
+      setBulkDeleting(false)
+    }
+  }
+
   if (!user) return null
 
   const awaiting = contracts.filter((contract) => contract.status === "sent").length
@@ -201,9 +224,29 @@ export default function ContractsPage() {
             {visibleContracts.length === 0 ? (
               <EmptySearchState label="No contracts match your search." />
             ) : (
-              <Table>
+              <>
+                {adminView && (
+                  <TableBulkBar
+                    count={selection.selectedCount}
+                    noun="contract"
+                    deleting={bulkDeleting}
+                    onClear={selection.clear}
+                    onDelete={handleBulkDelete}
+                  />
+                )}
+                <Table>
                 <TableHeader>
                   <TableRow>
+                    {adminView && (
+                      <TableHead className="w-10">
+                        <Checkbox
+                          aria-label="Select all contracts"
+                          checked={selection.allSelected}
+                          indeterminate={selection.someSelected}
+                          onChange={selection.toggleAll}
+                        />
+                      </TableHead>
+                    )}
                     <TableHead>Title</TableHead>
                     {adminView && <TableHead>Client</TableHead>}
                     <TableHead>Project</TableHead>
@@ -221,6 +264,15 @@ export default function ContractsPage() {
                     const meta = contractStatusMeta[contract.status] ?? contractStatusMeta.draft
                     return (
                       <TableRow key={contract.id}>
+                        {adminView && (
+                          <TableCell onClick={(e) => e.stopPropagation()}>
+                            <Checkbox
+                              aria-label={`Select contract ${contract.title}`}
+                              checked={selection.isSelected(contract.id)}
+                              onChange={() => selection.toggle(contract.id)}
+                            />
+                          </TableCell>
+                        )}
                         <TableCell className="font-medium">
                           {adminView ? (
                             <Link
@@ -327,6 +379,7 @@ export default function ContractsPage() {
                   })}
                 </TableBody>
               </Table>
+              </>
             )}
           </div>
         </>

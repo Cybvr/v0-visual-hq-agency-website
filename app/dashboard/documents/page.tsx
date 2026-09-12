@@ -12,7 +12,10 @@ import { EmptySearchState, FirstRunState } from "@/components/dashboard/empty-st
 import { NewDocumentDialog } from "@/components/dashboard/new-document-dialog"
 import { ImportWordDocumentDialog } from "@/components/dashboard/import-word-document-dialog"
 import { FilterBar, useFilterBar, type SortOption } from "@/components/dashboard/filter-bar"
+import { TableBulkBar } from "@/components/dashboard/table-bulk-bar"
 import { UserEditorSheet } from "@/components/dashboard/user-editor-sheet"
+import { Checkbox } from "@/components/ui/checkbox"
+import { useRowSelection } from "@/hooks/use-row-selection"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -69,6 +72,7 @@ export default function DocumentsPage() {
   const [confirmDelete, setConfirmDelete] = useState<CompanyDocument | null>(null)
   const [clientSheet, setClientSheet] = useState<string | null>(null)
   const [deleting, setDeleting] = useState(false)
+  const [bulkDeleting, setBulkDeleting] = useState(false)
   const [duplicateTarget, setDuplicateTarget] = useState<CompanyDocument | null>(null)
   const [duplicating, setDuplicating] = useState(false)
   const [creating, setCreating] = useState(false)
@@ -152,6 +156,25 @@ export default function DocumentsPage() {
     defaultDirection: "desc",
   })
 
+  const selection = useRowSelection(visibleDocuments, (row) => row.id)
+
+  async function handleBulkDelete() {
+    const ids = selection.selectedIds
+    if (ids.length === 0 || bulkDeleting) return
+    setBulkDeleting(true)
+    try {
+      await Promise.all(ids.map((id) => deleteCompanyDocument(id)))
+      const removed = new Set(ids)
+      setDocuments((current) => current.filter((row) => !removed.has(row.id)))
+      if (confirmDelete && removed.has(confirmDelete.id)) setConfirmDelete(null)
+      selection.clear()
+    } catch (deleteError) {
+      console.error("Error deleting documents:", deleteError)
+    } finally {
+      setBulkDeleting(false)
+    }
+  }
+
   if (!user) return null
 
   return (
@@ -186,9 +209,29 @@ export default function DocumentsPage() {
       ) : visibleDocuments.length === 0 ? (
         <EmptySearchState label="No documents match your search." />
       ) : (
+        <>
+        {adminView && (
+          <TableBulkBar
+            count={selection.selectedCount}
+            noun="document"
+            deleting={bulkDeleting}
+            onClear={selection.clear}
+            onDelete={handleBulkDelete}
+          />
+        )}
         <Table>
           <TableHeader>
             <TableRow>
+              {adminView && (
+                <TableHead className="w-10">
+                  <Checkbox
+                    aria-label="Select all documents"
+                    checked={selection.allSelected}
+                    indeterminate={selection.someSelected}
+                    onChange={selection.toggleAll}
+                  />
+                </TableHead>
+              )}
               <TableHead>Title</TableHead>
               {adminView && <TableHead>Company</TableHead>}
               <TableHead>Public</TableHead>
@@ -202,6 +245,15 @@ export default function DocumentsPage() {
               const meta = companyDocumentStatusMeta[row.status] ?? companyDocumentStatusMeta.draft
               return (
                 <TableRow key={row.id}>
+                  {adminView && (
+                    <TableCell onClick={(e) => e.stopPropagation()}>
+                      <Checkbox
+                        aria-label={`Select ${row.title}`}
+                        checked={selection.isSelected(row.id)}
+                        onChange={() => selection.toggle(row.id)}
+                      />
+                    </TableCell>
+                  )}
                   <TableCell className="font-medium"><Link href={adminView ? `/dashboard/documents/${row.id}/edit` : `/dashboard/documents/${row.id}`} className="rounded-sm outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring">{row.title}</Link></TableCell>
                   {adminView && <TableCell>{row.companyId ? <button type="button" onClick={() => setClientSheet(row.companyId)} className="rounded-sm text-left outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring">{row.client || "Company"}</button> : "—"}</TableCell>}
                   <TableCell>
@@ -232,6 +284,7 @@ export default function DocumentsPage() {
             })}
           </TableBody>
         </Table>
+        </>
       )}
 
       {adminView && <AlertDialog open={confirmDelete !== null} onOpenChange={(open) => !open && setConfirmDelete(null)}>

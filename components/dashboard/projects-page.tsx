@@ -29,6 +29,9 @@ import { NewProjectDialog } from "@/components/dashboard/new-project-dialog"
 import { ProjectCard } from "@/components/project-card"
 import { EmptySearchState, FirstRunState } from "@/components/dashboard/empty-state"
 import { FilterBar, useFilterBar, type SortOption } from "@/components/dashboard/filter-bar"
+import { TableBulkBar } from "@/components/dashboard/table-bulk-bar"
+import { Checkbox } from "@/components/ui/checkbox"
+import { useRowSelection } from "@/hooks/use-row-selection"
 import { cn } from "@/lib/utils"
 
 const PROJECT_SORTS: SortOption<Project>[] = [
@@ -86,6 +89,7 @@ export default function ProjectsAdminPage() {
   const [error, setError] = useState<string | null>(null)
   const [view, setView] = useState<"card" | "list">("card")
   const [deleting, setDeleting] = useState<string | null>(null)
+  const [bulkDeleting, setBulkDeleting] = useState(false)
   const [pendingDelete, setPendingDelete] = useState<Project | null>(null)
   const [creating, setCreating] = useState(false)
   const { results: visibleProjects, bar } = useFilterBar({
@@ -94,6 +98,8 @@ export default function ProjectsAdminPage() {
     sorts: PROJECT_SORTS,
     defaultSort: "title",
   })
+
+  const selection = useRowSelection(visibleProjects, (p) => p.id)
 
   async function fetchProjects() {
     setError(null)
@@ -122,6 +128,23 @@ export default function ProjectsAdminPage() {
       console.error("Error deleting project:", err)
     } finally {
       setDeleting(null)
+    }
+  }
+
+  async function handleBulkDelete() {
+    const ids = selection.selectedIds
+    if (ids.length === 0 || bulkDeleting) return
+    setBulkDeleting(true)
+    try {
+      await Promise.all(ids.map((id) => deleteProject(id)))
+      const removed = new Set(ids)
+      setProjects((prev) => prev.filter((p) => !removed.has(p.id)))
+      if (pendingDelete && removed.has(pendingDelete.id)) setPendingDelete(null)
+      selection.clear()
+    } catch (err) {
+      console.error("Error deleting projects:", err)
+    } finally {
+      setBulkDeleting(false)
     }
   }
 
@@ -197,9 +220,24 @@ export default function ProjectsAdminPage() {
             </ul>
           ) : (
             <div className="rounded-lg border border-border">
+              <TableBulkBar
+                count={selection.selectedCount}
+                noun="project"
+                deleting={bulkDeleting}
+                onClear={selection.clear}
+                onDelete={handleBulkDelete}
+              />
               <Table>
                 <TableHeader>
                   <TableRow>
+                    <TableHead className="w-10">
+                      <Checkbox
+                        aria-label="Select all projects"
+                        checked={selection.allSelected}
+                        indeterminate={selection.someSelected}
+                        onChange={selection.toggleAll}
+                      />
+                    </TableHead>
                     <TableHead>Project</TableHead>
                     <TableHead>Client</TableHead>
                     <TableHead>Service</TableHead>
@@ -218,6 +256,13 @@ export default function ProjectsAdminPage() {
                         className="cursor-pointer"
                         onClick={() => router.push(`/dashboard/projects/${projectSlug(p)}`)}
                       >
+                        <TableCell onClick={(e) => e.stopPropagation()}>
+                          <Checkbox
+                            aria-label={`Select ${p.title}`}
+                            checked={selection.isSelected(p.id)}
+                            onChange={() => selection.toggle(p.id)}
+                          />
+                        </TableCell>
                         <TableCell className="font-medium">
                           <div className="flex flex-wrap items-center gap-2">
                             <span>{p.title}</span>
