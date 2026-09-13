@@ -33,9 +33,9 @@ import {
 // On mobile the sidebar is a slide-over sheet, so nav rows need finger-sized
 // hit areas. max-md: keeps the desktop rail untouched.
 const mobileNavButton =
-  "h-7 text-[13px] font-medium max-md:h-12 max-md:gap-3 max-md:px-3 max-md:text-sm [&>svg]:max-md:size-5"
+  "surface-nav h-7 max-md:h-12 max-md:gap-3 max-md:px-3 [&>svg]:max-md:size-5"
 const mobileNavSubButton =
-  "text-[13px] font-medium max-md:h-11 max-md:gap-3 max-md:px-3 max-md:text-sm [&>svg]:max-md:size-5"
+  "surface-nav max-md:h-11 max-md:gap-3 max-md:px-3 [&>svg]:max-md:size-5"
 
 export type NavLink = {
   label: string
@@ -90,7 +90,7 @@ export function AppSidebar({
       )}
       {...props}
     >
-      <div className="group/sidebar m-2 flex min-h-0 flex-1 flex-col overflow-hidden rounded-[16px] bg-card text-[13px] font-medium text-muted-foreground [&_*]:text-muted-foreground! group-data-[collapsible=icon]:m-1 group-data-[collapsible=icon]:rounded-[12px]">
+      <div className="group/sidebar m-2 flex min-h-0 flex-1 flex-col overflow-hidden rounded-[16px] bg-card text-muted-foreground group-data-[collapsible=icon]:m-1 group-data-[collapsible=icon]:rounded-[12px]">
         <SidebarHeader className="group-data-[collapsible=icon]:p-1">
           <div className="flex h-12 items-center gap-2 group-data-[collapsible=icon]:justify-center">
             <SidebarMenu className="min-w-0 flex-1 group-data-[collapsible=icon]:hidden">
@@ -114,7 +114,7 @@ export function AppSidebar({
                 <React.Fragment key={link.href}>
                   {link.sectionLabel && (
                     <SidebarMenuItem className="group-data-[collapsible=icon]:hidden">
-                      <p className="px-2 pb-0.5 pt-2.5 text-xs font-medium text-muted-foreground">{link.sectionLabel}</p>
+                      <p className="surface-section-label px-2 pb-0.5 pt-2.5">{link.sectionLabel}</p>
                     </SidebarMenuItem>
                   )}
                 {link.items ? (

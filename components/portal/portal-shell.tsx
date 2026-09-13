@@ -23,7 +23,7 @@ function Shell({ children }: { children: ReactNode }) {
     if (!loading && !user) router.replace(`/login?next=${encodeURIComponent(pathname + (search ? `?${search}` : ""))}`)
   }, [loading, user, pathname, search, router])
   if (loading || !user) return <PortalLoading />
-  return <div className="portal-surface min-h-screen bg-background text-foreground [&_h1]:font-sans [&_h2]:font-sans [&_h3]:font-sans">
+  return <div className="portal-surface surface-body min-h-screen bg-background [&_h1]:font-sans [&_h2]:font-sans [&_h3]:font-sans">
     {appUser ? children : <PortalNotice title="We couldn’t load your account"><p>Sign out and try again. If this continues, contact your agency to check your access.</p><Button className="mt-4" variant="outline" size="sm" onClick={() => void signOut()}><LogOut className="size-4" />Sign out</Button></PortalNotice>}
   </div>
 }

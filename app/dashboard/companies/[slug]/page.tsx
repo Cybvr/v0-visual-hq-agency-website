@@ -16,7 +16,9 @@ export default function DashboardCompanyPage() {
 
   useEffect(() => {
     if (!isAdmin) return
-    getUsers().then(setAllContacts).catch(() => setAllContacts([]))
+    getUsers()
+      .then((users) => setAllContacts(users.filter((person) => Boolean(person.displayName?.trim() || person.email?.trim()))))
+      .catch(() => setAllContacts([]))
   }, [isAdmin])
   const {
     client,
@@ -95,6 +97,13 @@ export default function DashboardCompanyPage() {
                   await updateUser(contactId, { companyId: workspaceId })
                 }
                 await updateOrganization(workspaceId, { primaryContactId: contactId })
+                await reload()
+              },
+              onAddExistingContact: async (contactId) => {
+                const contact = allContacts.find((person) => person.uid === contactId)
+                if (!contact || contact.companyId === workspaceId) return
+                await updateUser(contactId, { companyId: workspaceId })
+                setAllContacts((current) => current.map((person) => person.uid === contactId ? { ...person, companyId: workspaceId } : person))
                 await reload()
               },
               reload,

@@ -33,7 +33,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { DropdownMenuItem } from "@/components/ui/dropdown-menu"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
 import type { Contract, Estimate, Invoice } from "@/lib/billing"
 import { getBusinessProfile, type BusinessProfile } from "@/lib/business-profile"
@@ -84,6 +84,8 @@ export interface CompanyPageAdmin {
   onViewWorkspace: (person: AppUser) => void
   onMediaChange?: (urls: string[]) => Promise<void>
   onUpdateCompany: (patch: CompanyDetailsPatch) => Promise<void>
+  /** Attach an existing contact to this company without creating a new account. */
+  onAddExistingContact?: (contactId: string) => Promise<void>
   /** Attach a contact to this company (if needed) and make them the primary contact. */
   onSelectPrimaryContact?: (contactId: string) => Promise<void>
   reload: () => Promise<void>
@@ -150,6 +152,9 @@ export function CompanyPage({
 
   const [selectedProject, setSelectedProject] = useState<Project | null>(null)
   const [addingPerson, setAddingPerson] = useState(false)
+  const [selectingExistingPerson, setSelectingExistingPerson] = useState(false)
+  const [existingPersonQuery, setExistingPersonQuery] = useState("")
+  const [addingExistingPersonId, setAddingExistingPersonId] = useState<string | null>(null)
   const [editingPerson, setEditingPerson] = useState<AppUser | null>(null)
   const [pendingRemove, setPendingRemove] = useState<AppUser | null>(null)
   const [removing, setRemoving] = useState(false)
@@ -197,6 +202,29 @@ export function CompanyPage({
 
   const primaryContact = people.find((person) => person.adminUser?.uid === company.primaryContactId)
     || people.find((person) => person.adminUser?.email)
+
+  const availableExistingContacts = (allContacts ?? [])
+    .filter((person) => person.role !== "admin" && !people.some((current) => current.id === person.id))
+
+  const existingContacts = availableExistingContacts
+    .filter((person) => {
+      const query = existingPersonQuery.trim().toLowerCase()
+      return !query || `${person.name} ${person.subtitle ?? ""}`.toLowerCase().includes(query)
+    })
+
+  async function handleAddExistingPerson(contactId: string) {
+    if (!admin?.onAddExistingContact || addingExistingPersonId) return
+    setAddingExistingPersonId(contactId)
+    try {
+      await admin.onAddExistingContact(contactId)
+      setSelectingExistingPerson(false)
+      setExistingPersonQuery("")
+    } catch (addError) {
+      console.error("Error adding existing contact:", addError)
+    } finally {
+      setAddingExistingPersonId(null)
+    }
+  }
 
   async function handleRemovePerson() {
     if (!admin || !pendingRemove || removing) return
@@ -255,6 +283,8 @@ export function CompanyPage({
                       <ContextualEmailButton
                         label="Email contact"
                         variant="secondary"
+                        size="icon"
+                        icon={false}
                         className="rounded-full"
                         context={{
                           companyId: company.id,
@@ -265,10 +295,9 @@ export function CompanyPage({
                           ctaUrl: admin.sharePath,
                         }}
                       />
-                      <Button asChild size="sm" variant="secondary" className="rounded-full">
+                      <Button asChild size="icon" variant="secondary" className="rounded-full" aria-label="View" title="View">
                         <Link href={admin.sharePath} target="_blank" rel="noreferrer">
                           <Eye className="size-4" aria-hidden="true" />
-                          View
                         </Link>
                       </Button>
                     </>
@@ -326,10 +355,27 @@ export function CompanyPage({
                   <span className="text-sm text-muted-foreground">{people.length}</span>
                 </div>
                 {admin && (
-                  <Button onClick={() => setAddingPerson(true)}>
-                    <Plus className="size-4" aria-hidden="true" />
-                    Add person
-                  </Button>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button>
+                        <Plus className="size-4" aria-hidden="true" />
+                        Add person
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onSelect={() => setAddingPerson(true)}>New person</DropdownMenuItem>
+                      {admin.onAddExistingContact && (
+                        <DropdownMenuItem
+                          onSelect={() => {
+                            setExistingPersonQuery("")
+                            setSelectingExistingPerson(true)
+                          }}
+                        >
+                          Select existing contact
+                        </DropdownMenuItem>
+                      )}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 )}
               </div>
 
@@ -554,7 +600,7 @@ export function CompanyPage({
             open={addingPerson}
             onOpenChange={setAddingPerson}
             fixedRole="client"
-            subjectNoun="company"
+            subjectNoun="contact"
             joinWorkspaceId={company.id}
             joinWorkspaceName={company.name}
             onSaved={async () => {
@@ -562,6 +608,51 @@ export function CompanyPage({
               await admin.reload()
             }}
           />
+
+          <Dialog
+            open={selectingExistingPerson}
+            onOpenChange={(open) => {
+              setSelectingExistingPerson(open)
+              if (!open) setExistingPersonQuery("")
+            }}
+          >
+            <DialogContent className="max-w-md">
+              <DialogHeader>
+                <DialogTitle>Select existing contact</DialogTitle>
+                <DialogDescription>Choose a contact already in VisualHQ to add to this company.</DialogDescription>
+              </DialogHeader>
+              <Input
+                autoFocus
+                value={existingPersonQuery}
+                onChange={(event) => setExistingPersonQuery(event.target.value)}
+                placeholder="Search contacts"
+                aria-label="Search contacts"
+              />
+              <div className="max-h-72 overflow-y-auto rounded-md border border-border">
+                {existingContacts.length === 0 ? (
+                  <p className="px-3 py-6 text-center text-sm text-muted-foreground">
+                    {availableExistingContacts.length ? "No contacts match your search." : "No existing contacts available."}
+                  </p>
+                ) : (
+                  existingContacts.map((person) => (
+                    <button
+                      key={person.id}
+                      type="button"
+                      disabled={addingExistingPersonId !== null}
+                      onClick={() => void handleAddExistingPerson(person.id)}
+                      className="flex w-full items-center justify-between gap-3 border-b border-border px-3 py-2.5 text-left outline-none last:border-b-0 hover:bg-accent focus-visible:bg-accent disabled:pointer-events-none disabled:opacity-60"
+                    >
+                      <span className="min-w-0">
+                        <span className="block truncate text-sm font-medium">{person.name}</span>
+                        {person.subtitle && <span className="block truncate text-xs text-muted-foreground">{person.subtitle}</span>}
+                      </span>
+                      {addingExistingPersonId === person.id && <span className="shrink-0 text-xs text-muted-foreground">Adding…</span>}
+                    </button>
+                  ))
+                )}
+              </div>
+            </DialogContent>
+          </Dialog>
 
           <UserEditorSheet
             open={Boolean(editingPerson)}

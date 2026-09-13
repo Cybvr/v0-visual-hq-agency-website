@@ -23,6 +23,7 @@ export const INDUSTRIES = [
   "Non-profit",
   "Oil & Gas",
   "Pharmaceuticals",
+  "Professional Services",
   "Retail & E-commerce",
   "Sports",
   "Technology",

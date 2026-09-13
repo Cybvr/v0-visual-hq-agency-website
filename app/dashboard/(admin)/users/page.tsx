@@ -76,7 +76,9 @@ export default function UsersAdminPage() {
     setError(null)
     try {
       const [data, orgs] = await Promise.all([getUsers(), getOrganizations()])
-      setUsers(data)
+      // Company workspace owner records are intentionally blank placeholders;
+      // keep them out of the Contacts list while retaining real contacts.
+      setUsers(data.filter((user) => Boolean(user.displayName?.trim() || user.email?.trim())))
       setCompanyNames(Object.fromEntries(orgs.map((org) => [org.id, org.name])))
     } catch (err) {
       console.error("Error fetching users:", err)

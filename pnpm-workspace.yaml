@@ -1,12 +1,13 @@
 allowBuilds:
-  '@firebase/util': set this to true or false
-  '@google/genai': set this to true or false
-  '@tailwindcss/oxide': set this to true or false
-  protobufjs: set this to true or false
-  sharp: set this to true or false
+  '@firebase/util': true
+  '@google/genai': true
+  '@tailwindcss/oxide': true
+  protobufjs: true
+  sharp: true
 
 # firebase-admin@14 pulls jwks-rsa@4, which currently loads jose with
 # require(). Keep that transitive dependency on the CommonJS-compatible line
 # so the Vercel serverless function can verify Firebase ID tokens.
 overrides:
+  '@radix-ui/react-dismissable-layer': 1.1.14
   'jwks-rsa>jose': 4.15.9

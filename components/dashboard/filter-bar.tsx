@@ -13,13 +13,14 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet"
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
 import { cn } from "@/lib/utils"
 
 export type SortDirection = "asc" | "desc"
@@ -54,8 +55,10 @@ export type FilterBarProps = {
   onDirectionChange: (value: SortDirection) => void
   sorts: Array<{ value: string; label: string; ascLabel?: string; descLabel?: string }>
   placeholder?: string
-  /** Extra controls (status pickers and the like) shown beside the sort control, and inside the sheet on mobile. */
+  /** Extra controls (status pickers and the like) shown beside the sort control, and inside the dialog on mobile. */
   children?: ReactNode
+  /** Additional controls shown only inside the mobile filter dialog. */
+  mobileFilters?: ReactNode
   /** Primary page actions, aligned to the right of the filters. */
   actions?: ReactNode
   /** Always-visible list controls, such as the view toggle. */
@@ -132,11 +135,12 @@ export function FilterBar({
   sorts,
   placeholder = "Search",
   children,
+  mobileFilters,
   actions,
   controls,
   className,
 }: FilterBarProps) {
-  const [sheetOpen, setSheetOpen] = useState(false)
+  const [filterOpen, setFilterOpen] = useState(false)
   const active = sorts.find((option) => option.value === sortKey)
   const ascLabel = active?.ascLabel ?? "Ascending"
   const descLabel = active?.descLabel ?? "Descending"
@@ -203,19 +207,23 @@ export function FilterBar({
             )}
           </div>
 
-          <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
-            <SheetTrigger asChild>
+          <Dialog open={filterOpen} onOpenChange={setFilterOpen}>
+            <DialogTrigger asChild>
               <Button variant="outline" size="icon" className="sm:hidden" aria-label="Sort and filter">
                 <SlidersHorizontal className="h-4 w-4" />
               </Button>
-            </SheetTrigger>
-            <SheetContent side="bottom" className="gap-0 rounded-t-xl">
-              <SheetHeader className="border-b">
-                <SheetTitle>Sort and filter</SheetTitle>
-                <SheetDescription>Choose how this list is ordered.</SheetDescription>
-              </SheetHeader>
-              <div className="space-y-6 p-4">
-                {children && <div className="space-y-2">{children}</div>}
+            </DialogTrigger>
+            <DialogContent className="max-h-[min(82vh,42rem)] overflow-y-auto p-0 sm:max-w-md">
+              <DialogHeader className="border-b px-6 pt-6 pb-4">
+                <DialogTitle>Sort and filter</DialogTitle>
+                <DialogDescription>Refine the list and choose how it is ordered.</DialogDescription>
+              </DialogHeader>
+              <div className="space-y-6 px-6 py-5">
+                {(mobileFilters || children) && (
+                  <div className="grid gap-3">
+                    {mobileFilters || children}
+                  </div>
+                )}
                 {sorts.length > 0 && (
                   <>
                     <div className="space-y-1">
@@ -256,12 +264,12 @@ export function FilterBar({
                     </div>
                   </>
                 )}
-                <Button className="w-full" onClick={() => setSheetOpen(false)}>
-                  Done
-                </Button>
+                <DialogClose asChild>
+                  <Button className="w-full">Done</Button>
+                </DialogClose>
               </div>
-            </SheetContent>
-          </Sheet>
+            </DialogContent>
+          </Dialog>
         </>
       )}
         {controls}

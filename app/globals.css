@@ -5,6 +5,14 @@
 
 :root {
   --radius: 0.5rem;
+  --surface-title-size: 0.8125rem;
+  --surface-title-line-height: 1.25rem;
+  --surface-body-size: 0.75rem;
+  --surface-body-line-height: 1.25rem;
+  --surface-nav-size: 0.8125rem;
+  --surface-nav-line-height: 1.25rem;
+  --surface-section-label-size: 0.75rem;
+  --surface-section-label-line-height: 1rem;
   --background: oklch(1 0 180);
   --foreground: oklch(0.126 0.026 268.939);
   --muted: oklch(0.885 0.01 276.021);
@@ -132,12 +140,12 @@
   body {
     @apply bg-background text-foreground;
   }
-  /* Dashboard defaults match the sidebar navigation text. Explicit text-* and
-     font-* utilities can still override these values where needed. */
+  /* Dashboard and portal surfaces share these semantic typography roles:
+     body/nav are muted, while titles and section labels are foreground. */
   .dashboard-body {
     font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
-    font-size: 12px !important;
-    line-height: 1.25rem !important;
+    font-size: var(--surface-body-size) !important;
+    line-height: var(--surface-body-line-height) !important;
     font-weight: 500 !important;
     color: var(--muted-foreground) !important;
   }
@@ -154,6 +162,14 @@
   .portal-surface h1, .portal-surface h2, .portal-surface h3 {
     font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
     font-weight: 600 !important;
+  }
+  .portal-surface {
+    font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+    color: var(--muted-foreground) !important;
+  }
+  .dashboard-body :where(h1, h2, h3, h4, h5, h6),
+  .portal-surface :where(h1, h2, h3, h4, h5, h6) {
+    color: var(--foreground);
   }
 
   .portal-content-area {
@@ -194,6 +210,53 @@
 }
 
 @layer utilities {
+  .surface-title {
+    color: var(--foreground) !important;
+    font-size: var(--surface-title-size) !important;
+    line-height: var(--surface-title-line-height) !important;
+    font-weight: 600 !important;
+  }
+
+  .surface-record-title {
+    color: var(--foreground) !important;
+    font-size: 1.125rem !important;
+    line-height: 1.5rem !important;
+    font-weight: 700 !important;
+  }
+
+  .surface-body {
+    color: var(--muted-foreground) !important;
+    font-size: var(--surface-body-size) !important;
+    line-height: var(--surface-body-line-height) !important;
+    font-weight: 500 !important;
+  }
+
+  .surface-nav {
+    color: var(--muted-foreground) !important;
+    font-size: var(--surface-nav-size) !important;
+    line-height: var(--surface-nav-line-height) !important;
+    font-weight: 500 !important;
+  }
+
+  .surface-section-label {
+    color: var(--foreground) !important;
+    font-size: var(--surface-section-label-size) !important;
+    line-height: var(--surface-section-label-line-height) !important;
+    font-weight: 600 !important;
+  }
+
+  .surface-table-header {
+    color: var(--foreground) !important;
+    font-size: var(--surface-section-label-size) !important;
+    line-height: var(--surface-section-label-line-height) !important;
+    font-weight: 600 !important;
+  }
+
+  .surface-table-cell {
+    font-size: var(--surface-body-size) !important;
+    line-height: var(--surface-body-line-height) !important;
+  }
+
   .poppins-wordmark {
     font-family: var(--font-poppins), ui-sans-serif, system-ui, sans-serif !important;
     font-weight: 700;

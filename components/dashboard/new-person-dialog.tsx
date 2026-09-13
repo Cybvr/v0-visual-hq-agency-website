@@ -8,7 +8,7 @@ interface NewPersonDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   fixedRole?: UserRole
-  subjectNoun?: "user" | "client" | "company"
+  subjectNoun?: "user" | "client" | "company" | "contact"
   /** Set when creating a person for a company that already exists, instead of giving them their own workspace. */
   joinWorkspaceId?: string
   joinWorkspaceName?: string
@@ -31,7 +31,9 @@ export function NewPersonDialog({
       ? "company"
       : subjectNoun === "client"
         ? "client"
-        : "user"
+        : subjectNoun === "contact"
+          ? "contact"
+          : "user"
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

@@ -113,12 +113,12 @@ export function DashboardShell({
         <AppSidebar navLinks={navLinks} rootHref={rootHref} subtitle={subtitle} navExtra={navExtra} />
         {/* overflow-y-auto: this column is the scroll container, not the body */}
         <SidebarInset className="overflow-y-auto">
-          <header className={cn("sticky top-0 z-40 flex h-14 shrink-0 items-center gap-2 bg-background px-4 text-[13px] font-medium text-muted-foreground max-md:text-sm", hideHeader && "md:hidden")}>
+          <header className={cn("surface-nav sticky top-0 z-40 flex h-14 shrink-0 items-center gap-2 bg-background px-4", hideHeader && "md:hidden")}>
             <div className="flex shrink-0 items-center gap-2 md:hidden">
               <SidebarTrigger className="-ml-1" />
               <Separator orientation="vertical" className="data-[orientation=vertical]:h-4" />
             </div>
-            <h1 className="min-w-0 truncate text-[13px] font-medium text-muted-foreground max-md:text-sm">{dashboardPageTitle(pathname ?? "/dashboard")}</h1>
+            <h1 className="surface-title min-w-0 truncate">{dashboardPageTitle(pathname ?? "/dashboard")}</h1>
             <div className="ml-auto flex shrink-0 items-center gap-2">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -141,7 +141,7 @@ export function DashboardShell({
                   ))}
                 </DropdownMenuContent>
               </DropdownMenu>
-              <Button asChild variant="outline" className="text-[13px] font-medium text-muted-foreground max-md:text-sm">
+              <Button asChild variant="outline" className="surface-nav">
                 <Link href="/pricing" aria-label="Upgrade" title="Upgrade">
                   <Crown className="size-4 sm:hidden" aria-hidden="true" />
                   <span className="hidden sm:inline">Upgrade</span>

@@ -80,10 +80,10 @@ function initialsFor(name: string): string {
 
 function DetailRow({ label, value, editable }: { label: string; value?: string; editable: boolean }) {
   return (
-    <div className="flex items-center justify-between gap-3 py-2.5 text-sm">
+    <div className="surface-body flex items-center justify-between gap-3 py-2.5">
       <span className="shrink-0 text-muted-foreground">{label}</span>
       {value ? (
-        <span className="truncate text-right font-medium">{value}</span>
+        <span className="truncate text-right font-medium text-foreground">{value}</span>
       ) : (
         <span className="truncate text-right text-muted-foreground/60">
           {editable ? `Add ${label.toLowerCase()}` : "Not set"}
@@ -95,7 +95,7 @@ function DetailRow({ label, value, editable }: { label: string; value?: string; 
 
 function DetailsRow({ label, children }: { label: string; children: ReactNode }) {
   return (
-    <div className="flex items-center justify-between gap-3 py-1 text-sm">
+    <div className="surface-body flex items-center justify-between gap-3 py-1">
       <span className="shrink-0 text-muted-foreground">{label}</span>
       <div className="min-w-0 flex-1">{children}</div>
     </div>
@@ -268,16 +268,16 @@ export function CompanySidebar({
                     event.currentTarget.blur()
                   }
                 }}
-                className="h-8 border-transparent bg-transparent px-1.5 text-lg font-bold shadow-none hover:border-input focus-visible:border-ring"
+                className="surface-record-title h-8 border-transparent bg-transparent px-1.5 shadow-none hover:border-input focus-visible:border-ring"
               />
             ) : (
-              <h1 className="truncate text-lg font-bold">{company.name}</h1>
+              <h1 className="surface-record-title truncate">{company.name}</h1>
             )}
             <div className="mt-2 flex flex-wrap items-center gap-1.5">
               {(company.tags ?? []).map((tag) => (
                 <span
                   key={tag}
-                  className="group/tag inline-flex items-center gap-1 rounded-full bg-muted px-2.5 py-1 text-xs font-medium"
+                  className="surface-body group/tag inline-flex items-center gap-1 rounded-full bg-muted px-2.5 py-1 font-medium"
                 >
                   {tag}
                   {admin && (
@@ -310,13 +310,13 @@ export function CompanySidebar({
                     }}
                     onBlur={addTag}
                     placeholder="Tag name"
-                    className="h-6 w-24 rounded-full border border-border bg-transparent px-2.5 text-xs outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                    className="surface-body h-6 w-24 rounded-full border border-border bg-transparent px-2.5 outline-none focus-visible:ring-1 focus-visible:ring-ring"
                   />
                 ) : (
                   <button
                     type="button"
                     onClick={() => setAddingTag(true)}
-                    className="text-sm text-muted-foreground outline-none transition-colors hover:text-foreground"
+                    className="surface-body text-muted-foreground outline-none transition-colors hover:text-foreground"
                   >
                     {(company.tags?.length ?? 0) > 0 ? "Add tag" : "Add tags"}
                   </button>
@@ -329,9 +329,8 @@ export function CompanySidebar({
           <div className="mt-4 flex flex-wrap items-center gap-2">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button size="sm" className="rounded-full">
+                <Button size="icon" className="rounded-full" aria-label="New" title="New">
                   <Plus className="size-4" aria-hidden="true" />
-                  New
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start">
@@ -340,9 +339,15 @@ export function CompanySidebar({
               </DropdownMenuContent>
             </DropdownMenu>
             {admin.extraAction}
-            <Button size="sm" variant="secondary" className="rounded-full" onClick={() => admin.onShare()}>
+            <Button
+              size="icon"
+              variant="secondary"
+              className="rounded-full"
+              onClick={() => admin.onShare()}
+              aria-label="Share"
+              title="Share"
+            >
               <Share2 className="size-4" aria-hidden="true" />
-              Share
             </Button>
           </div>
         )}
@@ -351,7 +356,7 @@ export function CompanySidebar({
 
         <div>
           <div className="flex items-center justify-between">
-            <h3 className="text-sm font-semibold text-muted-foreground">Primary Contact</h3>
+            <h3 className="surface-section-label">Primary Contact</h3>
             {admin && (
               <Popover>
                 <PopoverTrigger asChild>
@@ -368,7 +373,7 @@ export function CompanySidebar({
                     <button
                       type="button"
                       onClick={() => admin.onAddPerson()}
-                      className="w-full rounded-sm px-2 py-1.5 text-left text-sm outline-none hover:bg-accent"
+                      className="surface-body w-full rounded-sm px-2 py-1.5 text-left outline-none hover:bg-accent"
                     >
                       Add a contact first
                     </button>
@@ -379,11 +384,11 @@ export function CompanySidebar({
                         value={contactQuery}
                         onChange={(event) => setContactQuery(event.target.value)}
                         placeholder="Search contacts"
-                        className="mb-1 h-8 text-sm"
+                        className="surface-body mb-1 h-8"
                       />
                       <div className="max-h-64 overflow-y-auto">
                         {filteredContacts.length === 0 ? (
-                          <p className="px-2 py-1.5 text-sm text-muted-foreground">No matching contacts.</p>
+                          <p className="surface-body px-2 py-1.5">No matching contacts.</p>
                         ) : (
                           [...filteredContacts].sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: "base" })).map((person) => (
                             <button
@@ -395,13 +400,13 @@ export function CompanySidebar({
                                   : admin.onSave({ primaryContactId: person.id }))
                               }
                               className={cn(
-                                "flex w-full flex-col items-start rounded-sm px-2 py-1.5 text-left text-sm outline-none hover:bg-accent",
+                                "surface-body flex w-full flex-col items-start rounded-sm px-2 py-1.5 text-left outline-none hover:bg-accent",
                                 person.id === primaryContact?.id && "font-medium",
                               )}
                             >
                               <span className="w-full truncate">{person.name}</span>
                               {person.subtitle && (
-                                <span className="w-full truncate text-xs text-muted-foreground">{person.subtitle}</span>
+                                <span className="surface-body w-full truncate text-muted-foreground">{person.subtitle}</span>
                               )}
                             </button>
                           ))
@@ -421,10 +426,10 @@ export function CompanySidebar({
                 <AvatarFallback>{initialsFor(primaryContact.name)}</AvatarFallback>
               </Avatar>
               <div className="min-w-0">
-                <p className="truncate text-sm font-semibold">{primaryContact.name}</p>
+                <p className="surface-body truncate font-semibold text-foreground">{primaryContact.name}</p>
                 {primaryContact.subtitle && (
                   <div className="flex items-center gap-1.5">
-                    <p className="truncate text-xs text-muted-foreground">{primaryContact.subtitle}</p>
+                    <p className="surface-body truncate text-muted-foreground">{primaryContact.subtitle}</p>
                     <button
                       type="button"
                       onClick={() => copyEmail(primaryContact.subtitle!)}
@@ -438,14 +443,14 @@ export function CompanySidebar({
               </div>
             </div>
           ) : (
-            <p className="mt-3 text-sm text-muted-foreground">No primary contact yet.</p>
+            <p className="surface-body mt-3 text-muted-foreground">No primary contact yet.</p>
           )}
         </div>
 
         <Separator className="my-5" />
 
         <div>
-          <h3 className="text-sm font-semibold text-muted-foreground">Details</h3>
+          <h3 className="surface-section-label">Details</h3>
 
           {admin ? (
             <div className="mt-3 divide-y divide-border/60">
@@ -455,7 +460,7 @@ export function CompanySidebar({
                   defaultValue={company.website ?? ""}
                   onBlur={(event) => void commitField("website", event.target.value)}
                   placeholder="acme.com"
-                  className="h-7 border-transparent bg-transparent px-2 text-right text-sm shadow-none hover:border-input focus-visible:border-ring"
+                  className="surface-body h-7 border-transparent bg-transparent px-2 text-right shadow-none hover:border-input focus-visible:border-ring"
                 />
               </DetailsRow>
               <DetailsRow label="Description">
@@ -464,7 +469,7 @@ export function CompanySidebar({
                   defaultValue={company.description ?? ""}
                   onBlur={(event) => void commitField("description", event.target.value)}
                   placeholder="Add a description"
-                  className="h-7 border-transparent bg-transparent px-2 text-right text-sm shadow-none hover:border-input focus-visible:border-ring"
+                  className="surface-body h-7 border-transparent bg-transparent px-2 text-right shadow-none hover:border-input focus-visible:border-ring"
                 />
               </DetailsRow>
               <DetailsRow label="Industry">
@@ -472,7 +477,7 @@ export function CompanySidebar({
                   value={company.industry ?? ""}
                   onValueChange={(value) => void commitField("industry", value)}
                 >
-                  <SelectTrigger className="ml-auto h-7 w-fit border-transparent bg-muted! text-sm shadow-none focus-visible:border-transparent! focus-visible:ring-0!">
+                  <SelectTrigger className="surface-body ml-auto h-7 w-fit border-transparent bg-muted! shadow-none focus-visible:border-transparent! focus-visible:ring-0!">
                     <SelectValue placeholder="Add industry" />
                   </SelectTrigger>
                   <SelectContent>
@@ -490,7 +495,7 @@ export function CompanySidebar({
                   defaultValue={company.location ?? ""}
                   onBlur={(event) => void commitField("location", event.target.value)}
                   placeholder="Add location"
-                  className="h-7 border-transparent bg-transparent px-2 text-right text-sm shadow-none hover:border-input focus-visible:border-ring"
+                  className="surface-body h-7 border-transparent bg-transparent px-2 text-right shadow-none hover:border-input focus-visible:border-ring"
                 />
               </DetailsRow>
               <DetailsRow label="Company Size">
@@ -498,7 +503,7 @@ export function CompanySidebar({
                   value={company.companySize ?? ""}
                   onValueChange={(value) => void commitField("companySize", value)}
                 >
-                  <SelectTrigger className="ml-auto h-7 w-fit border-transparent bg-muted! text-sm shadow-none focus-visible:border-transparent! focus-visible:ring-0!">
+                  <SelectTrigger className="surface-body ml-auto h-7 w-fit border-transparent bg-muted! shadow-none focus-visible:border-transparent! focus-visible:ring-0!">
                     <SelectValue placeholder="Add size" />
                   </SelectTrigger>
                   <SelectContent>
@@ -516,7 +521,7 @@ export function CompanySidebar({
                   defaultValue={company.source ?? ""}
                   onBlur={(event) => void commitField("source", event.target.value)}
                   placeholder="Add source"
-                  className="h-7 border-transparent bg-transparent px-2 text-right text-sm shadow-none hover:border-input focus-visible:border-ring"
+                  className="surface-body h-7 border-transparent bg-transparent px-2 text-right shadow-none hover:border-input focus-visible:border-ring"
                 />
               </DetailsRow>
               <DetailsRow label="LinkedIn">
@@ -525,7 +530,7 @@ export function CompanySidebar({
                   defaultValue={company.linkedIn ?? ""}
                   onBlur={(event) => void commitField("linkedIn", event.target.value)}
                   placeholder="Add LinkedIn"
-                  className="h-7 border-transparent bg-transparent px-2 text-right text-sm shadow-none hover:border-input focus-visible:border-ring"
+                  className="surface-body h-7 border-transparent bg-transparent px-2 text-right shadow-none hover:border-input focus-visible:border-ring"
                 />
               </DetailsRow>
             </div>

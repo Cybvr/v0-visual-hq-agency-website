@@ -18,7 +18,7 @@ type ContextualEmailButtonProps = {
 
 export function ContextualEmailButton({ context, label, variant = "outline", size = "sm", className, icon = true }: ContextualEmailButtonProps) {
   return (
-    <Button asChild variant={variant} size={size} className={cn(className)}>
+    <Button asChild variant={variant} size={size} className={cn(className)} aria-label={label} title={label}>
       <Link href={buildEmailComposeHref(context)}>
         {icon && <Mail className="size-4" aria-hidden="true" />}
         {!icon && <Mail className="size-4" aria-hidden="true" />}

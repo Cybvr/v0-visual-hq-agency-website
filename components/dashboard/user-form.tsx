@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/select"
 import { Camera, Loader2, User as UserIcon } from "lucide-react"
 import { createOrganization, getOrganizations, type Organization } from "@/lib/organizations"
+import { findOrCreateCompany } from "@/lib/companies"
 import { createUser, updateUser, type AppUser, type UserRole } from "@/lib/users"
 
 type FormState = {
@@ -64,7 +65,7 @@ export function UserForm({ user, fixedRole, subjectNoun = "user", workspaceId, w
   const [newCompanyName, setNewCompanyName] = useState("")
 
   // A person joining a fixed workspace, or a company record itself, doesn't
-  // pick a company; everyone else (user/client/contact) chooses an existing one.
+  // pick a company; everyone else chooses or creates one.
   const pickCompany = !joiningExisting && subjectNoun !== "company"
 
   useEffect(() => {
@@ -110,29 +111,36 @@ export function UserForm({ user, fixedRole, subjectNoun = "user", workspaceId, w
       // already exists.
       const uid = isEdit && user ? user.uid : crypto.randomUUID()
       const chosenCompanyId = form.companyId.trim()
-      // Resolve the workspace this person belongs to, and whether to seed a
-      // company. Only naming a brand-new company creates an organization;
-      // a contact never does - it just links to a company or stands alone.
+      // Resolve the workspace this person belongs to. If a contact names a new
+      // company, create that company record first, then save the contact as a
+      // separate user linked to its workspace.
       let companyId: string
       let createOrg = false
-      // Set when the person is linked to a brand-new company they just named,
-      // so we seed that company's organization doc after saving the person.
       let newCompany = ""
-      if (subjectNoun === "company") {
+      if (joiningExisting) {
+        // Joining a workspace that already exists always wins: the person is a
+        // member of that company, never a company record of their own.
+        companyId = workspaceId as string
+      } else if (subjectNoun === "company") {
         companyId = (isEdit && user?.companyId) || uid
         createOrg = !isEdit
-      } else if (joiningExisting) {
-        companyId = workspaceId as string
       } else if (chosenCompanyId === NEW_COMPANY) {
-        // user/client/contact naming a new company: mint an org id and seed it.
+        // Contacts create a real company/workspace first, rather than turning
+        // the contact into the company record. Other user/client flows retain
+        // their existing behavior of creating the workspace alongside the user.
         newCompany = newCompanyName.trim()
         if (!newCompany) {
           setError("Enter a name for the new company.")
           setSaving(false)
           return
         }
-        companyId = crypto.randomUUID()
-        createOrg = true
+        if (subjectNoun === "contact") {
+          const company = await findOrCreateCompany({ name: newCompany })
+          companyId = company.id
+        } else {
+          companyId = crypto.randomUUID()
+          createOrg = true
+        }
       } else {
         // user/client/contact: the chosen company, or empty for a standalone contact
         companyId = chosenCompanyId
@@ -142,15 +150,14 @@ export function UserForm({ user, fixedRole, subjectNoun = "user", workspaceId, w
         displayName: form.displayName.trim(),
         // A person linked to a company doesn't carry its name themselves;
         // that lives on the organization doc.
-        company: subjectNoun === "company" ? form.company.trim() : "",
+        company: !joiningExisting && subjectNoun === "company" ? form.company.trim() : "",
         companyId,
         photoURL: form.photoURL.trim(),
         role: fixedRole ?? form.role,
       }
       if (createOrg) {
         // Seed the organization doc so the company shows up right away, without
-        // needing the companies-page migration button. Covers both a brand-new
-        // workspace and a contact linked to a company they just named.
+        // needing the companies-page migration button.
         await createOrganization(companyId, {
           name: newCompany || payload.company || payload.displayName || payload.email || "Unnamed company",
           logoUrl: subjectNoun === "company" ? payload.photoURL : "",

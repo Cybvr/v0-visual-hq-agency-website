@@ -169,6 +169,91 @@ function cleanSenderDisplay(value: string) {
     .trim()
 }
 
+type MessageFilterControlsProps = {
+  options: {
+    companies: Array<[string, string]>
+    projects: Array<[string, string]>
+    documents: Array<[string, string]>
+    senders: string[]
+  }
+  company: string
+  onCompanyChange: (value: string) => void
+  project: string
+  onProjectChange: (value: string) => void
+  document: string
+  onDocumentChange: (value: string) => void
+  sender: string
+  onSenderChange: (value: string) => void
+  status: string
+  onStatusChange: (value: string) => void
+}
+
+function MessageFilterControls({
+  options,
+  company,
+  onCompanyChange,
+  project,
+  onProjectChange,
+  document,
+  onDocumentChange,
+  sender,
+  onSenderChange,
+  status,
+  onStatusChange,
+}: MessageFilterControlsProps) {
+  return (
+    <>
+      <Select value={company} onValueChange={onCompanyChange}>
+        <SelectTrigger aria-label="Filter by company" className="h-9 w-full text-xs">
+          <SelectValue placeholder="All companies" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">All companies</SelectItem>
+          {[...options.companies].sort((a, b) => a[1].localeCompare(b[1], undefined, { sensitivity: "base" })).map(([value, label]) => <SelectItem key={value} value={value}>{label}</SelectItem>)}
+        </SelectContent>
+      </Select>
+      <Select value={project} onValueChange={onProjectChange}>
+        <SelectTrigger aria-label="Filter by project" className="h-9 w-full text-xs">
+          <SelectValue placeholder="All projects" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">All projects</SelectItem>
+          {[...options.projects].sort((a, b) => a[1].localeCompare(b[1], undefined, { sensitivity: "base" })).map(([value, label]) => <SelectItem key={value} value={value}>{label}</SelectItem>)}
+        </SelectContent>
+      </Select>
+      <Select value={document} onValueChange={onDocumentChange}>
+        <SelectTrigger aria-label="Filter by object type" className="h-9 w-full text-xs">
+          <SelectValue placeholder="All object types" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">All object types</SelectItem>
+          {[...options.documents].sort((a, b) => a[1].localeCompare(b[1], undefined, { sensitivity: "base" })).map(([value, label]) => <SelectItem key={value} value={value}>{label}</SelectItem>)}
+        </SelectContent>
+      </Select>
+      <Select value={sender} onValueChange={onSenderChange}>
+        <SelectTrigger aria-label="Filter by sender" className="h-9 w-full text-xs">
+          <SelectValue placeholder="All senders" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">All senders</SelectItem>
+          {[...options.senders].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" })).map((value) => <SelectItem key={value} value={value}>{value}</SelectItem>)}
+        </SelectContent>
+      </Select>
+      <Select value={status} onValueChange={onStatusChange}>
+        <SelectTrigger aria-label="Filter by status" className="h-9 w-full text-xs">
+          <SelectValue placeholder="All statuses" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">All statuses</SelectItem>
+          <SelectItem value="sent">Sent</SelectItem>
+          <SelectItem value="scheduled">Scheduled</SelectItem>
+          <SelectItem value="failed">Failed</SelectItem>
+        </SelectContent>
+      </Select>
+    </>
+  )
+}
+
 function htmlToText(value: string) {
   if (!value.includes("<")) return value
   return value
@@ -1032,6 +1117,21 @@ export default function EmailPage() {
           {...activeFilterBar}
           className="mb-2"
           placeholder={tab === "messages" ? "Search messages" : tab === "templates" ? "Search templates" : "Search lists"}
+          mobileFilters={tab === "messages" && showOpsDetail ? (
+            <MessageFilterControls
+              options={messageFilterOptions}
+              company={messageCompanyFilter}
+              onCompanyChange={setMessageCompanyFilter}
+              project={messageProjectFilter}
+              onProjectChange={setMessageProjectFilter}
+              document={messageDocumentFilter}
+              onDocumentChange={setMessageDocumentFilter}
+              sender={messageSenderFilter}
+              onSenderChange={setMessageSenderFilter}
+              status={messageStatusFilter}
+              onStatusChange={setMessageStatusFilter}
+            />
+          ) : undefined}
           actions={
             <>
               <Button
@@ -1066,54 +1166,20 @@ export default function EmailPage() {
           }
         />
         {tab === "messages" && showOpsDetail && (
-          <div className="mb-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-5">
-            <Select value={messageCompanyFilter} onValueChange={setMessageCompanyFilter}>
-              <SelectTrigger aria-label="Filter by company" className="h-9 w-full text-xs">
-                <SelectValue placeholder="All companies" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All companies</SelectItem>
-                {[...messageFilterOptions.companies].sort((a, b) => a[1].localeCompare(b[1], undefined, { sensitivity: "base" })).map(([value, label]) => <SelectItem key={value} value={value}>{label}</SelectItem>)}
-              </SelectContent>
-            </Select>
-            <Select value={messageProjectFilter} onValueChange={setMessageProjectFilter}>
-              <SelectTrigger aria-label="Filter by project" className="h-9 w-full text-xs">
-                <SelectValue placeholder="All projects" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All projects</SelectItem>
-                {[...messageFilterOptions.projects].sort((a, b) => a[1].localeCompare(b[1], undefined, { sensitivity: "base" })).map(([value, label]) => <SelectItem key={value} value={value}>{label}</SelectItem>)}
-              </SelectContent>
-            </Select>
-            <Select value={messageDocumentFilter} onValueChange={setMessageDocumentFilter}>
-              <SelectTrigger aria-label="Filter by object type" className="h-9 w-full text-xs">
-                <SelectValue placeholder="All object types" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All object types</SelectItem>
-                {[...messageFilterOptions.documents].sort((a, b) => a[1].localeCompare(b[1], undefined, { sensitivity: "base" })).map(([value, label]) => <SelectItem key={value} value={value}>{label}</SelectItem>)}
-              </SelectContent>
-            </Select>
-            <Select value={messageSenderFilter} onValueChange={setMessageSenderFilter}>
-              <SelectTrigger aria-label="Filter by sender" className="h-9 w-full text-xs">
-                <SelectValue placeholder="All senders" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All senders</SelectItem>
-                {[...messageFilterOptions.senders].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" })).map((value) => <SelectItem key={value} value={value}>{value}</SelectItem>)}
-              </SelectContent>
-            </Select>
-            <Select value={messageStatusFilter} onValueChange={setMessageStatusFilter}>
-              <SelectTrigger aria-label="Filter by status" className="h-9 w-full text-xs">
-                <SelectValue placeholder="All statuses" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All statuses</SelectItem>
-                <SelectItem value="sent">Sent</SelectItem>
-                <SelectItem value="scheduled">Scheduled</SelectItem>
-                <SelectItem value="failed">Failed</SelectItem>
-              </SelectContent>
-            </Select>
+          <div className="mb-3 hidden gap-2 sm:grid sm:grid-cols-2 lg:grid-cols-5">
+            <MessageFilterControls
+              options={messageFilterOptions}
+              company={messageCompanyFilter}
+              onCompanyChange={setMessageCompanyFilter}
+              project={messageProjectFilter}
+              onProjectChange={setMessageProjectFilter}
+              document={messageDocumentFilter}
+              onDocumentChange={setMessageDocumentFilter}
+              sender={messageSenderFilter}
+              onSenderChange={setMessageSenderFilter}
+              status={messageStatusFilter}
+              onStatusChange={setMessageStatusFilter}
+            />
           </div>
         )}
         <div className="mb-2 flex w-full items-center gap-1 rounded-md bg-muted/50 p-0.5 sm:hidden" role="tablist" aria-label="Email">
@@ -1161,14 +1227,35 @@ export default function EmailPage() {
                   <div className="px-3.5 py-2 text-xs font-medium text-muted-foreground sm:px-4">Drafts</div>
                   <div className="divide-y divide-border">
                     {drafts.map((draft) => (
-                      <div key={draft.id} className={cn("flex items-start gap-2 px-3.5 py-3 sm:px-4", editingDraftId === draft.id && "bg-muted")}>
-                        <button type="button" onClick={() => loadDraft(draft)} className="min-w-0 flex-1 space-y-1 text-left outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                      <div key={draft.id} className="group relative">
+                        <button
+                          type="button"
+                          onClick={() => loadDraft(draft)}
+                          className={cn(
+                            "block w-full space-y-1 px-3.5 py-3 text-left transition-colors hover:bg-muted/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset sm:px-4",
+                            editingDraftId === draft.id && "bg-muted",
+                          )}
+                          aria-label={`Open draft email: ${draft.subject?.trim() || "No subject"}`}
+                        >
+                          <div className="flex items-center justify-between gap-3">
+                            <span className="min-w-0 truncate text-xs font-medium">
+                              {draft.to || (draft.listId ? "Contact list" : "No recipient selected")}
+                            </span>
+                            <time dateTime={draft.updatedAt} className="max-w-[42%] shrink-0 truncate text-right text-[11px] text-muted-foreground">
+                              {formatMessageDate(draft.updatedAt)}
+                            </time>
+                          </div>
                           <p className="truncate text-sm font-semibold">{draft.subject?.trim() || "(No subject)"}</p>
                           <span className="inline-flex items-center gap-1 text-[11px] text-amber-700 dark:text-amber-300">
-                            <FileText className="size-3" aria-hidden="true" />Draft · {formatMessageDate(draft.updatedAt)}
+                            <FileText className="size-3" aria-hidden="true" />Draft
                           </span>
                         </button>
-                        <button type="button" onClick={() => void removeDraft(draft.id)} aria-label="Delete draft" className="flex size-8 shrink-0 items-center justify-center rounded-sm text-muted-foreground hover:bg-destructive/10 hover:text-destructive focus-visible:ring-2 focus-visible:ring-ring">
+                        <button
+                          type="button"
+                          onClick={() => void removeDraft(draft.id)}
+                          aria-label="Delete draft"
+                          className="absolute bottom-2.5 right-2 flex size-8 items-center justify-center rounded-sm text-muted-foreground opacity-0 transition-opacity hover:bg-destructive/10 hover:text-destructive focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring group-hover:opacity-100"
+                        >
                           <Trash2 className="size-4" aria-hidden="true" />
                         </button>
                       </div>

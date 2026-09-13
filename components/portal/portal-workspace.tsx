@@ -74,7 +74,7 @@ function shortDate(value: string) {
 }
 
 function Panel({ title, count, action, children }: { title: string; count?: number; action?: ReactNode; children: ReactNode }) {
-  return <section><div className="mb-5 flex flex-wrap items-center justify-between gap-3"><h2 className="flex items-center gap-2 text-sm font-semibold">{title}{count !== undefined && <span className="font-normal tabular-nums text-muted-foreground">{count}</span>}</h2>{action}</div>{children}</section>
+  return <section><div className="mb-5 flex flex-wrap items-center justify-between gap-3"><h2 className="surface-section-label flex items-center gap-2">{title}{count !== undefined && <span className="font-normal tabular-nums text-muted-foreground">{count}</span>}</h2>{action}</div>{children}</section>
 }
 
 function Empty({ children }: { children: ReactNode }) { return <p className="py-4 text-sm leading-6 text-muted-foreground">{children}</p> }
@@ -215,7 +215,7 @@ function PortalNavUser() {
           <DropdownMenuTrigger asChild>
             <SidebarMenuButton size="lg" className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground">
               <Avatar className="h-8 w-8 rounded-lg">{photoURL && <AvatarImage src={photoURL} alt={name} referrerPolicy="no-referrer" />}<AvatarFallback className="rounded-lg">{initials}</AvatarFallback></Avatar>
-              <div className="grid flex-1 text-left text-[13px] font-medium leading-tight text-muted-foreground"><span className="truncate font-medium">{name}</span><span className="truncate text-xs">Basic</span></div>
+              <div className="surface-nav grid flex-1 text-left leading-tight"><span className="truncate font-medium">{name}</span><span className="truncate">Basic</span></div>
               <ChevronsUpDown className="ml-auto size-4" />
             </SidebarMenuButton>
           </DropdownMenuTrigger>
@@ -251,7 +251,7 @@ function PortalTabNav({ company, activeTab }: { company: string; activeTab?: str
               isActive={activeTab === item}
               tooltip={item}
               asChild
-              className="capitalize max-md:h-12 max-md:gap-3 max-md:px-3 max-md:text-base max-md:[&>svg]:size-5"
+              className="surface-nav capitalize max-md:h-12 max-md:gap-3 max-md:px-3 max-md:[&>svg]:size-5"
             >
               <Link
                 href={item === "overview" ? portalPath(company) : `${portalPath(company)}/${item}`}
@@ -346,7 +346,7 @@ function PortalShellContents({ company, organization, activeTab, title, children
 
   return <>
     <Sidebar collapsible="icon" className="bg-background text-muted-foreground group-data-[side=left]:border-r-0 [&_[data-slot=sidebar-inner]]:bg-background">
-      <div className="group/sidebar m-2 flex min-h-0 flex-1 flex-col overflow-hidden rounded-[16px] bg-card text-[13px] font-medium text-muted-foreground group-data-[collapsible=icon]:m-1 group-data-[collapsible=icon]:rounded-[12px]">
+      <div className="group/sidebar m-2 flex min-h-0 flex-1 flex-col overflow-hidden rounded-[16px] bg-card text-muted-foreground group-data-[collapsible=icon]:m-1 group-data-[collapsible=icon]:rounded-[12px]">
         <SidebarHeader className="group-data-[collapsible=icon]:p-1">
           <div className="flex h-12 items-center gap-2 group-data-[collapsible=icon]:justify-center">
             <SidebarMenu className="min-w-0 flex-1 group-data-[collapsible=icon]:hidden">
@@ -378,12 +378,12 @@ function PortalShellContents({ company, organization, activeTab, title, children
       data-agent-open={agentOpen ? "true" : "false"}
       data-ngai-open={agentOpen && activeTab !== "ngai" ? "true" : "false"}
     >
-      <header className="sticky top-0 z-40 flex h-14 shrink-0 items-center gap-2 bg-background px-4 text-[13px] font-medium text-muted-foreground max-md:text-sm">
+      <header className="surface-nav sticky top-0 z-40 flex h-14 shrink-0 items-center gap-2 bg-background px-4">
         <div className="flex shrink-0 items-center gap-2 md:hidden">
           <SidebarTrigger className="-ml-1" />
           <Separator orientation="vertical" className="data-[orientation=vertical]:h-4" />
         </div>
-        <h1 className="min-w-0 truncate capitalize text-[13px] font-medium text-muted-foreground max-md:text-sm">{title}</h1>
+        <h1 className="surface-title min-w-0 truncate capitalize">{title}</h1>
         <PortalNgaiButton />
       </header>
       <div className={cn("px-4 py-5 sm:px-6", activeTab !== "ngai" && "pb-28")}>{children}</div>
