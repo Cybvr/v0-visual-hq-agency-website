@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/table"
 import { Eye, Pencil, Plus, Trash2, Loader2, User as UserIcon } from "lucide-react"
 import { getUsers, deleteUser, type AppUser } from "@/lib/users"
+import { getOrganizations } from "@/lib/organizations"
 import { UserEditorSheet } from "@/components/dashboard/user-editor-sheet"
 import { useAuth } from "@/components/auth-provider"
 import { FilterBar, useFilterBar, type SortOption } from "@/components/dashboard/filter-bar"
@@ -34,39 +35,49 @@ import { useRowSelection } from "@/hooks/use-row-selection"
 import { tsToMillis } from "@/lib/tasks"
 import { cn } from "@/lib/utils"
 
-const USER_SORTS: SortOption<AppUser>[] = [
-  { value: "name", label: "Name", get: (u) => u.displayName || u.email, ascLabel: "A–Z", descLabel: "Z–A" },
-  { value: "email", label: "Email", get: (u) => u.email, ascLabel: "A–Z", descLabel: "Z–A" },
-  { value: "role", label: "Role", get: (u) => u.role, ascLabel: "A–Z", descLabel: "Z–A" },
-  { value: "company", label: "Company", get: (u) => u.company, ascLabel: "A–Z", descLabel: "Z–A" },
-  {
-    value: "createdAt",
-    label: "Date added",
-    get: (u) => tsToMillis(u.createdAt),
-    ascLabel: "Oldest",
-    descLabel: "Newest",
-  },
-]
-
-function searchUser(u: AppUser) {
-  return [u.displayName, u.email, u.company, u.role, u.companyId]
-}
-
 export default function UsersAdminPage() {
   const router = useRouter()
   const { viewAsUser } = useAuth()
   const [users, setUsers] = useState<AppUser[]>([])
+  const [companyNames, setCompanyNames] = useState<Record<string, string>>({})
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [deleting, setDeleting] = useState<string | null>(null)
   const [bulkDeleting, setBulkDeleting] = useState(false)
   const [selectedId, setSelectedId] = useState<string | "new" | null>(null)
 
+  // A contact's company lives on the linked organization, keyed by companyId;
+  // the user doc's `company` string stays empty. Resolve the org name so the
+  // column reflects the company (and any change to it), falling back to the
+  // legacy string for older records.
+  function companyNameOf(u: AppUser) {
+    return (u.companyId && companyNames[u.companyId]) || u.company || ""
+  }
+
+  const USER_SORTS: SortOption<AppUser>[] = [
+    { value: "name", label: "Name", get: (u) => u.displayName || u.email, ascLabel: "A–Z", descLabel: "Z–A" },
+    { value: "email", label: "Email", get: (u) => u.email, ascLabel: "A–Z", descLabel: "Z–A" },
+    { value: "role", label: "Role", get: (u) => u.role, ascLabel: "A–Z", descLabel: "Z–A" },
+    { value: "company", label: "Company", get: (u) => companyNameOf(u), ascLabel: "A–Z", descLabel: "Z–A" },
+    {
+      value: "createdAt",
+      label: "Date added",
+      get: (u) => tsToMillis(u.createdAt),
+      ascLabel: "Oldest",
+      descLabel: "Newest",
+    },
+  ]
+
+  function searchUser(u: AppUser) {
+    return [u.displayName, u.email, companyNameOf(u), u.role, u.companyId]
+  }
+
   async function fetchUsers() {
     setError(null)
     try {
-      const data = await getUsers()
+      const [data, orgs] = await Promise.all([getUsers(), getOrganizations()])
       setUsers(data)
+      setCompanyNames(Object.fromEntries(orgs.map((org) => [org.id, org.name])))
     } catch (err) {
       console.error("Error fetching users:", err)
       setError(err instanceof Error ? err.message : "Failed to load contacts.")
@@ -242,7 +253,7 @@ export default function UsersAdminPage() {
                           <span className="text-muted-foreground">—</span>
                         )}
                       </TableCell>
-                      <TableCell className="text-muted-foreground">{u.company || "—"}</TableCell>
+                      <TableCell className="text-muted-foreground">{companyNameOf(u) || "—"}</TableCell>
                       <TableCell onClick={(e) => e.stopPropagation()}>
                         <Button
                           variant="outline"
