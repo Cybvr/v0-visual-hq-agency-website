@@ -25,6 +25,9 @@ type FormState = {
   role: UserRole
 }
 
+/** Sentinel companyId meaning "the user is typing a brand-new company name". */
+const NEW_COMPANY = "__new__"
+
 const EMPTY_FORM: FormState = {
   email: "",
   displayName: "",
@@ -58,6 +61,7 @@ export function UserForm({ user, fixedRole, subjectNoun = "user", workspaceId, w
   const [form, setForm] = useState<FormState>(EMPTY_FORM)
   const [editingPhoto, setEditingPhoto] = useState(false)
   const [organizations, setOrganizations] = useState<Organization[]>([])
+  const [newCompanyName, setNewCompanyName] = useState("")
 
   // A person joining a fixed workspace, or a company record itself, doesn't
   // pick a company; everyone else (user/client/contact) chooses an existing one.
@@ -86,6 +90,7 @@ export function UserForm({ user, fixedRole, subjectNoun = "user", workspaceId, w
       setForm({ ...EMPTY_FORM, role: fixedRole ?? EMPTY_FORM.role })
     }
     setEditingPhoto(false)
+    setNewCompanyName("")
     setError(null)
   }, [user, fixedRole])
 
@@ -110,11 +115,24 @@ export function UserForm({ user, fixedRole, subjectNoun = "user", workspaceId, w
       // a contact never does - it just links to a company or stands alone.
       let companyId: string
       let createOrg = false
+      // Set when the person is linked to a brand-new company they just named,
+      // so we seed that company's organization doc after saving the person.
+      let newCompany = ""
       if (subjectNoun === "company") {
         companyId = (isEdit && user?.companyId) || uid
         createOrg = !isEdit
       } else if (joiningExisting) {
         companyId = workspaceId as string
+      } else if (chosenCompanyId === NEW_COMPANY) {
+        // user/client/contact naming a new company: mint an org id and seed it.
+        newCompany = newCompanyName.trim()
+        if (!newCompany) {
+          setError("Enter a name for the new company.")
+          setSaving(false)
+          return
+        }
+        companyId = crypto.randomUUID()
+        createOrg = true
       } else {
         // user/client/contact: the chosen company, or empty for a standalone contact
         companyId = chosenCompanyId
@@ -129,6 +147,16 @@ export function UserForm({ user, fixedRole, subjectNoun = "user", workspaceId, w
         photoURL: form.photoURL.trim(),
         role: fixedRole ?? form.role,
       }
+      if (createOrg) {
+        // Seed the organization doc so the company shows up right away, without
+        // needing the companies-page migration button. Covers both a brand-new
+        // workspace and a contact linked to a company they just named.
+        await createOrganization(companyId, {
+          name: newCompany || payload.company || payload.displayName || payload.email || "Unnamed company",
+          logoUrl: subjectNoun === "company" ? payload.photoURL : "",
+          industry: "",
+        })
+      }
       if (isEdit && user) {
         // Spread the original doc first so any fields we don't edit are preserved.
         const { uid: _uid, createdAt: _createdAt, updatedAt: _updatedAt, ...rest } = user
@@ -136,15 +164,6 @@ export function UserForm({ user, fixedRole, subjectNoun = "user", workspaceId, w
         onSaved(user.uid)
       } else {
         await createUser(uid, payload)
-        if (createOrg) {
-          // Brand-new workspace: seed its organization doc so it shows up
-          // right away, without needing the companies-page migration button.
-          await createOrganization(companyId, {
-            name: payload.company || payload.displayName || payload.email || "Unnamed company",
-            logoUrl: payload.photoURL,
-            industry: "",
-          })
-        }
         onSaved(uid)
       }
     } catch (err) {
@@ -262,8 +281,17 @@ export function UserForm({ user, fixedRole, subjectNoun = "user", workspaceId, w
                     {[...organizations].sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: "base" })).map((org) => (
                       <SelectItem key={org.id} value={org.id}>{org.name}</SelectItem>
                     ))}
+                    <SelectItem value={NEW_COMPANY}>+ Add new company</SelectItem>
                   </SelectContent>
                 </Select>
+                {form.companyId === NEW_COMPANY && (
+                  <Input
+                    autoFocus
+                    value={newCompanyName}
+                    onChange={(e) => setNewCompanyName(e.target.value)}
+                    placeholder="New company name"
+                  />
+                )}
               </div>
             )}
           </div>
